@@ -1245,7 +1245,7 @@ static MODCMD_FUNC(cmd_devoiceall)
     change = mod_chanmode_alloc(channel->members.used);
     for (ii = count = 0; ii < channel->members.used; ++ii) {
 	struct modeNode *mn = channel->members.list[ii];
-	if (mn->modes & MODE_VOICE)
+	if (!(mn->modes & MODE_VOICE))
             continue;
         change->args[count].mode = MODE_REMOVE | MODE_VOICE;
         change->args[count++].member = mn;

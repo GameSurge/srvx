@@ -543,12 +543,15 @@ DelChannelUser(struct userNode* user, struct chanNode* channel, const char *reas
     if (!mNode)
         return;
 
-    for (n=0; n<pf_used; n++)
-	pf_list[n](mNode, reason);
-
     /* remove modeNode from channel and user */
     modeList_remove(&channel->members, mNode);
     modeList_remove(&user->channels, mNode);
+
+    /* make callbacks */
+    for (n=0; n<pf_used; n++)
+	pf_list[n](mNode, reason);
+
+    /* free memory */
     free(mNode);
 
     if (!deleting && !channel->members.used && !channel->locks && !(channel->modes & MODE_REGISTERED))
