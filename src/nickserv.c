@@ -3019,8 +3019,8 @@ nickserv_show_oper_accounts(struct userNode *user, struct svccmd *cmd)
     }
     table_send(cmd->parent->bot, user->nick, 0, NULL, tbl);
     reply("MSG_MATCH_COUNT", hil.used);
-    for (ii = 0; ii < hil.used; )
-        free(tbl.contents[++ii]);
+    for (ii = 0; ii < hil.used; ii++)
+        free(tbl.contents[ii]);
     free(tbl.contents);
     free(hil.list);
 }
