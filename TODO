@@ -18,13 +18,3 @@
 [FEATREQ] Suspension durations and/or comments when suspending user access to a channel
 
 [FEATREQ] support "unregistered": ?ctrace print mode +s unregistered
-
-[FEATREQ] runtime construction of nickserv.help, rather than compile time
-  - Can do something like this:
-    "<INDEX>" {
-        "/services/nickserv/disable_nicks:false and /services/nickserv/email_enabled:false" ( "Help content with nick ownership enabled and email disabled" );
-        // etc
-    };
-  - Need a mini-language interpreter for the logic blocks; should skip
-    leading "[0-9A-Za-z]+: " prefix to allow sorting the entries by
-    priority

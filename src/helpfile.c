@@ -16,10 +16,10 @@
  * along with this program; if not, email srvx-maintainers@srvx.net.
  */
 
+#include "conf.h"
 #include "helpfile.h"
 #include "log.h"
 #include "nickserv.h"
-#include "recdb.h"
 
 #include <dirent.h>
 
@@ -696,22 +696,215 @@ send_help(struct userNode *dest, struct userNode *src, struct helpfile *hf, cons
     return _send_help(dest, src, hf->expand, rec->d.qstring);
 }
 
-int
+/* Grammar supported by this parser:
+ * condition = expr | prefix expr
+ * expr = atomicexpr | atomicexpr op atomicexpr
+ * op = '&&' | '||' | 'and' | 'or'
+ * atomicexpr = '(' expr ')' | identifier
+ * identifier = ( '0'-'9' 'A'-'Z' 'a'-'z' '-' '_' '/' )+ | ! identifier
+ *
+ * Whitespace is ignored. The parser is implemented as a recursive
+ * descent parser by functions like:
+ *   static int helpfile_eval_<element>(const char *start, const char **end);
+ */
+
+enum helpfile_op {
+    OP_INVALID,
+    OP_BOOL_AND,
+    OP_BOOL_OR
+};
+
+static const struct {
+    const char *str;
+    enum helpfile_op op;
+} helpfile_operators[] = {
+    { "&&", OP_BOOL_AND },
+    { "and", OP_BOOL_AND },
+    { "||", OP_BOOL_OR },
+    { "or", OP_BOOL_OR },
+    { NULL, OP_INVALID }
+};
+
+static const char *identifier_chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_/";
+
+static int helpfile_eval_expr(const char *start, const char **end);
+static int helpfile_eval_atomicexpr(const char *start, const char **end);
+static int helpfile_eval_identifier(const char *start, const char **end);
+
+static int
+helpfile_eval_identifier(const char *start, const char **end)
+{
+    /* Skip leading whitespace. */
+    while (isspace(*start) && (start < *end))
+        start++;
+    if (start == *end) {
+        log_module(MAIN_LOG, LOG_FATAL, "Expected identifier in helpfile condition.");
+        return -1;
+    }
+
+    if (start[0] == '!') {
+        int res = helpfile_eval_identifier(start+1, end);
+        if (res < 0)
+            return res;
+        return !res;
+    } else if (start[0] == '/') {
+        const char *sep;
+        char *id_str, *value;
+
+        for (sep = start;
+             strchr(identifier_chars, sep[0]) && (sep < *end);
+             ++sep) ;
+        memcpy(id_str = alloca(sep+1-start), start, sep-start);
+        id_str[sep-start] = '\0';
+        value = conf_get_data(id_str+1, RECDB_QSTRING);
+        *end = sep;
+        if (!value)
+            return 0;
+        return enabled_string(value) || true_string(value);
+    } else if ((*end - start >= 4) && !ircncasecmp(start, "true", 4)) {
+        *end = start + 4;
+        return 1;
+    } else if ((*end - start >= 5) && !ircncasecmp(start, "false", 5)) {
+        *end = start + 5;
+        return 0;
+    } else {
+        log_module(MAIN_LOG, LOG_FATAL, "Unexpected helpfile identifier '%.*s'.", *end-start, start);
+        return -1;
+    }
+}
+
+static int
+helpfile_eval_atomicexpr(const char *start, const char **end)
+{
+    const char *sep;
+    int res;
+
+    /* Skip leading whitespace. */
+    while (isspace(*start) && (start < *end))
+        start++;
+    if (start == *end) {
+        log_module(MAIN_LOG, LOG_FATAL, "Expected atomic expression in helpfile condition.");
+        return -1;
+    }
+
+    /* If it's not parenthesized, it better be a valid identifier. */
+    if (*start != '(')
+        return helpfile_eval_identifier(start, end);
+
+    /* Parse the internal expression. */
+    start++;
+    sep = *end;
+    res = helpfile_eval_expr(start, &sep);
+
+    /* Check for the closing parenthesis. */
+    while (isspace(*sep) && (sep < *end))
+        sep++;
+    if ((sep == *end) || (sep[0] != ')')) {
+        log_module(MAIN_LOG, LOG_FATAL, "Expected close parenthesis at '%.*s'.", *end-sep, sep);
+        return -1;
+    }
+
+    /* Report the end location and result. */
+    *end = sep + 1;
+    return res;
+}
+
+static int
+helpfile_eval_expr(const char *start, const char **end)
+{
+    const char *sep, *sep2;
+    unsigned int ii, len;
+    int res_a, res_b;
+    enum helpfile_op op;
+
+    /* Parse the first atomicexpr. */
+    sep = *end;
+    res_a = helpfile_eval_atomicexpr(start, &sep);
+    if (res_a < 0)
+        return res_a;
+
+    /* Figure out what follows that. */
+    while (isspace(*sep) && (sep < *end))
+        sep++;
+    if (sep == *end)
+        return res_a;
+    op = OP_INVALID;
+    for (ii = 0; helpfile_operators[ii].str; ++ii) {
+        len = strlen(helpfile_operators[ii].str);
+        if (ircncasecmp(sep, helpfile_operators[ii].str, len))
+            continue;
+        op = helpfile_operators[ii].op;
+        sep += len;
+    }
+    if (op == OP_INVALID) {
+        log_module(MAIN_LOG, LOG_FATAL, "Unrecognized helpfile operator at '%.*s'.", *end-sep, sep);
+        return -1;
+    }
+
+    /* Parse the next atomicexpr. */
+    sep2 = *end;
+    res_b = helpfile_eval_atomicexpr(sep, &sep2);
+    if (res_b < 0)
+        return res_b;
+
+    /* Make sure there's no trailing garbage */
+    while (isspace(*sep2) && (sep2 < *end))
+        sep2++;
+    if (sep2 != *end) {
+        log_module(MAIN_LOG, LOG_FATAL, "Trailing garbage in helpfile expression: '%.*s'.", *end-sep2, sep2);
+        return -1;
+    }
+
+    /* Record where we stopped parsing. */
+    *end = sep2;
+
+    /* Do the logic on the subexpressions. */
+    switch (op) {
+    case OP_BOOL_AND:
+        return res_a && res_b;
+    case OP_BOOL_OR:
+        return res_a || res_b;
+    default:
+        return -1;
+    }
+}
+
+static int
+helpfile_eval_condition(const char *start, const char **end)
+{
+    const char *term;
+
+    /* Skip the prefix if there is one. */
+    for (term = start; isalnum(*term) && (term < *end); ++term) ;
+    if (term != start) {
+        if ((term + 2 >= *end) || (term[0] != ':') || (term[1] != ' ')) {
+            log_module(MAIN_LOG, LOG_FATAL, "In helpfile condition '%.*s' expected prefix to end with ': '.", *end-start, start);
+            return -1;
+        }
+        start = term + 2;
+    }
+
+    /* Evaluate the remaining string as an expression. */
+    return helpfile_eval_expr(start, end);
+}
+
+static int
 unlistify_help(const char *key, void *data, void *extra)
 {
     struct record_data *rd = data;
     dict_t newdb = extra;
-    key = strdup(key);
-    if (rd->type == RECDB_QSTRING) {
-	dict_insert(newdb, key, alloc_record_data_qstring(GET_RECORD_QSTRING(rd)));
+
+    switch (rd->type) {
+    case RECDB_QSTRING:
+	dict_insert(newdb, strdup(key), alloc_record_data_qstring(GET_RECORD_QSTRING(rd)));
 	return 0;
-    } else if (rd->type == RECDB_STRING_LIST) {
+    case RECDB_STRING_LIST: {
 	struct string_list *slist = GET_RECORD_STRING_LIST(rd);
 	char *dest;
 	unsigned int totlen, len, i;
-	for (i=totlen=0; i<slist->used; i++) {
+
+	for (i=totlen=0; i<slist->used; i++)
 	    totlen = totlen + strlen(slist->list[i]) + 1;
-	}
 	dest = alloca(totlen+1);
 	for (i=totlen=0; i<slist->used; i++) {
 	    len = strlen(slist->list[i]);
@@ -720,9 +913,37 @@ unlistify_help(const char *key, void *data, void *extra)
 	    totlen = totlen + len + 1;
 	}
 	dest[totlen] = 0;
-	dict_insert(newdb, key, alloc_record_data_qstring(dest));
+	dict_insert(newdb, strdup(key), alloc_record_data_qstring(dest));
 	return 0;
-    } else {
+    }
+    case RECDB_OBJECT: {
+        dict_iterator_t it;
+
+        for (it = dict_first(GET_RECORD_OBJECT(rd)); it; it = iter_next(it)) {
+            const char *k2, *end;
+            int res;
+
+            /* Evaluate the expression for this subentry. */
+            k2 = iter_key(it);
+            end = k2 + strlen(k2);
+            res = helpfile_eval_condition(k2, &end);
+            /* If the evaluation failed, bail. */
+            if (res < 0) {
+                log_module(MAIN_LOG, LOG_FATAL, " .. while processing entry '%s' condition '%s'.", key, k2);
+                return 1;
+            }
+            /* If the condition was false, try another. */
+            if (!res)
+                continue;
+            /* If we cannot unlistify the contents, bail. */
+            if (unlistify_help(key, iter_data(it), extra))
+                return 1;
+            return 0;
+        }
+        /* If none of the conditions apply, just omit the entry. */
+        return 0;
+    }
+    default:
 	return 1;
     }
 }
@@ -752,7 +973,8 @@ open_helpfile(const char *fname, expand_func_t expand)
 
 void close_helpfile(struct helpfile *hf)
 {
-    if (!hf) return;
+    if (!hf)
+        return;
     free((char*)hf->name);
     free_database(hf->db);
     free(hf);

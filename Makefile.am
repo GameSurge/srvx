@@ -5,7 +5,7 @@ DIST_SUBDIRS = src rx
 all: srvx
 
 srvx: src/srvx
-	cp ./src/srvx $(srcdir)/src/*.help ./src/nickserv.help .
+	cp ./src/srvx $(srcdir)/src/*.help .
 
 install-exec-local:
 	$(INSTALL) -d -m 755 $(prefix)
