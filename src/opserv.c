@@ -160,6 +160,7 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_RAW_PARSE_ERROR", "Error parsing raw line (not dumping to uplink)." },
     { "OSMSG_COLLIDED_NICK", "Now temporarily holding nick $b%s$b." },
     { "OSMSG_RESERVED_NICK", "Now reserving nick $b%s$b." },
+    { "OSMSG_NICK_UNRESERVED", "Nick $b%s$b is no longer reserve." },
     { "OSMSG_NOT_RESERVED", "Nick $b%s$b is not reserved." },
     { "OSMSG_ILLEGAL_REASON", "This channel is illegal." },
     { "OSMSG_ILLEGAL_KILL_REASON", "Joined an illegal modeless channel - do not repeat." },

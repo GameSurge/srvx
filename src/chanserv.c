@@ -5913,8 +5913,11 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
                 change.args[0].mode = MODE_CHANOP;
             else if(channel->access >= cn->channel_info->lvlOpts[lvlGiveVoice])
                 change.args[0].mode = MODE_VOICE;
+            else
+                change.args[0].mode = 0;
             change.args[0].member = mn;
-            mod_chanmode_announce(chanserv, cn, &change);
+            if(change.args[0].mode)
+                mod_chanmode_announce(chanserv, cn, &change);
         }
 
 	channel->seen = now;

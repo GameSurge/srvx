@@ -287,6 +287,12 @@ static const struct message_entry msgtab[] = {
     { "HSMSG_STATS_TIME", "$uTime spent helping in %s:$u" },
     { "HSMSG_STATS_REQS", "$uRequest activity statistics:$u" },
 
+/* Status report headers */
+    { "HSMSG_STATS_REPORT_0", "Stats report for current week" },
+    { "HSMSG_STATS_REPORT_1", "Stats report for one week ago" },
+    { "HSMSG_STATS_REPORT_2", "Stats report for two weeks ago" },
+    { "HSMSG_STATS_REPORT_3", "Stats report for three weeks ago" },
+
 /* Responses to user commands */
     { "HSMSG_YOU_BEING_HELPED", "You are already being helped." },
     { "HSMSG_YOU_BEING_HELPED_BY", "You are already being helped by $b%s$b." },
@@ -457,10 +463,10 @@ static const char *weekday_names[] = {
 };
 
 static const char *statsreport_week[] = {
-    "Stats report for current week",
-    "Stats report for one week ago",
-    "Stats report for two weeks ago",
-    "Stats report for three weeks ago"
+    "HSMSG_STATS_REPORT_0",
+    "HSMSG_STATS_REPORT_1",
+    "HSMSG_STATS_REPORT_2",
+    "HSMSG_STATS_REPORT_3"
 };
 
 static struct {
