@@ -337,8 +337,8 @@ static const struct message_entry msgtab[] = {
 
 /* Access information */
     { "CSMSG_IS_CHANSERV", "$b$C$b is the $bchannel service bot$b." },
-    { "CSMSG_ACCESS_SELF_ONLY", "You may only see the list of infolines for yourself (by using $b%s$b with no arguments)." },
-    { "CSMSG_SQUAT_ACCESS", "You do not have access to any channels." },
+    { "CSMSG_MYACCESS_SELF_ONLY", "You may only see the list of infolines for yourself (by using $b%s$b with no arguments)." },
+    { "CSMSG_SQUAT_ACCESS", "$b%s$b does not have access to any channels." },
     { "CSMSG_INFOLINE_LIST", "Showing all channel entries for account $b%s$b:" },
     { "CSMSG_USER_NO_ACCESS", "%s lacks access to %s." },
     { "CSMSG_USER_HAS_ACCESS", "%s has access $b%d$b in %s." },
@@ -1863,7 +1863,6 @@ static CHANSERV_FUNC(cmd_move)
     if(!(target = GetChannel(argv[1])))
     {
         target = AddChannel(argv[1], now, NULL, NULL);
-        LockChannel(target);
         if(!IsSuspended(channel->channel_info))
             AddChannelUser(chanserv, target);
     }
@@ -1905,6 +1904,7 @@ static CHANSERV_FUNC(cmd_move)
 	DelChannelUser(chanserv, channel, reason2, 0);
     }
     UnlockChannel(channel);
+    LockChannel(target);
     global_message(MESSAGE_RECIPIENT_OPERS | MESSAGE_RECIPIENT_HELPERS, reason);
     return 1;
 }
@@ -3133,6 +3133,49 @@ static CHANSERV_FUNC(cmd_open)
     return 1;
 }
 
+static CHANSERV_FUNC(cmd_myaccess)
+{
+    struct handle_info *target_handle;
+    struct userData *uData;
+    const char *chanName;
+
+    if(argc < 2)
+        target_handle = user->handle_info;
+    else if(!IsHelping(user))
+    {
+        reply("CSMSG_MYACCESS_SELF_ONLY", argv[0]);
+        return 0;
+    }
+    else if(!(target_handle = modcmd_get_handle_info(user, argv[1])))
+        return 0;
+
+    if(!target_handle->channels)
+    {
+        reply("CSMSG_SQUAT_ACCESS", target_handle->handle);
+        return 1;
+    }
+
+    reply("CSMSG_INFOLINE_LIST", target_handle->handle);
+    for(uData = target_handle->channels; uData; uData = uData->u_next)
+    {
+        struct chanData *cData = uData->channel;
+
+        if(uData->access > UL_OWNER)
+            continue;
+        if(IsProtected(cData)
+           && (target_handle != user->handle_info)
+           && !GetTrueChannelAccess(cData, user->handle_info))
+            continue;
+        chanName = cData->channel->name;
+        if(uData->info)
+            send_message_type(4, user, cmd->parent->bot, "[%s (%d)] %s", chanName, uData->access, uData->info);
+        else
+            send_message_type(4, user, cmd->parent->bot, "[%s (%d)]", chanName, uData->access);
+    }
+
+    return 1;
+}
+
 static CHANSERV_FUNC(cmd_access)
 {
     struct userNode *target;
@@ -3140,53 +3183,6 @@ static CHANSERV_FUNC(cmd_access)
     struct userData *uData;
     int helping;
     char prefix[MAXLEN];
-
-    if(!channel)
-    {
-        struct userData *uData;
-        const char *chanName;
-        int hide = 0;
-
-        target_handle = user->handle_info;
-        if(!target_handle)
-        {
-            reply("MSG_AUTHENTICATE");
-            return 0;
-        }
-        if(argc > 1)
-        {
-            if(!IsHelping(user))
-            {
-                reply("CSMSG_ACCESS_SELF_ONLY", argv[0]);
-                return 0;
-            }
-
-            if(!(target_handle = modcmd_get_handle_info(user, argv[1])))
-                return 0;
-            hide = 1;
-        }
-        if(!target_handle->channels)
-        {
-            reply("CSMSG_SQUAT_ACCESS");
-            return 1;
-        }
-        reply("CSMSG_INFOLINE_LIST", target_handle->handle);
-        for(uData = target_handle->channels; uData; uData = uData->u_next)
-        {
-            struct chanData *cData = uData->channel;
-
-            if(uData->access > UL_OWNER)
-                continue;
-            if(IsProtected(cData) && hide && !GetTrueChannelAccess(cData, user->handle_info))
-                continue;
-            chanName = cData->channel->name;
-            if(uData->info)
-                send_message_type(4, user, cmd->parent->bot, "[%s (%d)] %s", chanName, uData->access, uData->info);
-            else
-                send_message_type(4, user, cmd->parent->bot, "[%s (%d)]", chanName, uData->access);
-        }
-        return 1;
-    }
 
     if(argc < 2)
     {
@@ -7075,7 +7071,8 @@ init_chanserv(const char *nick)
     DEFINE_COMMAND(bans, 1, MODCMD_REQUIRE_REGCHAN, "access", "1", "flags", "+nolog", NULL);
     DEFINE_COMMAND(peek, 1, MODCMD_REQUIRE_REGCHAN, "access", "op", "flags", "+nolog", NULL);
 
-    DEFINE_COMMAND(access, 1, 0, "flags", "+nolog,+acceptchan", NULL);
+    DEFINE_COMMAND(myaccess, 1, MODCMD_REQUIRE_AUTHED, NULL);
+    DEFINE_COMMAND(access, 1, MODCMD_REQUIRE_REGCHAN, "flags", "+nolog,+joinable", NULL);
     DEFINE_COMMAND(users, 1, MODCMD_REQUIRE_REGCHAN, "flags", "+nolog,+joinable", NULL);
     DEFINE_COMMAND(wlist, 1, MODCMD_REQUIRE_REGCHAN, "flags", "+nolog,+joinable", NULL);
     DEFINE_COMMAND(clist, 1, MODCMD_REQUIRE_REGCHAN, "flags", "+nolog,+joinable", NULL);

@@ -8,7 +8,8 @@
         "  OPER            Helper/Operator commands."
 );
 "USER" ("$bUser commands:$b",
-        "  ACCESS      Check your own or another person's access to a channel.",
+        "  ACCESS      Check someone's access in a channel.",
+        "  MYACCESS    Show all channels where you have access.",
         "  ADDCOOWNER  Give another person coowner status in a channel.",
         "  ADDMASTER                       master status in a channel.",
         "  ADDOP                           op status in a channel.",
@@ -99,10 +100,13 @@
         "  CREATENOTE  Create a new note type.",
         "  REMOVENOTE  Remove an existing note type."
 );
-"ACCESS" ("/msg $C ACCESS <#channel> <nick|*account>",
-        "Reports various pieces of information about a channel user, including channel and network access level, and the user's info line. If no nick or account is provided, $C returns your own information.",
-        "If no channel is provided, $C lists your infolines in all registered channels.",
-        "$uSee Also:$u users");
+"MYACCESS" ("/msg $S MYACCESS [<nick|*account>]",
+        "Lists channels where you have access and infolines in each.",
+        "Network staff may specify a nickname or *account to view the list for another user.",
+        "$uSee Also:$u access, users");
+"ACCESS" ("/msg $S ACCESS <#channel> [<nick|*account>]",
+        "Reports various pieces of information about a channel user, including channel and network access level, and the user's info line. If no nick or account is provided, $S returns your own information.",
+        "$uSee Also:$u myaccess, users");
 "ADDBAN" ("/msg $C ADDBAN <#channel> <mask|nick> [Reason]",
         "Adds a ban to the channels permanent ban list, remaining in effect until removed with the DELBAN command. If it exactly matches an existing ban already in the list, the reason will be updated. If the existing ban was a timed ban, it will be extended into a permanent ban.",
         "$uSee Also:$u bans, delban, mdelban");
