@@ -17,7 +17,7 @@
  * It would be generally wise to replace the $p$i with a hard-coded
  * one; many insecure proxies refuse to connect to themselves.
  */
-"1080:0401$i$p=p=r=o=x=y00" {
+"1080:0401$p$i=p=r=o=x=y00" {
 	"..5a...." "reject:Unsecured socks4";
 };
 

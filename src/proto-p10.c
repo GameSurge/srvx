@@ -1076,7 +1076,10 @@ static CMD_FUNC(cmd_burst)
                     mode |= MODE_CHANOP;
                 else if (sep == 'v')
                     mode |= MODE_VOICE;
-                else
+                else if (isdigit(sep)) {
+                    mode |= MODE_CHANOP;
+                    while (isdigit(*end)) end++;
+                } else
                     break;
             }
             if (rel_age < 0)

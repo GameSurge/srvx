@@ -202,7 +202,7 @@ dict_insert(dict_t dict, const char *key, void *data)
 int
 dict_remove2(dict_t dict, const char *key, int no_dispose)
 {
-    struct dict_node *new_root;
+    struct dict_node *new_root, *old_root;
 
     if (!dict->root)
         return 0;
@@ -220,13 +220,14 @@ dict_remove2(dict_t dict, const char *key, int no_dispose)
     if (dict->first == dict->root) dict->first = dict->first->next;
     if (dict->root->next) dict->root->next->prev = dict->root->prev;
     if (dict->last == dict->root) dict->last = dict->last->prev;
-    if (no_dispose) {
-        free(dict->root);
-    } else {
-        dict_dispose_node(dict->root, dict->free_keys, dict->free_data);
-    }
+    old_root = dict->root;
     dict->root = new_root;
     dict->count--;
+    if (no_dispose) {
+        free(old_root);
+    } else {
+        dict_dispose_node(old_root, dict->free_keys, dict->free_data);
+    }
     return 1;
 }
 
