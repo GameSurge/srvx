@@ -334,22 +334,22 @@ user_matches_glob(struct userNode *user, const char *orig_glob, int include_nick
     if (!match_ircglob(user->ident, glob))
         return 0;
     glob = marker + 1;
-    /* Now check the host part */
-    if (isdigit(*glob) && !glob[strspn(glob, "0123456789./*?")]) {
-        /* Looks like an IP-based mask */
-        return match_ircglob(inet_ntoa(user->ip), glob);
-    } else {
-        /* The host part of the mask isn't IP-based */
-        if (IsFakeHost(user) && match_ircglob(user->fakehost, glob))
+    /* If it might be an IP glob, test that. */
+    if (!glob[strspn(glob, "0123456789./*?")]
+        && match_ircglob(inet_ntoa(user->ip), glob))
+        return 1;
+    /* Check for a fakehost match. */
+    if (IsFakeHost(user) && match_ircglob(user->fakehost, glob))
             return 1;
-        if (hidden_host_suffix && user->handle_info) {
-            char hidden_host[HOSTLEN+1];
-            snprintf(hidden_host, sizeof(hidden_host), "%s.%s", user->handle_info->handle, hidden_host_suffix);
-            if (match_ircglob(hidden_host, glob))
-                return 1;
-        }
-        return match_ircglob(user->hostname, glob);
+    /* Check for an account match. */
+    if (hidden_host_suffix && user->handle_info) {
+        char hidden_host[HOSTLEN+1];
+        snprintf(hidden_host, sizeof(hidden_host), "%s.%s", user->handle_info->handle, hidden_host_suffix);
+        if (match_ircglob(hidden_host, glob))
+            return 1;
     }
+    /* None of the above; could only be a hostname match. */
+    return match_ircglob(user->hostname, glob);
 }
 
 int
