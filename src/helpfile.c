@@ -64,7 +64,7 @@ static struct language *language_alloc(const char *name)
 {
     struct language *lang = calloc(1, sizeof(*lang));
     lang->name = strdup(name);
-    lang->parent = language_find("C");
+    lang->parent = lang_C;
     if (!languages) {
         languages = dict_new();
         dict_set_free_data(languages, language_free);
