@@ -1202,7 +1202,7 @@ add_channel_ban(struct chanData *channel, const char *mask, char *owner, time_t 
     safestrncpy(bd->mask, mask, sizeof(bd->mask));
     if(owner)
         safestrncpy(bd->owner, owner, sizeof(bd->owner));
-    bd->reason = reason ? strdup(reason) : NULL;
+    bd->reason = strdup(reason);
 
     if(expires)
 	timeq_add(expires, expire_ban, bd);
@@ -6591,7 +6591,7 @@ ban_read_helper(const char *key, struct record_data *rd, struct chanData *chan)
     else
         expires_time = 0;
 
-    if(expires_time && (expires_time < now))
+    if(!reason || (expires_time && (expires_time < now)))
         return;
 
     bData = add_channel_ban(chan, key, owner, set_time, triggered_time, expires_time, reason);
