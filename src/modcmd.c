@@ -1716,7 +1716,7 @@ static MODCMD_FUNC(cmd_dump_messages) {
 
 static MODCMD_FUNC(cmd_version) {
     reply("MCMSG_VERSION");
-    send_message_type(4, user, cmd->parent->bot, "Copyright 2000-2004 srvx Development Team.\nThe srvx Development Team includes Paul Chang, Adrian Dewhurst, Miles Peterson, Michael Poole and others.");
+    send_message_type(4, user, cmd->parent->bot, "Copyright 2000-2004 srvx Development Team.\nThe srvx Development Team includes Paul Chang, Adrian Dewhurst, Miles Peterson, Michael Poole and others.\nThe srvx Development Team can be reached at http://sf.net/projects/srvx/ or in #srvx on irc.gamesurge.net.");
     if ((argc > 1) && !irccasecmp(argv[1], "arch"))
         send_message_type(4, user, cmd->parent->bot, "%s", ARCH_VERSION);
     return 1;

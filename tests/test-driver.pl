@@ -86,6 +86,7 @@ POE::Session->create(inline_states =>
                       irc_topic => sub {},
                       irc_error => \&irc_error,
                       irc_disconnected => \&irc_disconnected,
+                      irc_socketerr => \&irc_socketerr,
                      },
                      args => [@ARGV]);
 
@@ -404,6 +405,26 @@ sub irc_disconnected {
   my ($kernel, $session, $heap, $sender, $server) = @_[KERNEL, SESSION, HEAP, SENDER, ARG0];
   my $client = $heap->{sessions}->{$sender};
   print "Client $client->{name} disconnected from server $_[ARG0]\n" if $heap->{verbose};
+  if ($client->{quitting}) {
+    $kernel->call($sender, 'unregister', 'all');
+    delete $heap->{sessions}->{$sender};
+    delete $heap->{clients}->{$client->{name}};
+  } else {
+    if ($client->{disconnect_expected}) {
+      delete $client->{disconnect_expected};
+    } else {
+      print "Got unexpected disconnect for $client->{name} (nick $client->{nick})\n";
+    }
+    $kernel->call($session, 'disable_client', $client);
+    $kernel->delay_set('reconnect', $client->{throttled} ? THROTTLED_TIMEOUT : RECONNECT_TIMEOUT, $client);
+    delete $client->{throttled};
+  }
+}
+
+sub irc_socketerr {
+  my ($kernel, $session, $heap, $sender, $msg) = @_[KERNEL, SESSION, HEAP, SENDER, ARG0];
+  my $client = $heap->{sessions}->{$sender};
+  print "Client $client->{name} (re-)connect error: $_[ARG0]\n";
   if ($client->{quitting}) {
     $kernel->call($sender, 'unregister', 'all');
     delete $heap->{sessions}->{$sender};

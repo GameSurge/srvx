@@ -3298,7 +3298,7 @@ static void
 zoot_list(struct listData *list)
 {
     struct userData *uData;
-    unsigned int start, curr;
+    unsigned int start, curr, highest, lowest;
     struct helpfile_table tmp_table;
     const char **temp, *msg;
 
@@ -3314,16 +3314,18 @@ zoot_list(struct listData *list)
     tmp_table.width = list->table.width;
     tmp_table.flags = list->table.flags;
     list->table.contents[0][0] = " ";
+    highest = list->highest;
+    lowest = (highest < 100) ? 0 : (highest - 100);
     for(start = curr = 1; curr < list->table.length; )
     {
         uData = list->users[curr-1];
         list->table.contents[curr++][0] = " ";
-        if((curr == list->table.length) || (list->users[curr-1]->access != uData->access))
+        if((curr == list->table.length) || (list->users[curr-1]->access < lowest))
         {
             if(list->search)
-                send_message(list->user, list->bot, "CSMSG_ACCESS_SEARCH_HEADER", list->channel->name, list->lowest, list->highest, list->search);
+                send_message(list->user, list->bot, "CSMSG_ACCESS_SEARCH_HEADER", list->channel->name, lowest, highest, list->search);
             else
-                send_message(list->user, list->bot, "CSMSG_ACCESS_ALL_HEADER", list->channel->name, list->lowest, list->highest);
+                send_message(list->user, list->bot, "CSMSG_ACCESS_ALL_HEADER", list->channel->name, lowest, highest);
             temp = list->table.contents[--start];
             list->table.contents[start] = list->table.contents[0];
             tmp_table.contents = list->table.contents + start;
@@ -3331,6 +3333,8 @@ zoot_list(struct listData *list)
             table_send(list->bot, list->user->nick, 0, NULL, tmp_table);
             list->table.contents[start] = temp;
             start = curr;
+            highest = lowest - 1;
+            lowest = (highest < 100) ? 0 : (highest - 99);
         }
     }
 }
@@ -4937,7 +4941,7 @@ channel_level_option(enum levelOption option, struct userNode *user, struct chan
         value = user_level_from_name(argv[1], UL_OWNER+1);
         if(!value && !isdigit(argv[1][0]))
 	{
-	    reply("CSMSG_INVALID_ACCESS", index);
+	    reply("CSMSG_INVALID_ACCESS", argv[1]);
             return 0;
         }
         uData = GetChannelUser(cData, user->handle_info);
@@ -6966,9 +6970,9 @@ init_chanserv(const char *nick)
     DEFINE_COMMAND(resync, 1, MODCMD_REQUIRE_CHANUSER, "access", "master", NULL);
 
     DEFINE_COMMAND(events, 1, MODCMD_REQUIRE_REGCHAN, "flags", "+nolog", "access", "coowner", NULL);
-    DEFINE_COMMAND(addban, 2, MODCMD_REQUIRE_REGCHAN, "access", "master", NULL);
-    DEFINE_COMMAND(addtimedban, 3, MODCMD_REQUIRE_REGCHAN, "access", "master", NULL);
-    DEFINE_COMMAND(delban, 2, MODCMD_REQUIRE_REGCHAN, "access", "master", NULL);
+    DEFINE_COMMAND(addban, 2, MODCMD_REQUIRE_REGCHAN, "access", "250", NULL);
+    DEFINE_COMMAND(addtimedban, 3, MODCMD_REQUIRE_REGCHAN, "access", "250", NULL);
+    DEFINE_COMMAND(delban, 2, MODCMD_REQUIRE_REGCHAN, "access", "250", NULL);
     DEFINE_COMMAND(uset, 1, MODCMD_REQUIRE_CHANUSER, "access", "peon", NULL);
 
     DEFINE_COMMAND(bans, 1, MODCMD_REQUIRE_REGCHAN, "access", "peon", "flags", "+nolog", NULL);

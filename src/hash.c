@@ -518,8 +518,7 @@ LockChannel(struct chanNode* channel)
 void
 UnlockChannel(struct chanNode *channel)
 {
-    if (!channel->locks)
-        return;
+    assert(channel->locks > 0);
     if (!--channel->locks && !channel->members.used)
         DelChannel(channel);
 }
