@@ -536,6 +536,8 @@ mod_chanmode_dup(struct mod_chanmode *orig, unsigned int extra)
     if (res) {
         res->modes_set = orig->modes_set;
         res->modes_clear = orig->modes_clear;
+        res->new_limit = orig->new_limit;
+        memcpy(res->new_key, orig->new_key, sizeof(res->new_key));
         res->argc = orig->argc;
         memcpy(res->args, orig->args, orig->argc*sizeof(orig->args[0]));
     }

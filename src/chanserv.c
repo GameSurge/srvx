@@ -6030,8 +6030,7 @@ handle_mode(struct chanNode *channel, struct userNode *user, const struct mod_ch
        && mode_lock_violated(&channel->channel_info->modes, change))
     {
         char correct[MAXLEN];
-        bounce = mod_chanmode_alloc(change->argc + 1);
-        *bounce = channel->channel_info->modes;
+        bounce = mod_chanmode_dup(&channel->channel_info->modes, change->argc + 1);
         mod_chanmode_format(&channel->channel_info->modes, correct);
         send_message(user, chanserv, "CSMSG_MODE_LOCKED", correct, channel->name);
     }
