@@ -24,5 +24,4 @@
 "SET ENFOPS" ("/msg $C SET <#channel> ENFOPS <value>",
         "This setting restricts who may op users who are not at least ops on the userlist.  If $C sees someone with access below the specified access op someone not on the userlist (or who is a peon), it will deop the second user.  It is a numeric user level, or 501 to mean no one may op unrecognised users.",
         "$uSee Also:$u set");
-        "$uSee Also:$u set");
 "Byte"	"<mike[F]> I just worked out Byte's role in the srvx team <mike[F]> It's his job to break srvx <mike[F]> Nothing else";
