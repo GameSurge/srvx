@@ -74,6 +74,9 @@
 #define IsReggedNick(x)         ((x)->modes & FLAGS_REGNICK)
 #define IsLocal(x)              ((x)->uplink == self)
 
+/* Please set this and define the mode you wish to be set/maintained on registered channels. */
+#define REGISTERED_MODE 0 
+
 #define NICKLEN         30
 #define USERLEN         10
 #define HOSTLEN         63
@@ -217,7 +220,7 @@ void UnlockChannel(struct chanNode *channel);
 
 struct modeNode* AddChannelUser(struct userNode* user, struct chanNode* channel);
 
-typedef void (*part_func_t) (struct userNode *user, struct chanNode *chan, const char *reason);
+typedef void (*part_func_t) (struct modeNode *mn, const char *reason);
 void reg_part_func(part_func_t handler);
 void unreg_part_func(part_func_t handler);
 void DelChannelUser(struct userNode* user, struct chanNode* channel, const char *reason, int deleting);

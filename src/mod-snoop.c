@@ -81,11 +81,11 @@ snoop_join(struct modeNode *mNode) {
 }
 
 static void
-snoop_part(struct userNode *user, struct chanNode *chan, const char *reason) {
+snoop_part(struct modeNode *mn, const char *reason) {
     if (!snoop_cfg.enabled) return;
-    if (user->dead) return;
+    if (mn->user->dead) return;
     UPDATE_TIMESTAMP();
-    SNOOP("$bPART$b %s by %s (%s)", chan->name, user->nick, reason ? reason : "");
+    SNOOP("$bPART$b %s by %s (%s)", mn->channel->name, mn->user->nick, reason ? reason : "");
 }
 
 static void

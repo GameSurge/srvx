@@ -5982,45 +5982,45 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
 }
 
 static void
-handle_part(struct userNode *user, struct chanNode *channel, UNUSED_ARG(const char *reason))
+handle_part(struct modeNode *mn, UNUSED_ARG(const char *reason))
 {
     struct chanData *cData;
     struct userData *uData;
 
-    cData = channel->channel_info;
-    if(!cData || IsSuspended(cData) || IsLocal(user))
+    cData = mn->channel->channel_info;
+    if(!cData || IsSuspended(cData) || IsLocal(mn->user))
         return;
 
-    if((cData->flags & CHANNEL_DYNAMIC_LIMIT) && !channel->join_flooded)
+    if((cData->flags & CHANNEL_DYNAMIC_LIMIT) && !mn->channel->join_flooded)
     {
 	/* Allow for a bit of padding so that the limit doesn't
 	   track the user count exactly, which could get annoying. */
-	if((channel->limit - channel->members.used) > chanserv_conf.adjust_threshold + 5)
+	if((mn->channel->limit - mn->channel->members.used) > chanserv_conf.adjust_threshold + 5)
 	{
 	    timeq_del(0, chanserv_adjust_limit, cData, TIMEQ_IGNORE_WHEN);
 	    timeq_add(now + chanserv_conf.adjust_delay, chanserv_adjust_limit, cData);
 	}
     }
 
-    if((uData = GetTrueChannelAccess(cData, user->handle_info)))
+    if((uData = GetTrueChannelAccess(cData, mn->user->handle_info)))
     {
-	scan_user_presence(uData, user);
+	scan_user_presence(uData, mn->user);
         uData->seen = now;
     }
 
-    if(IsHelping(user) && IsSupportHelper(user))
+    if(IsHelping(mn->user) && IsSupportHelper(mn->user))
     {
         unsigned int ii, jj;
         for(ii = 0; ii < chanserv_conf.support_channels.used; ++ii)
         {
-            for(jj = 0; jj < user->channels.used; ++jj)
-                if(user->channels.list[jj]->channel == chanserv_conf.support_channels.list[ii])
+            for(jj = 0; jj < mn->user->channels.used; ++jj)
+                if(mn->user->channels.list[jj]->channel == chanserv_conf.support_channels.list[ii])
                     break;
-            if(jj < user->channels.used)
+            if(jj < mn->user->channels.used)
                 break;
         }
         if(ii == chanserv_conf.support_channels.used)
-            HANDLE_CLEAR_FLAG(user->handle_info, HELPING);
+            HANDLE_CLEAR_FLAG(mn->user->handle_info, HELPING);
     }
 }
 
@@ -6243,6 +6243,7 @@ chanserv_conf_read(void)
     struct string_list *strlist;
     struct chanNode *chan;
     unsigned int ii;
+    extern int off_channel;
 
     if(!(conf_node = conf_get_data(CHANSERV_CONF_NAME, RECDB_OBJECT)))
     {
@@ -6374,6 +6375,10 @@ chanserv_conf_read(void)
     else
         strlist = alloc_string_list(2);
     chanserv_conf.old_ban_names = strlist;
+    /* the variable itself is actually declared in proto-common.c; this is equally 
+     * parse issue. */
+    str = database_get_data(conf_node, "off_channel", RECDB_QSTRING);
+    off_channel = (str && enabled_string(str)) ? 1 : 0;
 }
 
 static void
@@ -6535,6 +6540,7 @@ chanserv_channel_read(const char *key, struct record_data *hir)
     char *str, *argv[10];
     dict_iterator_t it;
     unsigned int argc;
+    extern int off_channel;
 
     channel = hir->d.object;
 
@@ -6649,18 +6655,18 @@ chanserv_channel_read(const char *key, struct record_data *hir)
         cData->flags &= ~CHANNEL_SUSPENDED;
     }
 
-    if(!(cData->flags & CHANNEL_SUSPENDED))
-    {
-        struct mod_chanmode change;
-        mod_chanmode_init(&change);
-        change.argc = 1;
-        change.args[0].mode = MODE_CHANOP;
-        change.args[0].member = AddChannelUser(chanserv, cNode);
-        mod_chanmode_announce(chanserv, cNode, &change);
-    }
-    else if(suspended->expires > now)
-    {
-        timeq_add(suspended->expires, chanserv_expire_suspension, suspended);
+    if (!off_channel) {
+      if (!(cData->flags & CHANNEL_SUSPENDED)) {
+       struct mod_chanmode change;
+       mod_chanmode_init(&change);
+       change.argc = 1;
+       change.args[0].mode = MODE_CHANOP;
+       change.args[0].member = AddChannelUser(chanserv, cNode);
+       mod_chanmode_announce(chanserv, cNode, &change);
+
+      } else if (suspended->expires > now) {
+       timeq_add(suspended->expires, chanserv_expire_suspension, suspended);
+      }
     }
 
     str = database_get_data(channel, KEY_REGISTERED, RECDB_QSTRING);
@@ -6682,6 +6688,8 @@ chanserv_channel_read(const char *key, struct record_data *hir)
        && (argc = split_line(str, 0, ArrayLength(argv), argv))
        && (modes = mod_chanmode_parse(cNode, argv, argc, MCP_KEY_FREE))) {
         cData->modes = *modes;
+	if(off_channel && !(REGISTERED_MODE == 0))
+	  cData->modes.modes_set |= REGISTERED_MODE;
         if(cData->modes.argc > 1)
             cData->modes.argc = 1;
         if(!IsSuspended(cData))

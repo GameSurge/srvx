@@ -563,8 +563,6 @@ irc_burst(struct chanNode *chan)
     long last_mode=-1;
     unsigned int n;
 
-    if (!chan->members.used)
-        return;
     base_len = sprintf(burst_line, "%s " P10_BURST " %s " FMT_TIME_T " ",
                        self->numeric, chan->name, chan->timestamp);
     len = irc_make_chanmode(chan, burst_line+base_len);
@@ -683,7 +681,7 @@ irc_kick(struct userNode *who, struct userNode *target, struct chanNode *channel
 {
     const char *numeric;
     struct modeNode *mn = GetUserMode(channel, who);
-    numeric = (mn && (mn->modes & MODE_CHANOP)) ? who->numeric : self->numeric;
+    numeric = ((!mn && off_channel) || (mn->modes & MODE_CHANOP)) ? who->numeric : self->numeric;
     putsock("%s " P10_KICK " %s %s :%s",
             numeric, channel->name, target->numeric, msg);
 }
@@ -1410,10 +1408,12 @@ init_parse(void)
         inttobase64(numer, (numnick << 12) + (usermask & 0x00fff), 3);
     else
         inttobase64(numer, (numnick << 18) + (usermask & 0x3ffff), 5);
+
     str = conf_get_data("server/his_servername", RECDB_QSTRING);
     his_servername = str ? strdup(str) : NULL;
     str = conf_get_data("server/his_servercomment", RECDB_QSTRING);
     his_servercomment = str ? strdup(str) : NULL;
+
     str = conf_get_data("server/hostname", RECDB_QSTRING);
     desc = conf_get_data("server/description", RECDB_QSTRING);
     if (!str || !desc) {
@@ -2135,7 +2135,9 @@ mod_chanmode_announce(struct userNode *who, struct chanNode *channel, struct mod
     chbuf.channel = channel;
     chbuf.actor = who;
     chbuf.chname_len = strlen(channel->name);
-    if ((mn = GetUserMode(channel, who)) && (mn->modes & MODE_CHANOP))
+
+    mn = GetUserMode(channel, who);
+    if ((!mn && off_channel) || (mn->modes & MODE_CHANOP))
         chbuf.is_chanop = 1;
 
     /* First remove modes */

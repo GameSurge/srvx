@@ -39,6 +39,7 @@ FILE *replay_file;
 struct io_fd *socket_io_fd;
 int force_n2k;
 const char *hidden_host_suffix;
+int off_channel;
 
 static char replay_line[MAXLEN+80];
 static int ping_freq;

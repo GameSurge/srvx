@@ -3689,13 +3689,13 @@ helpserv_define_func(const char *name, helpserv_func_t *func, enum helpserv_leve
 }
 
 /* Drop requests that persist until part when a user leaves the chan */
-static void handle_part(struct userNode *user, struct chanNode *chan, UNUSED_ARG(const char *reason)) {
+static void handle_part(struct modeNode *mn, UNUSED_ARG(const char *reason)) {
     struct helpserv_botlist *botlist;
     struct helpserv_userlist *userlist;
     const int from_opserv = 0; /* for helpserv_notice */
     unsigned int i;
 
-    if ((botlist = dict_find(helpserv_bots_bychan_dict, chan->name, NULL))) {
+    if ((botlist = dict_find(helpserv_bots_bychan_dict, mn->channel->name, NULL))) {
         for (i=0; i < botlist->used; i++) {
             struct helpserv_bot *hs;
             dict_iterator_t it;
@@ -3709,13 +3709,13 @@ static void handle_part(struct userNode *user, struct chanNode *chan, UNUSED_ARG
             for (it=dict_first(hs->requests); it; it=iter_next(it)) {
                 struct helpserv_request *req = iter_data(it);
 
-                if (user != req->user)
+                if (mn->user != req->user)
                     continue;
                 if (req->text->used) {
-                    helpserv_message(hs, user, MSGTYPE_REQ_DROPPED);
-                    helpserv_msguser(user, "HSMSG_REQ_DROPPED_PART", chan->name, req->id);
+                    helpserv_message(hs, mn->user, MSGTYPE_REQ_DROPPED);
+                    helpserv_msguser(mn->user, "HSMSG_REQ_DROPPED_PART", mn->channel->name, req->id);
                     if (req->helper && (hs->notify >= NOTIFY_DROP))
-                        helpserv_notify(req->helper, "HSMSG_NOTIFY_REQ_DROP_PART", req->id, user->nick);
+                        helpserv_notify(req->helper, "HSMSG_NOTIFY_REQ_DROP_PART", req->id, mn->user->nick);
                 }
                 helpserv_log_request(req, "Dropped");
                 dict_remove(hs->requests, iter_key(it));
@@ -3724,13 +3724,13 @@ static void handle_part(struct userNode *user, struct chanNode *chan, UNUSED_ARG
         }
     }
     
-    if (user->handle_info && (userlist = dict_find(helpserv_users_byhand_dict, user->handle_info->handle, NULL))) {
+    if (mn->user->handle_info && (userlist = dict_find(helpserv_users_byhand_dict, mn->user->handle_info->handle, NULL))) {
         for (i=0; i < userlist->used; i++) {
             struct helpserv_user *hs_user = userlist->list[i];
             struct helpserv_bot *hs = hs_user->hs;
             dict_iterator_t it;
 
-            if ((hs->helpserv == NULL) || (hs->helpchan != chan) || find_handle_in_channel(hs->helpchan, user->handle_info, user))
+            if ((hs->helpserv == NULL) || (hs->helpchan != mn->channel) || find_handle_in_channel(hs->helpchan, mn->user->handle_info, mn->user))
                 continue;
 
             /* In case of the clock being set back for whatever reason,
@@ -3749,7 +3749,7 @@ static void handle_part(struct userNode *user, struct chanNode *chan, UNUSED_ARG
                 if ((hs->persist_types[PERSIST_T_HELPER] == PERSIST_PART)
                     && (req->helper == hs_user)) {
                     char reason[CHANNELLEN + 8];
-                    sprintf(reason, "parted %s", chan->name);
+                    sprintf(reason, "parted %s", mn->channel->name);
                     helpserv_page_helper_gone(hs, req, reason);
                 }
             }
@@ -3765,9 +3765,9 @@ static void handle_part(struct userNode *user, struct chanNode *chan, UNUSED_ARG
                         unh = unh->next_unhandled;
 
                     if (num_trials) {
-                        helpserv_page(PGSRC_ALERT, "HSMSG_PAGE_FIRSTONLYTRIALALERT", hs->helpchan->name, user->nick, num_trials, num_unh);
+                        helpserv_page(PGSRC_ALERT, "HSMSG_PAGE_FIRSTONLYTRIALALERT", hs->helpchan->name, mn->user->nick, num_trials, num_unh);
                     } else {
-                        helpserv_page(PGSRC_ALERT, "HSMSG_PAGE_FIRSTEMPTYALERT", hs->helpchan->name, user->nick, num_unh);
+                        helpserv_page(PGSRC_ALERT, "HSMSG_PAGE_FIRSTEMPTYALERT", hs->helpchan->name, mn->user->nick, num_unh);
                     }
                     if (num_unh || !hs->req_on_join) {
                         timeq_del(0, run_empty_interval, hs, TIMEQ_IGNORE_WHEN);
