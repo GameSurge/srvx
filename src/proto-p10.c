@@ -2087,7 +2087,8 @@ static void
 mod_chanmode_append(struct chanmode_buffer *buf, char ch, const char *arg)
 {
     size_t arg_len = strlen(arg);
-    if (buf->modes_used + buf->args_used + buf->chname_len + arg_len > 450) {
+    if (buf->modes_used > (MAXMODEPARAMS) ||
+        buf->modes_used + buf->args_used + buf->chname_len + arg_len > 450) {
         memcpy(buf->modes + buf->modes_used, buf->args, buf->args_used);
         buf->modes[buf->modes_used + buf->args_used] = '\0';
         irc_mode((buf->is_chanop ? buf->actor : NULL), buf->channel, buf->modes);
