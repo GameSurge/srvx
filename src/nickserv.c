@@ -2698,19 +2698,17 @@ static NICKSERV_FUNC(cmd_merge)
         for (cList2=hi_to->channels; cList2; cList2=cList2->u_next)
             if (cList->channel == cList2->channel)
                 break;
-        log_module(NS_LOG, LOG_DEBUG, "Merging %s->%s@%s: before %p->%p->%-p, %p->%p->%p",
-                   hi_from->handle, hi_to->handle, cList->channel->channel->name,
-                   cList->u_prev, cList, cList->u_next,
-                   (cList2?cList2->u_prev:0), cList2, (cList2?cList2->u_next:0));
         if (cList2 && (cList2->access >= cList->access)) {
+            log_module(NS_LOG, LOG_INFO, "Merge: %s had only %d access in %s (versus %d for %s)", hi_from->handle, cList->access, cList->channel->channel->name, cList2->access, hi_to->handle);
             /* keep cList2 in hi_to; remove cList from hi_from */
-            log_module(NS_LOG, LOG_DEBUG, "Deleting %p", cList);
             del_channel_user(cList, 1);
         } else {
             if (cList2) {
+                log_module(NS_LOG, LOG_INFO, "Merge: %s had only %d access in %s (versus %d for %s)", hi_to->handle, cList2->access, cList->channel->channel->name, cList->access, hi_from->handle);
                 /* remove the lower-ranking cList2 from hi_to */
-                log_module(NS_LOG, LOG_DEBUG, "Deleting %p", cList2);
                 del_channel_user(cList2, 1);
+            } else {
+                log_module(NS_LOG, LOG_INFO, "Merge: %s had no access in %s", hi_to->handle, cList->channel->channel->name);
             }
             /* cList needs to be moved from hi_from to hi_to */
             cList->handle = hi_to;
@@ -2725,8 +2723,6 @@ static NICKSERV_FUNC(cmd_merge)
             if (hi_to->channels)
                 hi_to->channels->u_prev = cList;
             hi_to->channels = cList;
-            log_module(NS_LOG, LOG_DEBUG, "Now %p->%p->%p",
-                       cList->u_prev, cList, cList->u_next);
         }
     }
 
@@ -3438,6 +3434,7 @@ nickserv_conf_read(void)
 
 static void
 nickserv_reclaim(struct userNode *user, struct nick_info *ni, enum reclaim_action action) {
+    const char *msg;
     char newnick[NICKLEN+1];
 
     assert(user);
@@ -3456,7 +3453,8 @@ nickserv_reclaim(struct userNode *user, struct nick_info *ni, enum reclaim_actio
         irc_svsnick(nickserv, user, newnick);
         break;
     case RECLAIM_KILL:
-        irc_kill(nickserv, user, "NSMSG_RECLAIM_KILL");
+        msg = user_find_message(user, "NSMSG_RECLAIM_KILL");
+        irc_kill(nickserv, user, msg);
         break;
     }
 }
