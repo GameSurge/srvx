@@ -26,6 +26,7 @@
 #endif
 
 #define SLAB_DEBUG 0
+#define SLAB_RESERVE 1024
 
 #if SLAB_DEBUG
 
@@ -105,7 +106,9 @@ struct slabset {
  */
 
 static struct slabset little_slabs[SMALL_CUTOFF / SLAB_GRAIN];
-static struct slab *free_slabs;
+static struct slab *free_slab_head;
+static struct slab *free_slab_tail;
+unsigned long free_slab_count;
 unsigned long big_alloc_count;
 unsigned long big_alloc_size;
 unsigned long slab_count;
@@ -191,13 +194,15 @@ slab_alloc(struct slabset *sset)
         unsigned int ii, step;
 
         /* Allocate new slab. */
-        if (free_slabs) {
-            slab = free_slabs;
-            free_slabs = slab->next;
+        if (free_slab_head) {
+            slab = free_slab_head;
+            if (!(free_slab_head = slab->next))
+                free_slab_tail = NULL;
         } else {
             item = slab_map(slab_pagesize());
             slab = (struct slab*)((char*)item + slab_pagesize() - sizeof(*slab));
             slab->base = item;
+            slab_count++;
         }
 
         /* Populate free list. */
@@ -221,7 +226,6 @@ slab_alloc(struct slabset *sset)
         assert(!slab->prev || slab == slab->prev->next);
         sset->child = slab;
         sset->nslabs++;
-        slab_count++;
         /* log_module(MAIN_LOG, LOG_DEBUG, "Allocated new %u-slab %p.", sset->size, slab); */
     }
 
@@ -302,11 +306,34 @@ slab_unalloc(void *ptr, size_t size)
             assert(!new_next->prev || new_next == new_next->prev->next);
         }
 
+#if SLAB_RESERVE
+        /* Make sure we have enough free slab pages. */
+        while (free_slab_count < SLAB_RESERVE) {
+            struct slab *tslab;
+            item = slab_map(slab_pagesize());
+            tslab = (struct slab*)((char*)item + slab_pagesize() - sizeof(*slab));
+            tslab->base = item;
+            tslab->prev = free_slab_tail;
+            free_slab_tail = tslab;
+            if (!free_slab_head)
+                free_slab_head = tslab;
+            free_slab_count++;
+            slab_count++;
+        }
+
+        /* Unmap old slab, so accesses to stale pointers will fault. */
+        munmap(slab->base, slab_pagesize());
+        slab_count--;
+#else
         /* Link to list of free slabs. */
-        slab->prev = NULL;
         slab->parent = NULL;
-        slab->next = free_slabs;
-        free_slabs = slab;
+        slab->prev = free_slab_tail;
+        slab->next = NULL;
+        free_slab_tail = slab;
+        if (!free_slab_head)
+            free_slab_head = slab;
+        free_slab_count++;
+#endif
     }
 }
 

@@ -723,7 +723,7 @@ log_entry_search(struct logSearch *discrim, entry_search_func esf, void *data)
     unsigned int matched = 0;
 
     if (discrim->type) {
-        volatile struct logEntry *last;
+        static volatile struct logEntry *last;
         struct logEntry *entry;
 
         for (entry = discrim->type->log_oldest, last = NULL;
