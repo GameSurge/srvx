@@ -8,6 +8,14 @@ noinst_DATA = chanserv.help global.help modcmd.help nickserv.help opserv.help sa
 EXTRA_DIST = $(noinst_DATA)
 BUILT_SOURCES = arch-version.h
 noinst_HEADERS = arch-version.h
+arch-version.h:
+	@if [ -e $@ ] ; then OLD_REVISION=`cat $@` ; else OLD_REVISION="" ; fi ; \
+	ARCH_REVISION=`tla logs -f | tail -n 1` ; \
+	VERSION_CONTENTS="#define ARCH_VERSION \"$$ARCH_REVISION\"" ; \
+	if [ "z" != "z$$ARCH_REVISION" -a "z$$OLD_REVISION" != "z$$VERSION_CONTENTS" ] ; then \
+	    echo "Putting new arch version into $@" ; \
+	    echo $$VERSION_CONTENTS > $@ ; \
+	fi
 
 EXTRA_srvx_SOURCES = proto-bahamut.c proto-common.c proto-p10.c mod-snoop.c mod-memoserv.c mod-helpserv.c mod-sockcheck.c
 srvx_LDADD = @MODULE_OBJS@
