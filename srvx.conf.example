@@ -127,10 +127,6 @@
         "accounts_per_email" "1"; // you may want to increase this; or not
         "email_search_level" "600"; // minimum OpServ level to search based on email address
         "email_visible_level" "800"; // minimum OpServ level to see somebody's email address
-
-        "set_title_level" "900"; // minimum OpServ level to set a title on an account
-        "set_fakehost_level" "1000"; // minimum OpServ level to set a freeform fakehost on an account
-        "titlehost_suffix" "example.net"; // suffix to use with automatically generated fakehosts
     };
 
     "opserv" {
@@ -199,8 +195,7 @@
         // character to make ChanServ pay attention to you
         "trigger" "!";
         // what !set options should we show when user calls "!set" with no arguments?
-        "set_shows" ("DefaultTopic", "TopicMask", "Greeting", "UserGreeting", "Modes", "PubCmd", "StrictOp", "AutoOp", "EnfModes", "EnfTopic", "Protect", "Toys", "Setters", "TopicRefresh", "CtcpUsers", "CtcpReaction",
-                "Voice", "UserInfo", "DynLimit", "TopicSnarf", "NoDelete");
+        "set_shows" ("DefaultTopic", "TopicMask", "Greeting", "UserGreeting", "Modes", "PubCmd", "InviteMe", "UserInfo", "GiveVoice", "GiveOps", "EnfOps", "EnfModes", "EnfTopic", "TopicSnarf", "Setters", "CtcpUser", "CtcpReaction", "Protect", "Toys", "DynLimit", "NoDelete");
 
         // A list of !8ball responses
         "8ball" ("Not a chance.",

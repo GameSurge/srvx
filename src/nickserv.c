@@ -1015,6 +1015,7 @@ nickserv_make_cookie(struct userNode *user, struct handle_info *hi, enum cookie_
         snprintf(subject, sizeof(subject), fmt, netname);
         fmt = user_find_message(user, "NSEMAIL_ALLOWAUTH_BODY");
         snprintf(body, sizeof(body), fmt, netname, cookie->cookie, nickserv->nick, self->name, hi->handle);
+        send_message(user, nickserv, "NSMSG_USE_COOKIE_AUTH");
         break;
     default:
         log_module(NS_LOG, LOG_ERROR, "Bad cookie type %d in nickserv_make_cookie.", cookie->type);
@@ -1663,7 +1664,6 @@ static NICKSERV_FUNC(cmd_authcookie)
         return 0;
     }
     nickserv_make_cookie(user, hi, ALLOWAUTH, NULL);
-    reply("NSMSG_USE_COOKIE_AUTH");
     return 1;
 }
 

@@ -14,11 +14,12 @@ files.
 
 Requirements:
 ----------
-This release of srvx (1.2) only supports the Undernet P10 and Bahamut
+This release of srvx (1.3) only supports the Undernet P10 and Bahamut
 protocols and is known to link with ircu/Universal (u2.10.09),
 ircu/Undernet (u2.10.10, u2.10.11), ircu-lain, and Bahamut 1.4.32. It
 does not support hybrid, Unreal, or any other ircd not listed. Should
-you find other compatible ircds, please let us know.
+you find other compatible ircds, please let us know.  Most of the
+testing has been done on ircu2.10.11.06.
 
 srvx is known to compile on the following systems as long as you
 are using GNU make (make on Linux, gmake on many other systems):
