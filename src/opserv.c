@@ -2358,9 +2358,9 @@ opserv_define_func(const char *name, modcmd_func_t *func, int min_level, int req
     case 2: iflags = MODCMD_REQUIRE_CHANNEL; break;
     }
     if (flags) {
-        return modcmd_register(opserv_module, name, func, min_argc, iflags, "level", buf, "flags", flags, NULL);
+        return modcmd_register(opserv_module, name, func, min_argc, iflags, "level", buf, "flags", flags, "flags", "+oper", NULL);
     } else {
-        return modcmd_register(opserv_module, name, func, min_argc, iflags, "level", buf, NULL);
+        return modcmd_register(opserv_module, name, func, min_argc, iflags, "level", buf, "flags", "+oper", NULL);
     }
 }
 

@@ -135,6 +135,7 @@
 
     "opserv" {
         "nick" "OpServ";
+        "privileged" "1";
         // what channel should opserv send debug output to?
         "debug_channel" "#opserv";
         "debug_channel_modes" "+tinms";

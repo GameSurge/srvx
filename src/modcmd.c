@@ -114,6 +114,7 @@ static const struct message_entry msgtab[] = {
     { "MCMSG_DUPLICATE_TRIGGER", "$b%s$b already uses trigger $b%c$b." },
     { "MCMSG_CURRENT_TRIGGER", "Trigger for $b%s$b is $b%c$b." },
     { "MCMSG_NEW_TRIGGER", "Changed trigger for $b%s$b to $b%c$b." },
+    { "MCMSG_SERVICE_PRIVILEGED", "Service $b%s$b privileged: $b%s$b." },
     { "MCMSG_SERVICE_REMOVED", "Service $b%s$b has been deleted." },
     { "MCMSG_FILE_NOT_OPENED", "Unable to open file $b%s$b for writing." },
     { "MCMSG_MESSAGES_DUMPED", "Messages written to $b%s$b." },
@@ -1519,7 +1520,8 @@ static MODCMD_FUNC(cmd_showcommands) {
 
     /* Find the matching commands. */
     svccmd_list_init(&commands);
-    if (cmd->parent->privileged) ignore_flags = MODCMD_REQUIRE_OPER;
+    if (cmd->parent->privileged)
+        ignore_flags = MODCMD_REQUIRE_OPER;
     for (it = dict_first(cmd->parent->commands); it; it = iter_next(it)) {
         svccmd = iter_data(it);
         if (strchr(svccmd->name, ' '))
@@ -1673,6 +1675,21 @@ static MODCMD_FUNC(cmd_service_trigger) {
     return 1;
 }
 
+static MODCMD_FUNC(cmd_service_privileged) {
+    struct service *service;
+    const char *newval;
+
+    if (!(service = service_find(argv[1]))) {
+        reply("MCMSG_UNKNOWN_SERVICE", argv[1]);
+        return 0;
+    }
+    if (argc >= 3)
+        service->privileged = true_string(argv[2]) || enabled_string(argv[2]);
+    newval = user_find_message(user, service->privileged ? "MSG_ON" : "MSG_OFF");
+    reply("MCMSG_SERVICE_PRIVILEGED", service->bot->nick, newval);
+    return 1;
+}
+
 static MODCMD_FUNC(cmd_service_remove) {
     char *name, *reason;
     struct service *service;
@@ -1811,6 +1828,8 @@ modcmd_saxdb_write(struct saxdb_context *ctx) {
             saxdb_write_string(ctx, "trigger", buff);
         }
         saxdb_write_string(ctx, "description", service->bot->info);
+        if (service->privileged)
+            saxdb_write_string(ctx, "privileged", "1");
         saxdb_end_record(ctx);
     }
     saxdb_end_record(ctx);
@@ -1911,8 +1930,12 @@ modcmd_load_bots(struct dict *db) {
         desc = database_get_data(rd->d.object, "description", RECDB_QSTRING);
         if (desc)
         {
+            struct service *svc;
             bot = AddService(nick, desc);
-            service_register(bot, trigger);
+            svc = service_register(bot, trigger);
+            desc = database_get_data(rd->d.object, "privileged", RECDB_QSTRING);
+            if (desc && (true_string(desc) || enabled_string(desc)))
+                svc->privileged = 1;
         }
     }
 }
@@ -1934,23 +1957,24 @@ modcmd_init(void) {
     conf_register_reload(modcmd_conf_read);
 
     modcmd_module = module_register("modcmd", MAIN_LOG, "modcmd.help", modcmd_expand);
-    bind_command = modcmd_register(modcmd_module, "bind", cmd_bind, 4, MODCMD_KEEP_BOUND, "level", "800", NULL);
+    bind_command = modcmd_register(modcmd_module, "bind", cmd_bind, 4, MODCMD_KEEP_BOUND, "oper_level", "800", NULL);
     help_command = modcmd_register(modcmd_module, "help", cmd_help, 1, 0, "flags", "+nolog", NULL);
     modcmd_register(modcmd_module, "command", cmd_command, 2, 0, "flags", "+nolog", NULL);
     modcmd_register(modcmd_module, "modcmd", cmd_modcmd, 4, MODCMD_KEEP_BOUND, "template", "bind", NULL);
     modcmd_register(modcmd_module, "god", cmd_god, 0, MODCMD_REQUIRE_AUTHED, "flags", "+oper,+networkhelper", NULL);
-    modcmd_register(modcmd_module, "readhelp", cmd_readhelp, 2, 0, "level", "650", NULL);
-    modcmd_register(modcmd_module, "timecmd", cmd_timecmd, 2, 0, "level", "1", NULL);
+    modcmd_register(modcmd_module, "readhelp", cmd_readhelp, 2, 0, "oper_level", "650", NULL);
+    modcmd_register(modcmd_module, "timecmd", cmd_timecmd, 2, 0, "oper_level", "1", NULL);
     modcmd_register(modcmd_module, "unbind", cmd_unbind, 3, 0, "template", "bind", NULL);
     modcmd_register(modcmd_module, "joiner", cmd_joiner, 1, 0, NULL);
-    modcmd_register(modcmd_module, "stats modules", cmd_stats_modules, 1, 0, "level", "0", NULL);
-    modcmd_register(modcmd_module, "stats services", cmd_stats_services, 1, 0, "level", "0", NULL);
+    modcmd_register(modcmd_module, "stats modules", cmd_stats_modules, 1, 0, "flags", "+oper", NULL);
+    modcmd_register(modcmd_module, "stats services", cmd_stats_services, 1, 0, "flags", "+oper", NULL);
     modcmd_register(modcmd_module, "showcommands", cmd_showcommands, 1, 0, "flags", "+acceptchan", NULL);
     modcmd_register(modcmd_module, "helpfiles", cmd_helpfiles, 2, 0, "template", "bind", NULL);
-    modcmd_register(modcmd_module, "service add", cmd_service_add, 3, 0, NULL);
-    modcmd_register(modcmd_module, "service rename", cmd_service_rename, 3, 0, NULL);
-    modcmd_register(modcmd_module, "service trigger", cmd_service_trigger, 2, 0, NULL);
-    modcmd_register(modcmd_module, "service remove", cmd_service_remove, 2, 0, NULL);
+    modcmd_register(modcmd_module, "service add", cmd_service_add, 3, 0, "flags", "+oper", NULL);
+    modcmd_register(modcmd_module, "service rename", cmd_service_rename, 3, 0, "flags", "+oper", NULL);
+    modcmd_register(modcmd_module, "service trigger", cmd_service_trigger, 2, 0, "flags", "+oper", NULL);
+    modcmd_register(modcmd_module, "service privileged", cmd_service_privileged, 2, 0, "flags", "+oper", NULL);
+    modcmd_register(modcmd_module, "service remove", cmd_service_remove, 2, 0, "flags", "+oper", NULL);
     modcmd_register(modcmd_module, "dumpmessages", cmd_dump_messages, 1, 0, "oper_level", "1000", NULL);
     version_command = modcmd_register(modcmd_module, "version", cmd_version, 1, 0, NULL);
     message_register_table(msgtab);

@@ -223,9 +223,9 @@ static void language_read_all(void)
     /* Read into an in-memory list and sort so we are likely to load
      * parent languages before their children (de_DE sorts after de).
      */
-    slist = alloc_string_list(4);
     if (!(dir = opendir("languages")))
         return;
+    slist = alloc_string_list(4);
     while ((dirent = readdir(dir)))
         string_list_append(slist, strdup(dirent->d_name));
     closedir(dir);
