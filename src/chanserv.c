@@ -3226,7 +3226,7 @@ static CHANSERV_FUNC(cmd_myaccess)
         else
             string_buffer_append_string(&sbuf, ")]");
         string_buffer_append(&sbuf, '\0');
-        send_message_type(4, user, cmd->parent->bot, sbuf.list);
+        send_message_type(4, user, cmd->parent->bot, "%s", sbuf.list);
     }
 
     return 1;
