@@ -1010,10 +1010,10 @@ mode_lock_violated(const struct mod_chanmode *orig, const struct mod_chanmode *c
         return 1;
     if(orig->modes_clear & change->modes_set)
         return 1;
-    if((orig->modes_set & MODE_KEY)
+    if((orig->modes_set & MODE_KEY) && (change->modes_set & MODE_KEY)
        && strcmp(orig->new_key, change->new_key))
         return 1;
-    if((orig->modes_set & MODE_LIMIT)
+    if((orig->modes_set & MODE_LIMIT) && (change->modes_set & MODE_LIMIT)
        && (orig->new_limit != change->new_limit))
         return 1;
     return 0;

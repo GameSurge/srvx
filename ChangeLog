@@ -2,6 +2,20 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2004-srvx/srvx--devo--1.3
 #
 
+2004-05-17 09:44:35 GMT	adam <adam@gamesurge.net>	patch-63
+
+    Summary:
+      fix minor EnfModes bug in chanserv.c 
+    Revision:
+      srvx--devo--1.3--patch-63
+
+    * address bug id #955105; minor EnfModes issue
+    
+
+    modified files:
+     ChangeLog src/chanserv.c
+
+
 2004-05-14 06:27:30 GMT	adam <adam@gamesurge.net>	patch-62
 
     Summary:
