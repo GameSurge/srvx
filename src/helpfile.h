@@ -95,6 +95,7 @@ const char *language_find_message(struct language *lang, const char *msgid);
 #define handle_find_message(HANDLE, MSGID) language_find_message((HANDLE) ? (HANDLE)->language : lang_C, (MSGID))
 #define user_find_message(USER, MSGID) language_find_message((USER)->handle_info ? (USER)->handle_info->language : lang_C, (MSGID))
 void helpfile_init(void);
+void helpfile_finalize(void);
 
 struct helpfile *open_helpfile(const char *fname, expand_func_t expand);
 void close_helpfile(struct helpfile *hf);

@@ -184,7 +184,7 @@ gline_alternate_target(const char *target)
         struct in_addr in;
         struct hostent *he;
         if (inet_aton(hostname+1, &in)
-            && (he = gethostbyaddr(&in, sizeof(in), AF_INET))) {
+            && (he = gethostbyaddr((char*)&in, sizeof(in), AF_INET))) {
             res = malloc((hostname - target) + 2 + strlen(he->h_name));
             sprintf(res, "%.*s@%s", hostname - target, target, he->h_name);
             return res;

@@ -64,6 +64,7 @@ static struct language *language_alloc(const char *name)
 {
     struct language *lang = calloc(1, sizeof(*lang));
     lang->name = strdup(name);
+    lang->parent = language_find("C");
     if (!languages) {
         languages = dict_new();
         dict_set_free_data(languages, language_free);
@@ -108,19 +109,13 @@ static void language_set_messages(struct language *lang, dict_t dict)
 {
     dict_iterator_t it, it2;
     struct record_data *rd;
-    const char *msgid;
     char *msg;
-    int diff, extra, missing;
+    int extra, missing;
 
     extra = missing = 0;
-    for (it = dict_first(dict), it2 = dict_first(lang_C->messages); it || it2; ) {
-        msgid = iter_key(it);
-        if (it && it2)
-            diff = irccasecmp(msgid, iter_key(it2));
-        else if (it)
-            diff = -1;
-        else
-            diff = 1;
+    for (it = dict_first(dict), it2 = dict_first(lang_C->messages); it; ) {
+        const char *msgid = iter_key(it);
+        int diff = it2 ? irccasecmp(msgid, iter_key(it2)) : -1;
         if (diff < 0) {
             extra++;
             it = iter_next(it);
@@ -130,7 +125,6 @@ static void language_set_messages(struct language *lang, dict_t dict)
             it2 = iter_next(it2);
             continue;
         }
-        msgid = iter_key(it);
         rd = iter_data(it);
         switch (rd->type) {
         case RECDB_QSTRING:
@@ -142,8 +136,12 @@ static void language_set_messages(struct language *lang, dict_t dict)
             log_module(MAIN_LOG, LOG_WARNING, "Unsupported record type for message %s in language %s", msgid, lang->name);
             continue;
         }
-        dict_insert(lang->messages, iter_key(it2), msg);
+        dict_insert(lang->messages, msgid, msg);
         it = iter_next(it);
+        it2 = iter_next(it2);
+    }
+    while (it2) {
+        missing++;
         it2 = iter_next(it2);
     }
     log_module(MAIN_LOG, LOG_WARNING, "In language %s, %d extra and %d missing messages", lang->name, extra, missing);
@@ -211,6 +209,18 @@ static struct language *language_read(const char *name)
     /* All done. */
     closedir(dir);
     return lang;
+}
+
+static void language_read_list(void)
+{
+    struct dirent *dirent;
+    DIR *dir;
+
+    if (!(dir = opendir("languages")))
+        return;
+    while ((dirent = readdir(dir)))
+        language_alloc(dirent->d_name);
+    closedir(dir);
 }
 
 static void language_read_all(void)
@@ -994,6 +1004,11 @@ void message_register_table(const struct message_entry *table)
 void helpfile_init(void)
 {
     message_register_table(msgtab);
+    language_read_list();
+}
+
+void helpfile_finalize(void)
+{
     language_read_all();
     reg_exit_func(language_cleanup);
 }

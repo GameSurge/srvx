@@ -37,7 +37,7 @@ static struct module *modcmd_module;
 static struct modcmd *bind_command, *help_command, *version_command;
 static const struct message_entry msgtab[] = {
     { "MCMSG_VERSION", "$b"PACKAGE_STRING"$b ("CODENAME"), Built: " __DATE__ ", " __TIME__"." },
-    { "MCMSG_BARE_FLAG", "Flag %.*s must be preceeded by a + or -." },
+    { "MCMSG_BARE_FLAG", "Flag %.*s must be preceded by a + or -." },
     { "MCMSG_UNKNOWN_FLAG", "Unknown module flag %.*s." },
     { "MCMSG_BAD_OPSERV_LEVEL", "Invalid $O access level %s." },
     { "MCMSG_BAD_CHANSERV_LEVEL", "Invalid $C access level %s." },

@@ -285,7 +285,7 @@ static const struct message_entry msgtab[] = {
     { "NSEMAIL_EMAIL_CHANGE_BODY_NEW", "This email has been sent to verify that your email address belongs to the same person as account %5$s on %1$s.  The SECOND HALF of your cookie is %2$.*6$s.\nTo verify your address as associated with this account, log on to %1$s and type the following command:\n    /msg %3$s@%4$s COOKIE %5$s ?????%2$.*6$s\n(Replace the ????? with the FIRST HALF of the cookie, as sent to your OLD email address.)\nIf you did NOT request this email address to be associated with this account, you do not need to do anything.  Please contact the %1$s staff if you have questions." },
     { "NSEMAIL_EMAIL_CHANGE_BODY_OLD", "This email has been sent to verify that you want to change your email for account %5$s on %1$s from this address to %7$s.  The FIRST HALF of your cookie is %2$.*6$s\nTo verify your new address as associated with this account, log on to %1$s and type the following command:\n    /msg %3$s@%4$s COOKIE %5$s %2$.*6$s?????\n(Replace the ????? with the SECOND HALF of the cookie, as sent to your NEW email address.)\nIf you did NOT request this change of email address, you do not need to do anything.  Please contact the %1$s staff if you have questions." },
     { "NSEMAIL_EMAIL_VERIFY_SUBJECT", "Email address verification for %s" },
-    { "NSEMAIL_EMAIL_VERIFY_BODY", "This email has been sent to verify that this address belongs to the same person as %5$s on %1$s.  Your cookie is %2$s.\nTo verify your address as associated with this account, log on to %1$s and type the following command:\n    /msg %3$s@%4$s COOKIE %5$s %1$s\nIf you did NOT request this email address to be associated with this account, you do not need to do anything.  Please contact the %1$s staff if you have questions." },
+    { "NSEMAIL_EMAIL_VERIFY_BODY", "This email has been sent to verify that this address belongs to the same person as %5$s on %1$s.  Your cookie is %2$s.\nTo verify your address as associated with this account, log on to %1$s and type the following command:\n    /msg %3$s@%4$s COOKIE %5$s %2$s\nIf you did NOT request this email address to be associated with this account, you do not need to do anything.  Please contact the %1$s staff if you have questions." },
     { "NSEMAIL_ALLOWAUTH_SUBJECT", "Authentication allowed for %s" },
     { "NSEMAIL_ALLOWAUTH_BODY", "This email has been sent to let you authenticate (auth) to account %5$s on %1$s.  Your cookie is %2$s.\nTo auth to that account, log on to %1$s and type the following command:\n    /msg %3$s@%4$s COOKIE %5$s %1$s\nIf you did NOT request this authorization, you do not need to do anything.  Please contact the %1$s staff if you have questions." },
     { "CHECKPASS_YES", "Yes." },
@@ -2019,7 +2019,7 @@ set_list(struct userNode *user, struct handle_info *hi, int override)
     unsigned int i;
     char *set_display[] = {
         "INFO", "WIDTH", "TABLEWIDTH", "COLOR", "PRIVMSG", "STYLE",
-        "EMAIL", "ANNOUNCEMENTS", "MAXLOGINS"
+        "EMAIL", "ANNOUNCEMENTS", "MAXLOGINS", "LANGUAGE"
     };
 
     send_message(user, nickserv, "NSMSG_SETTING_LIST");

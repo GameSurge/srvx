@@ -522,7 +522,9 @@ mod_chanmode_alloc(unsigned int argc)
     else
         res = calloc(1, sizeof(*res));
     if (res) {
+#if !defined(NDEBUG)
         res->alloc_argc = argc;
+#endif
         res->argc = argc;
     }
     return res;

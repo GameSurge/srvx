@@ -71,7 +71,6 @@
                 "  SET        Set per-account options.",
                 "  UNREGISTER Unregister an account.",
                 "  RENAME     Renames an account",
-                "  GHOST      Disconnects your old clients",
                 "  ACCOUNT FLAGS Definition for each account flag"
         );
 };

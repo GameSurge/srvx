@@ -84,7 +84,6 @@ static const struct message_entry msgtab[] = {
     { "MSG_COMMAND_PRIVILEGED", "$b%s$b is a privileged command." },
     { "MSG_COMMAND_DISABLED", "$b%s$b is a disabled command." },
     { "MSG_SETTING_PRIVILEGED", "$b%s$b is a privileged setting." },
-    { "MSG_REGISTER_HANDLE", "You must first register a account with $b$N$b." },
     { "MSG_AUTHENTICATE", "You must first authenticate with $b$N$b." },
     { "MSG_USER_AUTHENTICATE", "%s must first authenticate with $b$N$b." },
     { "MSG_SET_EMAIL_ADDR", "You must first set your account's email address.  (Contact network staff if you cannot auth to your account.)" },
@@ -829,6 +828,7 @@ int main(int argc, char *argv[])
     message_register_table(msgtab);
     modcmd_finalize();
     saxdb_finalize();
+    helpfile_finalize();
     modules_finalize();
 
     /* The first exit func to be called *should* be saxdb_write_all(). */

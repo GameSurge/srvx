@@ -236,7 +236,7 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_MODE_LOCKED", "Modes conflicting with $b%s$b are not allowed in %s." },
     { "CSMSG_CANNOT_SET", "That setting is above your current level, so you cannot change it." },
     { "CSMSG_OWNER_DEFAULTS", "You must have access 500 in %s to reset it to the default options." },
-    { "CSMSG_CONFIRM_DEFAULTS", "To reset %s's settings to the defaults, you muse use 'set defaults %s'." },
+    { "CSMSG_CONFIRM_DEFAULTS", "To reset %s's settings to the defaults, you must use 'set defaults %s'." },
     { "CSMSG_SETTINGS_DEFAULTED", "All settings for %s have been reset to default values." },
     { "CSMSG_BAD_SETLEVEL", "You cannot change any setting to above your level." },
     { "CSMSG_BAD_GIVEVOICE", "You cannot change GiveVoice to above GiveOps (%d)." },
@@ -296,8 +296,9 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_CTCPREACTION_LONGBAN", "Long timed ban on disallowed CTCPs" },
 
     { "CSMSG_INVITED_USER", "Invited $b%s$b to join %s." },
-    { "CSMSG_INVITING_YOU", "$b%s$b invites you to join %s%s%s" },
-    { "CSMSG_ALREADY_PRESENT", "%s is $balready in %s$b." },
+    { "CSMSG_INVITING_YOU_REASON", "$b%s$b invites you to join %s: %s" },
+    { "CSMSG_INVITING_YOU", "$b%s$b invites you to join %s." },
+    { "CSMSG_ALREADY_PRESENT", "%s is already in $b%s$b." },
     { "CSMSG_YOU_ALREADY_PRESENT", "You are already in $b%s$b." },
     { "CSMSG_LOW_CHANNEL_ACCESS", "You lack sufficient access in %s to use this command." },
 
@@ -3743,8 +3744,13 @@ static CHANSERV_FUNC(cmd_invite)
 
     if(user != invite)
     {
-	char *reason = (argc > 2) ? unsplit_string(argv + 2, argc - 2, NULL) : "";
-	send_message(invite, chanserv, "CSMSG_INVITING_YOU", user->nick, channel->name, (argc > 2) ? ": " : ".", reason);
+        if(argc > 2)
+        {
+            char *reason = unsplit_string(argv + 2, argc - 2, NULL);
+            send_message(invite, chanserv, "CSMSG_INVITING_YOU_REASON", user->nick, channel->name, reason);
+        }
+        else
+            send_message(invite, chanserv, "CSMSG_INVITING_YOU", user->nick, channel->name);
     }
     irc_invite(chanserv, invite, channel);
     if(argc > 1)
