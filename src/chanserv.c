@@ -3315,7 +3315,12 @@ zoot_list(struct listData *list)
     tmp_table.flags = list->table.flags;
     list->table.contents[0][0] = " ";
     highest = list->highest;
-    lowest = (highest < 100) ? 0 : (highest - 100);
+    if (list->lowest != 0)
+        lowest = list->lowest;
+    else if (highest < 100)
+        lowest = 1;
+    else
+        lowest = highest - 100;
     for(start = curr = 1; curr < list->table.length; )
     {
         uData = list->users[curr-1];
@@ -3452,7 +3457,7 @@ cmd_list_users(struct userNode *user, struct chanNode *channel, unsigned int arg
 
 static CHANSERV_FUNC(cmd_users)
 {
-    return cmd_list_users(CSFUNC_ARGS, 0, UL_OWNER);
+    return cmd_list_users(CSFUNC_ARGS, 1, UL_OWNER);
 }
 
 static CHANSERV_FUNC(cmd_wlist)
@@ -3464,14 +3469,17 @@ static CHANSERV_FUNC(cmd_clist)
 {
     return cmd_list_users(CSFUNC_ARGS, UL_COOWNER, UL_OWNER-1);
 }
+
 static CHANSERV_FUNC(cmd_mlist)
 {
     return cmd_list_users(CSFUNC_ARGS, UL_MASTER, UL_COOWNER-1);
 }
+
 static CHANSERV_FUNC(cmd_olist)
 {
     return cmd_list_users(CSFUNC_ARGS, UL_OP, UL_MASTER-1);
 }
+
 static CHANSERV_FUNC(cmd_plist)
 {
     return cmd_list_users(CSFUNC_ARGS, 1, UL_OP-1);
@@ -6969,7 +6977,7 @@ init_chanserv(const char *nick)
     DEFINE_COMMAND(wipeinfo, 2, MODCMD_REQUIRE_CHANUSER, "access", "master", NULL);
     DEFINE_COMMAND(resync, 1, MODCMD_REQUIRE_CHANUSER, "access", "master", NULL);
 
-    DEFINE_COMMAND(events, 1, MODCMD_REQUIRE_REGCHAN, "flags", "+nolog", "access", "coowner", NULL);
+    DEFINE_COMMAND(events, 1, MODCMD_REQUIRE_REGCHAN, "flags", "+nolog", "access", "350", NULL);
     DEFINE_COMMAND(addban, 2, MODCMD_REQUIRE_REGCHAN, "access", "250", NULL);
     DEFINE_COMMAND(addtimedban, 3, MODCMD_REQUIRE_REGCHAN, "access", "250", NULL);
     DEFINE_COMMAND(delban, 2, MODCMD_REQUIRE_REGCHAN, "access", "250", NULL);
