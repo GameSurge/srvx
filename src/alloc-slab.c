@@ -25,7 +25,7 @@
 # error The slab allocator requires that your system have the mmap() system call.
 #endif
 
-#define SLAB_DEBUG 0
+#define SLAB_DEBUG 1
 #define SLAB_RESERVE 1024
 
 #if SLAB_DEBUG
@@ -97,7 +97,7 @@ struct slabset {
 #define SLAB_MIN     (2 * sizeof(void*))
 #define SLAB_GRAIN   sizeof(void*)
 #define SLAB_ALIGN   SLAB_GRAIN
-#define SMALL_CUTOFF 582
+#define SMALL_CUTOFF 580
 /* Element size < SMALL_CUTOFF -> use small slabs.
  * Larger elements are allocated directly using mmap().  The largest
  * regularly allocated struct in srvx 1.x is smaller than
@@ -293,7 +293,6 @@ slab_unalloc(void *ptr, size_t size)
         /* log_module(MAIN_LOG, LOG_DEBUG, "%u-slab %p became full.", slab->parent->size, slab); */
         /* Unlink slab from its parent. */
         slab->parent->nslabs--;
-        slab_count--;
         if (slab->prev)
             slab->prev->next = slab->next;
         if (slab->next)
@@ -307,18 +306,20 @@ slab_unalloc(void *ptr, size_t size)
         }
 
 #if SLAB_RESERVE
-        /* Make sure we have enough free slab pages. */
-        while (free_slab_count < SLAB_RESERVE) {
-            struct slab *tslab;
-            item = slab_map(slab_pagesize());
-            tslab = (struct slab*)((char*)item + slab_pagesize() - sizeof(*slab));
-            tslab->base = item;
-            tslab->prev = free_slab_tail;
-            free_slab_tail = tslab;
-            if (!free_slab_head)
-                free_slab_head = tslab;
-            free_slab_count++;
-            slab_count++;
+        if (!free_slab_count) {
+            /* Make sure we have enough free slab pages. */
+            while (free_slab_count < SLAB_RESERVE) {
+                struct slab *tslab;
+                item = slab_map(slab_pagesize());
+                tslab = (struct slab*)((char*)item + slab_pagesize() - sizeof(*slab));
+                tslab->base = item;
+                tslab->prev = free_slab_tail;
+                free_slab_tail = tslab;
+                if (!free_slab_head)
+                    free_slab_head = tslab;
+                free_slab_count++;
+                slab_count++;
+            }
         }
 
         /* Unmap old slab, so accesses to stale pointers will fault. */
@@ -387,6 +388,7 @@ slab_realloc(const char *file, unsigned int line, void *ptr, size_t size)
         return ptr;
     newblock = slab_malloc(file, line, size);
     memcpy(newblock, ptr, osize);
+    slab_free(file, line, ptr);
     return newblock;
 }
 
@@ -403,7 +405,7 @@ slab_strdup(const char *file, unsigned int line, const char *src)
 }
 
 void
-slab_free(UNUSED_ARG(const char *file), UNUSED_ARG(unsigned int line), void *ptr)
+slab_free(const char *file, unsigned int line, void *ptr)
 {
     alloc_header_t *hdr;
     size_t real;
@@ -413,10 +415,13 @@ slab_free(UNUSED_ARG(const char *file), UNUSED_ARG(unsigned int line), void *ptr
     verify(ptr);
     hdr = (alloc_header_t*)ptr - 1;
 #if SLAB_DEBUG
+    hdr->file_id = get_file_id(file);
+    hdr->line = line;
     hdr->magic = FREE_MAGIC;
     real = hdr->size + sizeof(*hdr);
 #else
     real = *hdr + sizeof(*hdr);
+    (void)file; (void)line;
 #endif
     real = (real + SLAB_GRAIN - 1) & ~(SLAB_GRAIN - 1);
     if (real < SMALL_CUTOFF) {
