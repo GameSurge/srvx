@@ -1604,9 +1604,9 @@ static MODCMD_FUNC(cmd_stats_memory) {
 
 static MODCMD_FUNC(cmd_dump)
 {
-    char linedup[MAXLEN], *original;
+    char linedup[MAXLEN], original[MAXLEN];
 
-    original = unsplit_string(argv+1, argc-1, NULL);
+    unsplit_string(argv+1, argc-1, original);
     safestrncpy(linedup, original, sizeof(linedup));
     /* assume it's only valid IRC if we can parse it */
     if (parse_line(linedup, 1)) {
@@ -1619,9 +1619,9 @@ static MODCMD_FUNC(cmd_dump)
 
 static MODCMD_FUNC(cmd_raw)
 {
-    char linedup[MAXLEN], *original;
+    char linedup[MAXLEN], original[MAXLEN];
 
-    original = unsplit_string(argv+1, argc-1, NULL);
+    unsplit_string(argv+1, argc-1, original);
     safestrncpy(linedup, original, sizeof(linedup));
     /* Try to parse the line before sending it; if it's too wrong,
      * maybe it will core us instead of our uplink. */

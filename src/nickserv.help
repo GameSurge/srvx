@@ -340,19 +340,19 @@
 "REGISTER" {
         "0: /services/nickserv/email_required" (
         "/msg $N@$s REGISTER <account> <password> <email>",
-        "Registers a specified account with $b$N$b, adding your current user@host to your new account. You must the password you specify with $bregister$b to use $bauth$b to authenticate to your account.",
+        "Registers a specified account with $b$N$b, adding your current user@host to your new account. You must use the same password with $bauth$b to authenticate to your account.",
         "An email will be sent to the email address you give containing a cookie that will let you activate your account.  Once you have that cookie, you must use the $bcookie$b command to be able to use your account.",
         "$uSee Also:$u auth, unregister"
         );
         "1: /services/nickserv/email_enabled" (
         "/msg $N@$s REGISTER <account> <password> [email]",
-        "Registers a specified account with $b$N$b, adding your current user@host to your new account. You must the password you specify with $bregister$b to use $bauth$b to authenticate to your account.",
+        "Registers a specified account with $b$N$b, adding your current user@host to your new account. You must use the same password with $bauth$b to authenticate to your account.",
         "If you specify an email address, an email will be sent to it containing a cookie that will let you activate your account.  Once you have that cookie, you must use the $bcookie$b command to be able to use your account.",
         "$uSee Also:$u auth, unregister"
         );
         "2: !/services/nickserv/email_enabled" (
         "/msg $N@$s REGISTER <account> <password>",
-        "Registers a specified account with $b$N$b, adding your current user@host to your new account. You must the password you specify with $bregister$b to use $bauth$b to authenticate to your account.",
+        "Registers a specified account with $b$N$b, adding your current user@host to your new account. You must use the same password with $bauth$b to authenticate to your account.",
         "$uSee Also:$u auth, unregister"
         );
 };
