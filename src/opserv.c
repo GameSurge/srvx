@@ -886,7 +886,7 @@ static MODCMD_FUNC(cmd_inviteme)
 	return 0;
     }
     if (GetUserMode(opserv_conf.debug_channel, user)) {
-        reply("OSMSG_ALREADY_THERE", channel->name);
+        reply("OSMSG_ALREADY_THERE", opserv_conf.debug_channel->name);
         return 0;
     }
     irc_invite(cmd->parent->bot, target, opserv_conf.debug_channel);
