@@ -719,9 +719,12 @@ log_entry_search(struct logSearch *discrim, entry_search_func esf, void *data)
     unsigned int matched = 0;
 
     if (discrim->type) {
-        struct logEntry *entry;
+        struct logEntry *entry, *last;
 
-        for (entry = discrim->type->log_oldest; entry; entry = entry->next) {
+        for (entry = discrim->type->log_oldest, last = NULL;
+             entry;
+             last = entry, entry = entry->next) {
+            verify(entry);
             if (entry_match(discrim, entry)) {
                 esf(entry, data);
                 if (++matched >= discrim->limit)

@@ -163,6 +163,7 @@ void STRUCTNAME##_init(struct STRUCTNAME *list) {\
   list->list = malloc(list->size*sizeof(list->list[0]));\
 }\
 void STRUCTNAME##_append(struct STRUCTNAME *list, ITEMTYPE new_item) {\
+  verify(list->list);\
   if (list->used == list->size) {\
     list->size = list->size ? (list->size << 1) : 4;\
     list->list = realloc(list->list, list->size*sizeof(list->list[0]));\
@@ -171,6 +172,7 @@ void STRUCTNAME##_append(struct STRUCTNAME *list, ITEMTYPE new_item) {\
 }\
 int STRUCTNAME##_remove(struct STRUCTNAME *list, ITEMTYPE new_item) {\
     unsigned int n, found;\
+    verify(list->list);\
     for (found=n=0; n<list->used; n++) {\
 	if (list->list[n] == new_item) {\
 	    memmove(list->list+n, list->list+n+1, (list->used-n-1)*sizeof(list->list[n]));\
@@ -183,6 +185,7 @@ int STRUCTNAME##_remove(struct STRUCTNAME *list, ITEMTYPE new_item) {\
 void STRUCTNAME##_clean(struct STRUCTNAME *list) {\
   list->used = list->size = 0;\
   free(list->list);\
+  list->list = NULL;\
 }
 
 /* The longest string that is likely to be produced in English is "10

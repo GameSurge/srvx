@@ -694,7 +694,9 @@ GetUserMode(struct chanNode *channel, struct userNode *user)
     struct modeNode *mn = NULL;
 
     verify(channel);
+    verify(channel->members.list);
     verify(user);
+    verify(user->channels.list);
     if (channel->members.used < user->channels.used) {
 	for (n=0; n<channel->members.used; n++) {
             verify(channel->members.list[n]);

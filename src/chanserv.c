@@ -1662,7 +1662,6 @@ chanserv_get_owned_count(struct handle_info *hi)
 
 static CHANSERV_FUNC(cmd_register)
 {
-    struct mod_chanmode *change;
     struct handle_info *handle;
     struct chanData *cData;
     struct modeNode *mn;
@@ -1752,13 +1751,20 @@ static CHANSERV_FUNC(cmd_register)
     scan_user_presence(add_channel_user(cData, handle, UL_OWNER, 0, NULL), NULL);
     cData->modes = chanserv_conf.default_modes;
     if(off_channel > 0)
-      cData->modes.modes_set |= MODE_REGISTERED;
-    change = mod_chanmode_dup(&cData->modes, 1);
-    change->args[change->argc].mode = MODE_CHANOP;
-    change->args[change->argc].u.member = AddChannelUser(chanserv, channel);
-    change->argc++;
-    mod_chanmode_announce(chanserv, channel, change);
-    mod_chanmode_free(change);
+        cData->modes.modes_set |= MODE_REGISTERED;
+    if (IsOffChannel(cData))
+    {
+        mod_chanmode_announce(chanserv, channel, &cData->modes);
+    }
+    else
+    {
+        struct mod_chanmode *change = mod_chanmode_dup(&cData->modes, 1);
+        change->args[change->argc].mode = MODE_CHANOP;
+        change->args[change->argc].u.member = AddChannelUser(chanserv, channel);
+        change->argc++;
+        mod_chanmode_announce(chanserv, channel, change);
+        mod_chanmode_free(change);
+    }
 
     /* Initialize the channel's max user record. */
     cData->max = channel->members.used;
@@ -6476,8 +6482,6 @@ chanserv_conf_read(void)
     else
         strlist = alloc_string_list(2);
     chanserv_conf.old_ban_names = strlist;
-    /* the variable itself is actually declared in proto-common.c; this is equally 
-     * parse issue. */
     str = database_get_data(conf_node, "off_channel", RECDB_QSTRING);
     off_channel = str ? atoi(str) : 0;
 }
