@@ -1,0 +1,28 @@
+Upgrading from srvx-1.2
+-----------------------
+
+Copy srvx.conf and your database files from your srvx-1.2 directory to
+your srvx-1.3 directory.
+
+Look over your srvx.conf and compare it to srvx.conf.example from
+srvx-1.3.  Add any new settings you want to.
+
+If you are using HelpServ, move the "helpserv" subsection from the
+"services" section to the "modules" section.  Make sure you enable
+the HelpServ module; see Q6 and Q8 in the FAQ.
+
+You must update command bindings, because several common commands
+moved in srvx-1.3.  If you have not added many custom bindings, the
+easiest way to do this is to delete the "modcmd" section of srvx.db
+(if you are using the "mondo" database layout) or delete modcmd.db (if
+you are not using "mondo"); when you start srvx after doing that, it
+will set up all the standard bindings.
+
+If you have added many custom bindings, the following commands should
+be bound to services:
+        Service Name	Suggested Name	Binding
+        ------------    --------------  -------
+        NickServ
+        ChanServ
+        OpServ
+(The above list is known to be incomplete.)

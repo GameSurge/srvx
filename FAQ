@@ -5,7 +5,8 @@ This FAQ assumes that your services are named NickServ, ChanServ and
 OpServ respectively.
 
 Q1) How do I set up srvx?
-A1) Read the README and INSTALL files, especially INSTALL.
+A1) Read the README and INSTALL files, especially INSTALL.  If you are
+upgrading from srvx-1.2, read UPGRADE.
 
 Q2) How do I set up my IRC server so srvx talks to it?
 A2) That depends on which IRC server you use.  Check its
@@ -50,3 +51,9 @@ A7) When you run the "configure" script, you must enable the MemoServ
 module; for example, "./configure --enable-modules=memoserv".  Then
 see the comment near the start of src/mod-memoserv.c for configuration
 options.
+
+Q8) How do I enable both HelpServ and MemoServ?  In addition to the
+configuration steps above, you must mention both when you run the
+configure script.  For example, run it using "./configure
+--enable-modules=memoserv,helpserv".  (You may add the snoop and/or
+sockcheck modules as well; separate the module names with commas.)

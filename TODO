@@ -18,3 +18,6 @@
 [FEATREQ] Suspension durations and/or comments when suspending user access to a channel
 
 [FEATREQ] support "unregistered": ?ctrace print mode +s unregistered
+
+- rewrite memory allocation calls to use wrapper macros, and add
+  optional debugging for the stubs to tag size and/or type.
