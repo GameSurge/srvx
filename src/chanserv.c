@@ -4036,19 +4036,22 @@ static CHANSERV_FUNC(cmd_resync)
     {
         struct modeNode *mn = channel->members.list[ii];
         struct userData *uData;
+
         if(IsService(mn->user))
+            continue;
+
+        uData = GetChannelAccess(cData, mn->user->handle_info);
+        if(!cData->lvlOpts[lvlGiveOps]
+           || (uData && uData->access >= cData->lvlOpts[lvlGiveOps]))
         {
-            /* must not change modes for this user */
-        }
-        else if(!(uData = GetChannelAccess(cData, mn->user->handle_info)))
-        {
-            if(mn->modes)
+            if(!(mn->modes & MODE_CHANOP))
             {
-                changes->args[used].mode = MODE_REMOVE | mn->modes;
+                changes->args[used].mode = MODE_CHANOP;
                 changes->args[used++].member = mn;
             }
         }
-        else if(uData->access < cData->lvlOpts[lvlGiveOps])
+        else if(!cData->lvlOpts[lvlGiveVoice]
+                || (uData && uData->access >= cData->lvlOpts[lvlGiveVoice]))
         {
             if(mn->modes & MODE_CHANOP)
             {
@@ -4063,9 +4066,9 @@ static CHANSERV_FUNC(cmd_resync)
         }
         else
         {
-            if(!(mn->modes & MODE_CHANOP))
+            if(mn->modes)
             {
-                changes->args[used].mode = MODE_CHANOP;
+                changes->args[used].mode = MODE_REMOVE | mn->modes;
                 changes->args[used++].member = mn;
             }
         }

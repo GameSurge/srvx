@@ -120,6 +120,10 @@ static const struct message_entry msgtab[] = {
     { "MCMSG_SERVICE_REMOVED", "Service $b%s$b has been deleted." },
     { "MCMSG_FILE_NOT_OPENED", "Unable to open file $b%s$b for writing." },
     { "MCMSG_MESSAGES_DUMPED", "Messages written to $b%s$b." },
+    { "MCMSG_COMMAND_FLAGS", "Command flags are %s (inferred: %s)." },
+    { "MCMSG_COMMAND_ACCOUNT_FLAGS", "Requires account flags +%s, prohibits account flags +%s." },
+    { "MCMSG_COMMAND_ACCESS_LEVEL", "Requires channel access %d and $O access %d." },
+    { "MCMSG_COMMAND_USES", "%s has been used %d times." },
     { NULL, NULL }
 };
 struct userData *_GetChannelUser(struct chanData *channel, struct handle_info *handle, int override, int allow_suspended);
@@ -1300,6 +1304,54 @@ static MODCMD_FUNC(cmd_command) {
     return 1;
 }
 
+static void
+modcmd_describe_command(struct userNode *user, struct svccmd *cmd, struct svccmd *target) {
+    char buf1[MAXLEN], buf2[MAXLEN];
+    unsigned int ii, len, buf1_used, buf2_used;
+
+    if (target->alias.used) {
+        unsplit_string((char**)target->alias.list, target->alias.used, buf1);
+        reply("MCMSG_COMMAND_ALIASES", target->name, buf1);
+    } else {
+        snprintf(buf1, sizeof(buf1), "%s.%s", target->command->parent->name, target->command->name);
+        reply("MCMSG_COMMAND_BINDING", target->name, buf1);
+    }
+    for (ii = buf1_used = buf2_used = 0; flags[ii].name; ++ii) {
+        if (target->flags & flags[ii].flag) {
+            if (buf1_used)
+                buf1[buf1_used++] = ',';
+            len = strlen(flags[ii].name);
+            memcpy(buf1 + buf1_used, flags[ii].name, len);
+            buf1_used += len;
+        } else if (target->effective_flags & flags[ii].flag) {
+            if (buf2_used)
+                buf2[buf2_used++] = ',';
+            len = strlen(flags[ii].name);
+            memcpy(buf2 + buf2_used, flags[ii].name, len);
+            buf2_used += len;
+        }
+    }
+    if (buf1_used)
+        buf1[buf1_used] = '\0';
+    else
+        strcpy(buf1, user_find_message(user, "MSG_NONE"));
+    if (buf2_used)
+        buf2[buf2_used] = '\0';
+    else
+        strcpy(buf2, user_find_message(user, "MSG_NONE"));
+    reply("MCMSG_COMMAND_FLAGS", buf1, buf2);
+    for (ii = buf1_used = buf2_used = 0; handle_flags[ii]; ++ii) {
+        if (target->req_account_flags & (1 << ii))
+            buf1[buf1_used++] = handle_flags[ii];
+        else if (target->deny_account_flags & (1 << ii))
+            buf2[buf2_used++] = handle_flags[ii];
+    }
+    buf1[buf1_used] = buf2[buf2_used] = '\0';
+    reply("MCMSG_COMMAND_ACCOUNT_FLAGS", buf1, buf2);
+    reply("MCMSG_COMMAND_ACCESS_LEVEL", target->min_channel_access, target->min_opserv_level);
+    reply("MCMSG_COMMAND_USES", target->name, target->uses);
+}
+
 static MODCMD_FUNC(cmd_modcmd) {
     struct svccmd *svccmd;
     unsigned int arg, changed;
@@ -1307,7 +1359,7 @@ static MODCMD_FUNC(cmd_modcmd) {
 
     assert(argc >= 2);
     arg = collapse_cmdname(argv+1, argc-1, cmdname) + 1;
-    if (!arg || (arg+2 < argc)) {
+    if (!arg) {
         reply("MSG_MISSING_PARAMS", cmd->name);
         return 0;
     }
@@ -1315,16 +1367,15 @@ static MODCMD_FUNC(cmd_modcmd) {
         reply("MCMSG_UNKNOWN_COMMAND_2", cmdname, cmd->parent->bot->nick);
         return 0;
     }
-    changed = 0;
-    while (arg+1 < argc) {
+    for (changed = 0; arg+1 < argc; arg += 2) {
         if (svccmd_configure(svccmd, user, cmd->parent->bot, argv[arg], argv[arg+1])) {
             reply("MCMSG_COMMAND_MODIFIED", argv[arg], svccmd->name);
             changed = 1;
         }
-        arg += 2;
     }
     if (changed)
         modcmd_set_effective_flags(svccmd);
+    modcmd_describe_command(user, cmd, svccmd);
     return changed;
 }
 
@@ -1963,7 +2014,7 @@ modcmd_init(void) {
     bind_command = modcmd_register(modcmd_module, "bind", cmd_bind, 4, MODCMD_KEEP_BOUND, "oper_level", "800", NULL);
     help_command = modcmd_register(modcmd_module, "help", cmd_help, 1, 0, "flags", "+nolog", NULL);
     modcmd_register(modcmd_module, "command", cmd_command, 2, 0, "flags", "+nolog", NULL);
-    modcmd_register(modcmd_module, "modcmd", cmd_modcmd, 4, MODCMD_KEEP_BOUND, "template", "bind", NULL);
+    modcmd_register(modcmd_module, "modcmd", cmd_modcmd, 2, MODCMD_KEEP_BOUND, "template", "bind", NULL);
     modcmd_register(modcmd_module, "god", cmd_god, 0, MODCMD_REQUIRE_AUTHED, "flags", "+oper,+networkhelper", NULL);
     modcmd_register(modcmd_module, "readhelp", cmd_readhelp, 2, 0, "oper_level", "650", NULL);
     modcmd_register(modcmd_module, "timecmd", cmd_timecmd, 2, 0, "oper_level", "1", NULL);

@@ -328,7 +328,6 @@
 	"TOYS:         Toggles how $b$C$b will respond to toy commands (!8ball etc).",
         "TOPICREFRESH: Controls if (and how often) $b$C$b will reset the topic.",
         "DYNLIMIT:     Adjusts user limit (+l channel mode) to prevent join floods.",
-        "PEONINVITE:   Indicates whether peons may use the $bINVITEME$b command.",
         "$bIRCOP ONLY$b:",
         "NODELETE:  Prevents channel deletion.",
         "If you wish to reset your channel to the default settings, you can use the $bSET DEFAULTS$b command.",

@@ -25,17 +25,14 @@
         "Reports how long it takes to run the specified command.");
 "command" ("/msg $S COMMAND <command>", 
         "Shows the restrictions on who can use the named command (and how).");
-"modcmd" ("/msg $S MODCMD <command> <option> <newval> [additional option/value pairs..]",
-        "Changes the named option(s) for the specified command.  The command name may be prefixed with $bServiceNick.$b to specify another service's command (for example, $N.AUTH to refer to the auth command).",
+"modcmd" ("/msg $S MODCMD <command> [<option> <newval> ...]",
+        "Displays options for the specified command, or changes the options and values listed.  The command name may be prefixed with $bServiceNick.$b to specify another service's command (for example, $N.AUTH to refer to the auth command).",
         "Supported options are:",
         "  FLAGS          Comma-separated, +/- prefixed list of flags to add or remove.",
         "  CHANNEL_ACCESS Minimum ChanServ access.",
         "  OPER_ACCESS    Minimum OpServ access.",
-        "  ACCESS         Alias for OPER_ACCESS (if the value starts with a digit) or CHANNEL_ACCESS (if the value does not start with a digit).",
         "  ACCOUNT_FLAGS  Account flags to require or deny (for example, +R-S)",
-        "  TEMPLATE       Command from which to inherit access restrictions",
-        "  WEIGHT         How much the command counts against the anti-flood policer",
-        "See the $bmodcmd flags$b entry for a list of supported flags.");
+        "See the $bmodcmd flags$b help entry for a list of supported flags.");
 "modcmd flags" ("The following flags are supported for commands:",
         "  ACCEPTCHAN     Treat a normal channel name (if specified) as the context for the command",
         "  ACCEPTPLUSCHAN Accept modeless channel names as well as normal channel names",

@@ -18,6 +18,7 @@
 "USERS" ("Managing helpers in $S",
         "  USER ACCESS Description of the user access levels",
         "  HELPERS     List current helpers and their access levels",
+        "  GIVEOWNERSHIP Transfer ownership to another user",
         "  ADDMANAGER  Add a new manager to the service",
         "  ADDHELPER   Add a helper to the service",
         "  ADDTRIAL    Add a trial helper to the service",
@@ -38,9 +39,7 @@
         "  UNREGISTER  Unregister a HelpServ bot",
         "  BOTS        List registered HelpServ instances",
         "  EXPIRE      Expire inactive channels",
-        "  VERSION     Show version of HelpServ",
-        "  READHELP    Re-read help file",
-        "  WRITE       Write out database");
+        "  READHELP    Re-read help file");
 "COMMANDS" "${index}";
 
 "ADDTRIAL" ("$bADDTRIAL$b",
@@ -93,7 +92,6 @@
         "/msg $S HELP [command|topic]",
         "HELP will show you usage or other information for the command you give.",
         "All help entries will use the same syntax for usage, with optional parameters listed in [] and meta-parameters listed in <> (a meta-parameter is one that you must provide a value for).",
-        "For example, \"/msg $S VERSION [CVS]\" means that you may send either \"VERSION\" or \"VERSION CVS\" as a command; \"/msg $S HELP [<command>]\" means that you may send \"HELP\" alone, or fill in the name of a command, as in \"HELP VERSION\".",
         "If you do not give a command or topic for HELP, an index is shown.");
 "HELPERS" ("$bHELPERS$b",
         "/msg $S HELPERS",
@@ -295,10 +293,3 @@
 "UNREGISTER" ("$bUNREGISTER$b",
         "/msg $S UNREGISTER CONFIRM",
         "Unregisters the channel and removes the service from the channel.");
-"VERSION" ("$bVERSION$b",
-        "/msg $S VERSION [CVS]",
-        "This tells you the version of srvx this bot is part of.",
-        "If you give the \"CVS\" argument, the source-code revision of $S is also shown.");
-"WRITE" ("$bWRITE$b",
-        "/msg $O HELPSERV WRITE",
-        "Saves all HelpServ bot data to the disk database.");
