@@ -26,6 +26,6 @@ access, that is used instead).
 Authenticated opers and network helpers may use the !god mode in
 ChanServ to toggle security override on and off.  Support helpers have
 security override on if (and only if) they are in a designated
-"support channel."  On GamesNET, this is #support.
+"support channel."  On GameSurge, this is #support.
 
 (More documentation goes here.)

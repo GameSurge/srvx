@@ -250,21 +250,30 @@ match_ircglob(const char *text, const char *glob)
             glob++;
             /* intentionally not tolower(...) so people can force
              * capitalization, or we can overload \ in the future */
-            if (*text++ != *glob++) return 0;
+            if (*text++ != *glob++)
+                return 0;
             break;
 	case '*':
         case '?':
             star_p = q_cnt = 0;
             do {
-                if (*glob == '*') star_p = 1;
-                else if (*glob == '?') q_cnt++;
-                else break;
+                if (*glob == '*')
+                    star_p = 1;
+                else if (*glob == '?')
+                    q_cnt++;
+                else
+                    break;
                 glob++;
             } while (1);
-            while (q_cnt) { if (!*text++) return 0; q_cnt--; }
+            while (q_cnt) {
+                if (!*text++)
+                    return 0;
+                q_cnt--;
+            }
             if (star_p) {
                 /* if this is the last glob character, it will match any text */
-                if (!*glob) return 1;
+                if (!*glob)
+                    return 1;
                 /* Thanks to the loop above, we know that the next
                  * character is a normal character.  So just look for
                  * the right character.
@@ -279,11 +288,14 @@ match_ircglob(const char *text, const char *glob)
             }
             /* if !star_p, fall through to normal character case,
              * first checking to see if ?s carried us to the end */
-            if (!*glob && !*text) return 1;
+            if (!*glob && !*text)
+                return 1;
 	default:
-	    if (!*text) return 0;
+	    if (!*text)
+                return 0;
 	    while (*text && *glob && *glob != '*' && *glob != '?' && *glob != '\\') {
-		if (tolower(*text++) != tolower(*glob++)) return 0;
+		if (tolower(*text++) != tolower(*glob++))
+                    return 0;
 	    }
 	}
     }
@@ -337,22 +349,31 @@ user_matches_glob(struct userNode *user, const char *orig_glob, int include_nick
 int
 is_ircmask(const char *text)
 {
-    while (*text && (isalnum((char)*text) || strchr("-_[]|\\`^{}?*", *text))) text++;
-    if (*text++ != '!') return 0;
-    while (*text && *text != '@' && !isspace((char)*text)) text++;
-    if (*text++ != '@') return 0;
-    while (*text && !isspace((char)*text)) text++;
+    while (*text && (isalnum((char)*text) || strchr("-_[]|\\`^{}?*", *text)))
+        text++;
+    if (*text++ != '!')
+        return 0;
+    while (*text && *text != '@' && !isspace((char)*text))
+        text++;
+    if (*text++ != '@')
+        return 0;
+    while (*text && !isspace((char)*text))
+        text++;
     return !*text;
 }
 
 int
 is_gline(const char *text)
 {
-    if (*text == '@') return 0;
+    if (*text == '@')
+        return 0;
     text += strcspn(text, "@!% \t\r\n");
-    if (*text++ != '@') return 0;
-    if (!*text) return 0;
-    while (*text && (isalnum((char)*text) || strchr(".-?*", *text))) text++;
+    if (*text++ != '@')
+        return 0;
+    if (!*text)
+        return 0;
+    while (*text && (isalnum((char)*text) || strchr(".-?*", *text)))
+        text++;
     return !*text;
 }
 
@@ -362,20 +383,28 @@ split_ircmask(char *text, char **nick, char **ident, char **host)
     char *start;
 
     start = text;
-    while (isalnum((char)*text) || strchr("=[]\\`^{}?*", *text)) text++;
-    if (*text != '!' || ((text - start) > NICKLEN)) return 0;
+    while (isalnum((char)*text) || strchr("=[]\\`^{}?*", *text))
+        text++;
+    if (*text != '!' || ((text - start) > NICKLEN))
+        return 0;
     *text = 0;
-    if (nick) *nick = start;
+    if (nick)
+        *nick = start;
 
     start = ++text;
-    while (*text && *text != '@' && !isspace((char)*text)) text++;
-    if (*text != '@' || ((text - start) > USERLEN)) return 0;
+    while (*text && *text != '@' && !isspace((char)*text))
+        text++;
+    if (*text != '@' || ((text - start) > USERLEN))
+        return 0;
     *text = 0;
-    if (ident) *ident = start;
+    if (ident)
+        *ident = start;
     
     start = ++text;
-    while (*text && (isalnum((char)*text) || strchr(".-?*", *text))) text++;
-    if (host) *host = start;
+    while (*text && (isalnum((char)*text) || strchr(".-?*", *text)))
+        text++;
+    if (host)
+        *host = start;
     return !*text && ((text - start) <= HOSTLEN) && nick && ident && host;
 }
 
@@ -532,15 +561,19 @@ parse_ipmask(const char *str, struct in_addr *addr, unsigned long *mask)
     unsigned long t_a, t_m;
 
     t_a = t_m = pos = 0;
-    if (addr) addr->s_addr = htonl(t_a);
-    if (mask) *mask = t_m;
+    if (addr)
+        addr->s_addr = htonl(t_a);
+    if (mask)
+        *mask = t_m;
     while (*str) {
-        if (!isdigit(*str)) return 0;
+        if (!isdigit(*str))
+            return 0;
         accum = 0;
         do {
             accum = (accum * 10) + *str++ - '0';
         } while (isdigit(*str));
-        if (accum > 255) return 0;
+        if (accum > 255)
+            return 0;
         t_a = (t_a << 8) | accum;
         t_m = (t_m << 8) | 255;
         pos += 8;
@@ -558,9 +591,8 @@ parse_ipmask(const char *str, struct in_addr *addr, unsigned long *mask)
                     t_m <<= 32 - pos;
                     pos = 32;
                     goto out;
-                } else {
+                } else
                     return 0;
-                }
             }
         } else if (*str == '/') {
             int start = pos;
@@ -573,17 +605,20 @@ parse_ipmask(const char *str, struct in_addr *addr, unsigned long *mask)
                 t_m = (t_m << 1) | 1;
                 pos++;
             }
-            if (pos != start+accum) return 0;
-        } else if (*str == 0) {
+            if (pos != start+accum)
+                return 0;
+        } else if (*str == 0)
             break;
-        } else {
+        else
             return 0;
-        }
     }
 out:
-    if (pos != 32) return 0;
-    if (addr) addr->s_addr = htonl(t_a);
-    if (mask) *mask = t_m;
+    if (pos != 32)
+        return 0;
+    if (addr)
+        addr->s_addr = htonl(t_a);
+    if (mask)
+        *mask = t_m;
     return 1;
 }
 
@@ -593,11 +628,11 @@ unsplit_string(char *set[], unsigned int max, char *dest)
     static char unsplit_buffer[MAXLEN*2];
     unsigned int ii, jj, pos;
 
-    if (!dest) dest = unsplit_buffer;
+    if (!dest)
+        dest = unsplit_buffer;
     for (ii=pos=0; ii<max; ii++) {
-        for (jj=0; set[ii][jj]; jj++) {
+        for (jj=0; set[ii][jj]; jj++)
             dest[pos++] = set[ii][jj];
-        }
         dest[pos++] = ' ';
     }
     dest[--pos] = 0;
@@ -653,14 +688,12 @@ int
 getipbyname(const char *name, unsigned long *ip)
 {
     struct hostent *he = gethostbyname(name);
-    if (he) {
-	if (he->h_addrtype != AF_INET)
-            return 0;
-	memcpy(ip, he->h_addr_list[0], sizeof(*ip));
-	return 1;
-    } else {
-	return 0;
-    }
+    if (!he)
+        return 0;
+    if (he->h_addrtype != AF_INET)
+        return 0;
+    memcpy(ip, he->h_addr_list[0], sizeof(*ip));
+    return 1;
 }
 
 DEFINE_LIST(string_buffer, char)
@@ -738,13 +771,14 @@ void
 string_buffer_replace(struct string_buffer *buf, unsigned int from, unsigned int len, const char *repl)
 {
     unsigned int repl_len = strlen(repl);
-    if (from > buf->used) return;
-    if (len + from > buf->used) len = buf->used - from;
+    if (from > buf->used)
+        return;
+    if (len + from > buf->used)
+        len = buf->used - from;
     buf->used = buf->used + repl_len - len;
     if (buf->size <= buf->used) {
-        while (buf->used >= buf->size) {
+        while (buf->used >= buf->size)
             buf->size <<= 1;
-        }
         buf->list = realloc(buf->list, buf->size*sizeof(buf->list[0]));
     }
     memmove(buf->list+from+repl_len, buf->list+from+len, strlen(buf->list+from+len));
@@ -755,10 +789,12 @@ struct string_list str_tab;
 
 const char *
 strtab(unsigned int ii) {
-    if (ii > 65536) return NULL;
+    if (ii > 65536)
+        return NULL;
     if (ii > str_tab.size) {
         unsigned int old_size = str_tab.size;
-        while (ii >= str_tab.size) str_tab.size <<= 1;
+        while (ii >= str_tab.size)
+            str_tab.size <<= 1;
         str_tab.list = realloc(str_tab.list, str_tab.size*sizeof(str_tab.list[0]));
         memset(str_tab.list+old_size, 0, (str_tab.size-old_size)*sizeof(str_tab.list[0]));
     }
@@ -773,12 +809,17 @@ void
 tools_init(void)
 {
     unsigned int upr, lwr;
-    for (lwr=0; lwr<256; ++lwr) tolower(lwr) = lwr;
-    for (upr='A', lwr='a'; lwr <= 'z'; ++upr, ++lwr) tolower(upr) = lwr;
+    for (lwr=0; lwr<256; ++lwr)
+        tolower(lwr) = lwr;
+    for (upr='A', lwr='a'; lwr <= 'z'; ++upr, ++lwr)
+        tolower(upr) = lwr;
 #ifdef WITH_PROTOCOL_P10
-    for (upr='[', lwr='{'; lwr <= '~'; ++upr, ++lwr) tolower(upr) = lwr;
-    for (upr=0xc0, lwr=0xe0; lwr <= 0xf6; ++upr, ++lwr) tolower(upr) = lwr;
-    for (upr=0xd8, lwr=0xf8; lwr <= 0xfe; ++upr, ++lwr) tolower(upr) = lwr;
+    for (upr='[', lwr='{'; lwr <= '~'; ++upr, ++lwr)
+        tolower(upr) = lwr;
+    for (upr=0xc0, lwr=0xe0; lwr <= 0xf6; ++upr, ++lwr)
+        tolower(upr) = lwr;
+    for (upr=0xd8, lwr=0xf8; lwr <= 0xfe; ++upr, ++lwr)
+        tolower(upr) = lwr;
 #endif
     str_tab.size = 1001;
     str_tab.list = calloc(str_tab.size, sizeof(str_tab.list[0]));
@@ -788,8 +829,7 @@ void
 tools_cleanup(void)
 {
     unsigned int ii;
-    for (ii=0; ii<str_tab.size; ++ii) {
-        if (str_tab.list[ii]) free(str_tab.list[ii]);
-    }
+    for (ii=0; ii<str_tab.size; ++ii)
+        free(str_tab.list[ii]);
     free(str_tab.list);
 }

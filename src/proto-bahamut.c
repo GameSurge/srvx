@@ -1265,6 +1265,13 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
         }
     }
     change->argc = argc; /* in case any turned out to be ignored */
+    if (change->modes_set & MODE_SECRET) {
+        change->modes_set &= ~(MODE_PRIVATE);
+        change->modes_clear |= MODE_PRIVATE;
+    } else if (change->modes_set & MODE_PRIVATE) {
+        change->modes_set &= ~(MODE_SECRET);
+        change->modes_clear |= MODE_SECRET;
+    }
     return change;
   error:
     mod_chanmode_free(change);

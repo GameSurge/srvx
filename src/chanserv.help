@@ -119,7 +119,7 @@
 "BAN" ("/msg $C BAN <#channel> <mask|nick>",
         "This command will temporarily add a ban for the user specified as the parameter. Masks are to be supplied in the format <Nick>!<Ident>@<Host> and usually contain wildcards. If a nick is specified, a mask is automatically generated (though not completely foolproof). This ban is removed either by removing it from the channel ban list using any irc client, or sending the UNBAN or UNBANALL commands. If you are banned with this method, the UNBANME command can be used.",
         "$uFor assistance, please join to #support$u",
-        "Example: *!*serv@*.gamesnet.net would ban anyone with ident 'serv' and a gamesnet.net hostname from joining the channel.",
+        "Example: *!*serv@*.gamesurge.net would ban anyone with ident 'serv' and a gamesurge.net hostname from joining the channel.",
         "$uSee Also:$u unban, unbanall, unbanme");
 "BANS" ("/msg $C BANS <#channel>",
         "This command lists all permanent and timed bans in the channel.",
@@ -506,7 +506,7 @@
         "\"I don't see why not.  It's got bloody well everything else.\"",
         "With that, the Chief Priest went to lunch.  The novice suddenly achieved enlightenment, several years later.");
 "thanks" ("The srvx developers would like to thank the following people for their help in making srvx as polished as it is today:",
-        "$bGamesNET IRC Network$b - All the users and staff there bear with our shortcomings and bugs and let us know what needs to be fixed.",
-        "$bIC5 Networks$b (and JohnM in particular) - Never afraid to critique things, even if GamesNET is the 800 pound gorilla.",
+        "$bGameSurge IRC Network$b - All the users and staff there bear with our shortcomings and bugs and let us know what needs to be fixed.",
+        "$bIC5 Networks$b (and JohnM in particular) - Never afraid to critique things, even if we are the 800 pound gorilla.",
         "$bMeeko, eraser, hock(ey), KilledInAction, MadEwokHerd, Milon and Shoat$b - Hardcore beta testing and bug finding on the testnet.",
         "$bCrips$b - Reading through all the boring messages and finding ways to make them clearer.");

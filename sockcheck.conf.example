@@ -26,7 +26,7 @@
         // this crap at the front is the router trying to negotiate telnet options
         "fffb01fffb03fffd18fffd1f0d0a0d0a=U=s=e=r= =A=c=c=e=s=s= =V=e=r=i=f=i=c=a=t=i=o=n0d0a0d0a=P=a=s=s=w=o=r=d3a= :=c=i=s=c=o0d0a" {
                 "0d0a=P=a=s=s=w=o=r=d3a= " "accept";
-                "other" "reject:[1 hour] Cisco router with default password, visit http://www.gamesnet.net/proxyglines.php for more information.";
+                "other" "reject:[1 hour] Cisco router with default password";
         };
 	"=W=i=n=G=a=t=e=>" "reject:Unsecured wingate";
 	"=T=o=o= =m=a=n=y" "reject:Unsecured wingate";

@@ -832,14 +832,18 @@ static CMD_FUNC(cmd_eob_ack)
 
 static CMD_FUNC(cmd_ping)
 {
+    struct server *srv;
+    struct userNode *un;
+
     if(argc > 3)
-    {
         irc_pong(argv[2], argv[1]);
-    }
+    else if ((srv = GetServerH(origin)))
+        irc_pong(self->name, srv->numeric);
+    else if ((un = GetUserH(origin)))
+        irc_pong(self->name, un->numeric);
     else
-    {
         irc_pong(self->name, origin);
-    }
+
     timeq_del(0, timed_send_ping, 0, TIMEQ_IGNORE_WHEN|TIMEQ_IGNORE_DATA);
     timeq_del(0, timed_ping_timeout, 0, TIMEQ_IGNORE_WHEN|TIMEQ_IGNORE_DATA);
     timeq_add(now + ping_freq, timed_send_ping, 0);
@@ -1975,7 +1979,7 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
         case '-':
             add = 0;
             break;
-#define do_chan_mode(FLAG) do { if (add) change->modes_set |= FLAG, change->modes_clear &= ~FLAG; else change->modes_clear |= FLAG, change->modes_set &= ~FLAG; } while(0)
+#define do_chan_mode(FLAG) do { if (add) change->modes_set |= (FLAG), change->modes_clear &= ~(FLAG); else change->modes_clear |= (FLAG), change->modes_set &= ~(FLAG); } while(0)
         case 'C': do_chan_mode(MODE_NOCTCPS); break;
         case 'D': do_chan_mode(MODE_DELAYJOINS); break;
         case 'c': do_chan_mode(MODE_NOCOLORS); break;
@@ -2044,6 +2048,13 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
         }
     }
     change->argc = ch_arg; /* in case any turned out to be ignored */
+    if (change->modes_set & MODE_SECRET) {
+        change->modes_set &= ~(MODE_PRIVATE);
+        change->modes_clear |= MODE_PRIVATE;
+    } else if (change->modes_set & MODE_PRIVATE) {
+        change->modes_set &= ~(MODE_SECRET);
+        change->modes_clear |= MODE_SECRET;
+    }
     return change;
   error:
     mod_chanmode_free(change);
