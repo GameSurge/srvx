@@ -500,6 +500,8 @@ static struct
     unsigned int 	max_chan_bans;
     unsigned int        max_userinfo_length;
 
+    unsigned int	use_registered_mode;
+
     struct string_list  *set_shows;
     struct string_list  *eightball;
     struct string_list  *old_ban_names;
@@ -1287,9 +1289,11 @@ unregister_channel(struct chanData *channel, const char *reason)
 
     timeq_del(0, NULL, channel, TIMEQ_IGNORE_FUNC | TIMEQ_IGNORE_WHEN);
 
-    mod_chanmode_init(&change);
-    change.modes_clear |= MODE_REGISTERED;
-    mod_chanmode_announce(chanserv, channel->channel, &change);
+    if (chanserv_conf.use_registered_mode) {
+      mod_chanmode_init(&change);
+      change.modes_clear |= MODE_REGISTERED;
+      mod_chanmode_announce(chanserv, channel->channel, &change);
+    }
 
     while(channel->users)
 	del_channel_user(channel->users, 0);
@@ -1745,6 +1749,8 @@ static CHANSERV_FUNC(cmd_register)
     cData = register_channel(channel, user->handle_info->handle);
     scan_user_presence(add_channel_user(cData, handle, UL_OWNER, 0, NULL), NULL);
     cData->modes = chanserv_conf.default_modes;
+    if (chanserv_conf.use_registered_mode)
+      cData->modes.modes_set |= MODE_REGISTERED;
     change = mod_chanmode_dup(&cData->modes, 1);
     change->args[change->argc].mode = MODE_CHANOP;
     change->args[change->argc].member = AddChannelUser(chanserv, channel);
@@ -3733,7 +3739,7 @@ static CHANSERV_FUNC(cmd_mode)
 	return 1;
     }
 
-    change = mod_chanmode_parse(channel, argv+1, argc-1, MCP_KEY_FREE);
+    change = mod_chanmode_parse(channel, argv+1, argc-1, MCP_KEY_FREE|MCP_REGISTERED);
     if(!change)
     {
 	reply("MSG_INVALID_MODES", unsplit_string(argv+1, argc-1, NULL));
@@ -4853,7 +4859,7 @@ static MODCMD_FUNC(chan_opt_modes)
 	{
             memset(&channel->channel_info->modes, 0, sizeof(channel->channel_info->modes));
 	}
-	else if(!(new_modes = mod_chanmode_parse(channel, argv+1, argc-1, MCP_KEY_FREE)))
+	else if(!(new_modes = mod_chanmode_parse(channel, argv+1, argc-1, MCP_KEY_FREE|MCP_REGISTERED)))
 	{
             reply("CSMSG_INVALID_MODE_LOCK", unsplit_string(argv+1, argc-1, NULL));
             return 0;
@@ -6436,6 +6442,8 @@ chanserv_conf_read(void)
      * parse issue. */
     str = database_get_data(conf_node, "off_channel", RECDB_QSTRING);
     off_channel = (str && enabled_string(str)) ? 1 : 0;
+    str = database_get_data(conf_node, "use_registered_mode", RECDB_QSTRING);
+    chanserv_conf.use_registered_mode = (str && enabled_string(str)) ? 1 : 0;
 }
 
 static void
@@ -6740,7 +6748,8 @@ chanserv_channel_read(const char *key, struct record_data *hir)
        && (argc = split_line(str, 0, ArrayLength(argv), argv))
        && (modes = mod_chanmode_parse(cNode, argv, argc, MCP_KEY_FREE))) {
         cData->modes = *modes;
-        cData->modes.modes_set |= MODE_REGISTERED;
+	if (chanserv_conf.use_registered_mode)
+          cData->modes.modes_set |= MODE_REGISTERED;
         if(cData->modes.argc > 1)
             cData->modes.argc = 1;
         mod_chanmode_announce(chanserv, cNode, &cData->modes);

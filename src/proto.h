@@ -205,6 +205,7 @@ struct mod_chanmode {
 #define MCP_ALLOW_OVB     0x0001 /* allow op, voice, ban manipulation */
 #define MCP_FROM_SERVER   0x0002 /* parse as from a server */
 #define MCP_KEY_FREE      0x0004 /* -k without a key argument */
+#define MCP_REGISTERED	  0x0008 /* chan is already registered; do not allow changes to MODE_REGISTERED */
 #define MC_ANNOUNCE       0x0100 /* send a mod_chanmode() change out */
 #define MC_NOTIFY         0x0200 /* make local callbacks to announce */
 #ifdef NDEBUG
