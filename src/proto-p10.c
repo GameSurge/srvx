@@ -875,20 +875,14 @@ static void
 create_helper(char *name, void *data)
 {
     struct create_desc *cd = data;
-    /* We can't assume the channel create was allowed because of the
-     * bad-word channel checking.
-     */
-    struct chanNode *cn;
-    struct modeNode *mn;
+
     if (!strcmp(name, "0")) {
         while (cd->user->channels.used > 0)
             DelChannelUser(cd->user, cd->user->channels.list[0]->channel, 0, 0);
         return;
     }
-    cn = AddChannel(name, cd->when, NULL, NULL);
-    mn = AddChannelUser(cd->user, cn);
-    if (mn && (cn->members.used == 1))
-        mn->modes = MODE_CHANOP;
+
+    AddChannelUser(cd->user, AddChannel(name, cd->when, NULL, NULL));
 }
 
 static CMD_FUNC(cmd_create)

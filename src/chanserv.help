@@ -320,7 +320,7 @@
         "ENFOPS:       Restrictions for opping users.",
         "ENFMODES:     Restrictions to change the default modes.",
         "ENFTOPIC:     Restrictions on changing the topic.",
-        "TOPICSNARF:   Topics set manually (by /TOPIC #channel ...) by users this level and bove change the default $b$C$b topic.",
+        "TOPICSNARF:   Topics set manually (by /TOPIC #channel ...) by users this level and above change the default $b$C$b topic.",
         "SETTERS:      Who may change channel settings (using $bSET$b).",
         "CTCPUSERS:    Who is allowed to send CTCPs to the channel.",
         "CTCPREACTION: What happens when a disallowed CTCP is sent to the channel.",

@@ -302,14 +302,14 @@ wipeout_channel(struct chanNode *cNode, time_t new_time, char **modes, unsigned 
     /* deop anybody in the channel now, but count services to reop */
     for (nn=argc=0; nn<cNode->members.used; nn++) {
         struct modeNode *mn = cNode->members.list[nn];
-        if (mn->modes & MODE_CHANOP && IsService(mn->user) && IsLocal(mn->user))
+        if ((mn->modes & MODE_CHANOP) && IsService(mn->user) && IsLocal(mn->user))
             argc++;
     }
     if (argc) {
         extern struct userNode *opserv;
         struct mod_chanmode *change;
 
-        change = mod_chanmode_alloc(nn);
+        change = mod_chanmode_alloc(argc);
         change->modes_clear = 0;
         change->modes_set = orig_modes;
         change->new_limit = orig_limit;
@@ -322,6 +322,7 @@ wipeout_channel(struct chanNode *cNode, time_t new_time, char **modes, unsigned 
                 argc++;
             }
         }
+        assert(argc == change->argc);
         if (change->argc > 0)
             mod_chanmode_announce(change->args[0].member->user, cNode, change);
         else

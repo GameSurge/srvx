@@ -161,14 +161,9 @@ uplink_insert(const char *key, void *data, UNUSED_ARG(void *extra))
     uplink->bind_addr_len = sizeof(*sin);
     if (str && getipbyname(str, &addr)) 
     {
-	sin = malloc(uplink->bind_addr_len);
-        sin->sin_port = 0;
+	sin = calloc(1, uplink->bind_addr_len);
 	sin->sin_family = AF_INET;
 	sin->sin_addr.s_addr = addr;
-#ifdef HAVE_SIN_LEN
-	sin->sin_len = 0;
-#endif
-	memset(sin->sin_zero, 0, sizeof(sin->sin_zero));
 	uplink->bind_addr = sin;
     } 
     else 
@@ -235,6 +230,7 @@ uplink_compile(void)
 	for(uplink = oldUplinks; uplink; uplink = next)
 	{
 	    next = uplink->next;
+            free(uplink->bind_addr);
 	    free(uplink);
 	}
     }
@@ -614,7 +610,7 @@ void main_shutdown(void)
     ioset_cleanup();
     for (ul = cManager.uplinks; ul; ul = ul_next) {
         ul_next = ul->next;
-        if (ul->bind_addr) free(ul->bind_addr);
+        free(ul->bind_addr);
         free(ul);
     }
     tools_cleanup();

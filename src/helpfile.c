@@ -535,7 +535,8 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
                     switch (exp.type) {
                     case HF_STRING:
                         free_value = value = exp.value.str;
-                        if (!value) value = "";
+                        if (!value)
+                            value = "";
                         break;
                     case HF_TABLE:
                         /* Must send current line, then emit table. */

@@ -136,7 +136,7 @@ sub drv_heartbeat {
       $line = delete $heap->{line};
     } elsif (defined($line = <$script>)) {
       $heap->{lineno} = $.;
-      print ".";
+      print "." unless $heap->{irc_debug};
     } else {
       # close all connections
       foreach my $client (values %{$heap->{clients}}) {

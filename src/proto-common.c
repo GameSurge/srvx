@@ -578,13 +578,20 @@ mod_chanmode_apply(struct userNode *who, struct chanNode *channel, struct mod_ch
                 break;
             }
             break;
-        default:
-            assert((change->args[ii].mode & (MODE_REMOVE|MODE_CHANOP|MODE_VOICE)) != 0);
+        case MODE_CHANOP:
+        case MODE_VOICE:
+        case MODE_VOICE|MODE_CHANOP:
+        case MODE_REMOVE|MODE_CHANOP:
+        case MODE_REMOVE|MODE_VOICE:
+        case MODE_REMOVE|MODE_VOICE|MODE_CHANOP:
             if (change->args[ii].mode & MODE_REMOVE)
                 change->args[ii].member->modes &= ~change->args[ii].mode;
             else
                 change->args[ii].member->modes |= change->args[ii].mode;
             break;
+        default:
+            assert(0 && "Invalid mode argument");
+            continue;
         }
     }
 }

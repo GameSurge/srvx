@@ -160,7 +160,7 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_RAW_PARSE_ERROR", "Error parsing raw line (not dumping to uplink)." },
     { "OSMSG_COLLIDED_NICK", "Now temporarily holding nick $b%s$b." },
     { "OSMSG_RESERVED_NICK", "Now reserving nick $b%s$b." },
-    { "OSMSG_NICK_UNRESERVED", "Nick $b%s$b is no longer reserve." },
+    { "OSMSG_NICK_UNRESERVED", "Nick $b%s$b is no longer reserved." },
     { "OSMSG_NOT_RESERVED", "Nick $b%s$b is not reserved." },
     { "OSMSG_ILLEGAL_REASON", "This channel is illegal." },
     { "OSMSG_ILLEGAL_KILL_REASON", "Joined an illegal modeless channel - do not repeat." },
@@ -1111,7 +1111,7 @@ static MODCMD_FUNC(cmd_op)
             continue;
         if (!(mn =  GetUserMode(channel, victim)))
             continue;
-        if (!(mn->modes & MODE_CHANOP))
+        if (mn->modes & MODE_CHANOP)
             continue;
         change->args[count].mode = MODE_CHANOP;
         change->args[count++].member = mn;
@@ -1803,7 +1803,7 @@ opserv_shutdown_channel(struct chanNode *channel, const char *reason)
         struct modeNode *mNode = channel->members.list[--nn];
         if (IsService(mNode->user))
             continue;
-        KickChannelUser(mNode->user, channel, opserv, reason);
+        KickChannelUser(mNode->user, channel, opserv, user_find_message(mNode->user, reason));
     }
     timeq_add(now + opserv_conf.purge_lock_delay, opserv_part_channel, channel);
 }
@@ -1827,6 +1827,12 @@ opserv_channel_check(struct chanNode *newchan)
     newchan->bad_channel = opserv_bad_channel(newchan->name);
 }
 
+static void
+opserv_channel_delete(struct chanNode *chan)
+{
+    timeq_del(0, opserv_part_channel, chan, TIMEQ_IGNORE_WHEN);
+}
+
 static int
 opserv_join_check(struct modeNode *mNode)
 {
@@ -1844,7 +1850,7 @@ opserv_join_check(struct modeNode *mNode)
         if (channel->name[0] != '#')
             DelUser(user, opserv, 1, "OSMSG_ILLEGAL_KILL_REASON");
         else if (!GetUserMode(channel, opserv))
-            opserv_shutdown_channel(channel, user_find_message(user, "OSMSG_ILLEGAL_REASON"));
+            opserv_shutdown_channel(channel, "OSMSG_ILLEGAL_REASON");
         else {
             send_message(user, opserv, "OSMSG_ILLEGAL_CHANNEL", channel->name);
             msg = user_find_message(user, "OSMSG_ILLEGAL_REASON");
@@ -4113,6 +4119,7 @@ init_opserv(const char *nick)
     reg_nick_change_func(opserv_alert_check_nick);
     reg_del_user_func(opserv_user_cleanup);
     reg_new_channel_func(opserv_channel_check);
+    reg_del_channel_func(opserv_channel_delete);
     reg_join_func(opserv_join_check);
     reg_auth_func(opserv_staff_alert);
 

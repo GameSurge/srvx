@@ -180,7 +180,7 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_DELETED_YOU", "Your $b%d$b access has been deleted from $b%s$b." },
 
 /* User management */
-    { "CSMSG_ADDED_USER", "Added new %s to the %s user list with access %d." },
+    { "CSMSG_ADDED_USER", "Added %s to the %s user list with access %d." },
     { "CSMSG_DELETED_USER", "Deleted %s (with access %d) from the %s user list." },
     { "CSMSG_BAD_RANGE", "Invalid access range; minimum (%d) must be greater than maximum (%d)." },
     { "CSMSG_DELETED_USERS", "Deleted accounts matching $b%s$b with access from $b%d$b to $b%d$b from the %s user list." },
@@ -3541,6 +3541,8 @@ static CHANSERV_FUNC(cmd_bans)
     {
         table_send(cmd->parent->bot, user->nick, 0, NULL, tbl);
 	reply("MSG_NONE");
+        free(tbl.contents[0]);
+        free(tbl.contents);
 	return 0;
     }
 
@@ -4318,7 +4320,7 @@ static CHANSERV_FUNC(cmd_say)
     {
         REQUIRE_PARAMS(3);
         msg = unsplit_string(argv + 2, argc - 2, NULL);
-        send_target_message(1, argv[1], cmd->parent->bot, "%s", msg);
+        send_target_message(5, argv[1], cmd->parent->bot, "%s", msg);
     }
     else
     {
@@ -4341,7 +4343,7 @@ static CHANSERV_FUNC(cmd_emote)
     else if(GetUserH(argv[1]))
     {
         msg = unsplit_string(argv + 2, argc - 2, NULL);
-        send_target_message(1, argv[1], cmd->parent->bot, "\001ACTION %s\001", msg);
+        send_target_message(5, argv[1], cmd->parent->bot, "\001ACTION %s\001", msg);
     }
     else
     {
@@ -5766,8 +5768,10 @@ handle_join(struct modeNode *mNode)
             if(bData != cData->bans)
             {
                 /* Shuffle the ban to the head of the list. */
-                if(bData->next) bData->next->prev = bData->prev;
-                if(bData->prev) bData->prev->next = bData->next;
+                if(bData->next)
+                    bData->next->prev = bData->prev;
+                if(bData->prev)
+                    bData->prev->next = bData->next;
 
                 bData->prev = NULL;
                 bData->next = cData->bans;
@@ -7045,7 +7049,7 @@ init_chanserv(const char *nick)
     DEFINE_COMMAND(mdelpeon, 2, MODCMD_REQUIRE_CHANUSER, "access", "master", NULL);
 
     DEFINE_COMMAND(trim, 3, MODCMD_REQUIRE_CHANUSER, "access", "master", NULL);
-    DEFINE_COMMAND(opchan, 1, MODCMD_REQUIRE_REGCHAN, "access", "1", NULL);
+    DEFINE_COMMAND(opchan, 1, MODCMD_REQUIRE_REGCHAN|MODCMD_NEVER_CSUSPEND, "access", "1", NULL);
     DEFINE_COMMAND(clvl, 3, MODCMD_REQUIRE_CHANUSER, "access", "master", NULL);
     DEFINE_COMMAND(giveownership, 2, MODCMD_REQUIRE_CHANUSER, "access", "owner", "flags", "+loghostmask", NULL);
 
