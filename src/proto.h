@@ -30,6 +30,7 @@
 #define COMBO_NUMERIC_LEN 5   /* 1/2, 1/3 or 2/3 digits for server/client parts */
 #define MAXLEN		512   /* Maximum IRC line length */
 #define MAXNUMPARAMS    200
+#define ALLCHANMSG_FUNCS_MAX  4 /* +1 == 5 potential 'allchanmsg' funcs */
 
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
@@ -95,6 +96,7 @@ int parse_line(char *line, int recursive);
 /* Callback notifications for protocol support. */
 typedef void (*chanmsg_func_t) (struct userNode *user, struct chanNode *chan, char *text, struct userNode *bot);
 void reg_chanmsg_func(unsigned char prefix, struct userNode *service, chanmsg_func_t handler);
+void reg_allchanmsg_func(struct userNode *service, chanmsg_func_t handler);
 struct userNode *get_chanmsg_bot(unsigned char prefix);
 
 typedef void (*privmsg_func_t) (struct userNode *user, struct userNode *target, char *text, int server_qualified);

@@ -442,6 +442,11 @@ static struct chanmsg_func {
     struct userNode *service;
 } chanmsg_funcs[256]; /* indexed by trigger character */
 
+static struct allchanmsg_func {
+    chanmsg_func_t func;
+    struct userNode *service;
+} allchanmsg_funcs[ALLCHANMSG_FUNCS_MAX];
+
 struct privmsg_desc {
     struct userNode *user;
     char *text;
@@ -455,6 +460,7 @@ privmsg_chan_helper(struct chanNode *cn, void *data)
     struct privmsg_desc *pd = data;
     struct modeNode *mn;
     struct chanmsg_func *cf = &chanmsg_funcs[(unsigned char)pd->text[0]];
+    int x;
 
     /* Don't complain if it can't find the modeNode because the channel might
      * be -n */
@@ -464,6 +470,15 @@ privmsg_chan_helper(struct chanNode *cn, void *data)
     /* Never send a NOTICE to a channel to one of the services */
     if (!pd->is_notice && cf->func && GetUserMode(cn, cf->service))
         cf->func(pd->user, cn, pd->text+1, cf->service);
+
+    /* This catches *all* text sent to the channel that the services server sees */
+    for (x = 0; x < ALLCHANMSG_FUNCS_MAX; x++) {
+       cf = (struct chanmsg_func *)&allchanmsg_funcs[x];
+       if (!cf->func)
+         break; /* end of list */
+       else
+       cf->func(pd->user, cn, pd->text, cf->service);
+    }
 }
 
 static void
@@ -489,6 +504,19 @@ reg_chanmsg_func(unsigned char prefix, struct userNode *service, chanmsg_func_t 
 	log_module(MAIN_LOG, LOG_WARNING, "Re-registering new chanmsg handler for character `%c'.", prefix);
     chanmsg_funcs[prefix].func = handler;
     chanmsg_funcs[prefix].service = service;
+}
+
+void
+reg_allchanmsg_func(struct userNode *service, chanmsg_func_t handler)
+{
+    int x;
+    for (x = 0; x < ALLCHANMSG_FUNCS_MAX; x++) {
+       if (allchanmsg_funcs[x].func)
+         continue;
+       allchanmsg_funcs[x].func = handler;
+       allchanmsg_funcs[x].service = service;
+       break;
+    }
 }
 
 struct userNode *

@@ -439,7 +439,7 @@
          "$bOptions:$b",
          "INFO:       Sets the infoline that $C sends when you join the channel.",
          "NOAUTOOP:   Enable or disable $C automatically opping you upon joining or authenticating.",
-         "AUTOINVITE: $C will invite you to +i/+k channels which you have access to and are not in when you authenticate if this setting is on.",
+	 "AUTOINVITE: $C will invite you to this channel if you have access to and are not in when you authenticate if this setting is on.",
          "NOTE: The NoAutoOp setting is equivalent to the !togop command in previous versions of srvx.",
          "$uSee Also:$u set");
 "USET INFO" ("/msg $C USET <#channel> INFO <info>",

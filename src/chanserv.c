@@ -5876,7 +5876,6 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
             if(!IsUserSuspended(channel)
                && IsUserAutoInvite(channel)
                && (channel->access >= channel->channel->lvlOpts[lvlInviteMe])
-               && (cn->modes & (MODE_KEY | MODE_INVITEONLY))
                && !self->burst)
                 irc_invite(chanserv, user, cn);
             continue;
