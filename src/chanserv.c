@@ -1845,6 +1845,7 @@ static CHANSERV_FUNC(cmd_unregister)
 
 static CHANSERV_FUNC(cmd_move)
 {
+    struct mod_chanmode change;
     struct chanNode *target;
     struct modeNode *mn;
     struct userData *uData;
@@ -1886,6 +1887,7 @@ static CHANSERV_FUNC(cmd_move)
         }
     }
 
+    mod_chanmode_init(&change);
     if(!(target = GetChannel(argv[1])))
     {
         target = AddChannel(argv[1], now, NULL, NULL);
@@ -1905,11 +1907,20 @@ static CHANSERV_FUNC(cmd_move)
     }
     else if(!IsSuspended(channel->channel_info))
     {
-        struct mod_chanmode change;
-        mod_chanmode_init(&change);
         change.argc = 1;
         change.args[0].mode = MODE_CHANOP;
         change.args[0].u.member = AddChannelUser(chanserv, target);
+        mod_chanmode_announce(chanserv, target, &change);
+    }
+
+    if(chanserv_conf.use_registered_mode)
+    {
+        /* Clear MODE_REGISTERED from old channel, add it to new. */
+        change.argc = 0;
+        change.modes_clear = MODE_REGISTERED;
+        mod_chanmode_announce(chanserv, channel, &change);
+        change.modes_clear = 0;
+        change.modes_set = MODE_REGISTERED;
         mod_chanmode_announce(chanserv, target, &change);
     }
 
@@ -6023,7 +6034,8 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
         struct banData *ban;
 
         if((user->channels.list[ii]->modes & (MODE_CHANOP|MODE_VOICE))
-           || !channel->channel_info)
+           || !channel->channel_info
+           || IsSuspended(channel->channel_info))
             continue;
         for(jj = 0; jj < channel->banlist.used; ++jj)
             if(user_matches_glob(user, channel->banlist.list[jj]->ban, 1))

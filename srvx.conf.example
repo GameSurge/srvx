@@ -193,10 +193,10 @@
 	// "modes" "+iok";
         // Does your ircd have off-channel services support?
         // Bahamut does; ircu2.10.11 does not.
-        "off_channel" "no";
+        "off_channel" "off";
 	// Does your ircd have a mode for registered channels?
 	// Bahamut does; ircu2.10.11 does not.
-	"use_registered_mode" "no";
+	"use_registered_mode" "off";
         // how long should a person be unseen before resending infoline?
         "info_delay" "120";
         // maximum greeting length
