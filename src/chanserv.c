@@ -5301,6 +5301,7 @@ static CHANSERV_FUNC(cmd_giveownership)
             }
             owner = curr_user;
         }
+        curr_user = owner;
     }
     if(!(new_owner_hi = modcmd_get_handle_info(user, argv[1])))
         return 0;
@@ -5795,6 +5796,8 @@ handle_join(struct modeNode *mNode)
     {
         if(modes)
         {
+            if(modes & MODE_CHANOP)
+                modes &= ~MODE_VOICE;
             change.args[0].mode = modes;
             change.args[0].member = mNode;
             mod_chanmode_announce(chanserv, channel, &change);
