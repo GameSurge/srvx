@@ -378,7 +378,7 @@ is_gline(const char *text)
         return 0;
     if (!*text)
         return 0;
-    while (*text && (isalnum((char)*text) || strchr(".-?*", *text)))
+    while (*text && (isalnum((char)*text) || strchr(".-?*:", *text)))
         text++;
     return !*text;
 }
@@ -405,9 +405,9 @@ split_ircmask(char *text, char **nick, char **ident, char **host)
     *text = 0;
     if (ident)
         *ident = start;
-    
+
     start = ++text;
-    while (*text && (isalnum((char)*text) || strchr(".-?*", *text)))
+    while (*text && (isalnum((char)*text) || strchr(".-?*:", *text)))
         text++;
     if (host)
         *host = start;

@@ -2,6 +2,23 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2005-srvx/srvx--devo--1.3
 #
 
+2005-01-20 22:51:54 GMT	Michael Poole <mdpoole@troilus.org>	patch-3
+
+    Summary:
+      various bugfixes and IPv6 preparation work
+    Revision:
+      srvx--devo--1.3--patch-3
+
+    src/modcmd.c (modcmd_privmsg): Fix CTCP PING response type.
+    
+    src/opserv.help: Add column headers for command lists.
+    
+    src/tools.c (is_gline, split_ircmask): Accept colons in hostnames.
+
+    modified files:
+     ChangeLog src/modcmd.c src/opserv.help src/tools.c
+
+
 2005-01-05 01:03:05 GMT	Michael Poole <mdpoole@troilus.org>	patch-2
 
     Summary:

@@ -17,6 +17,7 @@
 "USER" ("$bUSER COMMANDS$b",
         "Search for, gives information on, and gives some control over IRC users.",
         "Alerts are a way to automatically detect (and optionally G-line) certain users.  For example, a \"gline info sub7server\" alert would G-line any users using \"sub7server\" as their full name (user info field).",
+        "  COMMAND  [MinAccess]",
         "  ACCESS   [${level/access}]",
         "  ADDALERT [${level/addalert}]",
         "  ADDTRUST [${level/addtrust}]",
@@ -93,6 +94,7 @@
         "  CHANNEL REACTIONS   - Automated reactions based on channel names",
         "  CHANNEL CONTROL     - Channel information and control",
         "There are also some miscellaneous channel-related commands:",
+        "  COMMAND  [MinAccess]",
         "  CHANINFO [${level/chaninfo}]",
         "  CSEARCH  [${level/csearch}]",
         "  JOIN     [${level/join}]",
@@ -123,6 +125,7 @@
 
 "CHANNEL REACTIONS" ("$bCHANNEL REACTION COMMANDS$b",
         "\"Bad-word\" channels are for assisting in enforcement of network policies (such as disallowing \"warez\" channels).  \"Warning\" channels are for channels which may be abused when they are present, but should be allowed otherwise.",
+        "  COMMAND  [MinAccess]",
         "  ADDBAD    [${level/addbad}]",
         "  ADDEXEMPT [${level/addexempt}]",
         "  DELBAD    [${level/delbad}]",
@@ -152,6 +155,7 @@
 
 "CHANNEL CONTROL" ("$bCHANNEL CONTROL COMMANDS$b",
         "These are analogous to the same (or similar) $C commands, but can be used on any channel.",
+        "  COMMAND    [MinAccess]",
         "  BAN        [${level/ban}]",
         "  CLEARBANS  [${level/clearbans}]",
         "  CLEARMODES [${level/clearmodes}]",
@@ -231,6 +235,7 @@
 
 "GLINES" ("$bGLINE COMMANDS$b",
         "Searches for, issues, and removes G-lines (network-global K-lines).",
+        "  COMMAND  [MinAccess]",
         "  BLOCK    [${level/block}]",
         "  GLINE    [${level/gline}]",
         "  GTRACE   [${level/gtrace}]",
@@ -273,6 +278,7 @@
 
 "CLONES" ("$bCLONE/JUPE COMMANDS$b",
         "Commands that add, remove or control fake (reserved) users or servers.",
+        "  COMMAND   [MinAccess]",
         "  CLONE     [${level/clone}]",
         "  COLLIDE   [${level/collide}]",
         "  JUPE      [${level/jupe}]",
@@ -305,6 +311,7 @@
 
 "LOGS" ("$bLOGGING COMMANDS$b",
         "Controls what goes into logs and searches them.",
+        "  COMMAND         [MinAccess]",
         "  LOG             [${level/log}]",
         "  REOPEN          [${level/reopen}]");
 "LOG" ("/msg $O LOG <criteria> <value> [<criteria> <value>]...",
@@ -326,6 +333,7 @@
 
 "RUNNING" ("$bRUNNING COMMANDS$b",
         "These commands control srvx's runtime state.",
+        "  COMMAND   [MinAccess]",
         "  DIE       [${level/die}]",
         "  JUMP      [${level/jump}]",
         "  RECONNECT [${level/reconnect}]",
@@ -351,6 +359,7 @@
 
 "SERVICES" ("$bSERVICES COMMANDS$b",
         "These commands control how other services behave.",
+        "  COMMAND    [MinAccess]",
         "  BANEMAIL   [${level/banemail}]",
         "  BIND       [${level/bind}]",
         "  GAG        [${level/gag}]",
@@ -378,6 +387,7 @@
 
 "OTHER" ("$bOTHER COMMANDS$b",
         "These commands do not easily fall into one of the other categories.",
+        "  COMMAND [MinAccess]",
         "  DUMP    [${level/dump}]",
         "  HELP    [${level/help}]",
         "  RAW     [${level/raw}]",

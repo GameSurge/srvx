@@ -852,10 +852,10 @@ modcmd_privmsg(struct userNode *user, struct userNode *bot, char *text, int serv
             irc_notice_user(bot, user, "\001CLIENTINFO CLIENTINFO PING TIME USERINFO VERSION\x01");
         } else if (!irccasecmp(text, "PING")) {
             if (term) {
-                snprintf(response, sizeof(response), "\x01PONG %s\x01", term);
+                snprintf(response, sizeof(response), "\x01PING %s\x01", term);
                 irc_notice_user(bot, user, response);
             } else {
-                irc_notice_user(bot,user, "\x01PONG\x01");
+                irc_notice_user(bot,user, "\x01PING\x01");
             }
         } else if (!irccasecmp(text, "TIME")) {
             struct tm tm;
