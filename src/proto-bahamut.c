@@ -171,7 +171,7 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
 }
 
 struct userNode *
-AddService(const char *nick, const char *desc, const char *hostname) {
+AddService(const char *nick, const char *modes, const char *desc, const char *hostname) {
     time_t timestamp = now;
     struct userNode *old_user = GetUserH(nick);
     struct in_addr ipaddr = { INADDR_LOOPBACK };
@@ -182,7 +182,7 @@ AddService(const char *nick, const char *desc, const char *hostname) {
     }
     if (!hostname)
         hostname = self->name;
-    return AddUser(self, nick, nick, hostname, "+oikr", desc, timestamp, ipaddr, 0);
+    return AddUser(self, nick, nick, hostname, modes ? modes : "+oikr", desc, timestamp, ipaddr, 0);
 }
 
 struct userNode *

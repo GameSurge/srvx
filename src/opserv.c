@@ -4022,8 +4022,10 @@ void
 init_opserv(const char *nick)
 {
     OS_LOG = log_register_type("OpServ", "file:opserv.log");
-    if (nick)
-        opserv = AddService(nick, "Oper Services", NULL);
+    if (nick) {
+        const char *modes = conf_get_data("services/opserv/modes", RECDB_QSTRING);
+        opserv = AddService(nick, modes ? modes : NULL, "Oper Services", NULL);
+    }
     conf_register_reload(opserv_conf_read);
 
     memset(level_strings, 0, sizeof(level_strings));

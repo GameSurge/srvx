@@ -3826,7 +3826,8 @@ init_nickserv(const char *nick)
     userList_init(&curr_helpers);
 
     if (nick) {
-        nickserv = AddService(nick, "Nick Services", NULL);
+        const char *modes = conf_get_data("services/nickserv/modes", RECDB_QSTRING);
+        nickserv = AddService(nick, modes ? modes : NULL, "Nick Services", NULL);
         nickserv_service = service_register(nickserv);
     }
     saxdb_register("NickServ", nickserv_saxdb_read, nickserv_saxdb_write);

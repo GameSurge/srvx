@@ -1801,7 +1801,7 @@ void DelServer(struct server* serv, int announce, const char *message)
 }
 
 struct userNode *
-AddService(const char *nick, const char *desc, const char *hostname)
+AddService(const char *nick, const char *modes, const char *desc, const char *hostname)
 {
     char numeric[COMBO_NUMERIC_LEN+1];
     int local_num = get_local_numeric();
@@ -1820,7 +1820,7 @@ AddService(const char *nick, const char *desc, const char *hostname)
     if (!hostname)
         hostname = self->name;
     make_numeric(self, local_num, numeric);
-    return AddUser(self, nick, nick, hostname, "+oik", numeric, desc, now, "AAAAAA");
+    return AddUser(self, nick, nick, hostname, modes ? modes : "+oik", numeric, desc, now, "AAAAAA");
 }
 
 struct userNode *

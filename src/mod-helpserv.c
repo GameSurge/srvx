@@ -2603,7 +2603,7 @@ static struct helpserv_bot *register_helpserv(const char *nick, const char *help
      * it's a harmless default */
     hs = calloc(1, sizeof(struct helpserv_bot));
 
-    if (!(hs->helpserv = AddService(nick, helpserv_conf.description, NULL))) {
+    if (!(hs->helpserv = AddService(nick, "+iok", helpserv_conf.description, NULL))) {
         free(hs);
         return NULL;
     }

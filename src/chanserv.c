@@ -7249,7 +7249,8 @@ init_chanserv(const char *nick)
     dict_set_free_data(note_types, chanserv_deref_note_type);
     if(nick)
     {
-        chanserv = AddService(nick, "Channel Services", NULL);
+        const char *modes = conf_get_data("services/chanserv/modes", RECDB_QSTRING);
+        chanserv = AddService(nick, modes ? modes : NULL, "Channel Services", NULL);
         service_register(chanserv)->trigger = '!';
         reg_chanmsg_func('\001', chanserv, chanserv_ctcp_check);
     }
