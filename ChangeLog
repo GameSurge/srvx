@@ -2,6 +2,27 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2005-srvx/srvx--devo--1.3
 #
 
+2005-02-05 13:03:21 GMT	Michael Poole <mdpoole@troilus.org>	patch-15
+
+    Summary:
+      Rearrange slab allocation header; minor slab fixes.
+    Revision:
+      srvx--devo--1.3--patch-15
+
+    src/alloc-slab.c (ALLOC_MAGIC, FREE_MAGIC): Replace with single-byte values.
+    (struct alloc_header): Move file_id and line into second 32-bit word
+    of header.
+    (slab_alloc): Remove commented-out debug statements.
+    (slab_unalloc): Remove memset() of freed block and commented-out debug
+    statements.
+    (slab_free): memset() freed blocks here instead.  Try to fix
+    *_alloc_size counting errors (use the originally requested length
+    rather than rounded-up length)
+
+    modified files:
+     ChangeLog src/alloc-slab.c
+
+
 2005-02-05 03:52:51 GMT	Michael Poole <mdpoole@troilus.org>	patch-14
 
     Summary:

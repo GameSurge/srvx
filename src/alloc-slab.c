@@ -30,14 +30,14 @@
 
 #if SLAB_DEBUG
 
-#define ALLOC_MAGIC 0x1acf
-#define FREE_MAGIC  0xfc1d
+#define ALLOC_MAGIC 0x1a
+#define FREE_MAGIC  0xcf
 
 struct alloc_header {
-    unsigned int file_id : 8;
     unsigned int size : 24;
+    unsigned int magic : 8;
+    unsigned int file_id : 8;
     unsigned int line : 16;
-    unsigned int magic : 16;
 };
 
 static const char *file_ids[256];
@@ -226,7 +226,6 @@ slab_alloc(struct slabset *sset)
         assert(!slab->prev || slab == slab->prev->next);
         sset->child = slab;
         sset->nslabs++;
-        /* log_module(MAIN_LOG, LOG_DEBUG, "Allocated new %u-slab %p.", sset->size, slab); */
     }
 
     slab = sset->child;
@@ -235,7 +234,6 @@ slab_alloc(struct slabset *sset)
            <= (slab_pagesize() - sizeof(*slab) - sset->size));
     slab->free = *item;
     if (++slab->used == sset->items_per_slab) {
-        /* log_module(MAIN_LOG, LOG_DEBUG, "%u-slab %p is empty.", sset->size, item); */
         if (sset->child != slab) {
             /* Unlink slab and reinsert before sset->child. */
             if (slab->prev)
@@ -261,15 +259,12 @@ slab_alloc(struct slabset *sset)
 static void
 slab_unalloc(void *ptr, size_t size)
 {
-    void **item;
     struct slab *slab, *new_next;
 
-    item = ptr;
     assert(size < SMALL_CUTOFF);
     slab = (struct slab*)((((unsigned long)ptr | (slab_pagesize() - 1)) + 1) - sizeof(*slab));
-    *item = slab->free;
-    memset(item + 1, 0xde, size - sizeof(*item));
-    slab->free = item;
+    *(void**)ptr = slab->free;
+    slab->free = ptr;
     slab->parent->nallocs--;
 
     if (slab->used-- == slab->parent->items_per_slab
@@ -288,9 +283,7 @@ slab_unalloc(void *ptr, size_t size)
         slab->parent->child = slab;
         assert(!slab->next || slab == slab->next->prev);
         assert(!slab->prev || slab == slab->prev->next);
-        /* log_module(MAIN_LOG, LOG_DEBUG, "%u-slab %p became partial.", slab->parent->size, slab); */
     } else if (!slab->used) {
-        /* log_module(MAIN_LOG, LOG_DEBUG, "%u-slab %p became full.", slab->parent->size, slab); */
         /* Unlink slab from its parent. */
         slab->parent->nslabs--;
         if (slab->prev)
@@ -310,6 +303,8 @@ slab_unalloc(void *ptr, size_t size)
             /* Make sure we have enough free slab pages. */
             while (free_slab_count < SLAB_RESERVE) {
                 struct slab *tslab;
+                void *item;
+
                 item = slab_map(slab_pagesize());
                 tslab = (struct slab*)((char*)item + slab_pagesize() - sizeof(*slab));
                 tslab->base = item;
@@ -408,7 +403,7 @@ void
 slab_free(const char *file, unsigned int line, void *ptr)
 {
     alloc_header_t *hdr;
-    size_t real;
+    size_t user, real;
 
     if (!ptr)
         return;
@@ -418,20 +413,21 @@ slab_free(const char *file, unsigned int line, void *ptr)
     hdr->file_id = get_file_id(file);
     hdr->line = line;
     hdr->magic = FREE_MAGIC;
-    real = hdr->size + sizeof(*hdr);
+    user = hdr->size;
 #else
-    real = *hdr + sizeof(*hdr);
+    user = *hdr;
     (void)file; (void)line;
 #endif
-    real = (real + SLAB_GRAIN - 1) & ~(SLAB_GRAIN - 1);
+    real = (user + sizeof(*hdr) + SLAB_GRAIN - 1) & ~(SLAB_GRAIN - 1);
     if (real < SMALL_CUTOFF) {
+        memset(hdr + 1, 0xde, real - sizeof(*hdr));
         slab_unalloc(hdr, real);
         slab_alloc_count--;
-        slab_alloc_size -= real - sizeof(*hdr);
+        slab_alloc_size -= user;
     } else {
         munmap(hdr, slab_round_up(real));
         big_alloc_count--;
-        big_alloc_size -= real - sizeof(*hdr);
+        big_alloc_size -= user;
     }
 }
 
