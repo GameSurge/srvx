@@ -157,6 +157,7 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_MUST_TIME_OUT", "You must wait for cookies of that type to time out." },
     { "NSMSG_ATE_COOKIE", "I ate the cookie for your account.  You may now have another." },
     { "NSMSG_USE_RENAME", "You are already authenticated to account $b%s$b -- contact the support staff to rename your account." },
+    { "NSMSG_ALREADY_REGISTERING", "You have already used $bREGISTER$b once this session; you may not use it again." },
     { "NSMSG_REGISTER_BAD_NICKMASK", "Could not recognize $b%s$b as either a current nick or a hostmask." },
     { "NSMSG_NICK_NOT_REGISTERED", "Nick $b%s$b has not been registered to any account." },
     { "NSMSG_HANDLE_NOT_FOUND", "Could not find your account -- did you register yet?" },
@@ -278,7 +279,7 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_SET_LEVEL", "$bLEVEL:        $b%d" },
     { "NSMSG_SET_EPITHET", "$bEPITHET:      $b%s" },
     { "NSEMAIL_ACTIVATION_SUBJECT", "Account verification for %s" },
-    { "NSEMAIL_ACTIVATION_BODY", "This email has been sent to verify that this email address belongs to the person who tried to register an account on %1$s.  Your cookie is:\n    %2$s\nTo verify your email address and complete the account registration, log on to %1$s and type the following command:\n    /msg %3$s@%4$s COOKIE %5$s %2$s\nIf you did NOT request this account, you do not need to do anything.  Please contact the %1$s staff if you have questions." },
+    { "NSEMAIL_ACTIVATION_BODY", "This email has been sent to verify that this email address belongs to the person who tried to register an account on %1$s.  Your cookie is:\n    %2$s\nTo verify your email address and complete the account registration, log on to %1$s and type the following command:\n    /msg %3$s@%4$s COOKIE %5$s %2$s\nThis command is only used once to complete your account registration, and never again. Once you have run this command, you will need to authenticate everytime you reconnect to the network. To do this, you will have to type this command every time you reconnect:\n    /msg %3$s@%4$s AUTH %1$s your-password\n Please remember to fill in 'your-password' with the actual password you gave to us when you registered.\n\nIf you did NOT request this account, you do not need to do anything.  Please contact the %1$s staff if you have questions, and be sure to check our website." },
     { "NSEMAIL_PASSWORD_CHANGE_SUBJECT", "Password change verification on %s" },
     { "NSEMAIL_PASSWORD_CHANGE_BODY", "This email has been sent to verify that you wish to change the password on your account %5$s.  Your cookie is %2$s.\nTo complete the password change, log on to %1$s and type the following command:\n    /msg %3$s@%4$s COOKIE %5$s %2$s\nIf you did NOT request your password to be changed, you do not need to do anything.  Please contact the %1$s staff if you have questions." },
     { "NSEMAIL_EMAIL_CHANGE_SUBJECT", "Email address change verification for %s" },
@@ -1084,6 +1085,11 @@ static NICKSERV_FUNC(cmd_register)
         return 0;
     }
 
+    if (IsRegistering(user)) {
+        reply("NSMSG_ALREADY_REGISTERING");
+	return 0;
+    }
+
     if (IsStamped(user)) {
         /* Unauthenticated users might still have been stamped
            previously and could therefore have a hidden host;
@@ -1165,6 +1171,9 @@ static NICKSERV_FUNC(cmd_register)
     /* If they need to do email verification, tell them. */
     if (no_auth)
         nickserv_make_cookie(user, hi, ACTIVATION, hi->passwd);
+
+    /* Set registering flag.. */
+    user->modes |= FLAGS_REGISTERING; 
 
     return 1;
 }

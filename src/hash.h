@@ -58,6 +58,7 @@
 #define FLAGS_STAMPED           0x1000 /* for users who have been stamped */
 #define FLAGS_HIDDEN_HOST       0x2000 /* user's host is masked by their account */
 #define FLAGS_REGNICK           0x4000 /* user owns their current nick */
+#define FLAGS_REGISTERING	0x8000 /* user has issued accnt register command, is waiting for email cookie */ 
 
 #define IsOper(x)               ((x)->modes & FLAGS_OPER)
 #define IsService(x)            ((x)->modes & FLAGS_SERVICE)
@@ -73,6 +74,7 @@
 #define IsStamped(x)            ((x)->modes & FLAGS_STAMPED)
 #define IsHiddenHost(x)         ((x)->modes & FLAGS_HIDDEN_HOST)
 #define IsReggedNick(x)         ((x)->modes & FLAGS_REGNICK)
+#define IsRegistering(x)	((x)->modes & FLAGS_REGISTERING)
 #define IsLocal(x)              ((x)->uplink == self)
 
 #define NICKLEN         30

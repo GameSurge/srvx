@@ -1183,6 +1183,7 @@ static MODCMD_FUNC(cmd_whois)
 	if (IsDeaf(target)) buffer[bpos++] = 'd';
         if (IsHiddenHost(target)) buffer[bpos++] = 'x';
         if (IsGagged(target)) buffer_cat(" (gagged)");
+	if (IsRegistering(target)) buffer_cat(" (registered account)");
 	buffer[bpos] = 0;
 	if (bpos > 0)
             reply("OSMSG_WHOIS_MODES", buffer);

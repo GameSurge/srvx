@@ -2940,7 +2940,7 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
     if(action & ACTION_KICK)
     {
         char kick_reason[MAXLEN];
-	sprintf(kick_reason, "%s (%s)", reason, user->nick);
+	sprintf(kick_reason, "(%s) %s", user->nick, reason);
 
 	for(n = 0; n < victimCount; n++)
 	    KickChannelUser(victims[n]->user, channel, chanserv, kick_reason);
@@ -5831,7 +5831,7 @@ handle_join(struct modeNode *mNode)
         if(bData)
         {
             char kick_reason[MAXLEN];
-            sprintf(kick_reason, "%s (%s)", bData->reason, bData->owner);
+            sprintf(kick_reason, "(%s) %s", bData->owner, bData->reason);
 
             bData->triggered = now;
             if(bData != cData->bans)
