@@ -396,6 +396,7 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_NETWORK_SERVERS", "$bServers:             $b%i" },
     { "CSMSG_NETWORK_USERS",   "$bTotal Users:         $b%i" },
     { "CSMSG_NETWORK_BANS",    "$bTotal Ban Count:     $b%i" },
+    { "CSMSG_NETWORK_CHANUSERS", "$bTotal User Count:    $b%i" },
     { "CSMSG_NETWORK_OPERS",   "$bIRC Operators:       $b%i" },
     { "CSMSG_NETWORK_CHANNELS","$bRegistered Channels: $b%i" },
     { "CSMSG_SERVICES_UPTIME", "$bServices Uptime:     $b%s" },
@@ -3907,7 +3908,7 @@ static CHANSERV_FUNC(cmd_netinfo)
     reply("CSMSG_NETWORK_OPERS", curr_opers.used);
     reply("CSMSG_NETWORK_CHANNELS", registered_channels);
     reply("CSMSG_NETWORK_BANS", banCount);
-    reply("CSMSG_CHANNEL_USERS", userCount);
+    reply("CSMSG_NETWORK_CHANUSERS", userCount);
     reply("CSMSG_SERVICES_UPTIME", intervalString(interval, time(NULL) - boot_time, user->handle_info));
     reply("CSMSG_BURST_LENGTH", intervalString(interval, burst_length, user->handle_info));
     return 1;

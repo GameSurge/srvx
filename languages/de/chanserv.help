@@ -1,0 +1,569 @@
+"<INDEX>" ("$b$C Help$b",
+        "$b$C$b ist ein Channel Service Bot, welcher primär feindliche Channel Übernahmen verhindern soll. Zusätzlich beinhaltet der Bot viele nützliche Funktionen, um die Channel Leitung einfacher zu gestalten.",
+        "$b$C$b's Kategorien sind:",
+        "  USER            User Management.",
+        "  CHANNEL         Channel Management.",
+        "  BAN MANAGEMENT  Ban Management.",
+        "  INFORMATION     Informations-Befehle.",
+        "  OPER            Helper/IRC Operator Befehle."
+);
+"USER" ("$bUser Management Befehle:$b",
+        "  ACCESS      Zeigt den Channel Access von einem User an.",
+        "  MYACCESS    Zeigt alle Channel an, in denen du Access hast.",
+        "  ADDCOOWNER  Fügt der Channel Userliste einen Coowner hinzu.",
+        "  ADDMASTER   Fügt der Channel Userliste einen Master hinzu.",
+        "  ADDOP       Fügt der Channel Userliste einen Op hinzu.",
+        "  ADDPEON     Fügt der Channel Userliste einen Peon hinzu.",
+        "  GIVEOWNERSHIP    Gibt die Owner Rechte einem anderen User.",
+        "  CLVL        Ändert den Channel Access eines Users.",
+        "  ADDUSER     Gibt einem User den angegebenen Access Level.",
+        "  DELUSER     Löscht einen User aus einer Channel Userliste.",
+        "  DELETEME    Löscht deinen Access aus einer Channel Userliste.",
+        "  MDELCOOWNER Löscht alle Coowner, deren Accounts auf die angegebene Mask passen.",
+        "  MDELMASTER  Löscht alle Master, deren Accounts auf die angegebene Mask passen.",
+        "  MDELOP      Löscht alle Ops, deren Accounts auf die angegebene Mask passen.",
+        "  MDELPEON    Löscht alle Peons, deren Accounts auf die angegebene Mask passen.",
+	"  TRIM        Löscht inaktive User.",
+        "  UP          Gibt dir Op/Voice in einem Channel, wenn du Access hast.",
+        "  DOWN        Nimmt dir Op/Voice in einem Channel.",
+        "  UPALL       Gibt dir Op/Voice in allen Channeln, in denen du Access hast.",
+        "  DOWNALL     Nimmt dir Op/Voice in allen Channeln.",
+        "  OP          Gibt dem angegebenen User Op.",
+        "  DEOP        Nimmt dem angegebenen User Op.",
+        "  VOICE       Gibt dem angegebenen User Voice.",
+        "  DEVOICE     Nimmt dem angegebenen User Voice.",
+        "  USET        Ändert User Einstellung für einen Channel.",
+        "  SUSPEND     Suspendiert den Access eines Users in einem Channel.",
+        "  UNSUSPEND   Stellt den Access eines Users in einem Channel wieder her.",
+        "  WIPEINFO    Löscht die Infoline von einem User, der weniger Access hat als du."
+);
+"BAN MANAGEMENT" ("$bBan Management Befehle:$b",
+        "  KICK        Kickt einen User aus einem Channel.",
+        "  BAN         Bannt einen User aus einem Channel.",
+        "  KICKBAN     Kickt und bannt einen User aus einem Channel.",
+        "  BANS        Listet alle permanenten Bans auf.",
+        "  ADDBAN      Fügt der Channel Ban Liste einen permanenten Ban hinzu.",
+        "  ADDTIMEDBAN Fügt der Channel Ban Liste einen Ban hinzu, welcher nach der angegebenen Zeit erlischt.",
+        "  UNBAN       Löscht einen temporären Ban.",
+        "  DELBAN      Löscht einen permanenten Ban aus einer Channel Ban Liste.",
+	"  TRIM        Löscht alte Bans.",
+        "  UNBANME     Löscht alle Bans, die für deine Hostmask gelten.",
+        "  UNBANALL    Löscht alle temporären Bans."
+);
+"CHANNEL" ("$bChannel Management Befehle:$b",
+        "  OPEN        Entfernt die Channel Modi +ilk und alle Bans, die für deine Hostmask gelten.",
+        "  USERS       Listet alle User eines Channels auf.",
+        "  CLIST       Listet alle Coowner eines Channels auf.",
+        "  MLIST       Listet alle Master eines Channels auf.",
+        "  OLIST       Listet alle Ops eines Channels auf.",
+        "  PLIST       Listet alle Peons eines Channels auf.",
+        "  BANS        Listet alle permanenten Bans auf.",
+        "  TOPIC       Setzt ein Topic oder resetted das Default Topic.",
+        "  MODE        Ändert die Channel Modi.",
+        "  INVITE      Lädt andere User in einen Channel ein.",
+        "  INVITEME    Lädt dich in einen Channel ein.",
+        "  INFO        Zeigt Informationen über einen Channel an.",
+        "  SET         Ändert eine Vielzahl von Channel Einstellungen.",
+        "  EVENTS      Zeigt eine Liste von vergangenen Events an.",
+        "  NOTE        Fügt einem Channel eine Note hinzu.",
+        "  DELNOTE     Löscht eine Note von einem Channel.",
+        "  RESYNC      Gleicht die Ops und Voices mit der Channel Userliste ab."
+);
+"INFORMATION" ("$bInformations-Befehle:$b",
+        "  VERSION     Zeigt die aktuelle Version von $C an.",
+        "  NETINFO     Zeigt aktuelle Informationen über das Netzwerk an.",
+        "  STAFF       Zeigt eine Liste des Netzwerk Staff an.",
+        "  IRCOPS      Zeigt eine Liste der IRC Operatoren an.",
+        "  HELPERS     Zeigt eine Liste der Support Helper an.",
+        "  PEEK        Zeigt aktuelle Informationen über Channel Modi, das Topic und Channel Ops an.",
+        "  SEEN        Zeigt an, wann ein User das letzte Mal im Channel war.",
+        "  COMMAND     Zeigt Informationen über einen Befehl an."
+);
+"OPER" ("$bHelper/IRC Operator Befehle:$b",
+        "  SAY         Sendet per $C eine Nachricht in einen Channel.",
+        "  EMOTE       Sendet per $C /me ... an einen Channel.",
+        "  GOD         Aktiviert/Deaktiviert Security Override.",
+        "  EXPIRE      Löscht alte Channel.",
+        "  CSUSPEND    Suspendiert $C von einem Channel.",
+        "  CUNSUSPEND  Stellt $C's Access in einem suspendierten Channel wieder her.",
+        "  UNVISITED   Listet alle Channel auf, die in der angegebenen Zeit nicht besucht wurden.",
+	"  MERGE       Kopiert einen Channel mitsamt Userliste, Bans und anderen Daten in einen Anderen.",
+        "  MOVE        Verschiebt einen Channel.",
+        "  OPCHAN      Gibt $C Op in einem Channel.",
+        "  REGISTER    Registriert einen neuen Channel mit $C.",
+        "  NOREGISTER  Fügt einen Channel zu der do-not-register Liste hinzu.",
+        "  ALLOWREGISTER Löscht einen Channel von der do-not-register Liste.",
+        "  UNREGISTER  Löscht $C aus einem registrierten Channel.",
+        "  SEARCH      Sucht nach Channel, die zu den angegebenen Kriterien passen.",
+        "  ADDOWNER    Fügt der Channel Userliste einen Owner hinzu.",
+        "  DELOWNER    Löscht einen Owner von der Channel Userliste.",
+        "  MDELOWNER   Löscht alle Owner, deren Accounts auf die angegebene Mask passen.",
+        "  CREATENOTE  Erstellt einen neuen Note Typ.",
+        "  REMOVENOTE  Löscht einen bestehenden Note Typ."
+);
+"MYACCESS" ("/msg $S MYACCESS [Nick|*Account]",
+        "Listet alle Channel auf, in denen du Access hast und zeigt die Infoline an, falls du eine in diesem Channel gesetzt hast.",
+        "Netzwerk Staff kann einen Nicknamen oder *Account angeben, um den Channel Access von anderen Usern zu betrachten.",
+        "$uSiehe auch:$u access, users");
+        
+"ACCESS" ("/msg $S ACCESS <#Channel> [Nick|*Account]",
+        "Zeigt eine Vielzahl von Informationen eines Users an, wie zum Beispiel den Channel Access, den Netzwerk Access und die Infoline. Wenn kein Nick oder Account angegeben wird, dann zeigt dir $S deine eigenen Informationen.",
+        "$uSiehe auch:$u myaccess, users");
+        
+"ADDBAN" ("/msg $C ADDBAN <#Channel> <Mask|Nick> [Grund]",
+        "Fügt der Channel Ban Liste einen permaneten Ban hinzu, welcher solange bestehen bleibt, bis dieser mit dem DELBAN Befehl gelöscht wird. Wenn schon ein solcher Ban in der Ban Liste ist, wird der Grund des Bans geupdated. Wenn der bestehende Ban zeitlich begrenzt war, wird er permanent gesetzt.",
+        "$uSiehe auch:$u bans, delban, mdelban");
+        
+"ADDUSER" ("/msg $C ADDUSER <#Channel> <Nick|*Account> <Level>",
+        "Dieser Befehl fügt der Channel Userliste einen User mit dem angegebenen Access Level hinzu. (Du kannst Usern nur weniger Access geben als du hast.)",
+        "Der Access Level kann entweder $bPeon$b, $bOp$b, $bMaster$b, $bCoowner$b, $bOwner$b oder eine Zahl zwischen 1 und 500 sein.  Nur der Netzwerk Staff darf Usern Access Level 500 (Owner) geben.",
+        "$uSiehe auch:$u deluser, users");
+        
+"ADDTIMEDBAN" ("/msg $C ADDTIMEDBAN <#Channel> <Mask|Nick> <Länge> [Grund]",
+        "Fügt der Channel Ban Liste einen Ban hinzu, welcher nach der angegebenen Zeit erlischt. Der Befehl funktioniert ähnlich wie der ADDBAN Befehl, mit der Ausnahme, dass die Bans automatisch nach der angegebenen Zeit gelöscht werden. Wenn schon ein solcher Ban in der Ban Liste ist, wird der Grund des Bans geupdated. Falls der alte Ban ein zeitlich begrenzter Ban war, dann wird dieser verlängert. Zeitliche begrenzte Bans müssen mit dem DELBAN Befehl gelöscht werden, genauso wie ADDBANs.",
+        "$uSiehe auch:$u addban, bans, delban, durations");
+        
+"ALLOWREGISTER" ("/msg $C ALLOWREGISTER <#Channel|*Account>",
+        "Löscht einen Channel (oder eine Channel Mask) von der do-not-register Liste.",
+        "$uSiehe auch:$u register, noregister, unregister");
+        
+"BAN" ("/msg $C BAN <#Channel> <Mask|Nick>",
+        "Dieser Befehl wird dem Channel einen temporären Ban mit den angegebenen Parametern hinzufügen. Masks werden in dem Format <Nick>!<Ident>@<Host> angegeben und können Wildcards enthalten. Wenn ein Nickname angegeben wird, wird die Mask automatisch generiert. Dieser Ban kann entweder mit einem normalen IRC Client oder via UNBAN oder UNBANALL Befehl gelöscht werden. Wenn du durch solch einen Ban gebannt wurdest, kannst du den UNBANME Befehl verwenden.",
+        "$uBei Fragen, betrete #support$u",
+        "Beispiel: *!*serv@*.gamesurge.net würde jeden mit der Ident 'serv' und dem gamesurge.net Host bannen.",
+        "$uSiehe auch:$u unban, unbanall, unbanme");
+        
+"BANS" ("/msg $C BANS <#Channel>",
+        "Dieser Befehl listet alle permanenten und zeitlich begrenzten Bans auf.",
+        "$uSiehe auch:$u addban, delban, mdelban");
+        
+"CLIST" ("/msg $C CLIST <#Channel> [Such-Maske]",
+        "Dieser Befehl listet alle $bCoowner$b des Channels auf. Wenn eine Such-Maske angegeben wird, werden nur Coowner aufgelistet, deren Accounts auf die Such-Maske passen.",
+        "$uSiehe auch:$u addcoowner, delcoowner, mdelcoowner, users");
+
+"CLVL" ("/msg $C CLVL <#Channel> <Nick|*Account> <Level>",
+        "Dieser Befehl ändert den Access Level eines Users. Du kannst diesem nicht genauso viel oder mehr Access geben, als du selber hast.",
+        "Du kannst *Account statt Nick verwenden. Das * Zeichen bedeutet, dass $C direkt den Account benutzt (nützlich, falls der User nicht online ist).",
+        "$uSiehe auch:$u access, users, giveownership");
+        
+"CREATENOTE" ("/msg $S CREATENOTE <Typ-Name> <Set-Access> [Access-Arg] <View-Access> <Max-Length>",
+        "Definiert einen neuen Note Typ.  $bTyp-Name$b ist der Name der Note.  $bSet-Access$b kann folgendes sein:",
+        "  $bPRIVILEGED$b Setzt den minimum $O Access, der von $baccess-arg$b bestimmt wird",
+        "  $bCHANNEL   $b Setzt den minimum Channel Access, der von $baccess-arg$b bestimmt wird",
+        "  $bSETTER    $b (ohne access-arg) wird jedem erlaubt, die Note zu verändern, wenn dieser auch !set benutzen kann",
+        "$bView-Access$b ist entweder $bPRIVILEGED$b, $bCHANNEL_USERS$b, oder $bALL$b. Dieser Wert bestimmt, wer die Note sehen kann.",
+        "$bMax-Length$b ist die maximale Länge der Note.",
+        "Falls ein Note Typ schon existiert, wird er mit den neuen Einstellungen geupdated.",
+        "$uSiehe auch:$u removenote");
+        
+"GIVEOWNERSHIP" ("/msg $C GIVEOWNERSHIP <#Channel> <Nick|*Account>",
+        "Übergibt die Owner Rechte des Channels an einen anderen User, der auf der Userliste sein muss.  Dein Access wird auf Coowner geändert, der andere User bekommt den Channel Access Owner.",
+        "Du kannst *Account statt Nick verwenden. Das * Zeichen bedeutet, dass $C direkt den Account benutzt (nützlich, falls der User nicht online ist).",
+        "$uSiehe auch:$u clvl, access, users");
+        
+"CSUSPEND" ("/msg $C CSUSPEND <#Channel> [!]<Dauer> <Grund>",
+        "Dieser Befehl entfernt $C temporär aus dem Channel.",
+        "Die Dauer kann \"0\" betragen, damit $C den niemals wieder betritt, ansonsten wird $C nach der angegebenen $uDauer$u den Channel wieder betreten.",
+        "Wenn du eine bereits existierende Suspendierung verändern möchtest, benutze ein ! vor der Dauer.",
+        "$uSiehe auch:$u unregister, cunsuspend, durations");
+        
+"CUNSUSPEND" ("/msg $C CUNSUSPEND <#Channel>",
+        "Stellt $b$C$bs Access in einem suspendierten Channel wieder her.",
+        "$uSiehe auch:$u csuspend, unregister");
+        
+"DELBAN" ("/msg $C DELBAN <#Channel> <Mask|Nick>",
+        "Löscht einen Ban aus der Ban Liste. Mit diesem Befehl kann man sowohl permanente Bans löschen als auch Bans, die nach einer Zeit ablaufen.",
+        "$uSiehe auch:$u addban, addtimedban, bans");
+        
+"DELNOTE" ("/msg $C DELNOTE <#Channel> <Note-Name>",
+        "Löscht eine Note.  Um dieses zu tun, musst du Access haben, die Note zu verändern.",
+        "$uSiehe auch:$u note, note types");
+        
+"DELUSER" ("/msg $C DELUSER <#Channel> <Nick|*Account>",
+        "Löscht einen User aus der Channel Userliste.",
+        "Du kannst *Account statt Nick verwenden. Das * Zeichen bedeutet, dass $C direkt den Account benutzt (nützlich, falls der User nicht online ist).",
+        "$uSiehe auch:$u adduser, deleteme, users");
+        
+"DELETEME" ("/msg $C DELETEME <#Channel> [<Bestätigungscode>]",
+        "Du kannst mit diesem Befehl deinen Access aus einem Channel löschen, solange du keinen Owner Access hast.  $bFalls du dich ausversehen löscht, musst du jemanden finden, der mehr Access hat als du, der dir wieder Access gibt.$b",
+        "Der Bestätigungscode ist von Channel User zu Channel User verschieden.  Wenn du keinen Code angibst, wird dir $C sagen, wie der Code lauten muss.",
+        "$uSiehe auch:$u adduser, deluser, giveownership, users");
+        
+"DEOP" ("/msg $C DEOP <#Channel> <Nick> [Nick]...",
+        "Nimmt dem/den angegebenen User(n) Op.",
+        "$uSiehe auch:$u down, op");
+        
+"DEVOICE" ("/msg $C DEVOICE <#Channel> <Nick> [Nick]...",
+        "Nimmt dem/den angegebenen User(n) Voice.",
+        "$uSiehe auch:$u addpeon, delpeon, deop, voice");
+        
+"DOWN" ("/msg $C DOWN <#Channel>",
+        "Dieser Befehl wird dir im angegebenen Channel Op/Voice wegnehmen.",
+        "$uSiehe auch:$u downall, up, upall");
+        
+"DOWNALL" ("/msg $C DOWNALL",
+        "Führt den $bdown$b Befehl für jeden Channel aus, in dem du Access hast.",
+        "$uSiehe auch:$u down, up, upall");
+        
+"DURATIONS" ("[<n>y][<n>M][<n>w][<n>d][<n>h][<n>m][<n>[s]]",
+        "Es gibt eine Syntax, mit der du eine Zeitangabe ganz einfach definieren kannst.  Eine Zeitangabe besteht aus einem oder mehreren Teilen, welche aus Zahlen bestehen und durch Buchstaben getrennt werden.",
+        "Die gültigen Buchstaben sind $by$b (für 1 Jahr - 365 Tage), $bM$b (für Monat - 31 Tage), $bw$b (für Woche - 7 Tage), $bd$b (für Tag - 24 Stunden), $bh$b (für Stunde - 60 Minuten), $bm$b (für Minuten - 60 Sekunden) und $bs$b (für Sekunde).  Wir wissen, dass nicht alle Jahre 365 Tage haben und nicht alle Monate 31 Tage, aber auf solch kleine Unterschiede kommt es nicht an.",
+        "Wenn der letzte Teil der Zeitangabe keinen Buchstaben enthält, gilt dieser Teil als Sekundenangabe.",
+        "$uBeispiele$u: 1y1M bedeutet 365 Tage und 31 Tage; 1y1m bedeutet 365 Tage und 1 Minute; 1h30m45 bedeutet 90 Minuten und 45 Sekunden.");
+        
+"EMOTE" ("/msg $C EMOTE <#Channel> <Text>",
+        "Durch diesen Befehl sendet $b$C$b eine CTCP ACTION Nachricht an den angegebenen Channel.",
+        "$uSiehe auch:$u say");
+        
+"EVENTS" ("/msg $C EVENTS <#Channel> [Limit [Such-Mask]]",
+        "Erlaubt Coownern, sich eine Liste der ausgeführten Befehle im Channel anzusehen. Falls eine Such-Mask angegeben wird, werden nur Befehle angezeigt, die auf die Such-Mask passen.",
+	"$bAnmerkung:$b Du musst ein Limit angeben, wenn du eine Such-Mask benutzt.",
+        "$uSiehe auch:$u last");
+        
+"EXPIRE" ("/msg $C EXPIRE",
+        "Löscht alle Channel, die für eine eingestellte Zeit nicht besucht worden sind. $C löscht automatisch verlassene Channel, daher braucht man diesen Befehl nur verwenden, wenn die eingestellte Zeit verändert wurde.",
+        "$uSiehe auch:$u unvisited");
+        
+"HELPERS" ("/msg $C HELPERS",
+        "Zeigt alle Helper an, die zur Zeit online sind. Wenn ein Helper /away ist, wird der Nickname in Klammern gesetzt.",
+        "$uSiehe auch:$u staff");
+        
+"INFO" ("/msg $C INFO <#Channel>",
+        "Dieser Befehl zeigt viele Informationen über einen Channel an, wie zum Beispiel maximale Besucher, Anzahl der Bans und User.");
+        
+"INVITE" ("/msg $C INVITE <#Channel> [Nick [Grund]]",
+        "Lädt einen User in den Channel ein. Falls ein Grund angegeben wird, wird dieser mit verschickt. Wenn du weniger als $bMaster$b im Channel hast, kannst du nur dich selber in den Channel einladen. Wenn du keinen Nick angibst, wirst du in den Channel eingeladen.");
+
+"INVITEME" ("/msg $S INVITEME <#channel>",
+        "Lädt dich in den angegebenen Channel ein.");
+        
+"IRCOPS" ("/msg $C IRCOPS",
+        "Zeigt alle IRC Operatoren an, die zur Zeit online sind. Wenn ein IRCOp /away ist, wird der Nickname in Klammern gesetzt.",
+        "$uSiehe auch:$u staff");
+
+"KICK" ("/msg $C KICK <#Channel> <Mask|Nick> [Grund]",
+        "Kickt einen User aus dem Channel. Wenn kein Grund angegeben wird, wird ein Standardgrund verwendet.",
+        "$uSiehe auch:$u kickban");
+        
+"KICKBAN" ("/msg $C KICKBAN <#Channel> <Mask|Nick> [Grund]",
+        "Kickt und bannt einen User aus dem Channel. Wenn kein Grund angegeben wird, wird der Standardgrund verwendet.",
+        "$uSiehe auch:$u addban, kick");
+        
+"MDELCOOWNER" ("/msg $C MDELCOOWNER <#Channel> <Such-Mask>",
+        "Löscht alle Coowner aus der Channel Userliste, deren Accounts auf die angegebene Such-Mask passen.",
+        "$uSiehe auch:$u clist, delcoowner");
+        
+"MDELMASTER" ("/msg $C MDELMASTER <#Channel> <Such-Mask>",
+        "Löscht alle Master aus der Channel Userliste, deren Accounts auf die angegebene Such-Mask passen.",
+        "$uSiehe auch:$u mdelban, mdelcoowner, mdelop, mdelowner, mdelpeon");
+        
+"MDELOP" ("/msg $C MDELOP <#Channel> <Such-Mask>",
+        "Löscht alle Ops aus der Channel Userliste, deren Accounts auf die angegebene Such-Mask passen.");
+
+"MDELOWNER" ("/msg $C MDELOWNER <#Channel> <Such-Mask>",
+        "Löscht alle Owner aus der Channel Userliste, deren Accounts auf die angegebene Such-Mask passen.",
+        "$uSiehe auch:$u addowner, mdelcoowner, mdelmaster, mdelop, mdelpeon");
+
+"MDELPEON" ("/msg $C MDELPEON <#Channel> <Such-Mask>",
+        "Löscht alle Peons aus der Channel Userliste, deren Accounts auf die angegebene Such-Mask passen.",
+        "$uSiehe auch:$u addpeon, mdelcoowner, mdelmaster, mdelop");
+
+"MERGE" ("/msg $C MERGE <#Channel> <Ziel>",
+        "Kopiert alle Daten wie User und Bans von dem alten Channel in den neuen Channel. User, die ihm Ziel Channel mehr Access haben als im Alten, behalten den höheren Access.",
+        "$uSiehe auch:$u register, move, unregister");
+
+"MLIST" ("/msg $C MLIST <#Channel> [Such-Maske]",
+        "Dieser Befehl listet alle $bMaster$b des Channels auf. Wenn eine Such-Maske angegeben wird, werden nur Master aufgelistet, deren Accounts auf die Such-Maske passen.",
+        "$uSiehe auch:$u addmaster, delmaster, mdelmaster, users");
+
+"MODE" ("/msg $C MODE <#Channel>",
+        "Setzt Channel Modi oder ändert sie auf die Modi, die bei SET MODES angegeben sind.",
+        "$uSiehe auch:$u open, set");
+
+"MOVE" ("/msg $C MOVE <#Channel> <Ziel>",
+        "Verschiebt den Channel zu einem anderen Channel, eingeschlossen den Einstellungen und der User/Ban Listen. Alle Einschränkungen, die für $bregister$b gelten, gelten auch für $bmove$b.",
+        "$uSiehe auch:$u register, merge, unregister");
+
+"NETINFO" ("/msg $C NETINFO",
+        "Zeigt Informationen über $b$C$b und das Netzwerk.",
+        "$uSiehe auch:$u info, staff");
+
+"NOREGISTER" ("/msg $C NOREGISTER <#Channel|*Account> <Grund>",
+        "Ohne Parameter werden alle Einträge der do-not-register Liste aufgelistet.",
+        "Mit Parametern wird der angegebene Channel (oder Account) der Liste hinzugefügt. Die Wildcards * und ? können für Channelnamen verwendet werden.",
+        "$uSiehe auch:$u allowregister, register, unregister");
+
+"NOTE" ("/msg $C NOTE <#Channel> [<Typ> [NeuerText]]",
+        "Ohne Parameter werden die Notes des Channels angezeigt (wenn vorhanden).",
+        "Mit einem Parameter wird der angegebene Note Typ und die dazugehörige Note angezeigt.",
+        "Mit mehr als einem Parameter wird die Note geändert.",
+        "$uSiehe auch:$u delnote, note types");
+
+"NOTE TYPES" ("$bNOTE TYPES$b",
+        "${notes}",
+        "$uSiehe auch:$u note, delnote");
+
+"OLIST" ("/msg $C OLIST <#Channel> [Such-Maske]",
+        "Dieser Befehl listet alle $bOps$b des Channels auf. Wenn eine Such-Maske angegeben wird, werden nur Ops aufgelistet, deren Accounts auf die Such-Maske passen.",
+        "$uSiehe auch:$u addop, delop, mdelop, users");
+
+"OP" ("/msg $C OP <#Channel> <Nick> [Nick]...",
+        "Mit diesem Befehl kannst du durch $C anderen Usern Op geben.",
+        "$uSiehe auch:$u addop, delop, deop");
+
+"OPCHAN" ("/msg $C OPCHAN <#Channel>",
+        "Durch diesen Befehl gibt sich $C in dem Channel selber Op.");
+
+"OPEN" ("/msg $C OPEN <#Channel>",
+        "Durch diesen Befehl entfernt $C alle Channel Modi, die einen User daran hindern könnten, den Channel zu betreten und löscht alle Bans, die mit der Hostmask des Users übereinstimmen.",
+        "$uSiehe auch:$u unbanme");
+
+"PEEK" ("/msg $C PEEK <#Channel>",
+        "Zeigt das aktuelle Topic, die Channel Modi und Ops in dem Channel. Anders als $binfo$b, zeigt $bpeek$b Channel Information, die nicht mit $b$C$b zusammen hängen.",
+        "$uSiehe auch:$u info");
+
+"PLIST" ("/msg $C PLIST <#Channel> [Such-Maske]",
+        "Dieser Befehl listet alle $bPeons$b des Channels auf. Wenn eine Such-Maske angegeben wird, werden nur Peons aufgelistet, deren Accounts auf die Such-Maske passen.",
+        "$uSiehe auch:$u addpeon, delpeon, mdelpeon, users");
+        
+"REGISTER" ("/msg $C REGISTER <#Channel> [User|*Account] [Force]",
+        "Registriert einen Channel mit $b$C$b und gibt dem angegebenen User Owner Rechte. Wenn kein User angegeben wird, gibt $b$C$b die Owner Rechte an den User, der den Befehl benutzt hat.",
+        "Wenn der Registrar Netzwerk Staff ist und $bForce$b angibt, ist es möglich, einen Channel an einen User zu registrieren, auch wenn der Channel und/oder der User auf der do-not-register Liste sind.",
+        "Zusätzlich muss man $bForce$b benutzen, wenn jemand mehr Channel besitzt, als in den Einstellungen angegeben und noch einen weiteren Channel benötigt.",
+        "$uSiehe auch:$u addowner, noregister, unregister");
+
+"REMOVENOTE" ("/msg $S REMOVENOTE <Typ> [FORCE]",
+        "Löscht einen Note Typ.  Ohne das Wort $bFORCE$b, wird nur ein Typ gelöscht, der in keinem Channel verwendet wird.",
+        "$uSiehe auch:$u createnote");
+
+"RESYNC" ("/msg $S RESYNC <#Channel>",
+        "Synchronisiert die User des Channels mit der Channel Userliste. Das bedeutet, wenn ein User normal beim Betreten des Channels Op bekommt, stellt $S sicher, dass der User Op hat.  Wenn ein User normal Voice bekommt, stellt $S sicher, dass der User Voice hat aber kein Op.  Wenn User keinen Access im Channel haben, stellt $S sicher, dass diese weder Op noch Voice haben.");
+
+"SAY" ("/msg $C SAY <#Channel> <Text>",
+        "Durch diesen Befehl kann man $b$C$b in einem Channel sprechen lassen.",
+        "$uSiehe auch:$u emote");
+
+"SEARCH CRITERIA" ("$bSEARCH CRITERIA$b",
+        "Die folgenden Kriterien können benutzt werden:",
+        "  NAME        Channel, deren Namen auf die angebenene Such-Maske passen",
+        "  REGISTRAR   Channel, dessen Registrar auf die angebenene Such-Maske passt",
+        "  UNVISITED   Channel, die in der angegebenen Zeit nicht besucht wurden",
+        "  REGISTERED  Channel, die länger als der angegebene Zeitraum registriert sind",
+        "  FLAGS       Channel, die die angegebenen Flags haben",
+        "  LIMIT       Limitiert die Ausgabe der Suche",
+        "Flags können sein: nodelete und suspended.",
+        "$uSiehe auch:$u search, search actions");
+
+"SEARCH ACTIONS" ("$bSEARCH ACTIONS$b",
+	"Die folgenden Aktionen sind gültig:",
+	"  PRINT       Zeigt die Channel, die den Kriterien entsprechen",
+	"  COUNT       Zählt die Channel, die den Kriterien entsprechen",
+	"$uSiehe auch:$u search, search criteria");
+
+"SEARCH" ("/msg $C SEARCH <Aktion> <Kriterium> <Wert> [<Kriterium> <Wert>]...",
+        "Sucht nach Channeln, die mit den angegebenen Kriterien übereinstimmen und führt dann die Aktion aus.",
+        "$uSiehe auch:$u search actions, search criteria");
+
+"SEEN" ("/msg $C SEEN <#Channel> <Account>",
+        "Dieser Befehl zeigt an, wann ein User letztmalig im Channel war.",
+        "$uSiehe auch:$u access, users");
+
+"SET" ("/msg $C SET <#Channel> [<Einstellung> [Wert]]",
+        "Mit diesem Befehl ist es möglich, zahlreiche Channel Einstellungen zu verändern.  Ohne Parameter zeigt $C alle aktuellen Einstellungen.",
+        "DEFAULTTOPIC: Default Topic des Channels.",
+        "TOPICMASK:    Vorlage, wie das Channel Topic aussehen soll.",
+        "GREETING:     Begrüßung für Channel Besucher.",
+        "USERGREETING: Begrüßung für User, die auf der Channel Userliste sind.",
+        "MODES:        Default Channel Modi.",
+	"PUBCMD:       Wer darf ! Befehle benutzen.",
+        "INVITEME:     Wer darf INVITEME und AUTOINVITE benutzen.",
+        "USERINFO:     Bei wem soll die Infoline angezeigt werden.",
+        "GIVEVOICE:    Wer bekommt von $b$C$b Voice.",
+        "GIVEOPS:      Wer bekommt von $b$C$b Op.",
+        "ENFOPS:       Wer darf anderen Usern Op geben.",
+        "ENFMODES:     Wer darf die Channel Modi verändern.",
+        "ENFTOPIC:     Wer darf das Topic verändern.",
+        "TOPICSNARF:   Bei wem soll $b$C$b das Default Topic ändern, wenn dieser /TOPIC #Channel benutzt.",
+        "SETTERS:      Wer darf die Channel Einstellungen verändern (durch $bSET$b).",
+        "CTCPUSERS:    Wer darf CTCPs an den Channel senden.",
+        "CTCPREACTION: Reaktion bei einem unerlaubten CTCP.",
+        "PROTECT:      Wen soll $b$C$b vor anderen Usern beschützen.",
+	"TOYS:         Wie soll mit Toy Befehlen umgegangen werden (!8ball etc).",
+        "TOPICREFRESH: Hiermit kann eingestellt werden, ob und wie oft das Topic erneuert werden soll.",
+        "DYNLIMIT:     Regelt das Userlimit (Channel Modus +l), um Join-Floods zu verhindern.",
+        "$bIRCOP$b:",
+        "NODELETE:  Verhindert, dass der Channel gelöscht werden kann.",
+        "Wenn du willst, dass die Standard Channel Einstellungen wiederhergestellt werden, kannst du den $bSET DEFAULTS$b Befehl benutzen.",
+        "$uSiehe auch:$u set pubcmd, set giveops, set enfops, set enfmodes, set enftopic, set protect, set toys, set setters, set topicrefresh, set ctcpusers, set ctcpreaction, set defaults");
+
+"SET DEFAULTTOPIC" ("/msg $C SET <#Channel> DEFAULTTOPIC <Neues Topic>",
+        "Dieser Befehl ändert das Default Topic des Channels. $C wird dieses Topic setzen, wenn jemand den $btopic$b Befehl ohne Parameter verwendet, wenn das Topic in bestimmten Zeitabständen erneuert werden soll (falls $bset topicrefresh$b aktiviert ist) oder wenn ein unauthorisierter User das Topic ändert.",
+        "$uSiehe auch:$u set, set topicrefresh, set enftopic, set topicmask");
+
+"SET TOPICMASK" ("/msg $C SET <#Channel> TOPICMASK <Topic Mask mit *>",
+        "Dieser Befehl setzt eine Vorlage, wie das Topic aussehen sollte.  Die Wilcard $b*$b bedeutet, dass dort nachher unendlich viele Zeichen stehen dürfen.  Ein User darf das Topic verändern, wenn das entweder $btopicmask$b oder $benftopic$b erlauben.",
+        "Um eine Topic Mask zu setzen, musst du folgendes machen: $b!set topicmask Willkommen - News: *$b und dann $b!set enftopic 501$b.",
+        "Wenn du dann $b!topic keine$b eingibst, ändert $C das Topic in $uWillkommen - News: keine$u. Wenn du die Topic Mask wieder ändern möchtest, musst du $benftopic$b auf einen niedrigeren Access Level setzen.",
+        "Eine Topic Mask darf nur eine WildCard $b*$b enthalten, ansonsten funtkioniert die Topic Mask nicht wie gewünscht, wenn mehrere * oder ? angegeben sind.",
+        "Falls du immer noch nicht genau weißt, wie du Topic Mask verwenden kannst, gehe auf diese Seite: http://www.gamesurge.net/cms/Topic%%20Masking%%20Guide/",
+        "$uSiehe auch:$u set, set topic, set enftopic");
+
+"SET TOYS" ("/msg $C SET <#Channel> TOYS <Wert>",
+	"In dieser Einstellung kannst du angeben, wie und ob $C auf Befehle wie !8ball reagieren soll.  Gültige Werte sind:",
+	"$b0$b  Toys sind vollständig abgeschaltet.",
+	"$b1$b  Toys werden nur dem User direkt beantwortet.",
+	"$b2$b  Toys werden im Channel beantwortet.",
+	"$uSiehe auch:$u set");
+
+"SET PUBCMD" ("/msg $C SET <#Channel> PUBCMD <Wert>",
+        "Mit diesem Befehl kannst du den Access Level festsetzen, den man benötigt, um Befehle via ! direkt im Channel nutzen zu können. Du kannst Access Level 0 - 501 verwenden. 0 bedeutet, jeder darf ! Befehle verwenden; 501 bedeutet, niemand darf ! Befehle verwenden.",
+        "$uSiehe auch:$u set");
+
+"SET ENFOPS" ("/msg $C SET <#Channel> ENFOPS <Wert>",
+        "Mit diesem Befehl kannst du den Access Level angegeben, den man benötigt, um Usern Op zu geben, die weniger als Op Access im Channel haben. Wenn ein unbekannter User Op erhält, wird $C ihm die Op-Rechte wieder entziehen.  Du kannst Access Level 0 - 501 verwenden. 501 bedeutet, niemand darf unbekannte Usern Op geben.",
+        "$uSiehe auch:$u set");
+
+"SET GIVEOPS" ("/msg $C SET <#Channel> GIVEOPS <Wert>",
+        "Mit diesem Befehl kannst du den Access Level angegeben, den man benötigt, um von $C automatisch Op zu bekommen.  Du kannst Access Level 0 - 501 verwenden. 0 bedeutet, jeder bekommt Op; 501 bedeutet, niemand bekommt Op.",
+        "$uSiehe auch:$u set");
+
+"SET ENFMODES" ("/msg $C SET <#Channel> ENFMODES <Wert>",
+        "Mit diesem Befehl kannst du den Access Level angegeben, den man benötigt, um die Channel Modi zu verändern. Die Channel Modi Beschränkung, die mit $bset modes$b angegeben wurde, besteht für den User dann nicht. Du kannst Access Level 0 - 501 verwenden. 0 bedeutet, für niemanden gilt die $bset modes$b Beschränkung; 501 bedeutet, für alle gilt die $bset modes$b Beschränkung.",
+        "$uSiehe auch:$u set");
+
+"SET ENFTOPIC" ("/msg $C SET <#Channel> ENFTOPIC <Wert>",
+        "Mit diesem Befehl kannst du den Access Level angegeben, den ein User benötigt, um das Channel Topic zu verändern.  Du kannst Access Level 0 - 501 verwenden. 0 bedeutet, jeder darf das Topic ändern; 501 bedeutet, niemand darf das Topic ändern.",
+        "Wenn eine Topic Mask gesetzt wurde, dann darf ein User das Topic verändern, solange es zu der Topic Mask passt oder dieser mehr Access hat als bei dieser Einstellung angegeben ist.",
+        "Wenn keine Topic Mask gesetzt wurde, dann darf ein User das Topic nicht verändern, wenn dieser weniger Access hat.",
+        "$uSiehe auch:$u set, set topic, set topicmask");
+
+"SET PROTECT" ("/msg $C SET <#Channel> PROTECT <Wert>",
+        "Hier kannst du einstellen, wer von $C geschützt werden soll.  Gültige Einstellungen sind:",
+        "$b0$b  Channel Besucher und User, die Access im Channel haben, werden vor Usern mit gleichem oder weniger Access geschützt.",
+        "$b1$b  User, die Access im Channel haben, werden vor Usern mit gleichem oder weniger Access geschützt.",
+        "$b2$b  User, die Access im Channel haben, werden vor Usern mit weniger Access geschützt.",
+        "$b3$b  Niemand wird geschützt.",
+        "$uSiehe auch:$u set");
+
+"SET SETTERS" ("/msg $C SET <#Channel> SETTERS <Wert>",
+        "Hiermit kannst du einstellen, welchen Access Level ein User benötigt, um mit dem Befehl $bSET$b die $C Einstellungen zu verändern.  Du kannst Access Level 200 - 500 verwenden.",
+        "$uSiehe auch:$u set");
+
+"SET TOPICREFRESH" ("/msg $C SET <#Channel> TOPICREFRESH <Wert>",
+        "Mit diesem Befehl kannst du angeben, ob und wie oft das aktuelle Topic mit dem Default Topic überschrieben wird.  Gültige Einstellungen sind:",
+        "$b0$b  Niemals erneuern.",
+        "$b1$b  Alle 3 Stunden erneuern.",
+        "$b2$b  Alle 6 Stunden erneuern.",
+        "$b3$b  Alle 12 Stunden erneuern.",
+        "$b4$b  Alle 24 Stunden erneuern.",
+        "$uSiehe auch:$u set, set topic");
+
+"SET CTCPUSERS" ("/msg $C SET <#Channel> CTCPUSERS <Wert>",
+        "Mit diesem Befehl kannst du den Access Level angegeben, den ein User benötigt, um CTCPs an den Channel senden zu dürfen.  CTCP ACTION - sind immer erlaubt (CTCP ACTION wäre zum Beispiel /me).  Für andere CTCPs muss man genügend Access haben.  Du kannst Access Level 0 - 501 verwenden. 0 bedeutet, jeder darf CTCPs senden; 501 bedeutet, niemand darf CTCPs senden.",
+        "Wenn jemand CTCPs an den Channel sendet und nicht genug Access hat, wird er mit der bei $bCTCPReaction$b angegebenen Weise bestraft.",
+        "$uSiehe auch:$u set, set ctcpreaction");
+
+"SET CTCPREACTION" ("/msg $C SET <#Channel> CTCPREACTION <Wert>",
+        "Hiermit kannst du einstellen, was mit Usern passieren soll, die unerlaubte CTCPs verwenden:",
+        "$b0$b  Kick bei unerlaubten CTCPs.",
+        "$b1$b  Kickban bei unerlaubten CTCPs.",
+        "$b2$b  Kurzfristiger Ban (Default: 3 Minuten) bei unerlaubten CTCPs.",
+        "$b3$b  Langfristiger Ban (Default: 1 Stunde) bei unerlaubten CTCPs.",
+        "$uSiehe auch:$u set, set ctcpusers");
+
+"SET DEFAULTS" ("/msg $C SET <#Channel> DEFAULTS [<Bestätigungscode>]",
+        "Mit diesem Befehl kannst du die Standard Channel Einstellungen wiederherstellen.",
+        "Wenn du keinen Bestätigungscode angibst, zeigt dir $C, wie der Code lauten muss.",
+        "$uSiehe auch:$u set");
+
+"STAFF" ("/msg $C STAFF",
+        "Zeigt alle Helper und IRC Operatoren an, die zur Zeit online sind. Wenn ein Helper oder IRCOp /away ist, wird der Nickname in Klammern gesetzt.",
+        "$uSiehe auch:$u helpers, ircops, netinfo");
+
+"SUSPEND" ("/msg $C SUSPEND <#Channel> <Nick|*Account>",
+        "Durch diesen Befehl kannst du den Access eines Users in einem Channel suspendieren.  Den Access kannst du später mit dem $bunsuspend$b Befehl wiederherstellen.",
+        "$uSiehe auch:$u unsuspend, deluser");
+
+"TOPIC" ("/msg $C TOPIC <#Channel> [Topic]",
+        "Setzt das Topic im angegebenen Channel.  Wenn kein Topic angegeben wird, wird das Default Topic als Channel Topic gesetzt.");
+
+"TRIM" ("/msg $C TRIM <#Channel> <Ziel> <Zeitangabe>",
+       "Der Trim Befehl löscht User oder Bans, die für die angegebene Zeit inaktiv waren. Das Ziel muss ein Access Level, ein Bereich von Access Leveln (Beispiel: \"300-399\"), \"users\" oder \"bans\" sein.",
+       "$uSiehe auch:$u durations");
+
+"UNBAN" ("/msg $C UNBAN <#Channel> <Mask|Nick>",
+        "Löscht einen temporären Ban, der für den angegeben User oder die Mask gilt. Wenn ein Nick angegeben wird, sucht sich $b$C$b die Bans, die gelöscht werden müssen.",
+        "$uSiehe auch:$u ban, kick, kickban");
+
+"UNBANALL" ("/msg $C UNBANALL <#Channel>",
+        "Löscht alle temporären Channel Bans.",
+        "$uSiehe auch:$u ban, unban, unbanme");
+
+"UNBANME" ("/msg $C UNBANME <#Channel>",
+        "Löscht alle Bans, die für deine Hostmask gelten. Damit kannst du Bans löschen, falls dich jemand von einem Channel gebannt hat.",
+        "$uSiehe auch:$u ban, unban");
+
+"UNREGISTER" ("/msg $C UNREGISTER <#Channel> [<Bestätigungscode>]",
+        "Löscht einen Channel, der mit $b$C$b registriert ist. $bWICHTIG$b: Wenn der Channel einmal gelöscht wurde, kann die Userliste $bNICHT$b wiederhergestellt werden.",
+        "Wenn du kein Netzwerk Staff Mitglied bist, musst du einen Bestätigungscode angeben, um den Channel zu löschen.  Wenn du keinen Code angibst, wird dir $C sagen, wie der Code lauten muss.",
+        "$uSiehe auch:$u register");
+
+"UNSUSPEND" ("/msg $C UNSUSPEND <#Channel> <Nick|*Account>",
+        "Stellt den Access eines Users wieder her, wenn dieser suspendiert wurde.",
+        "$uSiehe auch:$u suspend, deluser");
+
+"UNVISITED" ("/msg $C UNVISITED [Zeitangabe] [Limit]",
+        "Zeigt Channel bis zu einem Limit an, welche in der angegebenen Zeit nicht besucht wurden. Wenn keine Zeitangabe angegeben wird, wird ein Defaultwert benutzt.",
+        "$uSiehe auch:$u expire, search, durations");
+
+"UP" ("/msg $C UP <#Channel>",
+     "Dieser Befehl wird dir im angegebenen Channel Op/Voice geben, wenn du genügend Access hast.  Wenn dein Access geringer ist als bei GiveVoice angegeben, passiert nichts. Wenn dein Access geringer ist als bei GiveOps angegeben, dann wird dir $b$C$b Voice geben und wenn du mehr Access hast, gibt dir $b$C$b Op.");
+
+"UPALL" ("/msg $C UPALL",
+        "Führt den $bup$b Befehl für jeden Channel aus, in dem du Access hast.",
+        "$uSiehe auch:$u up, down, downall");
+
+"USET"  ("/msg $C USET <#Channel> [<Einstellung> [<Wert>]]",
+         "Der $buset$b Befehl erlaubt dir einige Channel-User Einstellungen zu verändern. Ohne Parameter zeigt der Befehl die aktuellen Einstellungen an.",
+         "$bOptionen:$b",
+         "INFO:       Setzt deine Infoline, die $C an den Channel sendet, wenn du diesen joinst.",
+         "NOAUTOOP:   Wenn aktiviert, gibt dir $C kein Op, wenn du den Channel betrittst.",
+         "AUTOINVITE: Wenn aktiviert, wird dich $C in den Channel einladen, wenn du dich bei $N einloggst und der Channel entweder +i oder +k ist.",
+         "Anmerkung: Die NoAutoOp Einstellung ist dem alten !togop Befehl sehr ähnlich.",
+         "$uSiehe auch:$u set");
+
+"USET INFO" ("/msg $C USET <#Channel> INFO <Text>",
+        "Mit diesem Befehl kannst du einen Text angeben, der an den Channel gesendet wird, wenn du diesen betrittst. Um den Text zu löschen, benutze '*' als Text.",
+        "$uSiehe auch:$u access");
+
+"USERS" ("/msg $C USERS <#Channel> [Such-Maske]",
+        "Zeigt die Userliste des angegebenen Channels an. Wenn eine Such-Maske angegeben wird, werden nur die User angezeigt, deren Accounts auf die Such-Maske passen.",
+        "$uSiehe auch:$u clist, mlist, olist, plist, wlist");
+
+"VOICE" ("/msg $C VOICE <#Channel> <Nick> [Nick]...",
+        "Mit diesem Befehl kannst du durch $C anderen Usern Voice geben.",
+        "$uSiehe auch:$u devoice");
+
+"WIPEINFO" ("/msg $C WIPEINFO <#Channel> <Nick|*Account>",
+        "Mit diesem Befehl kannst du die Infoline eines anderen Users löschen, wenn dieser weniger Access im Channel hat als du.");
+
+"WLIST" ("/msg $C WLIST <#Channel> [Such-Maske]",
+        "Dieser Befehl listet alle $bOwner$b des Channels auf. Wenn eine Such-Maske angegeben wird, werden nur Owner aufgelistet, deren Accounts auf die Such-Maske passen.",
+        "$uSiehe auch:$u addcoowner, delcoowner, mdelcoowner, users");
+
+"I'VE FALLEN AND I CAN'T GET UP" ("$bHelp, I've fallen and I can't get up$b!",
+        "If you drank your milk, you might not feel so vulnerable right now.",
+        "So next time you're sitting in front of a tall frosty glass of milk, just think how much it will help build up your bone structure.");
+"ME"	"Help you? You're beyond help.";
+"Zoot"	"Crash it again, please?";
+"Entrope" "C Code.  C Code Run.  Run, Code, Run!!    (please?)";
+"emacs" ("A novice of the temple once approached the Chief Priest with a question.",
+        "The novice asked, \"Master, does Emacs have the Buddha nature?\"",
+        "The Chief Priest had been in the temple for many years and could be relied upon to know these things.  He thought for several minutes before replying.",
+        "\"I don't see why not.  It's got bloody well everything else.\"",
+        "With that, the Chief Priest went to lunch.  The novice suddenly achieved enlightenment, several years later.");
+"thanks" ("The srvx developers would like to thank the following people for their help in making srvx as polished as it is today:",
+        "$bGameSurge IRC Network$b - All the users and staff there bear with our shortcomings and bugs and let us know what needs to be fixed.",
+        "$bIC5 Networks$b (and JohnM in particular) - Never afraid to critique things, even if we are the 800 pound gorilla.",
+        "$bMeeko, eraser, hock(ey), KilledInAction, MadEwokHerd, Milon and Shoat$b - Hardcore beta testing and bug finding on the testnet.",
+        "$bCrips and feigling$b - Reading through all the boring messages and finding ways to make them clearer.");

@@ -1,0 +1,11 @@
+"connect" ("/msg $S CONNECT",
+        "Verbindet srvx mit dem ServerSpy Server.",
+        "(Das kann je nach Netzwerk einige Zeit dauert.)",
+        "$uSiehe auch:$u disconnect");
+"disconnect" ("/msg $S DISCONNECT",
+        "Disconnected srvx von dem ServerSpy Server.",
+        "$uSiehe auch:$u connect");
+"serverspy" ("/msg $S SERVERSPY [Player|Server] <Name-Mask> game <Game-ID> mod <Mod-ID>",
+        "Listet Server und Player auf, die auf die angegebene Name-Mask zutreffen.",
+        "Name-Mask kann die Wildcards * und ? enthalten.  Game-ID und Mod-ID können folgende sein:",
+        "${game-mod-table}");

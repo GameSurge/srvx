@@ -1,0 +1,35 @@
+"<INDEX>" ("$b$G Hilfe$b",
+        "Der $b$G$b Service erlaubt den Netzwerk Administratoren, wichtige Nachrichten zu verwalten und an alle User zu senden. Den Usern erlaubt dieser, Nachrichten zu lesen, die an sie gerichtet sind.",
+        "$bUser Befehle:$b",
+        "  MESSAGES   Zeigt dir alle Nachrichten, auf die zu Zugriff hast.",
+        "  VERSION    $G's Version.",
+        "$bPrivilegierte Befehle:$b",
+        "  NOTICE     Sendet eine Nachricht an alle User des Netzwerkes.",
+        "  MESSAGE    Fügt der $G Datenbank eine Nachricht hinzu.",
+        "  LIST       Zeigt alle aktiven Nachrichten.",
+        "  REMOVE     Löscht eine Nachricht.");
+"LIST" ("/msg $G LIST",
+        "Zeigt alle aktiven Nachrichten und weitere Informationen über diese, wie zum Beispiel Target, Message ID, Gültigkeitsdauer einer Nachricht und wer eine Nachricht gesetzt hat.",
+        "$uSiehe auch:$u message, messages, remove");
+"MESSAGE" ("/msg $G MESSAGE [<Optionen> <Wert>] text <Nachricht>",
+        "Fügt der $b$G$b Datenbank eine Nachricht hinzu. Diese Nachrichten werden an die User gesendet, wenn sie connecten oder die angegebene Target Class betreten. $bMessage$b hat folgende Optionen:",
+        "$bTARGET$b:   Stellt den Empfänger der Nachricht ein. Diese Option kann mehrere Male verwendet werden. Siehe $btarget$b, um eine Liste aller verfügbaren Ziele zu bekommen.",
+        "$bDURATION$b: Setzt die Gültigkeitsdauer der Nachricht. Nach der angegebenen Zeit wird die Nachricht aus der $b$G$b Datenbank gelöscht.",
+        "$uSiehe auch:$u list, messages, remove, target");
+"MESSAGES" ("/msg $G MESSAGES",
+        "Zeigt dir alle Nachrichten, auf die du Lesezugriff hast.");
+"NOTICE" ("/msg $G NOTICE <Ziel> <Nachricht>",
+        "Sendet sofort eine Nachricht an das angegebene Ziel. Siehe $btarget$b, um eine Liste aller verfügbaren Ziele zu bekommen.",
+        "$uSiehe auch:$u target");
+"REMOVE" ("/msg $G REMOVE <ID>",
+        "Löscht eine Nachricht, bevor sie erlischt. Die Message ID kannst du in der Nachricht von $bsend$b finden oder indem du $blist$b benutzt.",
+        "$uSiehe auch:$u list, message");
+"TARGET" ("$bTARGET$b",
+        "$bTarget$b wird in vielen Befehlen als Unterbefehl benutzt. Gültige Werte sind:",
+        "$bUSERS$b:      Die Nachricht wird an alle User des Netzwerkes ausser an Channel gesendet, eingeschlossen IRC Operatoren und Helper.",
+        "$bANNOUNCEMENT$b: Die Nachricht wird an alle User des Netzwerkes gesendet, die Community Announcements empfangen wollen.",
+        "$bHELPERS$b:    Die Nachricht wird nur an alle Helper gesendet.",
+        "$bOPERS$b:      Die Nachricht wird nur an alle IRC Operatoren gesendet.",
+        "$bSTAFF$b:      Die Nachricht wird nur an alle Helper und IRC Operatoren gesendet.",
+        "$bCHANNELS$b:   Die Nachricht wird an alle Channel gesendet.",
+        "$bALL$b:        Eine Kombination von USERS und CHANNELS.");

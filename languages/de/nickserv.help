@@ -1,0 +1,523 @@
+"<INDEX>" {
+        "/services/nickserv/disable_nicks" {
+        "/services/nickserv/email_enabled" (
+                "$b$N Hilfe$b",
+                "$b$N$b ist ein Service, welcher dazu dient, die Accounts aller User zu verwalten. $b$C$b, $b$O$b und $b$G$b greifen alle auf $b$N$b zu, um sicherzustellen, dass User ihren Channel Access haben und niemand den Channel Access von jemand anderem benutzen kann.",
+                "$b$N$b's Kategorien sind:",
+                "  ACCOUNT    Account Management.",
+                "  NOT NICKSERV   Beschreibung, was dieser Service macht und auch nicht macht.",
+                "  EMAIL      Alle Befehle, die Emails betreffen.",
+                "  OTHERS     Andere Befehle.",
+                "  COMMANDS   Liste aller verfügbaren Befehle."
+        );
+        "!/services/nickserv/email_enabled" (
+                "$b$N Hilfe$b",
+                "$b$N$b ist ein Service, welcher dazu dient, die Accounts aller User zu verwalten. $b$C$b, $b$O$b und $b$G$b greifen alle auf $b$N$b zu, um sicherzustellen, dass User ihren Channel Access haben und niemand den Channel Access von jemand anderem benutzen kann.",
+	        "$b$N$b's Kategorien sind:",
+        	"  ACCOUNT    Account Management.",
+                "  NOT NICKSERV   Beschreibung, was dieser Service macht und auch nicht macht.",
+        	"  OTHERS     Andere Befehle.",
+                "  COMMANDS   Liste aller verfügbaren Befehle."
+        );
+        };
+        "!/services/nickserv/disable_nicks" {
+        "/services/nickserv/email_enabled" (
+                "$b$N Hilfe$b",
+                "$b$N$b ist ein Service, welcher dazu dient, die Nicknamen und Accounts aller User zu verwalten. $b$C$b, $b$O$b und $b$G$b greifen alle auf $b$N$b zu, um sicherzustellen, dass User ihren Channel Access haben und niemand den Channel Access von jemand anderem benutzen kann.",
+	        "$b$N$b's Kategorien sind:",
+        	"  ACCOUNT    Account Management.",
+                "  NICK       Nick Management.",
+                "  EMAIL      Alle Befehle, die Emails betreffen.",
+        	"  OTHERS     Andere Befehle.",
+                "  COMMANDS   Liste aller verfügbaren Befehle."
+        );
+        "!/services/nickserv/email_enabled" (
+                "$b$N Hilfe$b",
+                "$b$N$b ist ein Service, welcher dazu dient, die Nicknamen und Accounts aller User zu verwalten. $b$C$b, $b$O$b und $b$G$b greifen alle auf $b$N$b zu, um sicherzustellen, dass User ihren Channel Access haben und niemand den Channel Access von jemand anderem benutzen kann.",
+	        "$b$N$b's Kategorien sind:",
+        	"  ACCOUNT    Account Management.",
+                "  NICK       Nick Management.",
+        	"  OTHERS     Andere Befehle.",
+                "  COMMANDS   Liste aller verfügbaren Befehle."
+        );
+        };
+};
+
+"HANDLE" ("Der Begriff $uHandle$u von früheren Versionen war für viele User verwirrend.  Daher verwenden wir nun $uAccount$u anstatt $uHandle$u.");
+
+"ACCOUNT" {
+        "/services/nickserv/enable_ghost" (
+                "Anhand deines Accounts erkennt dich $b$C$b und weiß, welchen Access du in einem Channel hast.  Diese Accounts sind den IRC Nicknamen sehr ähnlich, allerdings haben sie nur für die Services Bedeutung.  Solange du nicht mit einem Account bei $b$N$b eingeloggt bist, kannst du nur die Befehle $bREGISTER$b und $bAUTH$b verwenden.",
+                "Account Management Befehle sind:",
+                "  REGISTER   Registrieren eines neuen Accounts.",
+                "  AUTH       Einloggen mit einem registrierten Account bei $b$N$b.",
+                "  PASS       Ändern des Passworts.",
+                "  ADDMASK    Fügt deinem Account eine Hostmask hinzu.",
+                "  DELMASK    Löscht eine Hostmask von deinem Account.",
+                "  SET        Setzt verschiedene Account Optionen.",
+                "  UNREGISTER Löscht einen Account.",
+                "  GHOST      Killt alte eingeloggte Clients.",
+                "  ACCOUNT FLAGS Definitionen der Account Flags."
+        );
+        "!/services/nickserv/enable_ghost" (
+                "Anhand deines Accounts erkennt dich $b$C$b und weiß, welchen Access du in einem Channel hast.  Diese Accounts sind den IRC Nicknamen sehr ähnlich, allerdings haben sie nur für die Services Bedeutung.  Solange du nicht mit einem Account bei $b$N$b eingeloggt bist, kannst du nur die Befehle $bREGISTER$b und $bAUTH$b verwenden.",
+                "Account Management Befehle sind:",
+                "  REGISTER   Registrieren eines neuen Accounts.",
+                "  AUTH       Einloggen mit einem registrierten Account bei $b$N$b.",
+                "  PASS       Ändern des Passworts.",
+                "  ADDMASK    Fügt deinem Account eine Hostmask hinzu.",
+                "  DELMASK    Löscht eine Hostmask von deinem Account.",
+                "  SET        Setzt verschiedene Account Optionen.",
+                "  UNREGISTER Löscht einen Account.",
+                "  ACCOUNT FLAGS Definitionen der Account Flags."
+        );
+};
+
+"NOT NICKSERV" {
+        "/services/nickserv/disable_nicks" (
+        "$bNOT NICKSERV$b",
+        "Dieser $b$N$b ist kein Standard NickServ.",
+        "Die meisten NickServ Bots bieten \"Nick Ownership\", also Besitz eines Nicknamens an und erlauben dir, falls jemand deinen Nicknamen benutzt, diesen zu /KILLen oder dessen Nicknamen gewaltsam zu ändern.",
+        "Dieser $b$N$b wird das nicht ermöglichen.  $b$N$b erlaubt \"nur\", einen $bAccount$b zu registrieren, an welchem $b$C$b die einzelnen User erkennt.  Man kann eigentlich sagen, dass ein Account ein virtueller Nickname ist.  Wenn du dich bei $b$N$b einloggst, ist es vollkommen egal, welchen IRC Nicknamen du gerade benutzt.",
+        "$b$N$b kann dir sagen, welchen Account ein anderer User benutzt. Dazu musst du einfach den $bUSERINFO$b Befehl benutzen.  Falls du Probleme mit dem Registrieren eines Accounts oder generell mit $b$N$b hast, solltest du in #support um Hilfe bitten."
+        );
+};
+
+"OUNREGISTER" {
+        "/services/nickserv/disable_nicks" (
+        "/msg $N OUNREGISTER <Nick|*Account>",
+        "Löscht den angegebenen Account.",
+        "Du kannst *Account statt Nick verwenden. Das * Zeichen bedeutet, dass $N direkt den Account benutzt (nützlich, falls der User nicht online ist).",
+        "$uSiehe auch:$u oregister"
+        );
+        "!/services/nickserv/disable_nicks" (
+        "/msg $N OUNREGISTER <Nick|*Account>",
+        "Löscht den angegebenen Account und alle Nicknamen, welche auf den Account registriert wurden.",
+        "Du kannst *Account statt Nick verwenden. Das * Zeichen bedeutet, dass $N direkt den Account benutzt (nützlich, falls der User nicht online ist).",
+        "$uSiehe auch:$u oregister, oregnick, ounregnick"
+        );
+};
+
+"UNREGISTER" {
+        "/services/nickserv/disable_nicks" (
+        "/msg $N@$s UNREGISTER <Passwort>",
+        "Löscht den Account, mit dem du eingeloggt bist.",
+        "$uSiehe auch:$u register"
+        );
+        "!/services/nickserv/disable_nicks" (
+        "/msg $N@$s UNREGISTER <Passwort>",
+        "Löscht den Account, mit dem du eingeloggt bist und alle Nicknamen, welche auf den Account registriert wurden.",
+        "$uSiehe auch:$u register, regnick, unregnick"
+        );
+};
+
+"NICK" {
+        "!/services/nickserv/disable_nicks" (
+        "Du kannst dir Nicknamen registrieren. Dadurch wird es möglich, den User zu /KILLen, der einen deiner Nicknamen benutzt.",
+	"Nick Management Befehle sind:",
+        "  NICKINFO   Findet heraus, wer einen bestimmten Nicknamen registriert hat.",
+        "  REGNICK    Registriert einen Nicknamen.",
+        "  UNREGNICK  Löscht einen Nicknamen.",
+        "  RECLAIM    Fordert einen Nicknamen zurück, der dir gehört."
+        );
+};
+
+"NICKINFO" {
+        "!/services/nickserv/disable_nicks" (
+        "/msg $N NICKINFO <Nick>",
+        "Zeigt Informationen über den Nicknamen an.",
+        "$uSiehe auch:$u accountinfo, userinfo"
+        );
+};
+
+"REGNICK" {
+        "!/services/nickserv/disable_nicks" (
+        "/msg $N REGNICK ",
+        "Registriert den Nicknamen, den du zur Zeit benutzt.",
+        "$uSiehe auch:$u register, unregister, unregnick"
+        );
+};
+
+"OREGNICK" {
+        "!/services/nickserv/disable_nicks" (
+        "/msg $N OREGNICK [<Nick|*Account>, <Nick>]",
+        "Registriert den angegebenen Nicknamen zu dem Account. Falls kein Nickname und Account angegeben werden, registriert $boregnick$b deinen jetzigen Nick auf den Account, mit dem zu gerade eingeloggt bist.",
+        "Du kannst *Account statt Nick verwenden. Das * Zeichen bedeutet, dass $N direkt den Account benutzt (nützlich, falls der User nicht online ist).",
+        "$uSiehe auch:$u oregister, ounregister, ounregnick"
+        );
+};
+
+"OUNREGNICK" {
+        "!/services/nickserv/disable_nicks" (
+        "/msg $N OUNREGNICK <Nick>",
+        "Löscht einen registrierten Nicknamen.",
+        "$uSiehe auch:$u oregister, oregnick, ounregister"
+        );
+};
+
+"UNREGNICK" {
+        "!/services/nickserv/disable_nicks" (
+        "/msg $N UNREGNICK [Nick]",
+        "Löscht einen Nicknamen, der an dich registriert ist.  Wenn kein Nickname angegeben wird, wird dein aktueller Nickname gelöscht.",
+        "$uSiehe auch:$u register, regnick, unregister"
+        );
+};
+
+"RECLAIM" {
+        "!/services/nickserv/disable_nicks" (
+        "/msg $N RECLAIM <Nick>",
+        "Fordert den angegebenen Nicknamen zurück. Du musst mit dem Account eingeloggt sein, zu dem der Nickname gehört.",
+        "Ausgehend von der Konfiguration, wird nichts passieren; wird der User gefragt, ob er den Nicknamen ändern könnte; wird dessen Nickname geändert oder der User wird per /KILL disconnected."
+        );
+};
+
+"EMAIL" {
+        "/services/nickserv/email_enabled" (
+        "Email-basierende Befehle sind:",
+        "  AUTHCOOKIE Mailt ein Cookie, damit du dich auch ohne passende Hostmask authen kannst.",
+        "  RESETPASS  Mailt ein Cookie, falls du dein Passwort vergessen hast und es daher ändern möchtest.",
+        "  COOKIE     Schließt den AUTHCOOKIE oder RESETPASS Prozess ab.",
+        "  DELCOOKIE  Löscht das AUTHCOOKIE oder RESETPASS Cookie.",
+        "  EMAIL POLICY  Gibt die Verfahrensweise bezüglich der bei den Accounts angegebenen Email Adressen an."
+        );
+};
+
+"AUTHCOOKIE" {
+        "/services/nickserv/email_enabled" (
+        "/msg $N AUTHCOOKIE <Account>",
+        "Durch diesen Befehl sendet $N dir eine Email mit einem Cookie, welches dir erlaubt, dich mit deinem Account einzuloggen, auch wenn du keine gültige Hostmask für den Account hast. Zum Beispiel, wenn dein Internet Provider deine IP geändert hat.",
+        "Wenn du die Email bekommen hast, kannst du das Cookie in der Email mit dem $bcookie$b Befehl eingeben, um dich einzuloggen.",
+        "$uSiehe auch:$u cookie, delcookie"
+        );
+};
+
+"RESETPASS" {
+        "/services/nickserv/email_enabled" (
+        "/msg $N@$s RESETPASS <Account> <NeuesPasswort>",
+        "Durch diesen Befehl sendet $N dir eine Email mit einem Cookie, welches nach der Eingabe dein Passwort ändert (falls du mal dein Passwort vergessen haben solltest).  Wenn du die Email bekommen hast, kannst du das Cookie in der Email mit dem $bcookie$b Befehl eingeben, um das Passwort zu ändern.",
+        "$bDas Passwort wird solange nicht geändert, daher wird es nicht möglich sein, sich mit dem neuen Passwort einzuloggen, bis das Cookie der Email durch den $ucookie$u Befehl eingegeben wurde.$b",
+        "$uSiehe auch:$u cookie, delcookie"
+        );
+};
+
+"DELCOOKIE" {
+        "/services/nickserv/email_enabled" (
+        "/msg $N DELCOOKIE",
+        "Mit diesem Befehl löscht $N ein $bauthcookie$b oder $bresetpass$b Cookie.",
+        "(Da zum Ändern der Email Adresse und der Account Registrierung gültige Email Adressen benötigt werden, von denen wir nicht wissen, ob sie dir gehören, ist es nicht möglich, solche Cookies zu löschen (um Mail Flooding zu vermeiden).",
+        "$uSiehe auch:$u authcookie, resetpass, cookie"
+        );
+};
+
+"COOKIE" {
+        "/services/nickserv/email_enabled" (
+        "/msg $N@$s COOKIE <Account> <Cookie>",
+        "Mit diesem Befehl kannst du das Cookie eingeben, welches du per Mail bekommen hast, z.B. nach dem Registrieren des Accounts oder Ändern der Email Adresse.  Das Cookie ist nach der Benutzung unbrauchbar und kann nicht ein zweites Mal verwendet werden.",
+        "$uSiehe auch:$u authcookie, resetpass, set, delcookie"
+        );
+};
+
+"EMAIL POLICY" {
+        "/services/nickserv/email_enabled" (
+        "$bEMAIL POLICY",
+        "GameSurge behandelt deine Email Adresse vertraulich.  Wir werden diese nicht an dritte Parteien herausgeben, es sei denn, uns liegt dafür ein Gerichtsbeschluss vor."
+        );
+};
+
+"OTHERS" ("Andere Befehle sind:",
+        
+        "  ACCOUNTINFO Zeigt Informationen über einen Account.",
+        "  HELP        Zeigt Hilfe über $b$N$b an.",  
+        "  MERGE       Kopiert einen Account in einen Anderen.",
+        "  MERGEDB     Lädt die Datenbank in den Speicher.",
+        "  RENAME      Ändert den Namen eines Accounts.",
+        "  SEARCH      Sucht nach Accounts.",
+        "  STATUS      $b$N$b's Status.",
+        "  USERINFO    Zeigt den Account an, mit dem ein User eingeloggt ist.",        
+        "  VERSION     $b$N$b's Version.");
+
+"ADDMASK" ("/msg $N ADDMASK [User@Host]",
+        "Fügt dem Account, mit dem du bei $b$N$b eingeloggt bist, die angegebene Hostmask (User@Host) hinzu.  Falls keine Hostmask angegeben wird, wird deine aktuelle Hostmask hinzugefügt.",
+        "$uSiehe auch:$u auth, delmask");
+        
+"ALLOWAUTH" ("/msg $N ALLOWAUTH <Nick> [Account] [STAFF]",
+        "Erlaubt dem angegebenen User, sich mit dem angegebenen Account einzuloggen ($bauth$ben). $bAllowauth$b fügt dem Account NICHT die aktuelle Hostmask zu, daher sollte der User nach dem Allowauth $bADDMASK$b benutzen.",
+        "Falls kein Account angegeben wurde, wird die Erlaubnis wieder zurückgezogen (falls der User einen Allowauth bekommen hat).",
+        "Falls es sich bei dem Account um einen Helper oder Oper Account handelt, muss am Ende des Befehls STAFF stehen.",
+        "$uSiehe auch:$u addmask, auth");
+        
+"AUTH" {
+        "/services/nickserv/email_enabled" (
+        "/msg $N@$s AUTH [Account] <Passwort>",
+        "Loggt dich mit dem angegebenen Account bei $b$N$b ein. Du musst dich erst einloggen ($bauth$ben), bevor du in irgendeinem mit $b$C$b registrierten Channel Access bekommen kannst.",
+        "Wenn kein Account angegeben wird, wird der aktuelle Nickname als Accountname verwendet.",
+        "$uSiehe auch:$u pass, resetpass, authcookie",
+        );
+        "!/services/nickserv/email_enabled" (
+        "/msg $N@$s AUTH [Account] <Passwort>",
+        "Loggt dich mit dem angegebenen Account bei $b$N$b ein. Du musst dich erst einloggen ($bauth$ben), bevor du in irgendeinem mit $b$C$b registrierten Channel Access bekommen kannst.",
+        "Wenn kein Account angegeben wird, wird der aktuelle Nickname als Accountname verwendet.",
+        "$uSiehe auch:$u pass",
+        );
+};
+
+"DELMASK" ("/msg $N DELMASK <User@Host>",
+        "Löscht die angegebene Hostmask von dem Account, mit dem du eingeloggt bist.",
+        "Ein Account muss mindestens eine Hostmask besitzen, daher kannst du die letzte Hostmask nicht löschen.",
+        "$uSiehe auch:$u addmask");
+        
+"ACCOUNTINFO" {
+        "/services/nickserv/disable_nicks" (
+        "/msg $N ACCOUNTINFO <Nick|*Account>",
+        "Zeigt Informationen über einen Account an, z.B. Datum, an dem der Account registriert wurde, wann der User das letzte Mal mit dem Account eingeloggt war, die Infoline eines Accounts, die Flags, die Hostmask(s), die Channel und den Nicknamen des Users, wenn dieser eingeloggt ist.",
+        "Du kannst *Account statt Nick verwenden. Das * Zeichen bedeutet, dass $N direkt den Account benutzt (nützlich, falls der User nicht online ist).",
+        "$uSiehe auch:$u userinfo, account flags"
+        );
+        "!/services/nickserv/disable_nicks" (
+        "/msg $N ACCOUNTINFO <Nick|*Account>",
+        "Zeigt Informationen über einen Account an, z.B. Datum, an dem der Account registriert wurde, wann der User das letzte Mal mit dem Account eingeloggt war, die $b$N$b Infoline eines Accounts, die Flags, die Hostmask(s), die Channel und den Nicknamen des Users, wenn dieser eingeloggt ist.",
+        "Du kannst *Account statt Nick verwenden. Das * Zeichen bedeutet, dass $N direkt den Account benutzt (nützlich, falls der User nicht online ist).",
+        "$uSiehe auch:$u nickinfo, userinfo, account flags"
+        );
+};
+
+"ACCOUNT FLAGS" ("$bACCOUNT FLAGS$b",
+        "Die folgenden Account Flags sind gültig:",
+        "$bS$b  $O Access ist suspendiert",
+        "$bp$b  Services benutzen PRIVMSG statt NOTICE für alle Nachrichten",
+        "$bh$b  User ist ein Support Helper (dieser muss im Support Channel sein, um Security Override zu bekommen)",
+        "$bH$b  User ist ein Network Helper (kann Security Override aktivieren/deaktivieren)",
+        "$bg$b  God Mode (Security Override für IRC Staff)",
+        "$bs$b  Account ist suspendiert",
+        "$bc$b  mIRC Farb Codes werden in den Nachrichten der Services verwendet",
+        "$bf$b  Account ist im Urlaubsmodus (Account wird nicht wegen Inaktivität gelöscht. Urlaubsmodus deaktiviert sich beim nächsten Einloggen wieder)",
+        "$bn$b  No-Delete (Account wird nie wegen Inaktivität gelöscht)",
+        "$uSiehe auch:$u accountinfo, set");
+        
+"OADDMASK" ("/msg $N OADDMASK <Nick|*Account> <User@Host>",
+        "Fügt dem Account die angegebene Hostmask (User@Host) hinzu.",
+        "Du kannst *Account statt Nick verwenden. Das * Zeichen bedeutet, dass $N direkt den Account benutzt (nützlich, falls der User nicht online ist).",
+        "$uSiehe auch:$u odelmask");
+        
+"ODELMASK" ("/msg $N ODELMASK <Nick|*Account> <User@Host>",
+        "Löscht die angegebene Hostmask von dem Account.",
+        "Ein Account muss mindestens eine Hostmask besitzen, daher kannst du die letzte Hostmask nicht löschen.",
+        "Du kannst *Account statt Nick verwenden. Das * Zeichen bedeutet, dass $N direkt den Account benutzt (nützlich, falls der User nicht online ist).",
+        "$uSiehe auch:$u oaddmask");
+        
+"OREGISTER" {
+        "/services/nickserv/disable_nicks" (
+        "/msg $N@$s OREGISTER <Account> <Passwort> [User@Host|Nick]",
+        "Registriert einen Account bei $b$N$b und benutzt den angegebenen Accountnamen, das Passwort und die Hostmask (User@Host). Wenn ein Nickname anstelle von der Hostmask angegeben wird, wird die User@Host von dem User verwendet. Falls weder eine Hostmask noch ein Nickname angegeben werden, wird eine Default Hostmask verwendet, wenn sich der User einloggt.",
+        "$uSiehe auch:$u ounregister"
+        );
+        "!/services/nickserv/disable_nicks" (
+        "/msg $N@$s OREGISTER <Account> <Passwort> [User@Host|Nick]",
+        "Registriert einen Account bei $b$N$b und benutzt den angegebenen Accountnamen, das Passwort und die Hostmask (User@Host). Wenn ein Nickname anstelle von der Hostmask angegeben wird, wird die User@Host von dem User verwendet. Falls weder eine Hostmask noch ein Nickname angegeben werden, wird eine Default Hostmask verwendet, wenn sich der User einloggt.",
+        "$uSiehe auch:$u oregnick, ounregister, ounregnick"
+        );
+};
+
+"OSET" {
+        "/services/nickserv/disable_nicks" (
+        "/msg $N OSET <Nick|*Account> [<Einstellung> <Wert>]",
+        "Hiermit kann man die Einstellungen des Accounts verändern. Zusätzlich zu den normalen $bset$b Einstellungen, kann man folgendes setzen:",
+        "$bPASSWORD$b: Verändert das Passwort.",
+        "$bFLAGS$b: Verändert die Account Flags.",
+        "$bLEVEL$b: Verändert den $O Access Level.",
+        "$bEPITHET$b: Verändert die Beschreibung, die man mit dem ACCESS Befehl von $C bekommt.",
+        "Du kannst *Account statt Nick verwenden. Das * Zeichen bedeutet, dass $N direkt den Account benutzt (nützlich, falls der User nicht online ist).",
+        "$uSiehe auch:$u accountinfo, account flags, set, userinfo"
+        );
+        "!/services/nickserv/disable_nicks" (
+        "/msg $N OSET <Nick|*Account> [<Einstellung> <Wert>]",
+        "Hiermit kann man die Einstellungen des Accounts verändern. Zusätzlich zu den normalen $bset$b Einstellungen, kann man folgendes setzen:",
+        "$bPASSWORD$b: Verändert das Passwort.",
+        "$bFLAGS$b: Verändert die Account Flags.",
+        "$bLEVEL$b: Verändert den $O Access Level.",
+        "$bEPITHET$b: Verändert die Beschreibung, die man mit dem ACCESS Befehl von $C bekommt.",
+        "Du kannst *Account statt Nick verwenden. Das * Zeichen bedeutet, dass $N direkt den Account benutzt (nützlich, falls der User nicht online ist).",
+        "$uSiehe auch:$u accountinfo, account flags, nickinfo, set, userinfo"
+        );
+};
+
+"PASS" ("/msg $N@$s PASS <AltesPasswort> <NeuesPasswort>",
+        "Ändert dein $b$N$b Passwort.",
+        "$uSiehe auch:$u auth");
+
+"REGISTER" {
+        "0: /services/nickserv/email_required" (
+        "/msg $N@$s REGISTER <Account> <Passwort> <Email>",
+        "Registriert einen Account bei $b$N$b und fügt dem Account deine aktuelle Hostmask (User@Host) hinzu. Du musst das Passwort, welches du bei dem $bregister$b Befehl angibst auch beim späteren Einloggen ($bauth$ben) verwenden.",
+        "Es wird eine Email an die angegebene Email Adresse gesendet, in welcher ein Cookie steht, mit dem du den Account aktivieren kannst. Wenn du das Cookie bekommen hast, musst du den $bcookie$b Befehl benutzen, um die Registrierung abzuschließen.",
+        "$uSiehe auch:$u auth, unregister"
+        );
+        "1: /services/nickserv/email_enabled" (
+        "/msg $N@$s REGISTER <Account> <Passwort> [Email]",
+        "Registriert einen Account bei $b$N$b und fügt dem Account deine aktuelle Hostmask (User@Host) hinzu. Du musst das Passwort, welches du bei dem $bregister$b Befehl angibst auch beim späteren Einloggen ($bauth$ben) verwenden.",
+        "Wenn du eine Email Adresse angibst, wird eine Email an die angegebene Email Adresse gesendet, in welcher ein Cookie steht, mit dem du den Account aktivieren kannst. Wenn du das Cookie bekommen hast, musst du den $bcookie$b Befehl benutzen, um die Registrierung abzuschließen.",
+        "$uSiehe auch:$u auth, unregister"
+        );
+        "2: !/services/nickserv/email_enabled" (
+        "/msg $N@$s REGISTER <Account> <Passwort>",
+        "Registriert einen Account bei $b$N$b und fügt dem Account deine aktuelle Hostmask (User@Host) hinzu. Du musst das Passwort, welches du bei dem $bregister$b Befehl angibst auch beim späteren Einloggen ($bauth$ben) verwenden.",
+        "$uSiehe auch:$u auth, unregister"
+        );
+};
+
+"SET" {
+        "/services/nickserv/email_enabled && /services/nickserv/disable_nicks" (
+        "/msg $N SET [<Einstellung> [Wert]]",
+        "Hiermit kannst du die Einstellungen deines Accounts verändern. Mögliche Einstellungen sind:",
+        "$bANNOUNCEMENTS$b: Wenn aktiviert, bekommst du Community Ankündigungen via $G.",
+        "$bCOLOR$b: Wenn aktiviert, werden $b$N$b und $b$C$b $bbold$b und $uunderlines$u in den Nachrichten verwenden.",
+        "$bEMAIL$b: Ändert deine Email Adresse.",
+        "$bINFO$b:  Ändert deine Infoline, die ein anderer User per $baccountinfo$b Befehl sehen kann.",
+        "$bLANGUAGE$b: Ändert die Sprache, die die Services verwenden sollen.",
+        "$bPRIVMSG$b: Wenn aktiviert, werden $b$N$b und $b$C$b PRIVMSGs statt NOTICEs verwenden, um dir eine Nachricht zu schicken.",
+        "$bSTYLE$b: Ändert den Style der Channel Userliste. $bSTYLE$b kann entweder $bDef$b (Default) oder $bZoot$b sein.",
+        "$bTABLEWIDTH$b: Ändert die Länge für die an Tabellen formatierten Texte (Benutze 0 für den Default Wert).",
+        "$bWIDTH$b: Ändert die Länge der Texte, die dir srvx schickt (Benutze 0 für den Default Wert).",
+        "$bMAXLOGINS$b: Ändert die Anzahl der Clients, die gleichzeitig in den Account eingeloggt sein dürfen (Benutze 0 für den Default Wert).",
+        "$bset$b ohne irgendwelche Parameter listet die aktuellen Einstellungen auf.",
+        "$uSiehe auch:$u accountinfo, userinfo"
+        );
+        "/services/nickserv/email_enabled && !/services/nickserv/disable_nicks" (
+        "/msg $N SET [<Einstellung> [Wert]]",
+        "Hiermit kannst du die Einstellungen deines Accounts verändern. Mögliche Einstellungen sind:",
+        "$bANNOUNCEMENTS$b: Wenn aktiviert, bekommst du Community Ankündigungen via $G.",
+        "$bCOLOR$b: Wenn aktiviert, werden $b$N$b und $b$C$b $bbold$b und $uunderlines$u in den Nachrichten verwenden.",
+        "$bEMAIL$b: Ändert deine Email Adresse.",
+        "$bINFO$b:  Ändert deine $b$N$b Infoline, die ein anderer User per $baccountinfo$b Befehl sehen kann.",
+        "$bLANGUAGE$b: Ändert die Sprache, die die Services verwenden sollen.",
+        "$bPRIVMSG$b: Wenn aktiviert, werden $b$N$b und $b$C$b PRIVMSGs statt NOTICEs verwenden, um dir eine Nachricht zu schicken.",
+        "$bSTYLE$b: Ändert den Style der Channel Userliste. $bSTYLE$b kann entweder $bDef$b (Default) oder $bZoot$b sein.",
+        "$bTABLEWIDTH$b: Ändert die Länge für die an Tabellen formatierten Texte (Benutze 0 für den Default Wert).",
+        "$bWIDTH$b: Ändert die Länge der Texte, die dir srvx schickt (Benutze 0 für den Default Wert).",
+        "$bMAXLOGINS$b: Ändert die Anzahl der Clients, die gleichzeitig in den Account eingeloggt sein dürfen (Benutze 0 für den Default Wert).",
+        "$bset$b ohne irgendwelche Parameter listet die aktuellen Einstellungen auf.",
+        "$uSiehe auch:$u accountinfo, nickinfo, userinfo"
+        );
+        "!/services/nickserv/email_enabled && /services/nickserv/disable_nicks" (
+        "/msg $N SET [<Einstellung> [Wert]]",
+        "Hiermit kannst du die Einstellungen deines Accounts verändern. Mögliche Einstellungen sind:",
+        "$bANNOUNCEMENTS$b: Wenn aktiviert, bekommst du Community Ankündigungen via $G.",
+        "$bCOLOR$b: Wenn aktiviert, werden $b$N$b und $b$C$b $bbold$b und $uunderlines$u in den Nachrichten verwenden.",
+        "$bINFO$b:  Ändert deine $b$N$b Infoline, die ein anderer User per $baccountinfo$b Befehl sehen kann.",
+        "$bLANGUAGE$b: Ändert die Sprache, die die Services verwenden sollen.",
+        "$bPRIVMSG$b: Wenn aktiviert, werden $b$N$b und $b$C$b PRIVMSGs statt NOTICEs verwenden, um dir eine Nachricht zu schicken.",
+        "$bSTYLE$b: Ändert den Style der Channel Userliste. $bSTYLE$b kann entweder $bDef$b (Default) oder $bZoot$b sein.",
+        "$bTABLEWIDTH$b: Ändert die Länge für die an Tabellen formatierten Texte (Benutze 0 für den Default Wert).",
+        "$bWIDTH$b: Ändert die Länge der Texte, die dir srvx schickt (Benutze 0 für den Default Wert).",
+        "$bMAXLOGINS$b: Ändert die Anzahl der Clients, die gleichzeitig in den Account eingeloggt sein dürfen (Benutze 0 für den Default Wert).",
+        "$bset$b ohne irgendwelche Parameter listet die aktuellen Einstellungen auf.",
+        "$uSiehe auch:$u accountinfo, userinfo"
+        );
+        "!/services/nickserv/email_enabled && !/services/nickserv/disable_nicks" (
+        "/msg $N SET [<Einstellung> [Wert]]",
+        "Hiermit kannst du die Einstellungen deines Accounts verändern. Mögliche Einstellungen sind:",
+        "$bANNOUNCEMENTS$b: Wenn aktiviert, bekommst du Community Ankündigungen via $G.",
+        "$bCOLOR$b: Wenn aktiviert, werden $b$N$b und $b$C$b $bbold$b und $uunderlines$u in den Nachrichten verwenden.",
+        "$bINFO$b:  Ändert deine $b$N$b Infoline, die ein anderer User per $baccountinfo$b Befehl sehen kann.",
+        "$bLANGUAGE$b: Ändert die Sprache, die die Services verwenden sollen.",
+        "$bPRIVMSG$b: Wenn aktiviert, werden $b$N$b und $b$C$b PRIVMSGs statt NOTICEs verwenden, um dir eine Nachricht zu schicken.",
+        "$bSTYLE$b: Ändert den Style der Channel Userliste. $bSTYLE$b kann entweder $bDef$b (Default) oder $bZoot$b sein.",
+        "$bTABLEWIDTH$b: Ändert die Länge für die an Tabellen formatierten Texte (Benutze 0 für den Default Wert).",
+        "$bWIDTH$b: Ändert die Länge der Texte, die dir srvx schickt (Benutze 0 für den Default Wert).",
+        "$bMAXLOGINS$b: Ändert die Anzahl der Clients, die gleichzeitig in den Account eingeloggt sein dürfen (Benutze 0 für den Default Wert).",
+        "$bset$b ohne irgendwelche Parameter listet die aktuellen Einstellungen auf.",
+        "$uSiehe auch:$u accountinfo, nickinfo, userinfo"
+        );
+};
+
+"STATUS" {
+        "/services/nickserv/disable_nicks" (
+        "/msg $N STATUS",
+        "Zeigt den Status von $b$N$b, das heißt wieviele Accounts registriert sind."
+        );
+        "!/services/nickserv/disable_nicks" (
+        "Zeigt den Status von $b$N$b, das heißt wieviele Accounts und Nicknamen registriert sind und wieviele Nicknamen auf deinen Account registriert sind (wenn du eingeloggt bist)."
+        );
+};
+
+"USERINFO" ("/msg $N USERINFO <Nick>",
+        "Zeigt an, mit welchem Account ein User eingeloggt ist.",
+        "$uSiehe auch:$u auth, accountinfo");
+               
+"GHOST" ("/msg $N GHOST <Nick>",
+        "Dieser Befehl disconnected einen alten Client, welcher mit deinem Account eingeloggt ist (Ghost).  Dies ist $bnicht$b das gleiche wie Nick Ownership. Der User $bmuss$b mit dem Account eingeloggt sein, mit dem du auch eingeloggt bist.",
+        "$uSiehe auch:$u auth");
+        
+"RENAME" ("/msg $N RENAME <Nick|*Alter-Account> <Neuer-Account>",
+        "Ändert den Namen eines Accounts.",
+        "Dieser Befehl steht nur Helpern und IRC Operatoren zur Verfügung.",
+        "$uSiehe auch:$u merge");
+        
+"VACATION" ("/msg $N VACATION",
+        "Der Account wird in den \"Urlaubsmodus\" gesetzt, bis du dich das nächste Mal bei $N einloggst.",
+        "Während der Account im \"Urlaubsmodus\" ist, wird der Account wegen Inaktivität nicht gelöscht.");
+        
+"SEARCH" ("/msg $N SEARCH <Aktion> <Kriterium> <Wert> [<Kriterium> <Wert>]...",
+        "Sucht nach Accounts, die mit den angegebenen Kriterien übereinstimmen und führt dann die Aktion aus.",
+        "$uSiehe auch:$u search action, search criteria");
+        
+"SEARCH ACTION" ("$bSEARCH ACTION$b",
+        "Die folgenden Aktionen sind gültig:",
+        "  PRINT      - Zeigt die Accounts, die den Kriterien entsprechen",
+        "  COUNT      - Zählt die Accounts, die den Kriterien entsprechen",
+        "  UNREGISTER - Löscht die Accounts, die den Kriterien entsprechen",
+        "$uSiehe auch:$u search, search criteria");
+        
+"SEARCH CRITERIA" {
+        "/services/nickserv/disable_nicks" (
+        "$bSEARCH CRITERIA$b",
+        "Die folgenden Kriterien sind gültig.  Jedes benötigt einen weiteren Parameter, welcher das eigentliche Kriterium enthält:",
+        "  LIMIT      - Limitiert die Anzahl der Treffer",
+        "  FLAGS      - Account Flags bei einem Account, welche aktiviert (e.g. +h) und/oder deaktiviert (e.g. -S) sein müssen",
+        "  REGISTERED - Zeit, die ein Account registriert ist (<Nu, <=Nu, =Nu, >=Nu oder >Nu)",
+        "  SEEN       - Accounts, in die sich für die Zeit niemand eingeloggt hat",
+        "  ACCOUNTMASK - Accounts, deren Namen auf das Kriterium passt",
+        "  EMAIL      - Accounts, deren Email auf das Kriterium passt",
+        "  HOSTMASK SUPERSET - Accounts, bei denen sich jemand mit der Hostmask authen kann, die bei Kriterium angegeben ist",
+        "  HOSTMASK EXACT - Accounts, bei denen die exakte Hostmask gesetzt ist, die bei Kriterium angegeben ist",
+        "  HOSTMASK SUBSET - Accounts, bei denen die Hostmask gesetzt ist, die bei Kriterium angegeben ist",
+	"  HOSTMASK LASTQUIT - Accounts, bei denen \"Letzte Quit Hostmask\" mit dem Kriterium übereinstimmt",
+        "  HOSTMASK   - Accounts, bei denen die Hostmask gesetzt ist, die bei Kriterium angegeben ist (genau wie HOSTMASK SUPERSET)",
+        "  ACCESS     - $O Access (<nnn, <=nnn, =nnn, >=nnn oder >nnn)",
+        "$uSiehe auch:$u search, search action"
+        );
+        "!/services/nickserv/disable_nicks" (
+        "$bSEARCH CRITERIA$b",
+        "Die folgenden Kriterien sind gültig.  Jedes benötigt einen weiteren Parameter, welcher das eigentliche Kriterium enthält:",
+        "  LIMIT      - Limitiert die Anzahl der Treffer",
+        "  FLAGS      - Account Flags bei einem Account, welche aktiviert (e.g. +h) und/oder deaktiviert (e.g. -S) sein müssen",
+        "  REGISTERED - Zeit, die ein Account registriert ist (<Nu, <=Nu, =Nu, >=Nu oder >Nu)",
+        "  SEEN       - Accounts, in die sich für die Zeit niemand eingeloggt hat",
+        "  ACCOUNTMASK - Accounts, deren Namen auf das Kriterium passt",
+        "  EMAIL      - Accounts, deren Email auf das Kriterium passt",
+        "  NICKMASK   - Accounts, deren Nicknamen mit dem Kriterium übereinstimmen",
+        "  HOSTMASK SUPERSET - Accounts, bei denen sich jemand mit der Hostmask authen kann, die bei Kriterium angegeben ist",
+        "  HOSTMASK EXACT - Accounts, bei denen die exakte Hostmask gesetzt ist, die bei Kriterium angegeben ist",
+        "  HOSTMASK SUBSET - Accounts, bei denen die Hostmask gesetzt ist, die bei Kriterium angegeben ist",
+	"  HOSTMASK LASTQUIT - Accounts, bei denen \"Letzte Quit Hostmask\" mit dem Kriterium übereinstimmt",
+        "  HOSTMASK   - Accounts, bei denen die Hostmask gesetzt ist, die bei Kriterium angegeben ist (genau wie HOSTMASK SUPERSET)",
+        "  ACCESS     - $O Access (<nnn, <=nnn, =nnn, >=nnn oder >nnn)",
+        "$uSiehe auch:$u search, search action"
+        );
+};
+
+"MERGE" ("/msg $N MERGE <Start-Nick|*Start-Account> <Ziel-Nick|*Ziel-Account>",
+        "Kopiert den Channel Access vom $bStart-Account$b zum $bZiel-Account$b.  Das beinhaltet Hostmasks, registrierte Nicknamen, eingeloggte User und $O Access (falls vorhanden).  Wenn $bZiel-Account$b gleich viel oder mehr Access hat als $bStart-Account$b (oder eine allgemeinere Hostmask, etc), dann behält $bZiel-Account$b diese Information.",
+        "Dieser Befehl steht nur Helpern und IRC Operatoren zur Verfügung.",
+        "$uSiehe auch:$u rename");
+        
+"MERGEDB" ("/msg $N MERGEDB <DBFilename>",
+        "Kopiert den Inhalt von $bDBFilename$b in den Speicher.  Jegliche Accounts, die in $bDBFilename$b als auch im Speicher sind, werden mit den Daten aus der Datei $bÜBERSCHRIEBEN$b.",
+        "Dieser Befehl steht nur IRC Operatoren zur Verfügung.",
+        "$uSiehe auch:$u write");
+
+"SET LANGUAGE" ("/msg $S set language <Sprache>",
+        "Ändert die Sprache, die $S und andere Services verwenden sollen, wenn sie dir Nachrichten schicken.",
+        "Falls eine Nachricht in deiner Sprache nicht vorhanden sein sollte, wird der naheliegendeste Treffer verwendet.",
+        "Unterstützte Sprachen sind: ${modcmd:languages}",
+        "$uSiehe auch:$u set");
