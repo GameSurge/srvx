@@ -191,12 +191,15 @@
 	// mind which ircd software you are using here, and that all of the
 	// services need to be at least +o.
 	// "modes" "+iok";
-        // Does your ircd have off-channel services support?
-        // Bahamut does; ircu2.10.11 does not.
-        "off_channel" "off";
-	// Does your ircd have a mode for registered channels?
-	// Bahamut does; ircu2.10.11 does not.
-	"use_registered_mode" "off";
+        // Does your ircd have off-channel services support? Does it have
+	// a registered channel mode? Does it support services opping themselves?
+        // Bahamut has these things; ircu2.10.11 does not.
+	// This setting takes three numerical values:
+	//   0 = off
+	//   1 = use a registered channel mode, have services op themselves
+	//   2 = all of the above, and a channel setting to have ChanServ not
+	//       idle in the channel
+        "off_channel" "0";
         // how long should a person be unseen before resending infoline?
         "info_delay" "120";
         // maximum greeting length
