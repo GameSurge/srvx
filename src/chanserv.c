@@ -5940,15 +5940,16 @@ handle_part(struct userNode *user, struct chanNode *channel, UNUSED_ARG(const ch
 static void
 handle_kick(struct userNode *kicker, struct userNode *victim, struct chanNode *channel)
 {
-    const char *reason = user_find_message(kicker, "CSMSG_USER_PROTECTED");
-
     if(!channel->channel_info || !kicker || IsService(kicker)
        || (kicker == victim) || IsSuspended(channel->channel_info)
        || (kicker->handle_info && kicker->handle_info == victim->handle_info))
         return;
 
     if(protect_user(victim, kicker, channel->channel_info))
+    {
+        const char *reason = user_find_message(kicker, "CSMSG_USER_PROTECTED");
 	KickChannelUser(kicker, channel, chanserv, reason);
+    }
 }
 
 static int
