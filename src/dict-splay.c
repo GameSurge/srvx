@@ -123,10 +123,18 @@ dict_splay(struct dict_node *node, const char *key)
 static void
 dict_dispose_node(struct dict_node *node, free_f free_keys, free_f free_data)
 {
-    if (free_keys && node->key)
-        free_keys((void*)node->key);
-    if (free_data && node->data)
-        free_data(node->data);
+    if (free_keys && node->key) {
+        if (free_keys == free)
+            free((void*)node->key);
+        else
+            free_keys((void*)node->key);
+    }
+    if (free_data && node->data) {
+        if (free_data == free)
+            free(node->data);
+        else
+            free_data(node->data);
+    }
     free(node);
 }
 
