@@ -404,7 +404,7 @@
 "NSMSG_ATE_COOKIE" "Das Cookie wurde gelöscht.";
 "NSMSG_AUTH_ALLOWED" "User $b%s$b darf sich nun mit dem Account $b%s$b einloggen.";
 "NSMSG_AUTH_ALLOWED_EMAIL" "Du kannst (nach dem Einloggen) $b/msg $N set email user@dein.provider$b eingeben, um deine Email Adresse anzugeben.  Das erlaubt dir, den $bauthcookie$b Befehl zu verwenden.";
-"NSMSG_AUTH_ALLOWED_MSG" "Du kannst dich nun mit dem Account $b%s$b einloggen, in dem du $b/AuthServ auth %s passwort$b eingibst (passwort muss mit deinem Passwort ersetzt werden).  Wenn du diesen Computer öfters benutzt, solltest du $b/msg $N addmask$b eingeben (NACH dem Einloggen), damit du dich jedesmal von diesem PC einloggen kannst.";
+"NSMSG_AUTH_ALLOWED_MSG" "Du kannst dich nun mit dem Account $b%s$b einloggen, in dem du $b/msg $N@$s auth %s passwort$b eingibst (passwort muss mit deinem Passwort ersetzt werden).  Wenn du diesen Computer öfters benutzt, solltest du $b/msg $N addmask$b eingeben (NACH dem Einloggen), damit du dich jedesmal von diesem PC einloggen kannst.";
 "NSMSG_AUTH_NORMAL_ONLY" "User $b%s$b kann nun nur mit der passenden Hostmask einloggen.";
 "NSMSG_AUTH_SUCCESS" "Du bist nun eingeloggt.";
 "NSMSG_AUTH_UNSPECIAL" "User $b%s$b hat keine spezielle Erlaubnis (allowauth), sich einzuloggen.";
@@ -547,4 +547,4 @@
 "NSMSG_USER_PREV_STAMP" "$b%s$b ist bereits eingeloggt und kann sich daher nicht noch einmal einloggen.";
 "NSMSG_USERINFO_AUTHED_AS" "$b%s$b ist mit dem Account $b%s$b eingeloggt.";
 "NSMSG_USERINFO_NOT_AUTHED" "$b%s$b ist nicht eingeloggt.";
-"NSMSG_WEAK_PASSWORD" "WARNUNG: Du benutzt ein Passwort, welches leicht zu erraten ist.  Es wird dringend empfohlen, das Passwort zu ändern. Benutze \"/AUTHSERV PASS altes_passwort neues_passwort\", um es zu ändern.";
+"NSMSG_WEAK_PASSWORD" "WARNUNG: Du benutzt ein Passwort, welches leicht zu erraten ist.  Es wird dringend empfohlen, das Passwort zu ändern. Benutze \"/msg $N@$s PASS altes_passwort neues_passwort\", um es zu ändern.";
