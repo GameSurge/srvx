@@ -2787,7 +2787,8 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
                         free(bData->reason);
 		    bData->reason = strdup(reason);
                     safestrncpy(bData->owner, (user->handle_info ? user->handle_info->handle : user->nick), sizeof(bData->owner));
-		    reply("CSMSG_REASON_CHANGE", ban);
+                    if(cmd)
+                        reply("CSMSG_REASON_CHANGE", ban);
 		    if(!bData->expires)
                         goto post_add_ban;
 		}
@@ -2818,7 +2819,11 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
 			if(bData->expires)
 			    timeq_add(bData->expires, expire_ban, bData);
 
-			if(duration)
+                        if(!cmd)
+                        {
+                            /* automated kickban */
+                        }
+			else if(duration)
 			    reply("CSMSG_BAN_EXTENDED", ban, intervalString(interval, duration));
 			else
 			    reply("CSMSG_BAN_ADDED", name, channel->name);
@@ -2826,7 +2831,8 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
 			goto post_add_ban;
 		    }
 		}
-		reply("CSMSG_REDUNDANT_BAN", name, channel->name);
+                if(cmd)
+                    reply("CSMSG_REDUNDANT_BAN", name, channel->name);
 
 		free(ban);
 		return 0;
@@ -2875,7 +2881,8 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
 
 	if(channel->banlist.used >= MAXBANS)
 	{
-	    reply("CSMSG_BANLIST_FULL", channel->name);
+            if(cmd)
+                reply("CSMSG_BANLIST_FULL", channel->name);
 	    free(ban);
 	    return 0;
 	}
@@ -2901,7 +2908,8 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
 
         if(exists && (action == ACTION_BAN))
 	{
-            reply("CSMSG_REDUNDANT_BAN", name, channel->name);
+            if(cmd)
+                reply("CSMSG_REDUNDANT_BAN", name, channel->name);
             free(ban);
             return 0;
         }

@@ -86,6 +86,7 @@ log_open(const char *name)
     struct logDestination *ld;
     char *sep;
     char type_name[32];
+
     if ((ld = dict_find(log_dests, name, NULL))) {
         ld->refcnt++;
         return ld;
@@ -100,9 +101,8 @@ log_open(const char *name)
         log_module(MAIN_LOG, LOG_ERROR, "Invalid log type for log '%s'.", name);
         return 0;
     }
-    if (!(ld = vtbl->open(sep ? sep+1 : 0))) {
+    if (!(ld = vtbl->open(sep ? sep+1 : 0)))
         return 0;
-    }
     ld->name = strdup(name);
     dict_insert(log_dests, ld->name, ld);
     ld->refcnt = 1;
@@ -115,20 +115,17 @@ logList_open(struct logList *ll, struct record_data *rd)
     struct logDestination *ld;
     unsigned int ii;
 
-    if (!ll->size) {
+    if (!ll->size)
         logList_init(ll);
-    }
     switch (rd->type) {
     case RECDB_QSTRING:
-        if ((ld = log_open(rd->d.qstring))) {
+        if ((ld = log_open(rd->d.qstring)))
             logList_append(ll, ld);
-        }
         break;
     case RECDB_STRING_LIST:
         for (ii=0; ii<rd->d.slist->used; ++ii) {
-            if ((ld = log_open(rd->d.slist->list[ii]))) {
+            if ((ld = log_open(rd->d.slist->list[ii])))
                 logList_append(ll, ld);
-            }
         }
         break;
     default:
@@ -141,9 +138,8 @@ logList_join(struct logList *target, const struct logList *source)
 {
     unsigned int ii, jj, kk;
 
-    if (!source->used) {
+    if (!source->used)
         return;
-    }
     jj = target->used;
     target->used += source->used;
     target->size += source->used;
@@ -199,16 +195,26 @@ close_logs(void)
 }
 
 static void
+log_type_free_oldest(struct log_type *lt)
+{
+    struct logEntry *next;
+
+    if (!lt->log_oldest)
+        return;
+    next = lt->log_oldest->next;
+    free(lt->log_oldest->default_desc);
+    free(lt->log_oldest);
+    lt->log_oldest = next;
+    lt->log_count--;
+}
+
+static void
 log_type_free(void *ptr)
 {
     struct log_type *lt = ptr;
-    struct logEntry *le, *next;
-    
-    for (le = lt->log_oldest; le; le = next) {
-        next = le->next;
-        free(le->default_desc);
-        free(le);
-    }
+
+    while (lt->log_oldest)
+        log_type_free_oldest(lt);
     free(lt);
 }
 
@@ -248,7 +254,8 @@ log_parse_logset(char *buffer, struct string_list *slist)
     slist->used = 0;
     while (buffer) {
         char *cont = strchr(buffer, ',');
-        if (cont) *cont++ = 0;
+        if (cont)
+            *cont++ = 0;
         string_list_append(slist, strdup(buffer));
         buffer = cont;
     }
@@ -272,11 +279,10 @@ log_parse_sevset(char *buffer, char targets[LOG_NUM_SEVERITIES])
                     targets[bound] = 1;
             }
         } else if (buffer[0] == '<') {
-            if (buffer[1] == '=') {
+            if (buffer[1] == '=')
                 bound = find_severity(buffer+2) + 1;
-            } else {
+            else
                 bound = find_severity(buffer+1);
-            }
             for (first = 1; bound > 0; bound--) {
                 /* make people explicitly specify replay targets */
                 if (bound != LOG_REPLAY || first) {
@@ -285,11 +291,10 @@ log_parse_sevset(char *buffer, char targets[LOG_NUM_SEVERITIES])
                 }
             }
         } else if (buffer[0] == '>') {
-            if (buffer[1] == '=') {
+            if (buffer[1] == '=')
                 bound = find_severity(buffer+2);
-            } else {
+            else
                 bound = find_severity(buffer+1) + 1;
-            }
             for (first = 1; bound < LOG_NUM_SEVERITIES; bound++) {
                 /* make people explicitly specify replay targets */
                 if (bound != LOG_REPLAY || first) {
@@ -323,9 +328,11 @@ log_parse_options(struct log_type *type, struct dict *conf)
 {
     const char *opt;
     opt = database_get_data(conf, "max_age", RECDB_QSTRING);
-    if (opt) type->max_age = ParseInterval(opt);
+    if (opt)
+        type->max_age = ParseInterval(opt);
     opt = database_get_data(conf, "max_count", RECDB_QSTRING);
-    if (opt) type->max_count = strtoul(opt, NULL, 10);
+    if (opt)
+        type->max_count = strtoul(opt, NULL, 10);
 }
 
 static void
@@ -375,9 +382,8 @@ log_conf_read(void)
             }
         }
     }
-    if (log_debugged) {
+    if (log_debugged)
         log_debug();
-    }
 }
 
 void
@@ -391,9 +397,8 @@ log_debug(void)
     logList_init(&target);
     logList_append(&target, log_stdout);
 
-    for (sev = 0; sev < LOG_NUM_SEVERITIES; ++sev) {
+    for (sev = 0; sev < LOG_NUM_SEVERITIES; ++sev)
         logList_join(&log_default->logs[sev], &target);
-    }
 
     logList_close(&target);
     log_debugged = 1;
@@ -427,11 +432,13 @@ log_register_type(const char *name, const char *default_log)
         /* If any severity level was unspecified in the config, use the default. */
         dest = NULL;
         for (sev = 0; sev < LOG_NUM_SEVERITIES; ++sev) {
-            if (sev == LOG_REPLAY) continue; /* never default LOG_REPLAY */
+            if (sev == LOG_REPLAY)
+                continue; /* never default LOG_REPLAY */
             if (!type->logs[sev].size) {
                 logList_init(&type->logs[sev]);
                 if (!dest) {
-                    if (!(dest = log_open(default_log))) break;
+                    if (!(dest = log_open(default_log)))
+                        break;
                     dest->refcnt--;
                 }
                 logList_append(&type->logs[sev], dest);
@@ -459,15 +466,12 @@ log_audit(struct log_type *type, enum log_severity sev, struct userNode *user, s
     }
     /* Allocate and fill in the log entry */
     size = sizeof(*entry) + strlen(user->nick) + strlen(command) + 2;
-    if (user->handle_info) {
+    if (user->handle_info)
         size += strlen(user->handle_info->handle) + 1;
-    }
-    if (channel_name) {
+    if (channel_name)
         size += strlen(channel_name) + 1;
-    }
-    if (flags & AUDIT_HOSTMASK) {
+    if (flags & AUDIT_HOSTMASK)
         size += strlen(user->ident) + strlen(user->hostname) + 2;
-    }
     entry = calloc(1, size);
     str_next = (char*)(entry + 1);
     entry->time = now;
@@ -507,29 +511,18 @@ log_audit(struct log_type *type, enum log_severity sev, struct userNode *user, s
     /* insert into the linked list */
     entry->next = 0;
     entry->prev = type->log_newest;
-    if (type->log_newest) {
+    if (type->log_newest)
         type->log_newest->next = entry;
-    } else {
+    else
         type->log_oldest = entry;
-    }
     type->log_newest = entry;
     type->log_count++;
 
     /* remove old elements from the linked list */
-    while (type->log_count > type->max_count) {
-        struct logEntry *next = type->log_oldest->next;
-        free(type->log_oldest->default_desc);
-        free(type->log_oldest);
-        type->log_oldest = next;
-        type->log_count--;
-    }
-    while (type->log_oldest && (type->log_oldest->time + type->max_age < (unsigned long)now)) {
-        struct logEntry *next = type->log_oldest->next;
-        free(type->log_oldest->default_desc);
-        free(type->log_oldest);
-        type->log_oldest = next;
-        type->log_count--;
-    }
+    while (type->log_count > type->max_count)
+        log_type_free_oldest(type);
+    while (type->log_oldest && (type->log_oldest->time + type->max_age < (unsigned long)now))
+        log_type_free_oldest(type);
     if (type->log_oldest)
         type->log_oldest->prev = 0;
     else
@@ -635,17 +628,15 @@ log_discrim_create(struct userNode *service, struct userNode *user, unsigned int
         } else if (!irccasecmp(argv[ii], "age")) {
             const char *cmp = argv[++ii];
             if (cmp[0] == '<') {
-                if (cmp[1] == '=') {
+                if (cmp[1] == '=')
                     discrim->min_time = now - ParseInterval(cmp+2);
-                } else {
+                else
                     discrim->min_time = now - (ParseInterval(cmp+1) - 1);
-                }
             } else if (cmp[0] == '>') {
-                if (cmp[1] == '=') {
+                if (cmp[1] == '=')
                     discrim->max_time = now - ParseInterval(cmp+2);
-                } else {
+                else
                     discrim->max_time = now - (ParseInterval(cmp+1) - 1);
-                }
             } else {
                 discrim->min_time = now - ParseInterval(cmp+2);
             }
@@ -887,13 +878,12 @@ ldStd_open(const char *args) {
     ld->fname = strdup(args);
 
     /* Print to stderr if given "err" and default to stdout otherwise. */
-    if (atoi(args)) {
+    if (atoi(args))
         ld->output = fdopen(atoi(args), "a");
-    } else if (!strcasecmp(args, "err")) {
+    else if (!strcasecmp(args, "err"))
         ld->output = stdout;
-    } else {
+    else
         ld->output = stderr;
-    }
 
     return &ld->base;
 }

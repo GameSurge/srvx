@@ -337,7 +337,7 @@ svccmd_configure(struct svccmd *cmd, struct userNode *user, struct userNode *bot
         return 1;
     } else if (!irccasecmp(param, "channel_level") || !irccasecmp(param, "channel_access") || !irccasecmp(param, "access")) {
         unsigned short ul;
-        if (!irccasecmp(value, "none")) {
+        if (!irccasecmp(value, "none") || !irccasecmp(value, "0")) {
             cmd->min_channel_access = 0;
             return 1;
         } else if ((ul = user_level_from_name(value, UL_OWNER)) > 0) {

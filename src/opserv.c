@@ -1039,7 +1039,7 @@ static MODCMD_FUNC(cmd_kickbanall)
         change->args[1].mode = MODE_BAN;
         change->args[1].hostmask = "*!*@*";
     } else {
-        change = mod_chanmode_alloc(2);
+        change = mod_chanmode_alloc(1);
         change->args[0].mode = MODE_BAN;
         change->args[0].hostmask = "*!*@*";
     }
