@@ -152,7 +152,7 @@ dnl Optional features.
 AC_MSG_CHECKING(which malloc to use)
 AC_ARG_WITH(malloc,
 [  --with-malloc=type      Enables use of a special malloc library; one of:
-                          system (the default), boehm-gc, dmalloc, mpatrol, srvx],
+                          system (the default), boehm-gc, dmalloc, mpatrol, srvx, slab],
 [],
 [withval="system"])
 if test "x$withval" = "xsystem" ; then

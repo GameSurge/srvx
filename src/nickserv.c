@@ -2860,6 +2860,13 @@ static NICKSERV_FUNC(cmd_merge)
     if (hi_from->lastseen > hi_to->lastseen)
         hi_to->lastseen = hi_from->lastseen;
 
+    /* Does a fakehost carry over?  (This intentionally doesn't set it
+     * for users previously attached to hi_to.  They'll just have to
+     * reconnect.)
+     */
+    if (hi_from->fakehost && !hi_to->fakehost)
+        hi_to->fakehost = strdup(hi_from->fakehost);
+
     /* Notify of success. */
     sprintf(buffer, "%s (%s) merged account %s into %s.", user->nick, user->handle_info->handle, hi_from->handle, hi_to->handle);
     reply("NSMSG_HANDLES_MERGED", hi_from->handle, hi_to->handle);
