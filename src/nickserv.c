@@ -674,9 +674,9 @@ smart_get_handle_info(struct userNode *service, struct userNode *user, const cha
         }
         if (IsLocal(target)) {
 	    if (IsService(target))
-              send_message(user, service, "NSMSG_USER_IS_SERVICE", target->nick);
+                send_message(user, service, "NSMSG_USER_IS_SERVICE", target->nick);
 	    else
-	      send_message(user, service, "MSG_USER_AUTHENTICATE", target->nick);
+                send_message(user, service, "MSG_USER_AUTHENTICATE", target->nick);
             return 0;
         }
         if (!(hi = target->handle_info)) {

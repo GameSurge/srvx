@@ -584,6 +584,39 @@ static CMD_FUNC(cmd_privmsg) {
     return 1;
 }
 
+static CMD_FUNC(cmd_whois) {
+    struct userNode *from;
+    struct userNode *who;
+
+    if (argc < 3)
+        return 0;
+    if (!(from = GetUserH(origin))) {
+        log_module(MAIN_LOG, LOG_ERROR, "Could not find WHOIS origin user %s", origin);
+        return 0;
+    }
+    if(!(who = GetUserH(argv[2]))) {
+        irc_numeric(from, ERR_NOSUCHNICK, "%s@%s :No such nick", argv[2], self->name);
+        return 1;
+    }
+    if (IsHiddenHost(who) && !IsOper(from)) {
+        /* Just stay quiet. */
+        return 1;
+    }
+    irc_numeric(from, RPL_WHOISUSER, "%s %s %s * :%s", who->nick, who->ident, who->hostname, who->info);
+#ifdef WITH_PROTOCOL_P10
+    if (his_servername && his_servercomment)
+      irc_numeric(from, RPL_WHOISSERVER, "%s %s :%s", who->nick, his_servername, his_servercomment);
+    else
+#endif
+    irc_numeric(from, RPL_WHOISSERVER, "%s %s :%s", who->nick, who->uplink->name, who->uplink->description);
+
+    if (IsOper(who)) {
+        irc_numeric(from, RPL_WHOISOPERATOR, "%s :is a megalomaniacal power hungry tyrant", who->nick);
+    }
+    irc_numeric(from, RPL_ENDOFWHOIS, "%s :End of /WHOIS list", who->nick);
+    return 1;
+}
+
 static CMD_FUNC(cmd_capab) {
     static const struct {
         const char *name;
@@ -1207,6 +1240,7 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
             break;
 #define do_chan_mode(FLAG) do { if (add) change->modes_set |= FLAG, change->modes_clear &= ~FLAG; else change->modes_clear |= FLAG, change->modes_set &= ~FLAG; } while(0)
         case 'R': do_chan_mode(MODE_REGONLY); break;
+        case 'r': do_chan_mode(MODE_REGISTERED); break;
         case 'D': do_chan_mode(MODE_DELAYJOINS); break;
         case 'c': do_chan_mode(MODE_NOCOLORS); break;
         case 'i': do_chan_mode(MODE_INVITEONLY); break;
@@ -1345,6 +1379,7 @@ mod_chanmode_announce(struct userNode *who, struct chanNode *channel, struct mod
         DO_MODE_CHAR(DELAYJOINS, 'D');
         DO_MODE_CHAR(REGONLY, 'R');
         DO_MODE_CHAR(NOCOLORS, 'c');
+        DO_MODE_CHAR(REGISTERED, 'r');
 #undef DO_MODE_CHAR
         if (change->modes_clear & channel->modes & MODE_KEY)
             mod_chanmode_append(&chbuf, 'k', channel->key);
@@ -1379,6 +1414,7 @@ mod_chanmode_announce(struct userNode *who, struct chanNode *channel, struct mod
         DO_MODE_CHAR(DELAYJOINS, 'D');
         DO_MODE_CHAR(REGONLY, 'R');
         DO_MODE_CHAR(NOCOLORS, 'c');
+        DO_MODE_CHAR(REGISTERED, 'r');
 #undef DO_MODE_CHAR
         if (change->modes_set & MODE_KEY)
             mod_chanmode_append(&chbuf, 'k', change->new_key);
@@ -1430,8 +1466,9 @@ mod_chanmode_format(struct mod_chanmode *change, char *outbuff)
         DO_MODE_CHAR(LIMIT, 'l');
         DO_MODE_CHAR(KEY, 'k');
         DO_MODE_CHAR(DELAYJOINS, 'D');
-        DO_MODE_CHAR(REGONLY, '$');
+        DO_MODE_CHAR(REGONLY, 'R');
         DO_MODE_CHAR(NOCOLORS, 'c');
+        DO_MODE_CHAR(REGISTERED, 'r');
 #undef DO_MODE_CHAR
     }
     if (change->modes_set) {
@@ -1446,6 +1483,7 @@ mod_chanmode_format(struct mod_chanmode *change, char *outbuff)
         DO_MODE_CHAR(DELAYJOINS, 'D');
         DO_MODE_CHAR(REGONLY, 'R');
         DO_MODE_CHAR(NOCOLORS, 'c');
+        DO_MODE_CHAR(REGISTERED, 'r');
 #undef DO_MODE_CHAR
         switch (change->modes_set & (MODE_KEY|MODE_LIMIT)) {
         case MODE_KEY|MODE_LIMIT:

@@ -178,12 +178,9 @@
         // (This is changed relative srvx-1.0.x, which would use default
         // unless you specified ".disabled".)
         "nick" "ChanServ";
-	// Should ChanServ join the channel? Please do not ask the srvx dev
-	// team for help configuring your ircd or a patch if you attempt to
-	// use this option on ircds that do not support having services off
-	// of the channel. Most people will leave this off; we cannot assist
-	// you in designing your network to make this option usefull to you.
-	"off_channel" "no";
+        // Does your ircd have off-channel services support?
+        // Bahamut does; ircu2.10.11 does not.
+        "off_channel" "no";
         // how long should a person be unseen before resending infoline?
         "info_delay" "120";
         // maximum greeting length

@@ -286,11 +286,12 @@ static unsigned int num_privmsg_funcs;
 static privmsg_func_t *notice_funcs;
 static unsigned int num_notice_funcs;
 static struct dict *unbursted_channels;
-
-char *his_servername;
-char *his_servercomment;
+static char *his_servername;
+static char *his_servercomment;
 
 static struct userNode *AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *numeric, const char *userinfo, time_t timestamp, const char *realip);
+
+extern int off_channel;
 
 /* Numerics can be XYY, XYYY, or XXYYY; with X's identifying the
  * server and Y's indentifying the client on that server. */
@@ -681,7 +682,7 @@ irc_kick(struct userNode *who, struct userNode *target, struct chanNode *channel
 {
     const char *numeric;
     struct modeNode *mn = GetUserMode(channel, who);
-    numeric = ((!mn && off_channel) || (mn->modes & MODE_CHANOP)) ? who->numeric : self->numeric;
+    numeric = ((mn && (mn->modes & MODE_CHANOP)) || off_channel) ? who->numeric : self->numeric;
     putsock("%s " P10_KICK " %s %s :%s",
             numeric, channel->name, target->numeric, msg);
 }
@@ -749,6 +750,38 @@ change_nicklen(int new_nicklen)
         new_nick[nicklen] = 0;
         NickChange(user, new_nick, 1);
     }
+}
+
+static CMD_FUNC(cmd_whois)
+{
+    struct userNode *from;
+    struct userNode *who;
+
+    if (argc < 3)
+        return 0;
+    if (!(from = GetUserH(origin))) {
+        log_module(MAIN_LOG, LOG_ERROR, "Could not find WHOIS origin user %s", origin);
+        return 0;
+    }
+    if(!(who = GetUserH(argv[2]))) {
+        irc_numeric(from, ERR_NOSUCHNICK, "%s@%s :No such nick", argv[2], self->name);
+        return 1;
+    }
+    if (IsHiddenHost(who) && !IsOper(from)) {
+        /* Just stay quiet. */
+        return 1;
+    }
+    irc_numeric(from, RPL_WHOISUSER, "%s %s %s * :%s", who->nick, who->ident, who->hostname, who->info);
+    if (his_servername && his_servercomment)
+      irc_numeric(from, RPL_WHOISSERVER, "%s %s :%s", who->nick, his_servername, his_servercomment);
+    else
+    irc_numeric(from, RPL_WHOISSERVER, "%s %s :%s", who->nick, who->uplink->name, who->uplink->description);
+
+    if (IsOper(who)) {
+        irc_numeric(from, RPL_WHOISOPERATOR, "%s :is a megalomaniacal power hungry tyrant", who->nick);
+    }
+    irc_numeric(from, RPL_ENDOFWHOIS, "%s :End of /WHOIS list", who->nick);
+    return 1;
 }
 
 static CMD_FUNC(cmd_server)
@@ -1384,8 +1417,6 @@ init_parse(void)
     const char *str, *desc;
     int numnick, usermask, max_users;
     char numer[COMBO_NUMERIC_LEN+1];
-    extern char *his_servername;
-    extern char *his_servercomment;
 
     /* read config items */
     str = conf_get_data("server/ping_freq", RECDB_QSTRING);
@@ -2137,7 +2168,7 @@ mod_chanmode_announce(struct userNode *who, struct chanNode *channel, struct mod
     chbuf.chname_len = strlen(channel->name);
 
     mn = GetUserMode(channel, who);
-    if ((!mn && off_channel) || (mn->modes & MODE_CHANOP))
+    if ((mn && (mn->modes & MODE_CHANOP)) || off_channel)
         chbuf.is_chanop = 1;
 
     /* First remove modes */

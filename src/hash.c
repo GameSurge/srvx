@@ -532,9 +532,8 @@ DelChannelUser(struct userNode* user, struct chanNode* channel, const char *reas
     struct modeNode* mNode;
     unsigned int n;
 
-    if (reason) {
+    if (reason)
         irc_part(user, channel, reason);
-    }
 
     mNode = GetUserMode(channel, user);
 
@@ -552,7 +551,7 @@ DelChannelUser(struct userNode* user, struct chanNode* channel, const char *reas
     modeList_remove(&user->channels, mNode);
     free(mNode);
 
-    if (!deleting && !channel->members.used && !channel->locks)
+    if (!deleting && !channel->members.used && !channel->locks && !(channel->modes & MODE_REGISTERED))
         DelChannel(channel);
 }
 
@@ -708,7 +707,13 @@ DEFINE_LIST(serverList, struct server*)
 static void
 hash_cleanup(void)
 {
+    dict_iterator_t it, next;
+
     DelServer(self, 0, NULL);
+    for (it = dict_first(channels); it; it = next) {
+        next = iter_next(it);
+        DelChannel(iter_data(it));
+    }
     dict_delete(channels);
     dict_delete(clients);
     dict_delete(servers);

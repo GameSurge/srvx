@@ -39,7 +39,6 @@ FILE *replay_file;
 struct io_fd *socket_io_fd;
 int force_n2k;
 const char *hidden_host_suffix;
-int off_channel;
 
 static char replay_line[MAXLEN+80];
 static int ping_freq;
@@ -364,44 +363,6 @@ static CMD_FUNC(cmd_stats)
     default: /* unrecognized/unhandled stats output */ break;
     }
     irc_numeric(un, 219, "%s :End of /STATS report", argv[1]);
-    return 1;
-}
-
-static CMD_FUNC(cmd_whois)
-{
-    struct userNode *from;
-    struct userNode *who;
-#ifdef WITH_PROTOCOL_P10
-    extern char *his_servername;
-    extern char *his_servercomment;
-#endif
-
-    if (argc < 3)
-        return 0;
-    if (!(from = GetUserH(origin))) {
-        log_module(MAIN_LOG, LOG_ERROR, "Could not find WHOIS origin user %s", origin);
-        return 0;
-    }
-    if(!(who = GetUserH(argv[2]))) {
-        irc_numeric(from, ERR_NOSUCHNICK, "%s@%s :No such nick", argv[2], self->name);
-        return 1;
-    }
-    if (IsHiddenHost(who) && !IsOper(from)) {
-        /* Just stay quiet. */
-        return 1;
-    }
-    irc_numeric(from, RPL_WHOISUSER, "%s %s %s * :%s", who->nick, who->ident, who->hostname, who->info);
-#ifdef WITH_PROTOCOL_P10
-    if (his_servername && his_servercomment)
-      irc_numeric(from, RPL_WHOISSERVER, "%s %s :%s", who->nick, his_servername, his_servercomment);
-    else
-#endif
-    irc_numeric(from, RPL_WHOISSERVER, "%s %s :%s", who->nick, who->uplink->name, who->uplink->description);
-
-    if (IsOper(who)) {
-        irc_numeric(from, RPL_WHOISOPERATOR, "%s :is a megalomaniacal power hungry tyrant", who->nick);
-    }
-    irc_numeric(from, RPL_ENDOFWHOIS, "%s :End of /WHOIS list", who->nick);
     return 1;
 }
 

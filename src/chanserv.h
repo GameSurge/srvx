@@ -64,12 +64,14 @@ enum charOption {
 #define CHANNEL_DYNAMIC_LIMIT	0x00000020 /* (1 << 5) */
 #define CHANNEL_TOPIC_SNARF	0x00000040 /* (1 << 6) - DEPRECATED */
 #define CHANNEL_PEON_INVITE     0x00000080 /* (1 << 7) - DEPRECATED */
+#define CHANNEL_OFFCHANNEL      0x00000100 /* (1 << 8) */
 /* Flags with values over 0x20000000 or (1 << 29) will not work
  * because chanData.flags is a 30-bit field.
  */
 
 #define IsProtected(x)		((x)->flags & CHANNEL_NODELETE)
 #define IsSuspended(x)		((x)->flags & CHANNEL_SUSPENDED)
+#define IsOffChannel(x)         ((x)->flags & CHANNEL_OFFCHANNEL)
 
 struct chanData
 {

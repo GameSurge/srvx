@@ -114,7 +114,7 @@
 #define KEY_EXPIRES             "expires"
 #define KEY_TRIGGERED		"triggered"
 
-#define CHANNEL_DEFAULT_FLAGS   (0)
+#define CHANNEL_DEFAULT_FLAGS   (CHANNEL_OFFCHANNEL)
 #define CHANNEL_DEFAULT_OPTIONS "lmoooanpcnat"
 
 /* Administrative messages */
@@ -252,6 +252,7 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_SET_MODES",         "$bModes       $b %s" },
     { "CSMSG_SET_NODELETE",      "$bNoDelete    $b %s" },
     { "CSMSG_SET_DYNLIMIT",      "$bDynLimit    $b %s" },
+    { "CSMSG_SET_OFFCHANNEL",    "$bOffChannel  $b %s" },
     { "CSMSG_SET_USERINFO",      "$bUserInfo    $b %d" },
     { "CSMSG_SET_GIVE_VOICE",    "$bGiveVoice   $b %d" },
     { "CSMSG_SET_TOPICSNARF",    "$bTopicSnarf  $b %d" },
@@ -471,6 +472,7 @@ static int eject_user(struct userNode *user, struct chanNode *channel, unsigned 
 
 struct userNode *chanserv;
 dict_t note_types;
+int off_channel;
 static dict_t plain_dnrs, mask_dnrs, handle_dnrs;
 static struct log_type *CS_LOG;
 
@@ -1268,6 +1270,7 @@ static void chanserv_expire_suspension(void *data);
 static void
 unregister_channel(struct chanData *channel, const char *reason)
 {
+    struct mod_chanmode change;
     char msgbuf[MAXLEN];
 
     /* After channel unregistration, the following must be cleaned
@@ -1284,22 +1287,29 @@ unregister_channel(struct chanData *channel, const char *reason)
 
     timeq_del(0, NULL, channel, TIMEQ_IGNORE_FUNC | TIMEQ_IGNORE_WHEN);
 
+    mod_chanmode_init(&change);
+    change.modes_clear |= MODE_REGISTERED;
+    mod_chanmode_announce(chanserv, channel->channel, &change);
+
     while(channel->users)
 	del_channel_user(channel->users, 0);
 
     while(channel->bans)
 	del_channel_ban(channel->bans);
 
-    if(channel->topic) free(channel->topic);
-    if(channel->registrar) free(channel->registrar);
-    if(channel->greeting) free(channel->greeting);
-    if(channel->user_greeting) free(channel->user_greeting);
-    if(channel->topic_mask) free(channel->topic_mask);
+    free(channel->topic);
+    free(channel->registrar);
+    free(channel->greeting);
+    free(channel->user_greeting);
+    free(channel->topic_mask);
 
-    if(channel->prev) channel->prev->next = channel->next;
-    else channelList = channel->next;
+    if(channel->prev)
+        channel->prev->next = channel->next;
+    else
+        channelList = channel->next;
 
-    if(channel->next) channel->next->prev = channel->prev;
+    if(channel->next)
+        channel->next->prev = channel->prev;
 
     if(channel->suspended)
     {
@@ -1321,8 +1331,7 @@ unregister_channel(struct chanData *channel, const char *reason)
     }
     channel->channel->channel_info = NULL;
 
-    if(channel->notes)
-        dict_delete(channel->notes);
+    dict_delete(channel->notes);
     sprintf(msgbuf, "%s %s", channel->channel->name, reason);
     if(!IsSuspended(channel))
         DelChannelUser(chanserv, channel->channel, msgbuf, 0);
@@ -4925,6 +4934,54 @@ static MODCMD_FUNC(chan_opt_dynlimit)
     CHANNEL_BINARY_OPTION("CSMSG_SET_DYNLIMIT", CHANNEL_DYNAMIC_LIMIT);
 }
 
+static MODCMD_FUNC(chan_opt_offchannel)
+{
+    struct chanData *cData = channel->channel_info;
+    int value;
+
+    if(argc > 1)
+    {
+	/* Set flag according to value. */
+	if(enabled_string(argv[1]))
+	{
+            if(!IsOffChannel(cData))
+                DelChannelUser(chanserv, channel, "Going off-channel.", 0);
+	    cData->flags |= CHANNEL_OFFCHANNEL;
+	    value = 1;
+	}
+	else if(disabled_string(argv[1]))
+	{
+            if(IsOffChannel(cData))
+            {
+                struct mod_chanmode change;
+                mod_chanmode_init(&change);
+                change.argc = 1;
+                change.args[0].mode = MODE_CHANOP;
+                change.args[0].member = AddChannelUser(chanserv, channel);
+                mod_chanmode_announce(chanserv, channel, &change);
+            }
+	    cData->flags &= ~CHANNEL_OFFCHANNEL;
+	    value = 0;
+	}
+	else
+	{
+	    reply("MSG_INVALID_BINARY", argv[1]);
+	    return 0;
+	}
+    }
+    else
+    {
+	/* Find current option value. */
+	value = (cData->flags & CHANNEL_OFFCHANNEL) ? 1 : 0;
+    }
+
+    if(value)
+        reply("CSMSG_SET_OFFCHANNEL", user_find_message(user, "MSG_ON"));
+    else
+        reply("CSMSG_SET_OFFCHANNEL", user_find_message(user, "MSG_OFF"));
+    return 1;
+}
+
 static MODCMD_FUNC(chan_opt_defaults)
 {
     struct userData *uData;
@@ -5915,7 +5972,7 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
                && IsUserAutoInvite(channel)
                && (channel->access >= channel->channel->lvlOpts[lvlInviteMe])
                && !self->burst
-	       && !user->uplink->burst)
+               && !user->uplink->burst)
                 irc_invite(chanserv, user, cn);
             continue;
         }
@@ -6243,7 +6300,6 @@ chanserv_conf_read(void)
     struct string_list *strlist;
     struct chanNode *chan;
     unsigned int ii;
-    extern int off_channel;
 
     if(!(conf_node = conf_get_data(CHANSERV_CONF_NAME, RECDB_OBJECT)))
     {
@@ -6540,7 +6596,6 @@ chanserv_channel_read(const char *key, struct record_data *hir)
     char *str, *argv[10];
     dict_iterator_t it;
     unsigned int argc;
-    extern int off_channel;
 
     channel = hir->d.object;
 
@@ -6631,7 +6686,7 @@ chanserv_channel_read(const char *key, struct record_data *hir)
         /* We could use suspended->expires and suspended->revoked to
          * set the CHANNEL_SUSPENDED flag, but we don't. */
     }
-    else if(cData->flags & CHANNEL_SUSPENDED)
+    else if(IsSuspended(cData))
     {
         suspended = calloc(1, sizeof(*suspended));
         suspended->issued = 0;
@@ -6646,27 +6701,22 @@ chanserv_channel_read(const char *key, struct record_data *hir)
         suspended->cData = cData;
     }
     else
-        suspended = NULL;
+        suspended = NULL; /* to squelch a warning */
 
-    if((cData->flags & CHANNEL_SUSPENDED)
-       && suspended->expires
-       && (suspended->expires <= now))
-    {
-        cData->flags &= ~CHANNEL_SUSPENDED;
+    if(IsSuspended(cData)) {
+        if(suspended->expires > now)
+            timeq_add(suspended->expires, chanserv_expire_suspension, suspended);
+        else if(suspended->expires)
+            cData->flags &= ~CHANNEL_SUSPENDED;
     }
 
-    if (!off_channel) {
-      if (!(cData->flags & CHANNEL_SUSPENDED)) {
-       struct mod_chanmode change;
-       mod_chanmode_init(&change);
-       change.argc = 1;
-       change.args[0].mode = MODE_CHANOP;
-       change.args[0].member = AddChannelUser(chanserv, cNode);
-       mod_chanmode_announce(chanserv, cNode, &change);
-
-      } else if (suspended->expires > now) {
-       timeq_add(suspended->expires, chanserv_expire_suspension, suspended);
-      }
+    if((!off_channel || !IsOffChannel(cData)) && !IsSuspended(cData)) {
+        struct mod_chanmode change;
+        mod_chanmode_init(&change);
+        change.argc = 1;
+        change.args[0].mode = MODE_CHANOP;
+        change.args[0].member = AddChannelUser(chanserv, cNode);
+        mod_chanmode_announce(chanserv, cNode, &change);
     }
 
     str = database_get_data(channel, KEY_REGISTERED, RECDB_QSTRING);
@@ -6684,16 +6734,15 @@ chanserv_channel_read(const char *key, struct record_data *hir)
     str = database_get_data(channel, KEY_TOPIC, RECDB_QSTRING);
     cData->topic = str ? strdup(str) : NULL;
 
-    if((str = database_get_data(channel, KEY_MODES, RECDB_QSTRING))
+    if(!IsSuspended(cData)
+       && (str = database_get_data(channel, KEY_MODES, RECDB_QSTRING))
        && (argc = split_line(str, 0, ArrayLength(argv), argv))
        && (modes = mod_chanmode_parse(cNode, argv, argc, MCP_KEY_FREE))) {
         cData->modes = *modes;
-	if(off_channel && !(REGISTERED_MODE == 0))
-	  cData->modes.modes_set |= REGISTERED_MODE;
+        cData->modes.modes_set |= MODE_REGISTERED;
         if(cData->modes.argc > 1)
             cData->modes.argc = 1;
-        if(!IsSuspended(cData))
-            mod_chanmode_announce(chanserv, cNode, &cData->modes);
+        mod_chanmode_announce(chanserv, cNode, &cData->modes);
         mod_chanmode_free(modes);
     }
 
@@ -7171,6 +7220,8 @@ init_chanserv(const char *nick)
     DEFINE_CHANNEL_OPTION(ctcpusers);
     DEFINE_CHANNEL_OPTION(ctcpreaction);
     DEFINE_CHANNEL_OPTION(inviteme);
+    if(off_channel)
+        DEFINE_CHANNEL_OPTION(offchannel);
     modcmd_register(chanserv_module, "set defaults", chan_opt_defaults, 1, 0, "access", "owner", NULL);
 
     /* Alias set topic to set defaulttopic for compatibility. */

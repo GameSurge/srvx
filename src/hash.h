@@ -37,9 +37,10 @@
 #define MODE_BAN		0x0200 /* +b BAN */
 #define MODE_LIMIT		0x0400 /* +l LIMIT */
 #define MODE_DELAYJOINS         0x0800 /* +D */
-#define MODE_REGONLY            0x1000 /* +r */
+#define MODE_REGONLY            0x1000 /* ircu +r, Bahamut +R */
 #define MODE_NOCOLORS           0x2000 /* +c */
 #define MODE_NOCTCPS            0x4000 /* +C */
+#define MODE_REGISTERED         0x8000 /* Bahamut +r */
 #define MODE_REMOVE             0x80000000
 
 #define FLAGS_OPER		0x0001 /* Operator +O */
@@ -73,9 +74,6 @@
 #define IsHiddenHost(x)         ((x)->modes & FLAGS_HIDDEN_HOST)
 #define IsReggedNick(x)         ((x)->modes & FLAGS_REGNICK)
 #define IsLocal(x)              ((x)->uplink == self)
-
-/* Please set this and define the mode you wish to be set/maintained on registered channels. */
-#define REGISTERED_MODE 0 
 
 #define NICKLEN         30
 #define USERLEN         10
