@@ -917,6 +917,7 @@ nickserv_register(struct userNode *user, struct userNode *settee, const char *ha
     hi = register_handle(handle, crypted, 0);
     hi->masks = alloc_string_list(1);
     hi->users = NULL;
+    hi->language = lang_C;
     hi->registered = now;
     hi->lastseen = now;
     hi->flags = HI_DEFAULT_FLAGS;
@@ -997,7 +998,7 @@ nickserv_make_cookie(struct userNode *user, struct handle_info *hi, enum cookie_
             snprintf(body, sizeof(body), fmt, netname, cookie->cookie+COOKIELEN/2, nickserv->nick, self->name, hi->handle, COOKIELEN/2);
             sendmail(nickserv, hi, subject, body, 1);
             fmt = user_find_message(user, "NSEMAIL_EMAIL_CHANGE_BODY_OLD");
-            snprintf(body, sizeof(body), fmt, netname, cookie->cookie+COOKIELEN/2, nickserv->nick, self->name, hi->handle, COOKIELEN/2, hi->email_addr);
+            snprintf(body, sizeof(body), fmt, netname, cookie->cookie, nickserv->nick, self->name, hi->handle, COOKIELEN/2, hi->email_addr);
         } else {
             send_message(user, nickserv, "NSMSG_USE_COOKIE_EMAIL_1");
             fmt = user_find_message(user, "NSEMAIL_EMAIL_VERIFY_SUBJECT");
