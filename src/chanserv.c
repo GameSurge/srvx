@@ -6197,7 +6197,8 @@ chanserv_conf_read(void)
     str = database_get_data(conf_node, KEY_MAX_CHAN_BANS, RECDB_QSTRING);
     chanserv_conf.max_chan_bans = str ? atoi(str) : 512;
     str = database_get_data(conf_node, KEY_NICK, RECDB_QSTRING);
-    if(str) NickChange(chanserv, str, 0);
+    if(chanserv && str)
+        NickChange(chanserv, str, 0);
     str = database_get_data(conf_node, KEY_REFRESH_PERIOD, RECDB_QSTRING);
     chanserv_conf.refresh_period = str ? ParseInterval(str) : 3*60*60;
     str = database_get_data(conf_node, KEY_CTCP_SHORT_BAN_DURATION, RECDB_QSTRING);
@@ -6897,7 +6898,6 @@ chanserv_db_cleanup(void) {
 void
 init_chanserv(const char *nick)
 {
-    chanserv = AddService(nick, "Channel Services");
     CS_LOG = log_register_type("ChanServ", "file:chanserv.log");
     conf_register_reload(chanserv_conf_read);
 
@@ -7056,8 +7056,13 @@ init_chanserv(const char *nick)
 
     note_types = dict_new();
     dict_set_free_data(note_types, chanserv_deref_note_type);
+    if(nick)
+    {
+        chanserv = AddService(nick, "Channel Services");
+        service_register(chanserv, '!');
+        reg_chanmsg_func('\001', chanserv, chanserv_ctcp_check);
+    }
     saxdb_register("ChanServ", chanserv_saxdb_read, chanserv_saxdb_write);
-    reg_chanmsg_func('\001', chanserv, chanserv_ctcp_check);
 
     if(chanserv_conf.channel_expire_frequency)
 	timeq_add(now + chanserv_conf.channel_expire_frequency, expire_channels, NULL);

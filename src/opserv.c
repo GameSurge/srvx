@@ -262,7 +262,6 @@ static dict_t opserv_user_alerts; /* data is struct opserv_user_alert* */
 static dict_t opserv_nick_based_alerts; /* data is struct opserv_user_alert* */
 static dict_t opserv_channel_alerts; /* data is struct opserv_user_alert* */
 static struct module *opserv_module;
-static struct service *opserv_service;
 static struct log_type *OS_LOG;
 static unsigned int new_user_flood;
 static char *level_strings[1001];
@@ -363,11 +362,6 @@ opserv_free_user_alert(void *data)
     free(alert->discrim->reason);
     free(alert->discrim);
     free(alert);
-}
-
-static struct svccmd *
-opserv_get_command(const char *name) {
-    return dict_find(opserv_service->commands, name, NULL);
 }
 
 #define opserv_debug(format...) do { if (opserv_conf.debug_channel) send_channel_notice(opserv_conf.debug_channel , opserv , ## format); } while (0)
@@ -2303,22 +2297,27 @@ static MODCMD_FUNC(cmd_clone)
 static struct helpfile_expansion
 opserv_help_expand(const char *variable)
 {
+    extern struct userNode *message_source;
     struct helpfile_expansion exp;
+    struct service *service;
     struct svccmd *cmd;
     dict_iterator_t it;
     int row;
     unsigned int level;
 
-    if (!irccasecmp(variable, "index")) {
+    if (!(service = service_find(message_source->nick))) {
+        exp.type = HF_STRING;
+        exp.value.str = NULL;
+    } else if (!irccasecmp(variable, "index")) {
         exp.type = HF_TABLE;
         exp.value.table.length = 1;
         exp.value.table.width = 2;
         exp.value.table.flags = TABLE_REPEAT_HEADERS | TABLE_REPEAT_ROWS;
-        exp.value.table.contents = calloc(dict_size(opserv_service->commands)+1, sizeof(char**));
+        exp.value.table.contents = calloc(dict_size(service->commands)+1, sizeof(char**));
         exp.value.table.contents[0] = calloc(exp.value.table.width, sizeof(char*));
         exp.value.table.contents[0][0] = "Command";
         exp.value.table.contents[0][1] = "Level";
-        for (it=dict_first(opserv_service->commands); it; it=iter_next(it)) {
+        for (it=dict_first(service->commands); it; it=iter_next(it)) {
             cmd = iter_data(it);
             row = exp.value.table.length++;
             exp.value.table.contents[row] = calloc(exp.value.table.width, sizeof(char*));
@@ -2331,7 +2330,7 @@ opserv_help_expand(const char *variable)
             exp.value.table.contents[row][1] = level_strings[level];
         }
     } else if (!strncasecmp(variable, "level", 5)) {
-        cmd = opserv_get_command(variable+6);
+        cmd = dict_find(service->commands, variable+6, NULL);
         exp.type = HF_STRING;
         if (cmd) {
             level = cmd->min_opserv_level;
@@ -3308,7 +3307,7 @@ static MODCMD_FUNC(cmd_trace)
     char buf[MAXLEN];
 
     sprintf(buf, "trace %s", argv[1]);
-    if (!(subcmd = opserv_get_command(buf))) {
+    if (!(subcmd = dict_find(cmd->parent->commands, buf, NULL))) {
 	reply("OSMSG_BAD_ACTION", argv[1]);
         return 0;
     }
@@ -3529,7 +3528,7 @@ static MODCMD_FUNC(cmd_csearch)
     }
 
     sprintf(buf, "%s %s", argv[0], argv[0]);
-    if ((subcmd = opserv_get_command(buf))
+    if ((subcmd = dict_find(cmd->parent->commands, buf, NULL))
         && !svccmd_can_invoke(user, cmd->parent->bot, subcmd, channel, SVCCMD_NOISY)) {
         return 0;
     }
@@ -3619,7 +3618,7 @@ static MODCMD_FUNC(cmd_gtrace)
         return 0;
     }
     sprintf(buf, "%s %s", argv[0], argv[0]);
-    if ((subcmd = opserv_get_command(buf))
+    if ((subcmd = dict_find(cmd->parent->commands, buf, NULL))
         && !svccmd_can_invoke(user, cmd->parent->bot, subcmd, channel, SVCCMD_NOISY)) {
         return 0;
     }
@@ -3834,7 +3833,7 @@ static MODCMD_FUNC(cmd_addalert)
 
     name = argv[1];
     sprintf(buf, "addalert %s", argv[2]);
-    if (!(subcmd = opserv_get_command(buf))) {
+    if (!(subcmd = dict_find(cmd->parent->commands, buf, NULL))) {
 	reply("OSMSG_UNKNOWN_REACTION", argv[2]);
 	return 0;
     }
@@ -3885,7 +3884,7 @@ opserv_conf_read(void)
     }
     conf_node = rd->d.object;
     str = database_get_data(conf_node, KEY_DEBUG_CHANNEL, RECDB_QSTRING);
-    if (str) {
+    if (opserv && str) {
         str2 = database_get_data(conf_node, KEY_DEBUG_CHANNEL_MODES, RECDB_QSTRING);
         if (!str2)
             str2 = "+tinms";
@@ -3895,7 +3894,7 @@ opserv_conf_read(void)
 	opserv_conf.debug_channel = NULL;
     }
     str = database_get_data(conf_node, KEY_ALERT_CHANNEL, RECDB_QSTRING);
-    if (str) {
+    if (opserv && str) {
         str2 = database_get_data(conf_node, KEY_ALERT_CHANNEL_MODES, RECDB_QSTRING);
         if (!str2)
             str2 = "+tns";
@@ -3905,7 +3904,7 @@ opserv_conf_read(void)
 	opserv_conf.alert_channel = NULL;
     }
     str = database_get_data(conf_node, KEY_STAFF_AUTH_CHANNEL, RECDB_QSTRING);
-    if (str) {
+    if (opserv && str) {
         str2 = database_get_data(conf_node, KEY_STAFF_AUTH_CHANNEL_MODES, RECDB_QSTRING);
         if (!str2)
             str2 = "+timns";
@@ -3923,7 +3922,7 @@ opserv_conf_read(void)
     str = database_get_data(conf_node, KEY_JOIN_FLOOD_MODERATE_THRESH, RECDB_QSTRING);
     opserv_conf.join_flood_moderate_threshold = str ? strtoul(str, NULL, 0) : 50;
     str = database_get_data(conf_node, KEY_NICK, RECDB_QSTRING);
-    if (str)
+    if (opserv && str)
         NickChange(opserv, str, 0);
     str = database_get_data(conf_node, KEY_CLONE_GLINE_DURATION, RECDB_QSTRING);
     opserv_conf.clone_gline_duration = str ? ParseInterval(str) : 3600;
@@ -4007,7 +4006,6 @@ opserv_db_cleanup(void)
 void
 init_opserv(const char *nick)
 {
-    opserv = AddService(nick, "Oper Services");
     OS_LOG = log_register_type("OpServ", "file:opserv.log");
     conf_register_reload(opserv_conf_read);
 
@@ -4117,7 +4115,11 @@ init_opserv(const char *nick)
 
     opserv_db_init();
     saxdb_register("OpServ", opserv_saxdb_read, opserv_saxdb_write);
-    opserv_service = service_find(opserv->nick);
+    if(nick)
+    {
+        opserv = AddService(nick, "Oper Services");
+        service_register(opserv, '?');
+    }
 
     reg_exit_func(opserv_db_cleanup);
     message_register_table(msgtab);

@@ -1,22 +1,12 @@
-ServerSpy.net
-[FEATREQ] finish ServerSpy.net support
-
-Core
-[FEATREQ] per-service "set privmsg" option
-
 ---------
 
-<def|office> featreq: is_authed criteria for trace
-<Zoot> featreq: disallow the use of the channel criteria in addalert
 <myriad> [featreq] something to turn off security override after a set period of time
-<word-up_Wwv> [FEATREQ] how about adding a suspended symbol to the authserv channelaccesslist, would be handy and informative
 <adam> [featreq] an account flag that disallows users from using /ns kill (or some other way to prevent/deter nick holding on an account-level)
 <Byte> [featreq] people cant !invite over a timeban
 <Commander> [featreq] allow srvx to listen on a port for an ircd to connect to it
 [adam(m@myriad.lackofdiscipline.com)] yeah, and possibly another flag or some way to stop a hostmask range from registering any new nicks
 [adam(m@myriad.lackofdiscipline.com)] we're having people grab nicks of other users who don't understand how the system works
 [msg(adam)] yeah, blocking account or nick registrations for an address (or block of addresses) was another featreq on the web page
-<Incutio> put notes into the /msg o chaninfo output
 
 ---------
 
@@ -31,8 +21,4 @@ Core
 
 [FEATREQ] Suspension durations and/or comments when suspending user access to a channel
 
-[FEATREQ] Timestamps for channel notes and DNRs
-
 [FEATREQ] support "unregistered": ?ctrace print mode +s unregistered
-
-[FEATREQ] move "version" command into modcmd core; register module versions with modcmd

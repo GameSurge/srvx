@@ -506,16 +506,19 @@ conf_globals(void)
     dict_t dict;
 
     info = conf_get_data("services/global/nick", RECDB_QSTRING);
-    if (info && (info[0] != '.'))
-        init_global(info);
+    if (info[0] == '.')
+        info = NULL;
+    init_global(info);
 
     info = conf_get_data("services/nickserv/nick", RECDB_QSTRING);
-    if (info && (info[0] != '.'))
-        init_nickserv(info);
+    if (info[0] == '.')
+        info = NULL;
+    init_nickserv(info);
 
     info = conf_get_data("services/chanserv/nick", RECDB_QSTRING);
-    if (info && (info[0] != '.'))
-        init_chanserv(info);
+    if (info[0] == '.')
+        info = NULL;
+    init_chanserv(info);
 
     god_policer_params = policer_params_new();
     if ((dict = conf_get_data("policers/commands-god", RECDB_OBJECT))) {
@@ -540,8 +543,9 @@ conf_globals(void)
     }
 
     info = conf_get_data("services/opserv/nick", RECDB_QSTRING);
-    if (info)
-        init_opserv(info);
+    if (info[0] == '.')
+        info = NULL;
+    init_opserv(info);
 }
 
 #ifdef HAVE_SYS_RESOURCE_H

@@ -3381,7 +3381,7 @@ nickserv_conf_read(void)
     if (str)
         nickserv_load_dict(str);
     str = database_get_data(conf_node, KEY_NICK, RECDB_QSTRING);
-    if (str)
+    if (nickserv && str)
         NickChange(nickserv, str, 0);
     str = database_get_data(conf_node, KEY_AUTOGAG_ENABLED, RECDB_QSTRING);
     nickserv_conf.autogag_enabled = str ? strtoul(str, NULL, 0) : 1;
@@ -3569,7 +3569,6 @@ void
 init_nickserv(const char *nick)
 {
     unsigned int i;
-    nickserv = AddService(nick, "Nick Services");
     NS_LOG = log_register_type("NickServ", "file:nickserv.log");
     reg_new_user_func(handle_new_user);
     reg_nick_change_func(handle_nick_change);
@@ -3662,7 +3661,10 @@ init_nickserv(const char *nick)
 
     userList_init(&curr_helpers);
 
-    nickserv_service = service_register(nickserv, 0);
+    if (nick) {
+        nickserv = AddService(nick, "Nick Services");
+        nickserv_service = service_register(nickserv, 0);
+    }
     saxdb_register("NickServ", nickserv_saxdb_read, nickserv_saxdb_write);
     reg_exit_func(nickserv_db_cleanup);
     if(nickserv_conf.handle_expire_frequency)

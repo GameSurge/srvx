@@ -591,7 +591,7 @@ global_conf_read(void)
     global_conf.announcements_default = str ? enabled_string(str) : 1;
 
     str = database_get_data(conf_node, KEY_NICK, RECDB_QSTRING);
-    if(str)
+    if(global && str)
         NickChange(global, str, 0);
 }
 
@@ -653,13 +653,13 @@ global_saxdb_write(struct saxdb_context *ctx)
 static void
 global_db_cleanup(void)
 {
-    while (messageList) message_del(messageList);
+    while(messageList)
+        message_del(messageList);
 }
 
 void
 init_global(const char *nick)
 {
-    global = AddService(nick, "Global Services");
     G_LOG = log_register_type("Global", "file:global.log");
     reg_new_user_func(global_process_user);
     reg_auth_func(global_process_auth);
@@ -674,7 +674,11 @@ init_global(const char *nick)
     modcmd_register(global_module, "NOTICE", cmd_notice, 3, MODCMD_REQUIRE_AUTHED, "flags", "+oper", NULL);
     modcmd_register(global_module, "REMOVE", cmd_remove, 2, MODCMD_REQUIRE_AUTHED, "flags", "+oper", NULL);
 
-    global_service = service_register(global, 0);
+    if(nick)
+    {
+        global = AddService(nick, "Global Services");
+        global_service = service_register(global, 0);
+    }
     saxdb_register("Global", global_saxdb_read, global_saxdb_write);
     reg_exit_func(global_db_cleanup);
     message_register_table(msgtab);
