@@ -98,6 +98,14 @@ extern void *srvx_malloc(const char *, unsigned int, size_t);
 extern void *srvx_realloc(const char *, unsigned int, void *, size_t);
 extern char *srvx_strdup(const char *, unsigned int, const char *);
 extern void srvx_free(const char *, unsigned int, void *);
+# if !defined(NDEBUG)
+extern void verify(const void *ptr);
+#  define verify(x) verify(x)
+# endif
+#endif
+
+#ifndef verify
+# define verify(ptr) (void)(ptr)
 #endif
 
 extern time_t now;

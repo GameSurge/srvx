@@ -1943,6 +1943,8 @@ DelUser(struct userNode* user, struct userNode *killer, int announce, const char
 {
     unsigned int n;
 
+    verify(user);
+
     /* mark them as dead, in case anybody cares */
     user->dead = 1;
 

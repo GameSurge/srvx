@@ -75,12 +75,15 @@ static struct dict_node*
 dict_splay(struct dict_node *node, const char *key)
 {
     struct dict_node N, *l, *r, *y;
+    int res;
+
     if (!node) return NULL;
     N.l = N.r = NULL;
     l = r = &N;
 
     while (1) {
-	int res = irccasecmp(key, node->key);
+        verify(node);
+        res = irccasecmp(key, node->key);
 	if (!res) break;
 	if (res < 0) {
 	    if (!node->l) break;
@@ -149,6 +152,7 @@ dict_insert(dict_t dict, const char *key, void *data)
     struct dict_node *new_node;
     if (!key)
         return;
+    verify(dict);
     new_node = malloc(sizeof(struct dict_node));
     new_node->key = key;
     new_node->data = data;
@@ -224,6 +228,7 @@ dict_remove2(dict_t dict, const char *key, int no_dispose)
 
     if (!dict->root)
         return 0;
+    verify(dict);
     dict->root = dict_splay(dict->root, key);
     if (irccasecmp(key, dict->root->key))
         return 0;
@@ -264,6 +269,7 @@ dict_find(dict_t dict, const char *key, int *found)
             *found = 0;
 	return NULL;
     }
+    verify(dict);
     dict->root = dict_splay(dict->root, key);
     was_found = !irccasecmp(key, dict->root->key);
     if (found)
@@ -280,6 +286,7 @@ dict_delete(dict_t dict)
     dict_iterator_t it, next;
     if (!dict)
         return;
+    verify(dict);
     for (it=dict_first(dict); it; it=next) {
         next = iter_next(it);
         dict_dispose_node(it, dict->free_keys, dict->free_data);
@@ -296,6 +303,7 @@ struct dict_sanity_struct {
 static int
 dict_sanity_check_node(struct dict_node *node, struct dict_sanity_struct *dss)
 {
+    verify(node);
     if (!node->key) {
         snprintf(dss->error, sizeof(dss->error), "Node %p had null key", node);
         return 1;
@@ -328,6 +336,7 @@ dict_sanity_check(dict_t dict)
     dss.node_count = 0;
     dss.bad_node = 0;
     dss.error[0] = 0;
+    verify(dict);
     if (dict->root && dict_sanity_check_node(dict->root, &dss)) {
         return strdup(dss.error);
     } else if (dss.node_count != dict->count) {

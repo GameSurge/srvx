@@ -425,6 +425,7 @@ DelChannel(struct chanNode *channel)
 {
     unsigned int n;
 
+    verify(channel);
     dict_remove(channels, channel->name);
 
     if (channel->members.used || channel->locks) {
@@ -691,8 +692,12 @@ GetUserMode(struct chanNode *channel, struct userNode *user)
 {
     unsigned int n;
     struct modeNode *mn = NULL;
+
+    verify(channel);
+    verify(user);
     if (channel->members.used < user->channels.used) {
 	for (n=0; n<channel->members.used; n++) {
+            verify(channel->members.list[n]);
 	    if (user == channel->members.list[n]->user) {
 		mn = channel->members.list[n];
 		break;
@@ -700,6 +705,7 @@ GetUserMode(struct chanNode *channel, struct userNode *user)
 	}
     } else {
 	for (n=0; n<user->channels.used; n++) {
+            verify(user->channels.list[n]);
 	    if (channel == user->channels.list[n]->channel) {
 		mn = user->channels.list[n];
 		break;

@@ -74,19 +74,22 @@ srvx_malloc(const char *file, unsigned int line, size_t size)
 void *
 srvx_realloc(const char *file, unsigned int line, void *ptr, size_t size)
 {
-    struct alloc_header *block = NULL, *newblock;
+    struct alloc_header *block, *newblock;
 
-    if (ptr) {
-        block = (struct alloc_header *)ptr - 1;
-        assert(block->magic == ALLOC_MAGIC);
-        assert(0 == memcmp((char*)(block + 1) + block->size, redzone, sizeof(redzone)));
-        if (block->size >= size)
-            return block + 1;
-    }
+    if (!ptr)
+        return srvx_malloc(file, line, size);
+
+    verify(ptr);
+    block = (struct alloc_header *)ptr - 1;
+
+    if (block->size >= size)
+        return block + 1;
 
     newblock = malloc(sizeof(*newblock) + size + sizeof(redzone));
     assert(newblock != NULL);
-    memset(newblock, 0, sizeof(*newblock) + size + sizeof(redzone));
+    memset(newblock, 0, sizeof(*newblock));
+    memcpy(newblock + 1, block + 1, block->size);
+    memset((char*)(newblock + 1) + block->size, 0, size - block->size);
     memcpy((char*)(newblock + 1) + size, redzone, sizeof(redzone));
     newblock->file_id = get_file_id(file);
     newblock->line = line;
@@ -95,15 +98,7 @@ srvx_realloc(const char *file, unsigned int line, void *ptr, size_t size)
     alloc_count++;
     alloc_size += size;
 
-    if (ptr) {
-        memcpy(newblock + 1, block + 1, block->size);
-        size = block->size + sizeof(*block);
-        memset(block, 0, size);
-        block->magic = FREE_MAGIC;
-        free(block);
-        alloc_count--;
-        alloc_size -= size - sizeof(*block);
-    }
+    srvx_free(block);
 
     return newblock + 1;
 }
@@ -138,4 +133,15 @@ srvx_free(const char *file, unsigned int line, void *ptr)
     alloc_count--;
     alloc_size -= size;
     (void)file; (void)line;
+}
+
+void
+verify(const void *ptr)
+{
+    const struct alloc_header *header;
+    if (!ptr)
+        return;
+    header = (const struct alloc_header*)ptr - 1;
+    assert(header->magic == ALLOC_MAGIC);
+    assert(!memcmp((char*)(header + 1) + header->size, redzone, sizeof(redzone)));
 }

@@ -230,7 +230,9 @@ sockcheck_free_client(struct sockcheck_client *client)
     if (SOCKCHECK_DEBUG) {
         log_module(PC_LOG, LOG_INFO, "Goodbye %s (%p)!  I set you free!", client->addr->hostname, client);
     }
-    if (client->fd) ioset_close(client->fd->fd, 1);
+    verify(client);
+    if (client->fd)
+        ioset_close(client->fd->fd, 1);
     sockcheck_list_unref(client->tests);
     free(client->read);
     free(client->resp_state);
@@ -248,6 +250,7 @@ sockcheck_timeout_client(void *data)
     if (SOCKCHECK_DEBUG) {
         log_module(PC_LOG, LOG_INFO, "Client %s timed out.", client->addr->hostname);
     }
+    verify(client);
     sockcheck_advance(client, client->state->responses.used-1);
 }
 
@@ -472,6 +475,7 @@ sockcheck_advance(struct sockcheck_client *client, unsigned int next_state)
 {
     struct sockcheck_state *ns;
 
+    verify(client);
     timeq_del(0, sockcheck_timeout_client, client, TIMEQ_IGNORE_WHEN);
     if (SOCKCHECK_DEBUG) {
         unsigned int n, m;
@@ -522,6 +526,7 @@ sockcheck_readable(struct io_fd *fd)
     unsigned int nn;
     int res;
 
+    verify(client);
     res = read(fd->fd, client->read + client->read_used, client->read_size - client->read_used);
     if (res < 0) {
         switch (res = errno) {
@@ -628,6 +633,7 @@ static void
 sockcheck_connected(struct io_fd *fd, int rc)
 {
     struct sockcheck_client *client = fd->data;
+    verify(client);
     client->fd = fd;
     switch (rc) {
     default:
@@ -654,6 +660,7 @@ sockcheck_begin_test(struct sockcheck_client *client)
 {
     struct io_fd *io_fd;
 
+    verify(client);
     if (client->fd) {
         ioset_close(client->fd->fd, 1);
         client->fd = NULL;
@@ -708,6 +715,7 @@ sockcheck_queue_address(struct in_addr addr)
 
     sci = dict_find(checked_ip_dict, ipstr, NULL);
     if (sci) {
+        verify(sci);
         switch (sci->decision) {
         case CHECKING:
             /* We are already checking this host. */
