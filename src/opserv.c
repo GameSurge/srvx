@@ -228,7 +228,6 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_WARN_LISTSTART", "Channel activity warnings:" },
     { "OSMSG_WARN_LISTENTRY", "%s (%s)" },
     { "OSMSG_WARN_LISTEND", "End of activity warning list." },
-    { "OSMSG_STATS_MEMORY", "%u allocations totalling %u bytes." },
     { "OSMSG_UPLINK_CONNECTING", "Establishing connection with %s (%s:%d)." },
     { "OSMSG_CURRENT_UPLINK", "$b%s$b is already the current uplink." },
     { "OSMSG_INVALID_UPLINK", "$b%s$b is not a valid uplink name." },
@@ -1581,10 +1580,24 @@ static MODCMD_FUNC(cmd_stats_warn) {
     return 1;
 }
 
-#if defined(WITH_MALLOC_SRVX) || defined(WITH_MALLOC_SLAB)
+#if defined(WITH_MALLOC_SRVX)
 static MODCMD_FUNC(cmd_stats_memory) {
     extern unsigned long alloc_count, alloc_size;
-    reply("OSMSG_STATS_MEMORY", alloc_count, alloc_size);
+    send_message_type(MSG_TYPE_NOXLATE, user, cmd->parent->bot,
+                      "%u allocations totalling %u bytes.",
+                      alloc_count, alloc_size);
+    return 1;
+}
+#elif defined(WITH_MALLOC_SLAB)
+static MODCMD_FUNC(cmd_stats_memory) {
+    extern unsigned long slab_alloc_count, slab_count, slab_alloc_size;
+    extern unsigned long big_alloc_count, big_alloc_size;
+    send_message_type(MSG_TYPE_NOXLATE, user, cmd->parent->bot,
+                      "%u allocations in %u slabs totalling %u bytes.",
+                      slab_alloc_count, slab_count, slab_alloc_size);
+    send_message_type(MSG_TYPE_NOXLATE, user, cmd->parent->bot,
+                      "%u big allocations totalling %u bytes.",
+                      big_alloc_count, big_alloc_size);
     return 1;
 }
 #endif

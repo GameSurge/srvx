@@ -655,7 +655,7 @@ void usage(char *self) {
 void version() {
     printf("    --------------------------------------------------\n"
            "    - "PACKAGE_STRING" ("CODENAME"), Built: " __DATE__ ", " __TIME__".\n"
-           "    - Copyright (C) 2000 - 2003, srvx Development Team\n"
+           "    - Copyright (C) 2000 - 2005, srvx Development Team\n"
            "    --------------------------------------------------\n");
 }
 

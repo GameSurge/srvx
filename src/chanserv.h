@@ -71,7 +71,7 @@ enum charOption {
 
 #define IsProtected(x)		((x)->flags & CHANNEL_NODELETE)
 #define IsSuspended(x)		((x)->flags & CHANNEL_SUSPENDED)
-#define IsOffChannel(x)         ((x)->flags & CHANNEL_OFFCHANNEL)
+#define IsOffChannel(x)         (((x)->flags & CHANNEL_OFFCHANNEL) && (off_channel > 1))
 
 struct chanData
 {

@@ -25,7 +25,7 @@
 # error The slab allocator requires that your system have the mmap() system call.
 #endif
 
-#define SLAB_DEBUG 1
+#define SLAB_DEBUG 0
 
 #if SLAB_DEBUG
 
@@ -86,8 +86,9 @@ struct slab {
 };
 
 struct slabset {
-    struct slabset *next;
     struct slab *child;
+    size_t nslabs;
+    size_t nallocs;
     size_t size;
     size_t items_per_slab;
 };
@@ -95,7 +96,7 @@ struct slabset {
 #define SLAB_MIN     (2 * sizeof(void*))
 #define SLAB_GRAIN   sizeof(void*)
 #define SLAB_ALIGN   SLAB_GRAIN
-#define SMALL_CUTOFF 512
+#define SMALL_CUTOFF 582
 /* Element size < SMALL_CUTOFF -> use small slabs.
  * Larger elements are allocated directly using mmap().  The largest
  * regularly allocated struct in srvx 1.x is smaller than
@@ -103,10 +104,13 @@ struct slabset {
  * larger slabs.
  */
 
-static struct slabset *little_slabs[SMALL_CUTOFF / SLAB_GRAIN];
-static struct slabset slabset_slabs;
-unsigned long alloc_count;
-unsigned long alloc_size;
+static struct slabset little_slabs[SMALL_CUTOFF / SLAB_GRAIN];
+static struct slab *free_slabs;
+unsigned long big_alloc_count;
+unsigned long big_alloc_size;
+unsigned long slab_count;
+unsigned long slab_alloc_count;
+unsigned long slab_alloc_size;
 
 #if defined(MAP_ANON)
 #elif defined(MAP_ANONYMOUS)
@@ -170,20 +174,11 @@ slabset_create(size_t size)
     size = (size < SLAB_MIN) ? SLAB_MIN : (size + SLAB_GRAIN - 1) & ~(SLAB_GRAIN - 1);
     idx = size / SLAB_GRAIN;
     assert(idx < ArrayLength(little_slabs));
-    if (!little_slabs[idx]) {
-        if (!slabset_slabs.size) {
-            unsigned int idx2 = (sizeof(struct slabset) + SLAB_GRAIN - 1) / SLAB_GRAIN;
-            slabset_slabs.size = sizeof(struct slabset);
-            slabset_slabs.items_per_slab = (slab_pagesize() - sizeof(struct slab)) / ((sizeof(struct slabset) + SLAB_ALIGN - 1) & ~(SLAB_ALIGN - 1));
-            little_slabs[idx2] = &slabset_slabs;
-            if (idx == idx2)
-                return &slabset_slabs;
-        }
-        little_slabs[idx] = slab_alloc(&slabset_slabs);
-        little_slabs[idx]->size = size;
-        little_slabs[idx]->items_per_slab = (slab_pagesize() - sizeof(struct slab)) / ((size + SLAB_ALIGN - 1) & ~(SLAB_ALIGN - 1));
+    if (!little_slabs[idx].size) {
+        little_slabs[idx].size = size;
+        little_slabs[idx].items_per_slab = (slab_pagesize() - sizeof(struct slab)) / ((size + SLAB_ALIGN - 1) & ~(SLAB_ALIGN - 1));
     }
-    return little_slabs[idx];
+    return &little_slabs[idx];
 }
 
 static void *
@@ -196,31 +191,47 @@ slab_alloc(struct slabset *sset)
         unsigned int ii, step;
 
         /* Allocate new slab. */
-        item = slab_map(slab_pagesize());
-        slab = (struct slab*)((char*)item + slab_pagesize() - sizeof(*slab));
-        slab->base = item;
+        if (free_slabs) {
+            slab = free_slabs;
+            free_slabs = slab->next;
+        } else {
+            item = slab_map(slab_pagesize());
+            slab = (struct slab*)((char*)item + slab_pagesize() - sizeof(*slab));
+            slab->base = item;
+        }
 
         /* Populate free list. */
         step = (sset->size + SLAB_ALIGN - 1) & ~(SLAB_ALIGN - 1);
         for (ii = 1, item = slab->free = slab->base;
              ii < sset->items_per_slab;
              ++ii, item = (*item = (char*)item + step));
+        *item = NULL;
 
         /* Link to parent slabset. */
         slab->parent = sset;
-        if ((slab->prev = sset->child)) {
+        slab->prev = sset->child;
+        if (slab->prev) {
             slab->next = slab->prev->next;
             slab->prev->next = slab;
             if (slab->next)
                 slab->next->prev = slab;
-        }
+        } else
+            slab->next = NULL;
+        assert(!slab->next || slab == slab->next->prev);
+        assert(!slab->prev || slab == slab->prev->next);
         sset->child = slab;
+        sset->nslabs++;
+        slab_count++;
+        /* log_module(MAIN_LOG, LOG_DEBUG, "Allocated new %u-slab %p.", sset->size, slab); */
     }
 
     slab = sset->child;
     item = slab->free;
+    assert(((unsigned long)item & (slab_pagesize() - 1))
+           <= (slab_pagesize() - sizeof(*slab) - sset->size));
     slab->free = *item;
-    if (slab->used++ == sset->items_per_slab) {
+    if (++slab->used == sset->items_per_slab) {
+        /* log_module(MAIN_LOG, LOG_DEBUG, "%u-slab %p is empty.", sset->size, item); */
         if (sset->child != slab) {
             /* Unlink slab and reinsert before sset->child. */
             if (slab->prev)
@@ -231,11 +242,14 @@ slab_alloc(struct slabset *sset)
                 slab->prev->next = slab;
             if ((slab->next = sset->child))
                 slab->next->prev = slab;
+            assert(!slab->next || slab == slab->next->prev);
+            assert(!slab->prev || slab == slab->prev->next);
         } else if (slab->next) {
             /* Advance sset->child to next pointer. */
             sset->child = slab->next;
         }
     }
+    sset->nallocs++;
     memset(item, 0, sset->size);
     return item;
 }
@@ -252,28 +266,47 @@ slab_unalloc(void *ptr, size_t size)
     *item = slab->free;
     memset(item + 1, 0xde, size - sizeof(*item));
     slab->free = item;
+    slab->parent->nallocs--;
 
     if (slab->used-- == slab->parent->items_per_slab
         && slab->parent->child != slab) {
+        /* Unlink from current position, relink as parent's first child. */
         new_next = slab->parent->child;
-        slab->parent->child = slab;
-    } else if (!slab->used) {
-        for (new_next = slab;
-             new_next->next && new_next->next->used;
-             new_next = new_next->next) ;
-        new_next = new_next->next;
-    } else
-        new_next = NULL;
-
-    if (new_next) {
+        assert(new_next != NULL);
         if (slab->prev)
             slab->prev->next = slab->next;
         if (slab->next)
             slab->next->prev = slab->prev;
         if ((slab->prev = new_next->prev))
             slab->prev->next = slab;
-        if ((slab->next = new_next->next))
-            slab->next->prev = slab;
+        slab->next = new_next;
+        new_next->prev = slab;
+        slab->parent->child = slab;
+        assert(!slab->next || slab == slab->next->prev);
+        assert(!slab->prev || slab == slab->prev->next);
+        /* log_module(MAIN_LOG, LOG_DEBUG, "%u-slab %p became partial.", slab->parent->size, slab); */
+    } else if (!slab->used) {
+        /* log_module(MAIN_LOG, LOG_DEBUG, "%u-slab %p became full.", slab->parent->size, slab); */
+        /* Unlink slab from its parent. */
+        slab->parent->nslabs--;
+        slab_count--;
+        if (slab->prev)
+            slab->prev->next = slab->next;
+        if (slab->next)
+            slab->next->prev = slab->prev;
+        new_next = slab->next ? slab->next : slab->prev;
+        if (slab == slab->parent->child)
+            slab->parent->child = new_next;
+        if (new_next) {
+            assert(!new_next->next || new_next == new_next->next->prev);
+            assert(!new_next->prev || new_next == new_next->prev->next);
+        }
+
+        /* Link to list of free slabs. */
+        slab->prev = NULL;
+        slab->parent = NULL;
+        slab->next = free_slabs;
+        free_slabs = slab;
     }
 }
 
@@ -285,10 +318,15 @@ slab_malloc(const char *file, unsigned int line, size_t size)
 
     assert(size < 1 << 24);
     real = (size + sizeof(*res) + SLAB_GRAIN - 1) & ~(SLAB_GRAIN - 1);
-    if (real < SMALL_CUTOFF)
+    if (real < SMALL_CUTOFF) {
         res = slab_alloc(slabset_create(real));
-    else
+        slab_alloc_count++;
+        slab_alloc_size += size;
+    } else {
         res = slab_map(slab_round_up(real));
+        big_alloc_count++;
+        big_alloc_size += size;
+    }
 #if SLAB_DEBUG
     res->file_id = get_file_id(file);
     res->size = size;
@@ -298,8 +336,6 @@ slab_malloc(const char *file, unsigned int line, size_t size)
     *res = size;
     (void)file; (void)line;
 #endif
-    alloc_count++;
-    alloc_size += size;
     return res + 1;
 }
 
@@ -323,7 +359,7 @@ slab_realloc(const char *file, unsigned int line, void *ptr, size_t size)
     if (osize >= size)
         return ptr;
     newblock = slab_malloc(file, line, size);
-    memcpy(newblock, ptr, size);
+    memcpy(newblock, ptr, osize);
     return newblock;
 }
 
@@ -356,12 +392,15 @@ slab_free(UNUSED_ARG(const char *file), UNUSED_ARG(unsigned int line), void *ptr
     real = *hdr + sizeof(*hdr);
 #endif
     real = (real + SLAB_GRAIN - 1) & ~(SLAB_GRAIN - 1);
-    if (real < SMALL_CUTOFF)
+    if (real < SMALL_CUTOFF) {
         slab_unalloc(hdr, real);
-    else
+        slab_alloc_count--;
+        slab_alloc_size -= real - sizeof(*hdr);
+    } else {
         munmap(hdr, slab_round_up(real));
-    alloc_count--;
-    alloc_size -= real - sizeof(*hdr);
+        big_alloc_count--;
+        big_alloc_size -= real - sizeof(*hdr);
+    }
 }
 
 void
