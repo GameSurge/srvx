@@ -2747,7 +2747,7 @@ struct nickserv_discrim {
     unsigned long flags_on, flags_off;
     time_t min_registered, max_registered;
     time_t lastseen;
-    enum { SUBSET, EXACT, SUPERSET } hostmask_type;
+    enum { SUBSET, EXACT, SUPERSET, LASTQUIT } hostmask_type;
     const char *nickmask;
     const char *hostmask;
     const char *handlemask;
@@ -2830,6 +2830,12 @@ nickserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[])
                     goto fail;
                 }
                 discrim->hostmask_type = SUPERSET;
+	    } else if (!irccasecmp(argv[i], "lastquit") || !irccasecmp(argv[i], "lastauth")) {
+	       if (i == argc - 1) {
+	           send_message(user, nickserv, "MSG_MISSING_PARAMS", argv[i]);
+		   goto fail;
+	       }
+	       discrim->hostmask_type = LASTQUIT;
             } else {
                 i--;
                 discrim->hostmask_type = SUPERSET;
@@ -2905,6 +2911,8 @@ nickserv_discrim_match(struct nickserv_discrim *discrim, struct handle_info *hi)
                      && !irccasecmp(discrim->hostmask, mask)) break;
             else if ((discrim->hostmask_type == SUPERSET)
                      && (match_ircglobs(mask, discrim->hostmask))) break;
+	    else if ((discrim->hostmask_type == LASTQUIT)
+	    	     && (match_ircglobs(discrim->hostmask, hi->last_quit_host))) break;
         }
         if (i==hi->masks->used) return 0;
     }

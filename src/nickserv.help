@@ -466,6 +466,7 @@
         "  HOSTMASK SUPERSET - Account matches if someone with this hostmask can auth to the account",
         "  HOSTMASK EXACT - Account matches if this exact hostmask is in list",
         "  HOSTMASK SUBSET - Account matches if this mask \"covers\" one in their userlist",
+	"  HOSTMASK LASTQUIT - Account matches if this mask \"covers\" user was last seen using",
         "  HOSTMASK   - A glob that must match a hostmask for the account (equivalent to HOSTMASK SUPERSET)",
         "  ACCESS     - An $O access constraint (<nnn, <=nnn, =nnn, >=nnn or >nnn)",
         "$uSee Also:$u search, search action"
@@ -483,6 +484,7 @@
         "  HOSTMASK SUPERSET - Account matches if someone with this hostmask can auth to the account",
         "  HOSTMASK EXACT - Account matches if this exact hostmask is in list",
         "  HOSTMASK SUBSET - Account matches if this mask \"covers\" one in their userlist",
+        "  HOSTMASK LASTQUIT - Account matches if this mask \"covers\" user was last seen using",
         "  HOSTMASK   - A glob that must match a hostmask for the account (equivalent to HOSTMASK SUPERSET)",
         "  ACCESS     - An $O access constraint (<nnn, <=nnn, =nnn, >=nnn or >nnn)",
         "$uSee Also:$u search, search action"

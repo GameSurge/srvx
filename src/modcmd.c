@@ -642,7 +642,8 @@ svccmd_invoke_argv(struct userNode *user, struct service *service, struct chanNo
     }
     cmd = dict_find(service->commands, argv[cmd_arg], NULL);
     if (!cmd) {
-        send_message(user, service->bot, "MSG_COMMAND_UNKNOWN", argv[cmd_arg]);
+        if (!channel)
+            send_message(user, service->bot, "MSG_COMMAND_UNKNOWN", argv[cmd_arg]);
         return 0;
     }
     flags = cmd->effective_flags;

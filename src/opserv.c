@@ -240,7 +240,7 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_CHANINFO_TOPIC_UNKNOWN", "Topic: (none / not gathered)" },
     { "OSMSG_CHANINFO_BAN_COUNT", "Bans (%d):" },
     { "OSMSG_CHANINFO_BAN", "%%s by %%s (%a %b %d %H:%M:%S %Y)" },
-    { "OSMSG_CHANINFO_MANY_USERS", "%d users (\"/msg $s %s %s users\" for the list)" },
+    { "OSMSG_CHANINFO_MANY_USERS", "%d users (\"/msg $S %s %s users\" for the list)" },
     { "OSMSG_CHANINFO_USER_COUNT", "Users (%d):" },
     { "OSMSG_CSEARCH_CHANNEL_INFO", "%s [%d users] %s %s" },
     { NULL, NULL }
@@ -442,7 +442,7 @@ static MODCMD_FUNC(cmd_chaninfo)
 	for (n = 0; n < channel->banlist.used; n++) {
     	    ban = channel->banlist.list[n];
 	    strftime(buffer, sizeof(buffer), fmt, localtime(&ban->set));
-	    reply(buffer, ban->ban, ban->who);
+	    send_message_type(4, user, cmd->parent->bot, buffer, ban->ban, ban->who);
 	}
     }
     if ((argc < 2) && (channel->members.used >= 50)) {
@@ -1875,7 +1875,7 @@ opserv_join_check(struct modeNode *mNode)
                 change.modes_set |= MODE_MODERATED;
             if (change.modes_set || change.argc)
                 mod_chanmode_announce(opserv, channel, &change);
-            send_target_message(0, channel->name, opserv, "OSMSG_FLOOD_MODERATE");
+            send_channel_notice(channel, opserv, user_find_message(user, "OSMSG_FLOOD_MODERATE")); 
             opserv_alert("Warning: Possible join flood in %s (currently %d users; channel moderated).", channel->name, channel->members.used);
         } else {
             opserv_alert("Warning: Possible join flood in %s (currently %d users).", channel->name, channel->members.used);
