@@ -186,8 +186,18 @@ dict_insert(dict_t dict, const char *key, void *data)
 	    dict->root = new_node;
 	} else {
 	    /* maybe we don't want to overwrite it .. oh well */
-	    if (dict->free_data) dict->free_data(dict->root->data);
-            if (dict->free_keys) dict->free_keys((void*)dict->root->key);
+	    if (dict->free_data) {
+                if (dict->free_data == free)
+                    free(dict->root->data);
+                else
+                    dict->free_data(dict->root->data);
+            }
+            if (dict->free_keys) {
+                if (dict->free_keys == free)
+                    free((void*)dict->root->key);
+                else
+                    dict->free_keys((void*)dict->root->key);
+            }
             free(new_node);
             dict->root->key = key;
 	    dict->root->data = data;

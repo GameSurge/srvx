@@ -19,7 +19,6 @@
 #undef malloc
 #undef free
 
-/* cookies for anybody who recognizes these bytes without help :) */
 #define ALLOC_MAGIC 0x1acf
 #define FREE_MAGIC  0xfc1d
 const char redzone[] = { '\x03', '\x47', '\x76', '\xc7' };
@@ -132,11 +131,11 @@ srvx_free(const char *file, unsigned int line, void *ptr)
     block = (struct alloc_header *)ptr - 1;
     assert(block->magic == ALLOC_MAGIC);
     assert(0 == memcmp((char*)(block + 1) + block->size, redzone, sizeof(redzone)));
-    size = block->size + sizeof(*block);
-    memset(block, 0, size);
+    size = block->size;
+    memset(block + 1, 0xde, size);
     block->magic = FREE_MAGIC;
     free(block);
     alloc_count--;
-    alloc_size -= size - sizeof(*block);
+    alloc_size -= size;
     (void)file; (void)line;
 }
