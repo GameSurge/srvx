@@ -1,0 +1,217 @@
+diff -upr srvx-1.2rc4/src/chanserv.c Services/src/chanserv.c
+--- src/chanserv.c	Mon Jul  7 18:29:34 2003
++++ src/chanserv.c	Mon Jul  7 19:17:00 2003
+@@ -82,6 +82,7 @@
+ /* Channel data */
+ #define KEY_REGISTERED		"registered"
+ #define KEY_REGISTRAR		"registrar"
++#define KEY_SUCCESSOR        "successor"
+ #define KEY_SUSPENDED           "suspended"
+ #define KEY_PREVIOUS            "previous"
+ #define KEY_SUSPENDER		"suspender"
+@@ -247,6 +248,9 @@
+ #define CSMSG_NO_BANS		"No channel bans found on $b%s$b."
+ #define CSMSG_BANS_REMOVED	"Removed all channel bans from $b%s$b."
+ 
++#define CSMSG_SET_SUCCESSOR     "$b%s$b is now the successor of $b%s$b"
++#define CSMSG_ONLY_CO_SUCCESSOR "Only Coowners can be set as a successor."
++
+ /* Channel userlist */
+ #define CSMSG_ACCESS_SEARCH_HDR	"%s $b%ss$b matching %s:"
+ #define CSMSG_ACCESS_HEADER	"%s $b%ss$b:"
+@@ -321,6 +325,7 @@
+ #define CSMSG_CHANNEL_BANS	"$bBan Count:           $b%i"
+ #define CSMSG_CHANNEL_USERS	"$b%s Count:%*s$b%i"
+ #define CSMSG_CHANNEL_REGISTRAR "$bRegistrar:           $b%s"
++#define CSMSG_CHANNEL_SUCCESSOR  "$bSuccessor:            $b%s"
+ #define CSMSG_CHANNEL_SUSPENDED "$b%s$b is suspended:"
+ #define CSMSG_CHANNEL_HISTORY   "Suspension history for $b%s$b:"
+ #define CSMSG_CHANNEL_SUSPENDED_0 " by %s: %s"
+@@ -400,6 +405,8 @@
+ #define CSMSG_KICK_FORMAT	"%s (%s)"
+ #define CSMSG_PROTECT_REASON	"That user is protected."
+ 
++#define CSMSG_SUCCESSOR "$bSuccessor:$b %s"
++
+ #define CSFUNC_ARGS		user, channel, argc, argv, cmd
+ 
+ static unsigned char *CHANSERV_DEFAULT_MODES = "+nt";
+@@ -1505,8 +1512,9 @@ expire_channels(void *data)
+     struct chanData *channel, *next;
+     struct chanNode *save;
+     struct userData *user;
+-    char delay[INTERVALLEN], reason[INTERVALLEN + 64];
+-    int suspended;
++    struct handle_info *successor_handle;
++    char delay[INTERVALLEN], reason[INTERVALLEN + 64];
++    int suspended, ownerfound = 0;
+     (void)data;
+ 
+     intervalString(delay, chanserv_conf.channel_expire_delay);
+@@ -1514,11 +1522,36 @@ expire_channels(void *data)
+ 
+     for(channel = channelList; channel; channel = next)
+     {
+-	next = channel->next;
+-
++	   next = channel->next;
++
++       /* Check for a successor, see if there's an owner first */
++       for(user = channel->users; user; user=user->next)
++       {
++          if(user->present && (user->access >= ulOwner)) 
++          {
++             ownerfound = 1;
++             break;
++          }
++       }
++       if(channel->successor && !ownerfound) 
++       {
++          if((successor_handle = get_handle_info(channel->successor)))
++          {
++              if((user = GetTrueChannelAccess(channel, successor_handle)))
++              {
++                  channel->userCount[user->access]--;
++                  userCount[user->access]--;
++
++                   user->access = ulOwner;
++
++                   channel->userCount[user->access]++;
++                   userCount[user->access]++;
++               }
++           }
++        }
+         /* See if the channel can be expired. */
+         if((now - channel->visited) <= chanserv_conf.channel_expire_delay) continue;
+-	if(IsProtected(channel)) continue;
++	    if(IsProtected(channel)) continue;
+ 
+         /* Make sure there are no high-ranking users still in the channel. */
+         for(user=channel->users; user; user=user->next)
+@@ -4322,6 +4355,11 @@ static CHANSERV_FUNC(cmd_info)
+         }
+     }
+ 
++    if(cData->successor)
++    {
++       chanserv_notice(user, CSMSG_CHANNEL_SUCCESSOR, cData->successor);
++    }
++
+     if(privileged)
+     {
+ 	if((dnr = chanserv_is_dnr(chan_name, NULL)))
+@@ -5224,6 +5262,58 @@ static CHANNEL_OPTION_FUNC(opt_topicmask
+     return 1;
+ }
+ 
++static CHANNEL_OPTION_FUNC(opt_successor)
++{
++   struct userNode *target;
++   struct chanData *cData;
++   struct userData *uData;
++   struct handle_info *target_handle;
++
++   REQUIRE_PARAMS(2);
++
++   if(!(cData = channel->channel_info)) 
++   {
++      return 0;
++   }
++   if((argv[1][0] == '?') || (argv[1][0] == 0)) {
++      chanserv_notice(user, CSMSG_SUCCESSOR, (cData->successor ? cData->successor : "None."));
++      return 1;
++   }
++   if((target = GetUserH(argv[1])))
++   {
++      target_handle = target->handle_info;
++   }
++   else if(argv[1][0] == '*')
++   {
++      if(!(target_handle = get_handle_info(argv[1]+1)))
++      {
++          chanserv_notice(user, MSG_HANDLE_UNKNOWN, argv[1]+1);
++          return 0;
++      }
++   }
++   else
++   {
++      chanserv_notice(user, MSG_NICK_UNKNOWN, argv[1]);
++      return 0;
++   }
++   if((uData = GetTrueChannelAccess(channel->channel_info, target_handle)))
++   {
++      if(uData->access != ulCoowner) 
++      {
++         chanserv_notice(user, CSMSG_ONLY_CO_SUCCESSOR);
++         return 0;
++      }
++      cData->successor = strdup(uData->handle->handle);
++      chanserv_notice(user, CSMSG_SET_SUCCESSOR, uData->handle->handle, channel->name);
++      return 1;
++   }
++   else
++   {
++      chanserv_notice(user, CSMSG_USER_NO_ACCESS, target_handle->handle, channel->name);
++      return 0;
++   }  
++}
++
+ int opt_greeting_common(struct userNode *user, struct chanNode *channel, int argc, unsigned char *argv[], char *name, char **data)
+ {
+     (void)channel;
+@@ -6934,6 +7024,8 @@ chanserv_channel_read(const char *key, s
+     }
+ 
+     if((cData->suspended = suspended)) suspended->cData = cData;
++    str = database_get_data(channel, KEY_SUCCESSOR, RECDB_QSTRING);
++    if(str) cData->successor = strdup(str);
+     str = database_get_data(channel, KEY_REGISTERED, RECDB_QSTRING);
+     cData->registered = str ? (time_t)strtoul(str, NULL, 0) : now;
+     str = database_get_data(channel, KEY_VISITED, RECDB_QSTRING);
+@@ -7127,6 +7219,7 @@ chanserv_write_channel(struct saxdb_cont
+     saxdb_write_int(ctx, KEY_MAX, channel->max);
+     if(channel->topic[0]) saxdb_write_string(ctx, KEY_TOPIC, channel->topic);
+     if(channel->registrar) saxdb_write_string(ctx, KEY_REGISTRAR, channel->registrar);
++    if(channel->successor) saxdb_write_string(ctx, KEY_SUCCESSOR, channel->successor);
+     if(channel->greeting) saxdb_write_string(ctx, KEY_GREETING, channel->greeting);
+     if(channel->user_greeting) saxdb_write_string(ctx, KEY_USER_GREETING, channel->user_greeting);
+     if(channel->topic_mask) saxdb_write_string(ctx, KEY_TOPIC_MASK, channel->topic_mask);
+@@ -7412,6 +7505,7 @@ init_chanserv(const char *nick)
+     DEFINE_CHANNEL_OPTION(ctcpusers);
+     DEFINE_CHANNEL_OPTION(ctcpreaction);
+     DEFINE_CHANNEL_OPTION(peoninvite);
++    DEFINE_CHANNEL_OPTION(successor);
+ 
+     /* Alias set topic to set defaulttopic for compatibility. */
+     modcmd_register(chanserv_module, "set topic", chan_opt_defaulttopic, 1, 0, NULL);
+diff -upr srvx-1.2rc4/src/chanserv.h Services/src/chanserv.h
+--- src/chanserv.h	Mon Jul  7 18:29:34 2003
++++ src/chanserv.h	Mon Jul  7 19:16:55 2003
+@@ -95,6 +95,7 @@ struct chanData
+     char		*greeting;
+     char		*user_greeting;
+     char		*registrar;
++    char        *successor;
+     char                *topic_mask;
+ 
+     unsigned int	limit;
+diff -upr srvx-1.2rc4/src/chanserv.help Services/src/chanserv.help
+--- src/chanserv.help	Wed Jun 18 01:53:36 2003
++++ src/chanserv.help	Mon Jul  7 19:15:06 2003
+@@ -322,6 +322,7 @@
+         "DYNLIMIT:     Adjusts user limit (+l channel mode) to prevent join floods.",
+         "TOPICSNARF:   Topics set manually (by /TOPIC #channel ...) change default $C topic",
+         "PEONINVITE:   Indicates whether peons may use the $bINVITEME$b command.",
++        "SUCCESSOR:     Determines if a coowner gets ownership of a channel when the owner's handle expires.",
+         "$bIRCOP ONLY$b:",
+         "NODELETE:  Prevents channel deletion.",
+         "$uSee Also:$u set pubcmd, set strictop, set autoop, set enfmodes, set enftopic, set protect, set toys, set setters, set topicrefresh, set ctcpusers, set ctcpreaction");
+@@ -427,6 +428,8 @@
+         "$b2$b  Short timed ban (defaults to 3 minutes) on disallowed CTCPs.",
+         "$b3$b  Long timed ban (defaults to 1 hour) on disallowed CTCPs.",
+         "$uSee Also:$u set, set ctcpusers");
++"SET SUCCESSOR" ("/msg $C SET <#channel> SUCCESSOR <nick|*account>",
++        "This is a setting to determine who will be the next owner of a channel when the current owner's handle expires.");
+ "SETINFO" ("/msg $C SETINFO <#channel> <info>",
+         "This command will set a user defined information message to be displayed when you join the channel. By setting the message to '*', you will clear your message.",
+         "$uSee Also:$u access");

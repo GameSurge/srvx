@@ -1,0 +1,422 @@
+"<INDEX>" ("$b$O Help$b",
+        "$b$O$b is the IRC operator service, giving authorized users extra information and control over the network.",
+        "$uNetwork-related command categories:$u",
+        "  USER     - User information, control and searching",
+        "  CHANNEL  - Channel information and control",
+        "  GLINES   - G-line control and searching",
+        "$usrvx-internal command categories:$u",
+        "  CLONES   - Control for fake servers and users",
+        "  LOGS     - Log control and searching",
+        "  PROXY    - Proxy checking controls",
+        "  RUNNING  - Control srvx's run-time state",
+        "  SERVICES - Control of the other services in srvx",
+        "  OTHER    - Miscellaneous commands",
+        "$b/msg $O help <category>$b for a list of commands in each category, or $b/msg $O help <command>$b for syntax and usage for a command.");
+"COMMANDS" "${index}";
+
+"USER" ("$bUSER COMMANDS$b",
+        "Search for, gives information on, and gives some control over IRC users.",
+        "Alerts are a way to automatically detect (and optionally G-line) certain users.  For example, a \"gline info sub7server\" alert would G-line any users using \"sub7server\" as their full name (user info field).",
+        "  ACCESS   [${level/access}]",
+        "  ADDALERT [${level/addalert}]",
+        "  ADDTRUST [${level/addtrust}]",
+        "  DELALERT [${level/delalert}]",
+        "  DELTRUST [${level/deltrust}]",
+        "  INVITEME [${level/inviteme}]",
+        "  TRACE    [${level/trace}]",
+        "  WHOIS    [${level/whois}]");
+"ACCESS" ("/msg $O ACCESS [nick|*account] [new-level]",
+        "Displays the $O access level for the specified user or account.  With no arguments, displays your own access level.  With two arguments, sets the target's $O access level to the second argument (assuming you have sufficient access to do so).");
+"ADDALERT" ("/msg $O ADDALERT <name> <reaction> <criteria>",
+        "Adds the specified alert to the $b$O$b alert list.",
+        "$uSee Also:$u delalert, alert reaction, trace criteria");
+"ADDTRUST" ("/msg $O ADDTRUST <ip> <number> <duration> <reason>",
+        "Allows the specified IP address to have the specified amount of clones before being removed (rather than the usual limit).",
+        "You may use 0 as the duration if you do not wish the trust to ever expire.",
+        "$uSee Also:$u deltrust, stats trusted");
+"ALERT REACTION" ("$bALERT REACTION$b",
+        "Valid alert actions (to be taken when an alert is hit) are:",
+        "$bNOTICE$b:       Send a notice to the $b$O$b alert channel",
+        "$bKILL$b:         Disconnect the user",
+        "$bGLINE$b:        Gline the user that tripped the alert",
+        "$uSee Also:$u addalert, delalert");
+"DELALERT" ("/msg $O DELALERT <alert> [alert]...",
+        "Remove the specified alerts from the $b$O$b alert list.",
+        "$uSee Also:$u addalert, stats");
+"DELTRUST" ("/msg $O DELTRUST <ip>",
+        "Deletes a trusted IP from $b$O's$b trusted hosts list. A trusted IP address is exempted from normal client limits. A list of currently trusted IPs is displayed by $bstats trusted$b.",
+        "$uSee Also:$u addtrust, stats");
+"INVITEME" ("/msg $O INVITEME [nick]",
+        "Invites the specified user (if omitted, you) to $O's debug channel.",
+        "This is currently pointless, since no output is sent to the debug channel.");
+"TRACE" ("/msg $O TRACE <action> <criteria> <value> [<criteria> <value>]...",
+        "Searches through the current users for those matching the specified criteria, and applies the specified action to them. A list of actions can be found in $bhelp trace action$b and a list of criteria in $bhelp trace criteria$b.",
+        "$uSee Also:$u trace action, trace criteria");
+"TRACE ACTION" ("$bTRACE ACTION$b",
+        "Options for action in $btrace$b are:",
+        "$bPRINT$b:   Display the hostmask to you.",
+        "$bCOUNT$b:   Count all matching users.",
+        "$bKILL$b:    Kill matching clients.",
+        "$bGLINE$b:   Issue a gline for the client's host (by default, 1 hour long).",
+        "$bGAG$b:     Gag all matching users (by default, does not expire).",
+        "$bDOMAINS$b: Display counts of users in each domain (length specified by DEPTH criteria.", 
+        "Note: By default, IRC operators are not affected by the KILL, GLINE or GAG actions.  You can override this by specifying the $bABUSE OPERS$b criteria for a trace.  Even if you do specify $bABUSE OPERS$b, it will not affect opers at your access level or above.");
+"TRACE CRITERIA" ("$bTRACE CRITERIA$b",
+        "Criteria and values for $btrace$b (a search with $btrace$b must match all specified items):",
+        "$bMASK$b nick!user@host    Specifies a full hostmask to search for.",
+        "$bNICK$b nick              Specifies a nick to search for.",
+        "$bIDENT$b ident            Specifies an ident to search for.",
+        "$bHOST$b host              Specifies a hostname to search for.",
+        "$bINFO$b infoline          Specifies a user's info to search for.",
+        "$bSERVER$b server          Specifies a server to search for.",
+        "$bIP$b 127.0.0.1           Specifies an IP to search for (independent of hostname).",
+        "$bACCOUNT$b account        Specifies an account to search for.",
+        "$bAUTHED$b yes/no          Specifies if matching users must be authenticated with $N or not",
+        "$bCHANNEL$b #target        Specifies a channel the client must be in.",
+        "$bNUMCHANNELS$b 5          Specifies a number of channels the client must be in.",
+        "$bLIMIT$b 50               Limits the number of responses to a certain number.",
+        "$bNICKAGE$b cmp            Client has had nick this long (<Nu, <=Nu, =Nu, >=Nu or >Nu)",
+        "$bACCESS$b cmp             Access constraints (<nnn, <=nnn, =nnn, >=nnn or >nnn)",
+        "$bREASON$b reason          Reason for kill or gline (must be listed last).",
+        "$bDEPTH$b depth            How many domain-name parts to use for $bDOMAINS$b action.",
+        "$bDURATION$b duration      How long to apply a G-line or gag.",
+        "$bCLONES$b min             Ignore clients from hosts with fewer than this many connections.",
+        "$bINFO_SPACE$b yes/no      Clients match only if their info starts with a space (' ') character.",
+        "$bABUSE OPERS$b            Force adverse actions to affect opers as well.",
+        "$bLOG$b                    Record matching users in $O's log file (in addition to acting).",
+        "Additionally, the $bCHANNEL$b target may be prefixed with @ to select channel operators, + to select voiced users (will not select chanops unless @ is also used), or - to select non-voiced non-chanop users.  For example, CHANNEL #foo will select all users in #foo; CHANNEL +#foo will select only users voiced in #foo; CHANNEL @+#foo will select ops and voiced users in #foo; etc.");
+"WHOIS" ("/msg $O WHOIS <nick>",
+        "Displays detailed information for the named user.");
+
+"CHANNEL" ("$bCHANNEL SUB-CATEGORIES$b",
+        "Channel information, control, and searching.",
+        "  CHANNEL REACTIONS   - Automated reactions based on channel names",
+        "  CHANNEL CONTROL     - Channel information and control",
+        "There are also some miscellaneous channel-related commands:",
+        "  CHANINFO [${level/chaninfo}]",
+        "  CSEARCH  [${level/csearch}]",
+        "  JOIN     [${level/join}]",
+        "  PART     [${level/part}]");
+"CHANINFO" ("/msg $O CHANINFO <#channel> [users]",
+        "Displays very detailed information on the specified channel. If the channel is omitted, then $bchaninfo$b will be done on the channel where the command was given.  You must give a second parameter ($busers$b) to list users in the channel.",
+        "$uSee Also:$u whois");
+"CSEARCH" ("/msg $O CSEARCH <action> <criteria> <value> [<criteria> <value>]...",
+        "Searches through the network's channels for those matching the specified criteria, and applies the specified action to them. A list of actions can be found under $bhelp csearch action$b and a list of criteria in $bhelp csearch criteria$b.",
+        "$uSee Also:$u csearch action, csearch criteria");
+"CSEARCH ACTION" ("$bCSEARCH ACTION$b",
+        "Options for action in $bcsearch$b are:",
+        "$bPRINT$b:   Display the channel and user count.",
+        "$bCOUNT$b:   Count all matching channels.");
+"CSEARCH CRITERIA" ("$bCSEARCH CRITERIA$b",
+        "Criteria and values for $bcsearch$b (a search with $bcsearch$b must match all specified items):",
+        "$bNAME$b name              Specifies a name to search for.",
+        "$bTOPIC$b topic            Specifies a topic to search for.",
+	"$bUSERS$b cmp              User count constraint (<Nu, <=Nu, =Nu, >=Nu or >Nu)",
+        "$bTIMESTAMP$b cmp          Timestamp constraint (<Nu, <=Nu, =Nu, >=Nu or >Nu; supports interval notation)",
+        "$bLIMIT$b 50               Limits the number of responses to a certain number.");
+"JOIN" ("/msg $O JOIN <#channel> ",
+        "Makes $b$O$b join the specified channel.",
+        "$uSee Also:$u part");
+"PART" ("/msg $O PART <#channel> ",
+        "Makes $b$O$b leave the specified channel.",
+        "$uSee Also:$u join");
+
+"CHANNEL REACTIONS" ("$bCHANNEL REACTION COMMANDS$b",
+        "\"Bad-word\" channels are for assisting in enforcement of network policies (such as disallowing \"warez\" channels).  \"Warning\" channels are for channels which may be abused when they are present, but should be allowed otherwise.",
+        "  ADDBAD    [${level/addbad}]",
+        "  ADDEXEMPT [${level/addexempt}]",
+        "  DELBAD    [${level/delbad}]",
+        "  DELEXEMPT [${level/delexempt}]",
+        "  UNWARN    [${level/unwarn}]",
+        "  WARN      [${level/warn}]");
+"ADDBAD" ("/msg $O ADDBAD <word>",
+        "Adds a bad word to $b$O's$b bad word list. Bad words make any channel that has a bad word anywhere in a channel's name illegal. A list of current bad words can be displayed by $bstats bad$b.",
+        "$uSee Also:$u addexempt, delbad, stats");
+"ADDEXEMPT" ("/msg $O ADDEXEMPT <#channel>",
+        "Adds a channel to $O's \"exempt\" list.  These channels (and only these channels) are never considered to contain prohibited words.  Note that you $bmust$b specify the whole channel name, and may not use wildcards.",
+        "For example, if you have added $ufree$u to the bad-word list, you could add $u#FreeBSD$u to the exempt list, and anyone could join #FreeBSD.  Users joining #FreeBSDISOz would be kickbanned by $O.",
+        "The current exempt list is displayed with the current bad-words in $bstats bad$b.",
+        "$uSee Also:$u addbad, delexempt, stats");
+"DELBAD" ("/msg $O DELBAD <keyword>",
+        "Deletes a bad word from $b$O's$b bad word list. Bad words make any channel that has a bad word anywhere in a channel's name illegal. A list of current bad words can be displayed by $bstats bad$b.",
+        "$uSee Also:$u addbad, delexempt, stats");
+"DELEXEMPT" ("/msg $O DELEXEMPT <#channel>",
+        "Removes a channel from $O's bad-word-exempt channel list.",
+        "$uSee Also:$u addexempt, delbad, stats");
+"UNWARN"  ("/msg $O UNWARN <#channel>",
+        "Deletes the activity warning for a channel.",
+	"$uSee Also:$u warn, stats warn");
+"WARN"  ("/msg $O WARN <#channel> [reason]",
+        "Adds an activity warning for the channel.",
+	"$uSee Also:$u unwarn, stats warn");
+
+"CHANNEL CONTROL" ("$bCHANNEL CONTROL COMMANDS$b",
+        "These are analogous to the same (or similar) $C commands, but can be used on any channel.",
+        "  BAN        [${level/ban}]",
+        "  CLEARBANS  [${level/clearbans}]",
+        "  CLEARMODES [${level/clearmodes}]",
+        "  DEOP       [${level/deop}]",
+        "  DEOPALL    [${level/deopall}]",
+        "  DEVOICEALL [${level/devoiceall}]",
+        "  KICK       [${level/kick}]",
+        "  KICKALL    [${level/kickall}]",
+        "  KICKBAN    [${level/kickban}]",
+        "  KICKBANALL [${level/kickbanall}]",
+        "  MODE       [${level/mode}]",
+        "  OP         [${level/op}]",
+        "  OPALL      [${level/opall}]",
+        "  UNBAN      [${level/unban}]",
+        "  VOICEALL   [${level/voiceall}]");
+"BAN" ("/msg $O BAN <#channel> <nick|hostmask>",
+        "Bans the specified hostmask from the specified channel.",
+        "If a nick is used instead of hostmask, the hostmask is generated based on the nickname.",
+        "If the channel is omitted, the $bban$b will be done in the channel where the command was given.",
+        "$uSee Also:$u kickban, kickbanall, unban");
+"UNBAN" ("/msg $O UNBAN <#channel> <hostmask>",
+	"Unbans the specified hostmask from the specified channel.",
+	"If the channel is omitted, the $bunban$b will be done in the channel where the command was given.",
+	"$uSee Also:$u kickban, kickbanall, ban");
+"CLEARBANS" ("/msg $O CLEARBANS <#channel> ",
+        "Clears all bans in the specified channel.",
+        "If the channel is omitted, then $bclearbans$b will be done in the channel where the command was given.",
+        "$uSee Also:$u ban, unban");
+"CLEARMODES" ("/msg $O CLEARMODES <#channel> ",
+        "Clears the specified channel of all modes.",
+        "If the channel is omitted, then $bclearmodes$b will be done in the channel where the command was given.",
+        "$uSee Also:$u mode");
+"DEOP" ("/msg $O DEOP <#channel> <nick> [nick]...",
+        "Deops the specified user from the specified channel.",
+        "If the channel is omitted, then $bdeop$b will be done in the channel where the command was given.",
+        "$uSee Also:$u deopall, devoiceall, op, opall");
+"DEOPALL" ("/msg $O DEOPALL <#channel>",
+        "Deops all members of the specified channel.",
+        "If the channel is omitted, then $bdeopall$b will be done in the channel where the command was given.",
+        "$uSee Also:$u deop, devoiceall, op, opall");
+"DEVOICEALL" ("/msg $O DEVOICEALL <#channel>",
+        "Devoice all members of the specified channel who do not have channel ops.",
+        "If the channel is omitted, then $bdevoiceall$b will be done in the channel where the command was given.",
+        "$uSee Also:$u deop, deopall, op, opall");
+"KICK" ("/msg $O KICK <#channel> <nick> [reason]",
+        "Kicks the specified user from the specified channel.",
+        "If the channel is omitted, then $bkick$b will be done in the channel where the command was given.",
+        "$uSee Also:$u ban, kickall, kickban, kickbanall");
+"KICKALL" ("/msg $O KICKALL <#channel> [reason]",
+        "Kicks all users in the specified channel except for the user issuing the command.",
+        "If the channel is omitted, then $bkickall$b will be done in the channel where the command was given.",
+        "$uSee Also:$u ban, kick, kickbanall");
+"KICKBAN" ("/msg $O KICKBAN <#channel> <nick> [reason]",
+        "Kicks and bans the specified user. $b$O$b determines the hostmask to ban from the nick specified.",
+        "If the channel is omitted, then $bkickban$b will be done in the channel where the command was given.",
+        "$uSee Also:$u ban, kickall, kickbanall");
+"KICKBANALL" ("/msg $O KICKBANALL <#channel> [reason]",
+        "Kick and bans all members of the specified channel except for the user issuing the command.",
+        "If the channel is omitted, then $bkickbanall$b will be done in the channel where the command was given.",
+        "$uSee Also:$u ban, kick, kickban");
+"MODE" ("/msg $O MODE <#channel> <+/- mode>",
+        "Sets the specified modes (but cannot include voice, ban or op changes) on a channel.",
+        "If the channel is omitted, then $bmode$b will be done in the channel where the command was given.",
+        "$uSee Also:$u ban, deop, kickban, op");
+"OP" ("/msg $O OP <#channel> <nick> [nick]...",
+        "Ops specified nicknames the specified channel.",
+        "If the channel is omitted, then $bop$b will be done in the channel where the command was given.",
+        "$uSee Also:$u deop, deopall, opall");
+"OPALL" ("/msg $O OPALL <#channel>",
+        "Ops all members of the specified channel.",
+        "If the channel is omitted, then $bopall$b will be done in the channel where the command was given.",
+        "$uSee Also:$u deopall");
+"VOICEALL" ("/msg $O VOICEALL <#channel>",
+        "Voices all members of the specified channel who do not have channel ops.",
+        "If the channel is omitted, then $bvoiceall$b will be done in the channel where the command was given.",
+        "$uSee Also:$u opall, deopall, devoiceall");
+
+"GLINES" ("$bGLINE COMMANDS$b",
+        "Searches for, issues, and removes G-lines (network-global K-lines).",
+        "  BLOCK    [${level/block}]",
+        "  GLINE    [${level/gline}]",
+        "  GTRACE   [${level/gtrace}]",
+        "  GSYNC    [${level/gsync}]",
+        "  REFRESHG [${level/refreshg}]",
+        "  UNGLINE  [${level/ungline}]");
+"BLOCK" ("/msg $O BLOCK <nick> [reason]",
+        "GLINES the host of the specified nick for one hour  If no reason is given, use a default reason.",
+        "$uSee Also:$u gline, ungline");
+"GLINE" ("/msg $O GLINE <user@host> <duration> <reason>",
+        "Issues a GLINE (network ban) on the network for the speicified user@host for the specified duration (making the expiration time: net time + duration).",
+        "$uSee Also:$u trace, ungline");
+"GTRACE" ("/msg $O GTRACE <action> <criteria> [<criteria> <value>]...",
+        "Searches through the glines, much like $bTRACE$b does for users.",
+        "$uSee Also:$u trace, gtrace action, gtrace criteria");
+"GTRACE ACTION" ("$bGTRACE ACTION$b",
+        "Options for the action in $bgtrace$b are:",
+        "$bPRINT$b: Display the glines (mask, issuer, expiration time, reason)",
+        "$bCOUNT$b: Count the number of matching glines",
+	"$bUNGLINE$b: Remove matching glines");
+"GTRACE CRITERIA" ("$bGTRACE CRITERIA$b",
+        "Criteria and values for $bgtrace$b (a search with $bgtrace$b must match all the criteria you give):",
+        "$bMASK SUPERSET$b user@host G-line matches if it applies to someone with this hostmask.",
+        "$bMASK SUBSET$b user@host  G-line matches if this hostmask \"covers\" the G-line target.",
+        "$bMASK EXACT$b user@host   G-line matches only if the target is exactly this.",
+        "$bMASK$b user@host         Specifies a mask to search for (equivalent to MASK SUPERSET).",
+        "$bLIMIT$b count            Limits the number of matching glines.",
+        "$bREASON$b reason          Looks for glines with the given reason.",
+        "$bISSUER$b account         Looks for glines issued by the given account.",
+        "$bAFTER$b interval         Looks for glines that expire more than $binterval$b in the future.");
+"GSYNC" ("/msg $O GSYNC [server]",
+	"Requests a list of GLINES from its uplink or the specified server.  This can be used in the event srvx is down for period and becomes desynced.",
+	"$uSee Also:$u refreshg, gline, ungline");
+"REFRESHG" ("/msg $O REFRESHG [server]",
+        "Re-issues all GLINES in $b$O's$b database. Usually used for newly joining or desynched servers.  If a server mask is specified, the GLINES are only sent to server(s) with matching names.",
+        "$uSee Also:$u gline, ungline, gsync");
+"UNGLINE" ("/msg $O UNGLINE <user@host>",
+        "Removes a gline from the network before it expires.",
+        "$uSee Also:$u gline");
+
+"CLONES" ("$bCLONE/JUPE COMMANDS$b",
+        "Commands that add, remove or control fake (reserved) users or servers.",
+        "  CLONE     [${level/clone}]",
+        "  COLLIDE   [${level/collide}]",
+        "  JUPE      [${level/jupe}]",
+        "  RESERVE   [${level/reserve}]",
+        "  UNJUPE    [${level/unjupe}]",
+        "  UNRESERVE [${level/unreserve}]");
+"CLONE" ("/msg $O CLONE <sub-command> <sub-command arguments>",
+        "Creats and manipulates a fake user. Sub-commands for $bclone$b are:",
+        "$bADD$b:    Adds a new clone. Arguments: <nickname> <user@host> <info>",
+        "$bREMOVE$b: Removes a clone. Arguments: <nickname>",
+        "$bJOIN$b:   Joins a clone to a channel. Arguments: <nickname> <channel>",
+        "$bPART$b:   Parts a clone from a channel. Arguments: <nickname> <channel>",
+        "$bOP$b:     Ops a clone in a channel. Arguments: <nickname> <channel>",
+        "$bSAY$b:    Makes a clone say something to a channel. Arguments: <nickname> <channel> <text>");
+"COLLIDE" ("/msg $O COLLIDE <nick> <ident> <host> <description>",
+        "Creates a clone with the specified properties, colliding any existing user with the same nick.",
+        "$uSee Also:$u clone");
+"JUPE" ("/msg $O JUPE <srvname> <srvnum> <description>",
+	"Causes srvx to create a \"juped\" (dummy) server.  This can be used to prevent a poorly connected server from connecting.",
+	"$uSee Also:$u unjupe, reserve, unreserve");
+"RESERVE" ("/msg $O RESERVE <nickname> <user> <host> <comment>",
+        "Used to ban, protect, or jupe a given nick.  Unlike $bclone$b and $bcollide$b, reserved nicks are saved across restarts of srvx.",
+        "$uSee Also:$u clone, unreserve, jupe");
+"UNJUPE" ("/msg $O UNJUPE <srvname>",
+	"Causes srvx to unjupe a jupe server.",
+	"$uSee Also:$u jupe, reserve, unreserve");
+"UNRESERVE" ("/msg $O UNRESERVE <nick>",
+        "Removes a nick from $b$O's$b reserve list.",
+        "$uSee Also:$u reserve");
+
+"LOGS" ("$bLOGGING COMMANDS$b",
+        "Controls what goes into logs and searches them.",
+        "  LOG             [${level/log}]",
+        "  REOPEN          [${level/reopen}]");
+"LOG" ("/msg $O LOG <criteria> <value> [<criteria> <value>]...",
+        "Searches services logs based on critera specified and displays the results.",
+        "Criteria and associated values (a search match all specified items):",
+        "$bBOT$b -         A service bot's name (for example, $O).",
+        "$bCHANNEL$b -     The channel where a command was issued (accepts wildcards).",
+        "$bNICK$b -        The nickname issuing the command (accepts wildcards).",
+        "$bACCOUNT$b -     The account of the user who issued the command (accepts wildcards).",
+        "$bHOSTMASK$b -    The ident@host of the user who issued the command (accepts wildcards).",
+        "$bAGE$b -         Age of commands to find (for example, 1m or >3m).",
+        "$bLIMIT$b -       Maximum number of results to show.",
+        "$bLEVEL$b -       Comma-separated list of COMMAND, OVERRIDE, STAFF, to return only those commands.",
+        "$bTYPE$b -        Name of module that generated log (see $bSTATS MODULES$b).",
+        "By default, all levels of audit log entries are returned. You may exclude levels from the results by using the level criteria and the '-' character in front of the level name.");
+"REOPEN" ("/msg $O REOPEN",
+        "Close and re-open all the log files.",
+        "$uSee Also:$u log, loginfo");
+
+"RUNNING" ("$bRUNNING COMMANDS$b",
+        "These commands control srvx's runtime state.",
+        "  DIE       [${level/die}]",
+        "  JUMP      [${level/jump}]",
+        "  RECONNECT [${level/reconnect}]",
+        "  REHASH    [${level/rehash}]",
+        "  RESTART   [${level/restart}]",
+        "  WRITE     [${level/write}]",
+        "  WRITEALL  [${level/writeall}]");
+"DIE" ("/msg $O DIE <reason>",
+        "SQUIT srvx with the given reason and shuts it down.",
+        "$uSee Also:$u reconnect, restart");
+"JUMP" ("/msg $O JUMP <uplink>",
+        "Causes srvx to connect to the specified uplink.",
+        "$uSee Also:$u die, reconnect, restart");
+"RECONNECT" ("/msg $O RECONNECT ",
+        "Causes srvx to reconnect to its current uplink.",
+        "$uSee Also:$u die, jump, rehash, restart");
+"REHASH" ("/msg $O REHASH",
+        "Causes srvx to re-read its configuration file and update its state as much as possible.",
+        "$uSee Also:$u die, reconnect, restart");
+"RESTART" ("/msg $O RESTART <reason>",
+        "Causes srvx to SQUIT with the specified reason and restart.",
+        "$uSee Also:$u die, reconnect, rehash");
+
+"SERVICES" ("$bSERVICES COMMANDS$b",
+        "These commands control how other services behave.",
+        "  BANEMAIL   [${level/banemail}]",
+        "  BIND       [${level/bind}]",
+        "  GAG        [${level/gag}]",
+        "  HELPSERV   [${level/helpserv}]",
+        "  QUERY      [${level/query}]",
+        "  SET        [${level/set}]",
+        "  UNBANEMAIL [${level/unbanemail}]",
+        "  UNBIND     [${level/unbind}]",
+        "  UNGAG      [${level/ungag}]");
+"GAG" ("/msg $O GAG <mask> <duration> <reason>",
+        "Sets a complete services-wide ignore on all users matching the provided mask. All services will completely ignore all private messages or notices from gagged users, who are only notified when a gag goes into effect, or they sign onto the network. Gags have no effect on opers, and as a safety feature, only affect the first 250 matching users.  The gag will automatically expire after $b<duration>$b (or last forever if that is zero).",
+        "$uSee Also:$u ungag, trace");
+"HELPSERV" ("/msg $O HELPSERV <command>",
+        "Sends a command to the HelpServ system. It is used for all \"override\" commands, as well as registration and unregistration.",
+        "$uSee also:$u /msg $O HELPSERV HELP");
+"QUERY" ("/msg $O QUERY <option>",
+        "Displays the value of the given configuration key.  If the key is a composite entry, show the subkeys inside it.",
+        "$uSee Also:$u set");
+"SET" ("/msg $O SET <option> <value>",
+        "Modifies the internal configuration database. Currently, only keys that have been previously set may be modified.",
+        "$uSee Also:$u query");
+"UNGAG" ("/msg $O UNGAG <hostmask>",
+        "Ungags a gaged hostmask and displays how many users were affected by $bungag$b. You can get a list of gaged hostmasks from $bgags$b.",
+        "$uSee Also:$u gag, stats gags");
+
+"OTHER" ("$bOTHER COMMANDS$b",
+        "These commands do not easily fall into one of the other categories.",
+        "  DUMP    [${level/dump}]",
+        "  HELP    [${level/help}]",
+        "  RAW     [${level/raw}]",
+        "  STATS   [${level/stats}]",
+        "  SETTIME [${level/settime}]",
+        "  VERSION [${level/version}]");
+"DUMP" ("/msg $O DUMP <raw line>",
+        "Dumps a raw server message into the stream. Unlike $braw$b, $bdump$b checks line syntax before sending it, making it much safer to use then $braw$b. If $bdump$b detects a syntax error in the line, it is not sent. It is $bHIGHLY$b recommended that you use $bdump$b instead of $braw$b.",
+        "$uSee Also:$u raw");
+"RAW" ("/msg $O RAW <raw line>",
+        "Dumps a raw server message into the stream. Unlike $bdump$b, $braw$b does $bNOT$b check line syntax before sending it, making $braw$b dangerous. It will however, after the line is sent, warn of a parse error if there is a problem with the line. It is $bHIGHLY$b recommended that $bdump$b be used instead of $braw$b because it is much safer.",
+        "$uSee Also:$u dump");
+"SETTIME" ("/msg $O SETTIME [servermask] [resync]",
+        "Sets the time on the named server(s) to match the time known to srvx.",
+        "For example, using $b*$b as the mask sets the time on all servers; using a server's full name sets the time only on that one.",
+        "If the RESYNC argument is provided, sets the time to what srvx believes the local time is, rather than what it believes the network time is.");
+"STATS" ("/msg $O STATS <subject>",
+        "Displays statistics about a specified subject. Subjects include:",
+        "$bALERTS$b:     The list of current \"alerts\".",
+        "$bBAD$b:        Current list of bad words and exempted channels.",
+        "$bGAGS$b:       The list of current gags.",
+        "$bGLINES$b:     Reports the current number of glines.",
+        "$bLINKS$b:      Information about the link to the network.",
+        "$bMAX$b:        The max clients seen on the network.",
+        "$bNETWORK$b:    Displays network information such as total users and how many users are on each server.",
+        "$bNETWORK2$b:   Additional information about the network, such as numerics and linked times.",
+        "$bOPERS$b:      A list of users that are currently +o.",
+        "$bPROXYCHECK$b: Information about proxy checking in srvx.",
+        "$bRESERVED$b:   The list of currently reserved nicks.",
+        "$bTIMEQ$b:      The number of events in the timeq, and how long until the next one.",
+        "$bTRUSTED$b:    The list of currently trusted IPs.",
+        "$bUPTIME$b:     Srvx uptime, lines processed, and CPU time.",
+        "$bWARN$b:       The list of channels with activity warnings.",
+        "$bMODULES$b:    Shows loaded modules that implement commands.",
+        "$bSERVICES$b:   Shows active service bots.");
+"VERSION" ("/msg $O VERSION ",
+        "Sends you the srvx version and all version information for $b$C$b, $b$O$b, $b$N$b, and $b$G$b.");
+
+"INDEX" "${index}";
+"SEX" ("$bSEX$b",
+        "I'm sorry, but I can't give you help regarding your sex life.",
+        "But if you're so desperate you'll ask an IRC service bot for advice, you need therapy.");

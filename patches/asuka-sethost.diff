@@ -1,0 +1,362 @@
+diff -urN srvx_original2/hash.h apples_backup/hash.h
+--- srvx_original2/hash.h	Mon Jun  2 22:05:38 2003
++++ apples_backup/hash.h	Mon Jun  2 21:53:53 2003
+@@ -48,7 +48,11 @@
+ #define FLAGS_DEAF		0x0020 /* deaf +d */
+ #define FLAGS_SERVICE		0x0040 /* cannot be kicked, killed or deoped +k */
+ #define FLAGS_GLOBAL		0x0080 /* receives global messages +g */
+-#define FLAGS_HELPER		0x0100 /* (network?) helper +h */
++
++// apples - sethost 
++// #define FLAGS_HELPER		0x0100 /* (network?) helper +h */
++#define FLAGS_SETHOST           0x0100 /* for +h */
++
+ #define FLAGS_PERSISTENT	0x0200 /* for reserved nicks, this isn't just one-shot */
+ #define FLAGS_GAGGED		0x0400 /* for gagged users */
+ #define FLAGS_AWAY		0x0800 /* for away users */
+@@ -63,7 +67,11 @@
+ #define IsGlobal(x)             ((x)->modes & FLAGS_GLOBAL)
+ #define IsWallOp(x)             ((x)->modes & FLAGS_WALLOP)
+ #define IsServNotice(x)         ((x)->modes & FLAGS_SERVNOTICE)
+-#define IsHelperIrcu(x)         ((x)->modes & FLAGS_HELPER)
++
++// apples - sethost
++// #define IsHelperIrcu(x)         ((x)->modes & FLAGS_HELPER)
++#define IsSetHost(x)            ((x)->modes & FLAGS_SETHOST)
++
+ #define IsGagged(x)             ((x)->modes & FLAGS_GAGGED)
+ #define IsAway(x)               ((x)->modes & FLAGS_AWAY)
+ #define IsStamped(x)            ((x)->modes & FLAGS_STAMPED)
+@@ -103,6 +111,9 @@
+     unsigned int dead : 1;
+     unsigned long ip;
+     long modes;                   /* user flags +isw etc... */
++
++    // apples - sethost
++    char sethost[USERLEN + HOSTLEN + 2]; /* 1 for '\0' and 1 for @ = 2 */
+ 
+     time_t timestamp;
+     struct server *uplink;
+diff -urN srvx_original2/opserv.c apples_backup/opserv.c
+--- srvx_original2/opserv.c	Mon Jun  2 22:05:20 2003
++++ apples_backup/opserv.c	Mon Jun  2 21:54:03 2003
+@@ -1229,7 +1229,11 @@
+ 	if (IsOper(target)) buffer[bpos++] = 'o';
+ 	if (IsGlobal(target)) buffer[bpos++] = 'g';
+ 	if (IsServNotice(target)) buffer[bpos++] = 's';
+-	if (IsHelperIrcu(target)) buffer[bpos++] = 'h';
++	
++        // apples - sethost
++        // if (IsHelperIrcu(target)) buffer[bpos++] = 'h';
++        if (IsSetHost(target)) buffer[bpos++] = 'h';
++
+ 	if (IsService(target)) buffer[bpos++] = 'k';
+ 	if (IsDeaf(target)) buffer[bpos++] = 'd';
+         if (IsHiddenHost(target)) buffer[bpos++] = 'x';
+diff -urN srvx_original2/proto-common.c apples_backup/proto-common.c
+--- srvx_original2/proto-common.c	Mon Jun  2 22:05:06 2003
++++ apples_backup/proto-common.c	Mon Jun  2 21:53:46 2003
+@@ -537,13 +537,26 @@
+         nickname = "*";
+     }
+     if (options & GENMASK_STRICT_IDENT) {
+-        ident = user->ident;
++        // apples - sethost
++        if (IsSetHost(user)) {
++          ident = alloca(strcspn(user->sethost, "@")+2);
++          safestrncpy(ident, user->sethost, strcspn(user->sethost, "@")+1);
++        }
++        else
++          ident = user->ident;
+     } else if (options & GENMASK_ANY_IDENT) {
+         ident = "*";
+     } else {
+-        ident = alloca(strlen(user->ident)+2);
+-        ident[0] = '*';
+-        strcpy(ident+1, user->ident + ((*user->ident == '~')?1:0));
++        // apples - sethost
++        if (IsSetHost(user)) {
++          ident = alloca(strcspn(user->sethost, "@")+3);
++          ident[0] = '*';
++          safestrncpy(ident+1, user->sethost, strcspn(user->sethost, "@")+1);
++        } else {
++          ident = alloca(strlen(user->ident)+2);
++          ident[0] = '*';
++          strcpy(ident+1, user->ident + ((*user->ident == '~')?1:0));
++        }
+     }
+     hostname = user->hostname;
+     if (IsHiddenHost(user) && user->handle_info && hidden_host_suffix && !(options & GENMASK_NO_HIDING)) {
+@@ -604,15 +617,20 @@
+ 	    sprintf(hostname, "*.%s", user->hostname+ii+2);
+ 	}
+     }
+-    /* Emit hostmask */
+-    len = strlen(ident) + strlen(hostname) + 2;
+-    if (nickname) {
+-        len += strlen(nickname) + 1;
+-        mask = malloc(len);
+-        sprintf(mask, "%s!%s@%s", nickname, ident, hostname);
+-    } else {
+-        mask = malloc(len);
+-        sprintf(mask, "%s@%s", ident, hostname);
+-    }
++    // apples - sethost
++    if (IsSetHost(user)) 
++      hostname = strchr(user->sethost, '@') + 1;
++
++      /* Emit hostmask */
++      len = strlen(ident) + strlen(hostname) + 2;
++      if (nickname) {
++          len += strlen(nickname) + 1;
++          mask = malloc(len);
++          sprintf(mask, "%s!%s@%s", nickname, ident, hostname);
++      } else {
++          mask = malloc(len);
++          sprintf(mask, "%s@%s", ident, hostname);
++      }
++
+     return mask;
+ }
+diff -urN srvx_original2/proto-p10.c apples_backup/proto-p10.c
+--- srvx_original2/proto-p10.c	Mon Jun  2 22:04:54 2003
++++ apples_backup/proto-p10.c	Mon Jun  2 21:53:32 2003
+@@ -293,7 +293,8 @@
+ static unsigned int num_notice_funcs;
+ static struct dict *unbursted_channels;
+ 
+-static struct userNode *AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *account, const char *numeric, const char *userinfo, time_t timestamp, const char *realip);
++// apples - sethost
++static struct userNode *AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *account, const char *numeric, const char *userinfo, time_t timestamp, const char *realip, const char *sethost);
+ 
+ /* Numerics can be XYY, XYYY, or XXYYY; with X's identifying the
+  * server and Y's indentifying the client on that server. */
+@@ -397,7 +398,11 @@
+         if (IsServNotice(user)) modes[modelen++] = 's';
+         if (IsDeaf(user)) modes[modelen++] = 'd';
+         if (IsGlobal(user)) modes[modelen++] = 'g';
+-        if (IsHelperIrcu(user)) modes[modelen++] = 'h';
++
++        // apples - set host
++        // if (IsHelperIrcu(user)) modes[modelen++] = 'h';
++        if (IsSetHost(user)) modes[modelen++] = 'h';
++
+         if (IsHiddenHost(user)) modes[modelen++] = 'x';
+         modes[modelen] = 0;
+ 
+@@ -948,6 +953,8 @@
+ static CMD_FUNC(cmd_nick)
+ {
+     struct userNode *user;
++    int i; // apples - sethost
++
+     if ((user = GetUserH(origin))) {
+         /* nick change (since the source is a user numeric) */
+         if (argc < 2) return 0;
+@@ -959,14 +966,26 @@
+         serv = GetServerH(origin);
+         if (argv[6][0] == '+') {
+             if (argc < 10) return 0;
+-            if (argc > 10) {
+-                /* The user is +r and has an ACCOUNT stamp in argv[7]. */
+-                AddUser(serv, argv[1], argv[4], argv[5], argv[6], argv[7], argv[9], argv[argc-1], atoi(argv[3]), argv[8]);
+-            } else {
+-                AddUser(serv, argv[1], argv[4], argv[5], argv[6], NULL, argv[8], argv[argc-1], atoi(argv[3]), argv[7]);
++
++            // apples - sethost
++            if ((strchr(argv[6],'h')) && (strchr(argv[6],'r'))) { // +rh
++              i = 0;
++              while ((argv[6][i] != 'r') && (argv[6][i] != 'h')) i++;
++              if (argv[6][i] == 'r') // +r came before +h
++                AddUser(serv, argv[1], argv[4], argv[5], argv[6], argv[7], argv[10], argv[argc-1], atoi(argv[3]), argv[9], argv[8]);
++              else // +h came before +r
++                AddUser(serv, argv[1], argv[4], argv[5], argv[6], argv[8], argv[10], argv[argc-1], atoi(argv[3]), argv[9], argv[7]); 
++            }
++            else {
++              if (strchr(argv[6],'h')) // +h-r
++                AddUser(serv, argv[1], argv[4], argv[5], argv[6], NULL, argv[9], argv[argc-1], atoi(argv[3]), argv[8], argv[7]);
++              else if (strchr(argv[6],'r')) // +r-h
++                AddUser(serv, argv[1], argv[4], argv[5], argv[6], argv[7], argv[9], argv[argc-1], atoi(argv[3]), argv[8], NULL);
++              else // -rh
++                AddUser(serv, argv[1], argv[4], argv[5], argv[6], NULL, argv[8], argv[argc-1], atoi(argv[3]), argv[7], NULL);
+             }
+         } else {
+-            AddUser(serv, argv[1], argv[4], argv[5], "+", NULL, argv[7], argv[argc-1], atoi(argv[3]), argv[6]);
++            AddUser(serv, argv[1], argv[4], argv[5], "+", NULL, argv[7], argv[argc-1], atoi(argv[3]), argv[6], NULL);
+         }
+     }
+     return 1;
+@@ -1057,6 +1076,8 @@
+     struct chanNode *cn;
+     struct userNode *un;
+     const char *modes;
++    char *sethost; // apples - sethost
++    int i; // apples - sethost
+ 
+     if (argc < 3) {
+         return 0;
+@@ -1067,7 +1088,19 @@
+             log(MAIN_LOG, LOG_ERROR, "Unable to find user %s whose mode is changing\n", argv[1]);
+             return 0;
+         }
+-        mod_usermode(un, argv[2]);
++        // apples - sethost
++        if (argc == 3)
++          mod_usermode(un, argv[2]);
++        else {
++          sethost = malloc(strlen(argv[2]) + 1 + strlen(argv[3]) + 1);
++          i = 0;
++          while((sethost[i++] = *argv[2]++));
++          i--; 
++          sethost[i++] = ' ';
++          while((sethost[i++] = *argv[3]++)); 
++          mod_usermode(un, sethost); // apples - sethost
++        }       
++
+         return 1;
+     }
+ 
+@@ -1733,7 +1766,7 @@
+     }
+     make_numeric(self, local_num, numeric);
+     if (old_user) timestamp = old_user->timestamp - 1;
+-    return AddUser(self, nick, nick, self->name, "+oik", NULL, numeric, desc, now, "AAAAAA");
++    return AddUser(self, nick, nick, self->name, "+oik", NULL, numeric, desc, now, "AAAAAA", NULL); // apples - sethost
+ }
+ 
+ struct userNode *
+@@ -1750,7 +1783,7 @@
+     }
+     make_numeric(self, local_num, numeric);
+     if (old_user) timestamp = old_user->timestamp - 1;
+-    return AddUser(self, nick, ident, hostname, "+i", NULL, numeric, desc, timestamp, "AAAAAA");
++    return AddUser(self, nick, ident, hostname, "+i", NULL, numeric, desc, timestamp, "AAAAAA", NULL); // apples - sethost
+ }
+ 
+ int
+@@ -1765,12 +1798,14 @@
+     return 1;
+ }
+ 
++// apples - sethost
+ static struct userNode*
+-AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *account, const char *numeric, const char *userinfo, time_t timestamp, const char *realip)
++AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *account, const char *numeric, const char *userinfo, time_t timestamp, const char *realip, const char *sethost)
+ {
+     struct userNode *oldUser, *uNode;
+     struct policer_params *pol_params;
+     unsigned int n, ignore_user;
++    char *newmodes; // apples - sethost
+ 
+     if ((strlen(numeric) < 3) || (strlen(numeric) > 5)) {
+         log(MAIN_LOG, LOG_WARNING, "AddUser(%p, %s, ...): numeric %s wrong length!\n", uplink, nick, numeric);
+@@ -1829,7 +1864,22 @@
+     uNode->num_local = base64toint(numeric+strlen(uNode->uplink->numeric), 3) & uNode->uplink->num_mask;
+     uNode->uplink->users[uNode->num_local] = uNode;
+     if (account) call_account_func(uNode, account);
+-    mod_usermode(uNode, modes);
++ 
++    // apples - sethost
++    if (sethost) {
++      newmodes = malloc(strlen(modes) + 1 + strlen(sethost) + 1);
++      n = 0;
++      while ((newmodes[n] = modes[n])) n++;
++      newmodes[n++] = ' ';
++      while ((newmodes[n] = *sethost)) { 
++        n++; 
++        sethost++; 
++      }
++      mod_usermode(uNode, newmodes);
++    }
++    else
++      mod_usermode(uNode, modes);
++
+     if (ignore_user) return uNode;
+ 
+     dict_insert(clients, uNode->nick, uNode);
+@@ -1899,8 +1949,10 @@
+     extern struct policer_params *oper_policer_params, *luser_policer_params;
+     static void call_oper_funcs(struct userNode *user);
+     int add = 1;
++    int i = 0;
+ 
+     if (!user || !mode_change) return;
++ 
+     while (1) {
+ #define do_user_mode(FLAG) do { if (add) user->modes |= FLAG; else user->modes &= ~FLAG; } while (0)
+ 	switch (*mode_change++) {
+@@ -1931,7 +1983,18 @@
+ 	case 'd': do_user_mode(FLAGS_DEAF); break;
+ 	case 'k': do_user_mode(FLAGS_SERVICE); break;
+ 	case 'g': do_user_mode(FLAGS_GLOBAL); break;
+-	case 'h': do_user_mode(FLAGS_HELPER); break;
++
++        // apples - sethosti
++        // don't need this anymore vvvvvv
++	// case 'h': do_user_mode(FLAGS_HELPER); break;
++        // so basically, +h is the only mode that requires a parameter for the time
++        // being, so i check if there's an 'h' in the first part, and if there is 
++        // then everything after the space becomes their new host
++        case 'h': do_user_mode(FLAGS_SETHOST); break;
++        case ' ': if (IsSetHost(user))
++                    while ((user->sethost[i++] = *mode_change++)); 
++                  break;  
++                  
+         case 'x': do_user_mode(FLAGS_HIDDEN_HOST); break;
+ 	}
+ #undef do_user_mode
+diff -urN srvx_original2/tools.c apples_backup/tools.c
+--- srvx_original2/tools.c	Mon Jun  2 22:05:28 2003
++++ apples_backup/tools.c	Mon Jun  2 21:53:21 2003
+@@ -291,6 +291,9 @@
+ user_matches_glob(struct userNode *user, const char *orig_glob, int include_nick)
+ {
+     char *glob, *marker;
++    int usingreal = 0; // apples - sethost
++    int usingset = 0; // apples - sethost
++    char *setident, *sethostname; // apples - sethost
+ 
+     /* Make a writable copy of the glob */
+     glob = alloca(strlen(orig_glob)+1);
+@@ -311,22 +314,37 @@
+         return 0;
+     }
+     *marker = 0;
+-    if (!match_ircglob(user->ident, glob)) return 0;
++    
++    // apples - sethost
++    if (match_ircglob(user->ident, glob)) usingreal = 1;
++    if (IsSetHost(user)) {
++          setident = alloca(strcspn(user->sethost, "@")+2);
++          safestrncpy(setident, user->sethost, strcspn(user->sethost, "@")+1);
++          if (match_ircglob(setident, glob)) usingset = 1;
++    }
++
+     glob = marker + 1;
+     /* Now check the host part */
++
++    // apples - sethost
++    if (IsSetHost(user)) {
++      sethostname = strchr(user->sethost, '@') + 1;
++      if (match_ircglob(sethostname, glob) && usingset) return 1;
++    }
++
+     if (isdigit(*glob) && !glob[strspn(glob, "0123456789./*?")]) {
+         /* Looks like an IP-based mask */
+         unsigned char userip[20];
+         sprintf(userip, "%ld.%ld.%ld.%ld", (user->ip >> 24) & 255, (user->ip >> 16) & 255, (user->ip >> 8) & 255, user->ip & 255);
+-        return match_ircglob(userip, glob);
++        return match_ircglob(userip, glob) && usingreal;
+     } else {
+         if (hidden_host_suffix && user->handle_info) {
+             char hidden_host[HOSTLEN+1];
+             snprintf(hidden_host, sizeof(hidden_host), "%s.%s", user->handle_info->handle, hidden_host_suffix);
+-            if (match_ircglob(hidden_host, glob)) return 1;
++            if (match_ircglob(hidden_host, glob) && usingreal) return 1;
+         }
+         /* The host part of the mask isn't IP-based */
+-        return match_ircglob(user->hostname, glob);
++        return match_ircglob(user->hostname, glob) && usingreal;
+     }
+ }
+ 

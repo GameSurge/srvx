@@ -1,0 +1,41 @@
+News for srvx release 0.9.5
+[March 21, 2001 - Present]
+---------------------------
+- 0.9.5 released March 21, 2001.
+- This is the LAST release before 1.0 goes out.
+- We came across a (large) memory leak in FreeBSD's libc and worked
+  around it.  We also submitted a bug report to the FreeBSD team.
+- As far as we know, no more serious bugs are present in srvx. Most
+  development before 1.0 will be tweaking and minor fixups.
+- Helpfiles should be up to date before the release of 1.0.
+- Just showing off srvx's speed:
+    <@Jedi> ?timecmd trace count host *
+    -OpServX(OpServX@Services.GamesNET.net)- Found 4593 matches.
+    -OpServX(OpServX@Services.GamesNET.net)- Command `trace' finished in 0.003037 seconds.
+
+
+News for everything prior to 0.9.5
+[April 16, 2000 - March 20, 2001]
+----------------------------------
+- Coding began about 1 year prior to the 0.9.5 release.
+- Documentation up to 0.9.5 is virtually non-existant.
+- PRE01 released April 16, 2000.
+- PRE02 released April 18, 2000.
+- After the main parts were completed, it all came down to bug fixing.
+- 0.1 released June 13, 2000.
+- srvx was setup on a machine and linked to GamesNET for its initial beta
+  tests.  Many many many bugs were fixed in the first week, fewer as time
+  went along.
+- 0.2 released July 5, 2000.
+- Between 0.2 and 0.7 code for the services themselves was put in.  Prior
+  to this was mainly core coding.
+- Using dmalloc, bounds-checking and new log replaying code, we were able
+  to hammer out alot bugs, some of which were severe enough to cause a
+  segfault.
+- 0.7 released December 15, 2000.  [0.3 through 0.6 never released]
+- 0.9 released January 17, 2001.   [0.8 never released]
+- Just prior to the 0.9.5 release, numerous memory leaks were fixed,
+  prompting the release of 0.9.5.
+- srvx is still running smoothly on GamesNET.  If we didn't take it down
+  every 2 days to be updated with new patches, its uptime would be quite
+  high.

@@ -1,0 +1,31 @@
+-- This patch assumes a database prepared with the script below.
+-- Once this is set up, you tell the HelpServ code to log stats
+-- by adding an entry to the "helpserv" section of srvx.conf:
+--   "sql_log" "host=postgres.testnet.com port=5432 dbname=srvx user=srvx password=TeStNeT requiressl=1";
+-- some of those options may be omitted, in which case the PostgreSQL
+-- client library will use defaults.  You may use hostaddr=10.0.0.7
+-- instead of host=postgres.testnet.com, if the database server does
+-- not have a name in DNS or in /etc/hosts.
+
+CREATE TABLE srvx_helpserv_reqs (
+   c_bot VARCHAR(32) NOT NULL,
+   t_opened TIMESTAMP NOT NULL,
+   t_assigned TIMESTAMP,
+   t_closed TIMESTAMP NOT NULL,
+   i_id INTEGER NOT NULL,
+   c_helper VARCHAR(32),
+   c_user_account VARCHAR(32),
+   c_user_nick VARCHAR(32),
+   c_user_host VARCHAR(80),
+   c_close_reason TEXT NOT NULL,
+   c_text TEXT);
+
+CREATE TABLE srvx_helpserv_stats (
+   c_bot VARCHAR(32) NOT NULL,
+   t_weekstart TIMESTAMP NOT NULL,
+   c_helper VARCHAR(32) NOT NULL,
+   i_time INTEGER NOT NULL,
+   i_picked_up INTEGER NOT NULL,
+   i_closed INTEGER NOT NULL,
+   i_reassigned_from INTEGER NOT NULL,
+   i_reassigned_to INTEGER NOT NULL);

@@ -1,0 +1,28 @@
+chanserv.c - 68%
+conf.c - effectively 100%
+dict-splay.c - effectively 100%
+gline.c - effectively 100%
+global.c - effectively 100%
+hash.c - 78% (not ReintroduceUser(), wipeout_channel(), AddChannelBan() setting a wider ban, extremely large channel_apply_bans())
+heap.c - 100%
+helpfile.c - except for backup, post-expansion newline handling
+helpserv.c - 68%
+ioset.c - except for certain ioset_find_line_length(), reopen handling
+log.c - 80%
+main.c - enough (all the code called more than once)
+md5.c - effectively 100%
+mod-memoserv.c - 85%
+mod-serverspy.c - 88%
+modcmd.c - 66%
+modules.c - enough (no dependency code, no failure paths)
+nickserv.c - 67%
+opserv.c - 73%
+policer.c - effectively 100%
+proto-p10.c - 75%
+proto-common.c - except for hostmask generation
+recdb.c - except for char-by-char reading
+saxdb.c - except for the standalone database code
+sendmail.c - 16%
+sockcheck.c - 53%
+timeq.c - 100%
+tools.c - 81% (not some glob matching, sanitize_ircmask() with too-long parts)

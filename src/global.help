@@ -1,0 +1,37 @@
+"<INDEX>" ("$b$G Help$b",
+        "The $b$G$b service allows network administrators to manage and send important notices to users. It also allows users to retrieve, at once, all messages addressed to them.",
+        "$bUser Commands:$b",
+        "  MESSAGES   Sends you all messages addressed to your user class.",
+        "  VERSION    Prints the srvx and $G version information.",
+        "$bPrivileged Commands:$b",
+        "  NOTICE     Immediately sends a message.",
+        "  MESSAGE    Adds a message to $G's database.",
+        "  LIST       Displays active messages.",
+        "  REMOVE     Removes a message.");
+"LIST" ("/msg $G LIST",
+        "Displays all active messages and information pertaining to them, such as the target, message ID, expiration time, and who the message is from.",
+        "$uSee Also:$u message, messages, remove");
+"MESSAGE" ("/msg $G MESSAGE [<options> <value>] text <message>",
+        "Adds a notice to the $b$G$b database. Messages are sent to users as they enter the network or the target class. $bMessage$b takes several options, which must be preceded by the name of the option being used. Options include:",
+        "$bTARGET$b:   Controls the recipients of the message. This option may be used multiple times. See the $bTARGET$b help entry for details.",
+        "$bDURATION$b: This option sets the length of time for which the message is valid. After this time, the message will be deleted from the $b$G$b database.",
+        "$uSee Also:$u list, messages, remove, target");
+"MESSAGES" ("/msg $G MESSAGES",
+        "Sends you all messages addressed to your user class.");
+"NOTICE" ("/msg $G NOTICE <target> <message>",
+        "Immediately sends a notice to a specific target. See $btarget$b for a list of targets.",
+        "$uSee Also:$u target");
+"REMOVE" ("/msg $G REMOVE <message id>",
+        "Remove a message before it expires. The message ID can be found in the message you received when using $bsend$b to first add the message, or by using $blist$b.",
+        "$uSee Also:$u list, message");
+"TARGET" ("$bTARGET$b",
+        "$bTarget$b is used as a sub-command in many commands. It's values are:",
+        "$bUSERS$b:      The message will be sent to all users on the network including opers and helpers, but not channels.",
+        "$bANNOUNCEMENT$b: The message will be sent to all users who are configured to receive community announcements.",
+        "$bHELPERS$b:    The message will be sent to helpers only.",
+        "$bOPERS$b:      The message will be sent to opers only.",
+        "$bSTAFF$b:      The message will be sent to helpers and opers.",
+        "$bCHANNELS$b:   The message will be sent to all channels.",
+        "$bALL$b:        A combination of USERS and CHANNELS.");
+"VERSION" ("/msg $G VERSION",
+        "$bVERSION$b causes $b$G$b to to send you the srvx version and some additional version information that is specific to $b$G$b.");

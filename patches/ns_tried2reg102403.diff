@@ -1,0 +1,65 @@
+diff -urN services-dist/src/hash.h services/src/hash.h
+--- services-dist/src/hash.h	Fri Oct 24 20:05:25 2003
++++ services/src/hash.h	Fri Oct 24 21:35:44 2003
+@@ -56,6 +56,7 @@
+ #define FLAGS_STAMPED           0x1000 /* for users who have been stamped */
+ #define FLAGS_HIDDEN_HOST       0x2000 /* user's host is masked by their account */
+ #define FLAGS_REGNICK           0x4000 /* user owns their current nick */
++#define FLAGS_TRIED2REG		0x8000 /* user has used /msg NickServ@.. register already once this session */
+ 
+ #define IsOper(x)               ((x)->modes & FLAGS_OPER)
+ #define IsService(x)            ((x)->modes & FLAGS_SERVICE)
+@@ -71,6 +72,7 @@
+ #define IsStamped(x)            ((x)->modes & FLAGS_STAMPED)
+ #define IsHiddenHost(x)         ((x)->modes & FLAGS_HIDDEN_HOST)
+ #define IsReggedNick(x)         ((x)->modes & FLAGS_REGNICK)
++#define HasTried2Reg(x)		((x)->modes & FLAGS_TRIED2REG)
+ #define IsLocal(x)              ((x)->uplink == self)
+ 
+ #define NICKLEN         30
+diff -urN services-dist/src/nickserv.c services/src/nickserv.c
+--- services-dist/src/nickserv.c	Fri Oct 24 20:05:25 2003
++++ services/src/nickserv.c	Fri Oct 24 21:36:24 2003
+@@ -141,6 +141,7 @@
+ #define NSMSG_BAD_MAX_LOGINS    "MaxLogins must be at most %d."
+ #define NSMSG_MAX_LOGINS        "Your account already has its limit of %d user(s) logged in."
+ #define NSMSG_SETTEE_LOGGED_IN  "%s is already logged in, so you cannot do that."
++#define NSMSG_TRIED2REG		"You have already attempted to use $bREGISTER$b once this session, you will have to reconnect to use it again."
+ 
+ #define NSMSG_STAMPED_REGISTER  "You have already authenticated to an account once this session; you may not register a new account."
+ #define NSMSG_STAMPED_AUTH      "You have already authenticated to an account once this session; you may not authenticate to another."
+@@ -1063,6 +1064,14 @@
+         return 0;
+     }
+ 
++    if (HasTried2Reg(user)) {
++	/* On networks with email enabled, it is possible to use this cmd repeatedly, making
++	 * potential damage to services very, very easy. This only allows a user to try once
++	 * per session -akl */ 
++	nickserv_notice(user, NSMSG_TRIED2REG);
++	return 0;
++    }
++    
+     NICKSERV_MIN_PARMS((unsigned)3 + nickserv_conf.email_required);
+ 
+     if (!is_valid_handle(argv[1])) {
+@@ -1136,6 +1145,8 @@
+     /* If they need to do email verification, tell them. */
+     if (no_auth)
+         nickserv_make_cookie(user, hi, ACTIVATION, hi->passwd);
++
++    user->modes |= FLAGS_TRIED2REG;
+ 
+     return 1;
+ }
+diff -urN services-dist/src/opserv.c services/src/opserv.c
+--- services-dist/src/opserv.c	Fri Oct 24 20:05:25 2003
++++ services/src/opserv.c	Fri Oct 24 21:33:03 2003
+@@ -1195,6 +1195,7 @@
+ 	if (IsDeaf(target)) buffer[bpos++] = 'd';
+         if (IsHiddenHost(target)) buffer[bpos++] = 'x';
+         if (IsGagged(target)) buffer_cat(" (gagged)");
++	if (HasTried2Reg(target)) buffer_cat(" (registered an account)");
+ 	buffer[bpos] = 0;
+ 	if (bpos > 11) opserv_notice(user, buffer);
+     }

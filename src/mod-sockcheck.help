@@ -1,0 +1,10 @@
+"PROXY" ("$bPROXY COMMANDS$b",
+        "Proxy checking control commands include CLEARHOST, DEFPROXY and HOSTSCAN.");
+"CLEARHOST" ("/msg $O CLEARHOST <host|nick>",
+        "Removes any data for the given host in the proxy checker's results cache.",
+        "$uSee Also:$u hostscan");
+"DEFPROXY" ("/msg $O DEFPROXY <definition>",
+        "Inserts a proxy check definition into the proxy-check database. Extreme care should be used with this command.");
+"HOSTSCAN" ("/msg $O HOSTSCAN <host|nick>",
+        "Adds the speicified host to the proxy-check queue. If the host is found to have a running proxy, then that host is G-lined for an hour.",
+        "$uSee Also:$u trace");

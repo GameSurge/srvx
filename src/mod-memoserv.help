@@ -1,0 +1,56 @@
+"<INDEX>" ("$b$S Help$b",
+        "$b$S$b is a message relay services, with this - you can relay long distance messages to other (offline) users.",
+        "    SEND - Sends a message.",
+        "    READ - Reads a message.",
+        "  DELETE - Deletes a message.",
+        "    LIST - Lists your messages.",
+        "     SET - Sets certain options in relation with $S.",
+        "  EXPIRY - Displays current usage of expiring old messages.",
+        "  STATUS - Displays a few details about $S's status.",
+        " VERSION - Displays the current version of MemoServ.",
+        "$bPrivileged Commands:$b",
+        "  EXPIRE - Expires messages.",
+        "$b/msg $S help <command>$b for syntax and usage for a command.");
+
+"COMMANDS" "${index}";
+
+"SET" ("/msg $S SET <option> <value>",
+       "Sets a certain option for your account;",
+       "Currently, only $bset notify$b is available, see /msg $S help SET notify for further information.",
+       "$uSee Also:$u set notify");
+       
+"SET NOTIFY" ("$bSET NOTIFY$b",
+       "/msg $S SET notify <1 or 0>",
+       "Decides wether $S should notify you of the messages in your inbox, on authentication with $N AND when someone sends you a new message.");
+       
+"VERSION" ("/msg $S VERSION",
+        "Sends you the srvx version and some additional version information that is specific to $b$S$b.");
+        
+"EXPIRY" ("/msg $S EXPIRY ",
+         "Sends you the current usage of expiring old messages.");
+
+"EXPIRE" ("/msg $S EXPIRE ",
+         "Runs an expire process through $S's messages, deleting any messages that are over date.",
+         "$uSee Also:$u expiry");
+
+"SEND" ("/msg $S SEND <nick|*account> <message>",
+        "Sends a message to an user.",
+        "You may use *Account instead of Nick as the name argument; the * makes $S use the name of an account directly (useful if the user is not online).",
+        "$uSee also:$u read, list");
+
+"READ" ("/msg $S READ <memo id>",
+        "Shows you the message behind <memo id>",
+        "$uSee also:$u send, list");
+
+"DELETE" ("/msg $S DELETE <memo id/*>",
+          "Deletes <memo id> from your inbox.",
+          "NOTE: You may supply $b*$b or $ball$b as the memo id, which will result in $S deleting all your messages.");
+
+"LIST" ("/msg $S LIST",
+        "This will list all the messages in your inbox.",
+        "$uSee also:$u read, send");
+        
+"STATUS" ("/msg $S STATUS",
+        "This will list some details about $S's status, i.e the total ammount of memo's sent and expired.");
+
+"INDEX" "${index}";

@@ -1,0 +1,80 @@
+diff -urN services-dist/src/nickserv.c services/src/nickserv.c
+--- services-dist/src/nickserv.c	Fri Oct 24 20:05:25 2003
++++ services/src/nickserv.c	Fri Oct 24 21:08:01 2003
+@@ -1977,7 +1977,7 @@
+     unsigned int i;
+     char *set_display[] = {
+         "INFO", "WIDTH", "TABLEWIDTH", "COLOR", "PRIVMSG", "STYLE",
+-        "EMAIL", "ANNOUNCEMENTS", "MAXLOGINS"
++        "EMAIL", "ANNOUNCEMENTS", "MAXLOGINS", "RECLAIM"
+     };
+ 
+     nickserv_notice(user, NSMSG_SETTING_LIST);
+@@ -2094,6 +2094,27 @@
+     return 1;
+ }
+ 
++static OPTION_FUNC(opt_reclaim)
++{
++    /* if nickserv's nick ownership functions are disabled, we don't want this. I wanted to send an error
++     * message to the user, but there appears to be no quick & easy method of doing so, so we'll hide instead -akl */
++    if (nickserv_conf.disable_nicks) return 1; 
++	
++    if (argc > 1) {
++	if (enabled_string(argv[1])) {
++	    HANDLE_SET_FLAG(hi, NICKRECLAIM);
++	} else if (disabled_string(argv[1])) {
++	    HANDLE_CLEAR_FLAG(hi, NICKRECLAIM);
++	} else {
++	    nickserv_notice(user, MSG_INVALID_BINARY, argv[1]);
++	    return 0;
++	}
++    }
++
++    nickserv_notice (user, NSMSG_STR_SETTING, "RECLAIM:", HANDLE_FLAGGED(hi, NICKRECLAIM) ? "On - Your nicks are protected." : "Off.");
++    return 1;
++}
++
+ static OPTION_FUNC(opt_privmsg)
+ {
+     if (argc > 1) {
+@@ -3305,6 +3326,9 @@
+ 
+     assert(user);
+     assert(ni);
++
++    if (!HANDLE_FLAGGED(ni->owner, NICKRECLAIM)) return;
++    
+     switch (action) {
+     case RECLAIM_NONE:
+         /* do nothing */
+@@ -3341,6 +3365,7 @@
+         irc_regnick(user);
+         return 0;
+     }
++    if (ni && !HANDLE_FLAGGED(ni->owner, NICKRECLAIM)) return 0;
+     if (nickserv_conf.warn_nick_owned) {
+         send_message(user, nickserv, NSMSG_RECLAIM_WARN, ni->nick, ni->owner->handle);
+     }
+@@ -3534,6 +3559,7 @@
+     dict_insert(nickserv_opt_dict, "EPITHET", opt_epithet);
+     dict_insert(nickserv_opt_dict, "ANNOUNCEMENTS", opt_announcements);
+     dict_insert(nickserv_opt_dict, "MAXLOGINS", opt_maxlogins);
++    dict_insert(nickserv_opt_dict, "RECLAIM", opt_reclaim);
+ 
+     nickserv_handle_dict = dict_new();
+     dict_set_free_keys(nickserv_handle_dict, free);
+diff -urN services-dist/src/nickserv.h services/src/nickserv.h
+--- services-dist/src/nickserv.h	Fri Oct 24 20:05:25 2003
++++ services/src/nickserv.h	Fri Oct 24 20:29:40 2003
+@@ -37,8 +37,9 @@
+ #define HI_FLAG_FROZEN         0x00000040
+ #define HI_FLAG_NODELETE       0x00000080
+ #define HI_FLAG_NETWORK_HELPER 0x00000100
++#define HI_FLAG_NICKRECLAIM    0x00000200
+ /* Flag characters for the above.  First char is LSB, etc. */
+-#define HANDLE_FLAGS "SphgscfnH"
++#define HANDLE_FLAGS "SphgscfnHR"
+ 
+ /* HI_STYLE_* go into handle_info.userlist_style */
+ #define HI_STYLE_DEF	       'd'

@@ -1,0 +1,240 @@
+diff -upr srvx-1.2rc3/src/chanserv.c Services/src/chanserv.c
+--- src/chanserv.c	Sat Jan  4 07:16:40 2003
++++ src/chanserv.c	Mon Jul  7 18:18:27 2003
+@@ -419,6 +419,8 @@ dict_t note_types;
+ static dict_t sChannels;
+ static dict_t plain_dnrs, mask_dnrs, handle_dnrs;
+ 
++extern const char *hidden_host_suffix;
++
+ static struct
+ {
+     struct chanNode 	*debug_channel;
+@@ -2859,12 +2861,103 @@ bad_channel_ban(struct chanNode *channel
+     return 0;
+ }
+ 
++#define i_isdigit(x) isdigit((int) (unsigned char) (x))
++
++int is_ipv4_address(const char *host)
++{
++    while (*host != '\0') {
++       if (*host != '.' && !i_isdigit(*host))
++       return 0;
++       host++;
++    }
++    return 1;
++}
++
++static char *get_domain_mask(char *host)
++{
++    char *ptr;
++
++    if (strchr(host, '.') == NULL) {
++       /* no dots - toplevel domain or IPv6 address */
++       ptr = strrchr(host, ':');
++       if (ptr != NULL) {
++          /* IPv6 address, ban the last 64k addresses */
++          if (ptr[1] != '\0') strcpy(ptr+1, "*");
++       }
++       return host;
++    }
++
++    if (is_ipv4_address(host)) {
++       /* it's an IP address, change last digit to * */
++       ptr = strrchr(host, '.');
++       if (ptr != NULL && i_isdigit(ptr[1]))
++           strcpy(ptr+1, "*");
++    } else {
++       /* if more than one dot, skip the first
++          (dyn123.blah.net -> *.blah.net) */
++          ptr = strchr(host, '.');
++          if (ptr != NULL && strchr(ptr+1, '.') != NULL) {
++             host = ptr-1;
++             host[0] = '*';
++          }
++    }
++    return host;
++}
++
++char *generate_ban_hostmask(struct userNode *user, const char banopt)
++{
++    char *nickname, *ident = "*", *hostname, *mask, *usemask;
++    int len;
++
++    /* figure out string parts */
++    if(IsHiddenHost(user) && user->handle_info && hidden_host_suffix) {
++       usemask = alloca(strlen(user->handle_info->handle) + strlen(hidden_host_suffix) + 2);
++       sprintf(usemask, "%s.%s", user->handle_info->handle, hidden_host_suffix);
++    } 
++    else {
++       usemask = user->hostname;
++    } 
++
++    if((banopt == 'f') || (banopt == 'h') || (banopt == 'i') || (banopt == 'j')) {
++       nickname = user->nick;
++    }
++    else {
++       nickname = "*";
++    }
++
++    if((banopt == 'd') || (banopt == 'e') || (banopt == 'i') || (banopt == 'j')) {
++        hostname = get_domain_mask(usemask);
++    } 
++    else {
++      hostname = usemask;
++    }
++
++    if((banopt == 'a') || (banopt == 'f')) {
++       ident = user->ident;
++    }
++    else if((banopt == 'b') || (banopt == 'd') || (banopt == 'i')) {
++        ident = malloc(strlen(user->ident)+1);
++        sprintf(ident, "*%s", user->ident);
++    }
++    else {
++        ident = "*";
++    }
++
++    /* Put it all together. */
++    len = strlen(ident) + strlen(hostname) + strlen(nickname) + 3;
++    mask = malloc(len);
++    sprintf(mask, "%s!%s@%s", nickname, ident, hostname);
++
++    return mask;
++}
++
+ static int
+ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, unsigned char *argv[], struct svccmd *cmd, int action)
+ {
+     struct userNode *victim, **victims;
+     unsigned int offset, n, victimCount = 0, duration = 0, present;
+-    char *reason = CSMSG_KICK_REASON, *ban, *name;
++    char *reason = CSMSG_KICK_REASON, *ban, *name, banopt;
++    struct chanData *cData;
+ 
+     offset = (action & ACTION_ADD_TIMED_BAN) ? 3 : 2;
+     REQUIRE_PARAMS(offset); (void)cmd;
+@@ -2910,7 +3003,19 @@ eject_user(struct userNode *user, struct
+ 	victims = &victim;
+ 	victimCount = 1;
+ 
+-	ban = generate_hostmask(victim, GENMASK_STRICT_HOST|GENMASK_ANY_IDENT);
++    if(!(cData = channel->channel_info)) 
++    {
++       banopt = 'c';
++    }
++
++    if(!(cData->options[optBanType])) {
++       banopt = 'c';
++    }
++    else {
++       banopt = cData->options[optBanType];
++    }
++
++    ban = generate_ban_hostmask(victim, banopt);
+ 	name = victim->nick;
+     }
+     else
+@@ -5507,6 +5612,30 @@ static CHANNEL_OPTION_FUNC(opt_topicrefr
+     CHANNEL_MULTIPLE_OPTION("TopicRefresh ", "topic refresh", optTopicRefresh, -1);
+ }
+ 
++static CHANNEL_OPTION_FUNC(opt_bantype)
++{
++    struct chanData *cData = channel->channel_info;
++
++    struct valueData values[] =
++    {
++       {"*!user@host", 'a'},
++       {"*!*user@host", 'b'},
++       {"*!*@host", 'c'},
++       {"*!*user@*.host", 'd'},
++       {"*!*@*.host", 'e'},
++       {"nick!user@host", 'f'},
++       {"nick!*@host", 'h'},
++       {"nick!*user@*.host", 'i'},
++       {"nick!*@*.host", 'j'},
++    };
++
++    if(!(cData->options[optBanType])) {
++        cData->options[optBanType] = values[2].value;
++     }
++
++     CHANNEL_MULTIPLE_OPTION("BanType ", "bantype", optBanType, -1);
++}
++
+ static struct svccmd_list set_shows_list;
+ 
+ static void
+@@ -6538,6 +6667,7 @@ chanserv_conf_read(void)
+             "DefaultTopic", "TopicMask", "Greeting", "UserGreeting", "Modes",
+             "PubCmd", "StrictOp", "AutoOp", "EnfModes", "EnfTopic", "Protect",
+             "Toys", "Setters", "TopicRefresh", "CtcpUsers", "CtcpReaction",
++            "BanType",
+             /* binary options */
+             "Voice", "UserInfo", "DynLimit", "TopicSnarf", "PeonInvite", "NoDelete",
+             /* delimiter */
+@@ -7320,6 +7450,7 @@ init_chanserv(const char *nick)
+     DEFINE_CHANNEL_OPTION(ctcpusers);
+     DEFINE_CHANNEL_OPTION(ctcpreaction);
+     DEFINE_CHANNEL_OPTION(peoninvite);
++    DEFINE_CHANNEL_OPTION(bantype);
+ 
+     /* Alias set topic to set defaulttopic for compatibility. */
+     modcmd_register(chanserv_module, "set topic", chan_opt_defaulttopic, 1, 0, NULL);
+diff -upr srvx-1.2rc3/src/chanserv.h Services/src/chanserv.h
+--- src/chanserv.h	Mon Oct 21 04:34:58 2002
++++ src/chanserv.h	Mon Jul  7 18:16:21 2003
+@@ -51,10 +51,11 @@ enum opt
+     optTopicRefresh,
+     optCTCPUsers,
+     optCTCPReaction,
+-    optMax
++    optMax,
++    optBanType
+ };
+ 
+-#define OPTION_STRING_SIZE	(optMax + 2)
++#define OPTION_STRING_SIZE	(optBanType + 2)
+ #define FLAGS_STRING_LENGTH	5
+ 
+ /* Flags are stored in base64, so a length of 5 gives us
+@@ -76,7 +77,7 @@ enum opt
+    will not work because FLAGS_STRING_LENGTH is 5. */
+ 
+ #define CHANNEL_DEFAULT_FLAGS	(CHANNEL_INFO_LINES)
+-#define CHANNEL_DEFAULT_OPTIONS	"lmoooanpcnat"
++#define CHANNEL_DEFAULT_OPTIONS	"lmoooanpcnatc"
+ 
+ #define IsProtected(x)		((x)->flags & CHANNEL_NODELETE)
+ #define IsSuspended(x)		((x)->flags & CHANNEL_SUSPENDED)
+diff -upr srvx-1.2rc3/src/chanserv.help Services/src/chanserv.help
+--- src/chanserv.help	Wed Jan  1 00:45:40 2003
++++ src/chanserv.help	Mon Jul  7 17:51:47 2003
+@@ -322,6 +322,7 @@
+         "DYNLIMIT:     Adjusts user limit (+l channel mode) to prevent join floods.",
+         "TOPICSNARF:   Topics set manually (by /TOPIC #channel ...) change default $C topic",
+         "PEONINVITE:   Indicates whether peons may use the $bINVITEME$b command.",
++        "BANTYPE:      Indicated what type of ban $C will set will case of a ban command.",
+         "$bIRCOP ONLY$b:",
+         "NODELETE:  Prevents channel deletion.",
+         "$uSee Also:$u set pubcmd, set strictop, set autoop, set enfmodes, set enftopic, set protect, set toys, set setters, set topicrefresh, set ctcpusers, set ctcpreaction");
+@@ -440,6 +441,17 @@
+         "$b2$b  Short timed ban (defaults to 3 minutes) on disallowed CTCPs.",
+         "$b3$b  Long timed ban (defaults to 1 hour) on disallowed CTCPs.",
+         "$uSee Also:$u set, set ctcpusers");
++"SET BANTYPE" ("/msg $C SET <#channel> BANTYPE <value>",
++        "This settings control what banmask $C sets upon a ban command. Valid settings are:",
++        "$b0$b *!user@host",
++        "$b1$b *!*user@host",
++        "$b2$b *!*@host",
++        "$b3$b *!*user@*.host",
++        "$b4$b *!*@*.host",
++        "$b5$b nick!user@host",
++        "$b6$b nick!*@host",
++        "$b7$b nick!*user@*.host",
++        "$b8$b nick!*@*.host");
+ "SETINFO" ("/msg $C SETINFO <#channel> <info>",
+         "This command will set a user defined information message to be displayed when you join the channel. By setting the message to '*', you will clear your message.",
+         "$uSee Also:$u access");

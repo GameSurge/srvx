@@ -1,0 +1,134 @@
+   	      srvx Installation Instructions
+
+Introduction:
+----------
+If you encounter any problems compiling/running srvx, please make sure
+you have followed the directions in this file correctly and that all
+of the requirements listed below are met.
+
+If the problem persists, report it to one (or all) of the coders
+listed in the AUTHORS file. Please try to include ALL relevant
+information about the error/bug, including anything out of the
+ordinary reported from make and the appropriate entries from the log
+files.
+
+Requirements:
+----------
+This release of srvx (1.2) only supports the Undernet P10 and Bahamut
+protocols and is known to link with ircu/Universal (u2.10.09),
+ircu/Undernet (u2.10.10, u2.10.11), ircu-lain, and Bahamut 1.4.32. It
+does not support hybrid, Unreal, or any other ircd not listed. Should
+you find other compatible ircds, please let us know.
+
+srvx is known to compile on the following systems as long as you
+are using GNU make (make on Linux, gmake on many other systems):
+
+  * Linux (libc5 or glibc2); glibc2.1 recommended+    (SPARC, ALPHA, x86, PPC)
+  * FreeBSD 4.x; tested on 4.2-RELEASE and 4.2-STABLE (SPARC, x86)
+  * FreeBSD 3.x; tested on 3.3-RELEASE and 3.4-STABLE (SPARC, x86)
+  * FreeBSD 2.x; tested on 2.2.8-RELEASE	      (SPARC, x86)
+  * NetBSD 1.6+;                        	      (ALPHA, MIPS, x86)
+  * SunOS 5.x; tested on 5.8			      (SPARC, x86)
+  * OpenBSD 2.x; tested on 2.8			      (x86)
+  * BSDi 4.x; tested on 4.0.1			      (x86)
+  * CYGWIN 1.1.x and 1.3.x; tested on 1.1.8	      (x86)
+
+For the Linux kernel, srvx has been tested on Debian 2.x - 3.x, and
+Redhat 5.x - 8.x.
+
+srvx should compile on other system types also.  If you have success
+on other platforms/archs or problems on any platforms/archs, please
+contact the authors to let us know.
+
+gcc 2.96 tends to emit spurious warnings; before reporting any
+compiler warnings from it, make sure you are using the most recent
+version of it or try using an official release of gcc.
+
+You may also have trouble unless your compiler's C preprocessor
+supports ISO C99 varadic macros.  gcc is the compiler we use for
+almost all our testing, and we recommend it for use with srvx.
+
+Quick Install:
+----------
+$ ./configure
+    NOTE: The protocol the resulting srvx binary will support is
+    determined by the configure script. The P10 protocol is the
+    default; if you would like to link to Bahamut, you must pass
+    the --with-protocol=bahamut flag to the configure script:
+    $ ./configure --with-protocol=bahamut
+$ make
+$ ${EDITOR} srvx.conf
+    NOTE: You may want to copy srvx.conf.example to srvx.conf and
+    edit that.
+$ ./srvx
+
+Compiling:
+----------
+  1) Enter the root directory of the srvx tree.  If installation is done
+     from outside of it, it may cause problems during compile, or during
+     runtime.
+
+  2) Run the configure script (sh configure), it will verify that your
+     system will have the resources needed for srvx to compile.  If you
+     would like to change the path where srvx will be installed to,
+     execute configure with the --prefix=/path option.  The default path
+     is ~/srvx-X.X.X/, with the X's representing the version.  See the
+     note in "Quick Install" if you are linking to Bahamut.
+
+  3) On some systems you may need to edit the Makefile in order for
+     it to compile correctly.  Includes, and other such things may
+     reside in other directories.  Most likely the Makefile won't require
+     any modifications.
+
+  4) You may optionally edit config.h in case the configure script made a
+     mistake.
+
+  5) Execute the "make" command to begin compiling.  If you encounter any
+     uncorrectable errors/warnings, please scroll up to the introduction
+     section and follow the instructions.
+
+  6) You may now either type "make install" to install it to your
+     installation path, or work from your build directory, either is fine.
+
+  7) Copy sockcheck.conf.example to sockcheck.conf (and edit to add
+     new proxy types, if you wish).
+
+  8) Copy srvx.conf.example to srvx.conf and edit to suit your
+     needs. Errors in the configuration file will be logged to
+     main.log (and if srvx is running in the foreground, printed to
+     stdout) when you start the daemon. If you disable nick ownership
+     or enable the email features, you should copy srvx.conf to the
+     src directory and re-run make; this will regenerate the help
+     files (especially for NickServ) to include the appropriate
+     entries.
+
+     You can also do this by hand using the expnhelp program in src:
+       ./src/expnhelp < nickserv.help.m4 > nickserv.help
+
+  9) You can now begin using your service bots.  You can debug by
+     running it with '-fV', it will not background itself, and it
+     will be fairly verbose if you gave the configure script the
+     --enable-debug flag. If you would like to run in the foreground
+     with no verbosity, use the '-f' flag. If you just want to run it,
+     execute srvx without any flags.
+
+ 10) Once you have srvx started, you'll need to register a NickServ
+     account:
+       /msg NickServ@services.irc.com register <account> <password>
+     Make sure that you register the first account -- it is
+     automatically granted certain privileges and gives you root-level
+     access to OpServ once you are opered up.
+
+ 11) New operators can be given access to OpServ through NickServ's
+     (or whatever you've named the nick/authentication service) oset
+     command:
+       /msg NickServ oset <nick>|*<account> level <level>
+     Levels are generally beween 0 and 1000 by convention; higher
+     numbers correspond to more access. You can also add helpers
+     (users with extra privileges such as security override in
+     traditional configurations) through NickServ:
+       /msg NickServ oset <nick>|*<account> flags +H
+
+End of file, INSTALL.
+
+-Jedi (jedi@turboflux.net)

@@ -1,0 +1,53 @@
+/* This file describes what proxy tests to run: what ports to connect
+ * to, what to send to them, what to look for, and what to do if that
+ * is found.
+ */
+
+/* Connect on port 1080, sending "\5\1\0" as challenge.
+ * If we get "\5\0" as a response, it's an unsecured socks5. */
+"1080:050100" {
+	"0500" "reject:Unsecured socks5";
+};
+
+/* Connect on port 1080, sending "\4\1" followed by the port
+ * and IP of the client, followed by the (NUL-terminated) ident to
+ * use.  If we get a four byte response with '\x5a' as the second
+ * byte, it's an unsecured socks4 proxy.
+ *
+ * It would be generally wise to replace the $p$i with a hard-coded
+ * one; many insecure proxies refuse to connect to themselves.
+ */
+"1080:0401$i$p=p=r=o=x=y00" {
+	"..5a...." "reject:Unsecured socks4";
+};
+
+"23:" {
+        // This first test is interesting: multi-stage, and a default action is reject
+        // this crap at the front is the router trying to negotiate telnet options
+        "fffb01fffb03fffd18fffd1f0d0a0d0a=U=s=e=r= =A=c=c=e=s=s= =V=e=r=i=f=i=c=a=t=i=o=n0d0a0d0a=P=a=s=s=w=o=r=d3a= :=c=i=s=c=o0d0a" {
+                "0d0a=P=a=s=s=w=o=r=d3a= " "accept";
+                "other" "reject:[1 hour] Cisco router with default password, visit http://www.gamesnet.net/proxyglines.php for more information.";
+        };
+	"=W=i=n=G=a=t=e=>" "reject:Unsecured wingate";
+	"=T=o=o= =m=a=n=y" "reject:Unsecured wingate";
+	"=E=n=t=e=r= =h=o=s=t= =n=a=m=e" "reject:Unsecured wingate";
+        // the 3a is ':'; due to a parser glitch, =: isn't parsed like you might expect
+	"=E=n=t=e=r= 3a= =<=h=o=s=t=>" "reject:Unsecured wingate";
+};
+
+/* Connect on port 3128 (squid), trying to use a HTTP CONNECT
+ * proxy.  If we get a 200 response, it worked and should be
+ * booted.
+ * If you do this check on port 80, you might check for "200
+ * Connection" instead to reduce false positives; many servers
+ * send 200 OK responses for custom 404 Error pages.
+ * As with the SOCKS4 check, you may want to replace the $c:3128
+ * (client hostname and port) with a hard-coded one.
+ */
+"3128:=C=O=N=N=E=C=T= $c=:=3=1=2=8= =H=T=T=P=/=1=.=00d0a0d0a" {
+	"=H=T=T=P=/=1=.=0= =2=0=0" "reject:Unsecured proxy";
+};
+
+"27374:" {
+	"" "reject:Subseven detected";
+};

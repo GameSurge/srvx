@@ -1,0 +1,94 @@
+"bind" ("/msg $S BIND <service> <bindname> <command> [additional args..]",
+        "Binds (adds) a command to an existing service.  $bbindname$b is the name of the new command for the service.  $bcommand$b may be one of:",
+        "  CommandName              To refer to a command on the same service.",
+        "  ServiceNick.CommandName  To refer to a command bound on a different service.",
+        "  *ModuleName.CommandName  To bind a command directly from a module (note the asterisk before the module name).",
+        "  *ModuleName.*            To bind all commands from the named module.",
+        "For simplicity, you cannot bind to a command that is itself an alias.  Certain commands will not bound with the last form; you must bind them by name.",
+        "(A command binding is very similar to an alias, but only pays the speed penalty for alias expansion when there are additional arguments in the binding.)",
+        "$uSee also:$u unbind");
+"commands" "${index}";
+"god" ("/msg $C GOD [on|off]",
+        "Toggles security override, which grants you complete access to all channels. Please use carefully.");
+"help" ("/msg $S HELP [command]",
+        "Help will show you the information for the given command.",
+        "All help files will use the same syntax, with optional parameters listed in [] and required parameters listed in <>.",
+        "To see what commands are available for use with $S, type /msg $S help index. For help on any specific command or topic, type /msg $S help help command.");
+"readhelp" ("/msg $S READHELP <module>",
+        "Re-reads the module's help file from disk.",
+        "$uSee Also:$u help");
+"unbind" ("/msg $S UNBIND <service> <command>",
+        "Unbinds a command from a service, so that it is no longer accessible.",
+        "Some commands (such as $bauth$b and $bbind$b) will not let you unbind their last binding -- for obvious reasons.",
+        "$uSee Also:$u bind");
+"timecmd" ("/msg $S TIMECMD <command and args>",
+        "Reports how long it takes to run the specified command.");
+"command" ("/msg $S COMMAND <command>", 
+        "Shows the restrictions on who can use the named command (and how).");
+"modcmd" ("/msg $S MODCMD <command> <option> <newval> [additional option/value pairs..]",
+        "Changes the named option(s) for the specified command.  The command name may be prefixed with $bServiceNick.$b to specify another service's command (for example, $N.AUTH to refer to the auth command).",
+        "Supported options are:",
+        "  FLAGS          Comma-separated, +/- prefixed list of flags to add or remove.",
+        "  CHANNEL_ACCESS Minimum ChanServ access.",
+        "  OPER_ACCESS    Minimum OpServ access.",
+        "  ACCESS         Alias for OPER_ACCESS (if the value starts with a digit) or CHANNEL_ACCESS (if the value does not start with a digit).",
+        "  ACCOUNT_FLAGS  Account flags to require or deny (for example, +R-S)",
+        "  TEMPLATE       Command from which to inherit access restrictions",
+        "  WEIGHT         How much the command counts against the anti-flood policer",
+        "See the $bmodcmd flags$b entry for a list of supported flags.");
+"modcmd flags" ("The following flags are supported for commands:",
+        "  ACCEPTCHAN     Treat a normal channel name (if specified) as the context for the command",
+        "  ACCEPTPLUSCHAN Accept modeless channel names as well as normal channel names",
+        "  AUTHED         Require that the user be authed to use the command",
+        "  CHANNEL        Require that an existing channel be given as the context",
+        "  CHANUSER       Require that the user have $C access to the context",
+        "  DISABLED       Command is disabled",
+        "  HELPING        Require that the user have security override enabled",
+        "  IGNORE_CSUSPEND  Allow a +REGCHAN command to work even if the channel is suspended",
+        "  JOINABLE       Require that the user have $C access to the channel, be in the channel, or be network staff to use the command",
+        "  KEEPBOUND      Do not let the last instance of the command be removed",
+        "  LOGHOSTMASK    Log the user's ident, hostname and IP (as well as nick and account name)",
+        "  NOLOG          Do not log the command at all",
+        "  NETWORKHELPER  Allow network helpers to use the command",
+        "  OPER           Allow opers to use the command",
+        "  QUALIFIED      Require $b/msg Service@$s$b addressing when using the command",
+        "  REGCHAN        Require a registered channel to be give as the context",
+        "  SUPPORTHELPER  Allow support helpers to use the command",
+        "  TOY            Command is a toy (cannot be invoked on a channel from outside the channel)",
+        "Note: If any of SUPPORTHELPER, NETWORKHELPER, OPER, any of the specified flags is considered sufficient.  For example, NETWORKHELPER and OPER both specified means both network helpers and opers can use the command.");
+"joiner" ("/msg $S JOINER [subcmd ...]",
+        "Magically looks up subcommands and redirects to them.  Use the command by itself to see what subcommands are known.");
+"stats modules" ("/msg $S STATS MODULES [modulename]",
+        "With no module name argument, shows a list of loaded modules and brief statistics for each.",
+        "When a module name is given, shows commands exported by that module.",
+        "$uSee Also:$u stats services, command, modcmd, bind");
+"stats services" ("/msg $S STATS SERVICES [botnick]",
+        "With no bot nick argument, shows a list of the service bots using the unified command framework, and brief statistics for each.",
+        "When a bot nick is given, shows commands bound to that service.",
+        "$uSee Also:$u stats modules, command, modcmd, bind, unbind");
+"showcommands" ("/msg $S SHOWCOMMANDS [opserv-access] [channel-access]",
+        "Shows commands which you can execute (with their required access levels).  If you give a numeric $O access level or text $C access name, it further restricts output to only show commands which can be executed by users with that access.",
+        "$uSee Also:$u command");
+"helpfiles" ("/msg $S HELPFILES <service> [module list]",
+        "With only a service nick, shows the helpfiles used by that service.",
+        "With a list of modules, sets the order that the service will look up non-command help entries.",
+        "$uSee Also:$u bind, unbind");
+"service add" ("/msg $S SERVICE ADD <nick> <description>",
+        "Creates a new service bot.",
+        "$uSee Also:$u service rename, service trigger, service remove");
+"service rename" ("/msg $S SERVICE RENAME <oldnick> <newnick>",
+        "Renames a service bot.  Currently does not support the default services.",
+        "$uSee Also:$u service add, service trigger, service remove");
+"service trigger" ("/msg $S SERVICE TRIGGER <nick> [remove|<trigger>]",
+        "Sets or clears the trigger character that the named service uses to identify in-channel messages directed at it.",
+        "To remove a trigger, use the word $bremove$b (or $bnone$b) as the argument.  Otherwise, the first letter of the argument will be used as the new trigger.",
+        "If no argument is given, shows the current trigger for the service.",
+        "$uSee Also:$u service add, service rename, service remove");
+"service remove" ("/msg $S SERVICE REMOVE <nick> [<quit reason>]",
+        "Destroys a service.  If a default service is named, it will be recreated when srvx restarts.",
+        "$uSee Also:$u service add, service rename, service trigger");
+"set language" ("/msg $S set language <langname>",
+        "Sets the language that $S and other services will use when sending you messages.",
+        "If a particular message is not available in your language, it will use the closest match it has.",
+        "Supported languages are: ${languages}",
+        "$uSee Also:$u set");

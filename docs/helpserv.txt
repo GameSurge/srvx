@@ -1,0 +1,115 @@
+How HelpServ Works
+------------------
+
+HelpServ is a bot designed to help with queues of questions (or
+support requests).  It's designed to work well in multiple channels
+at once.
+
+There is a one-to-one mapping between help bots and channels they act
+in; this is to allow privmsgs to work without having users specify a
+channel (which is much easier to use).  For example, HelpServ might be
+in #support, and Interview could be in #counterstrike; both would be
+bots of this kind, but they would have totally separate user lists and
+data sets.
+
+Each channel/help bot has a set of "helper" users, defined by the
+channel admin(s).  In the rest of this document, I will use "helper"
+to indicate someone on the helper list for the channel, and "user" to
+indicate all other users.  There are also "manager" users and one
+"owner" for the bot.
+
+There are two primary modes: "command mode" and "help mode."  Helpers
+default to command mode, and other users default to help mode.
+Command mode uses a command parser similar to the standard services.
+Help mode queues each user's messages into a virtual folder for later
+perusal by a helper.  A helper who is actively using "help mode" may
+issue "command mode" lines by prefixing them with a "command word" for
+the channel.
+
+In Help Mode
+------------
+
+When a normal user joins the channel, a customizable greeting is sent.
+This usually tells the user to privmsg the bot for help (or to queue a
+question).  It is recommended that this include a URL to a FAQ.  The
+bot then shuts up until the user msgs them again.
+
+When a user msgs the bot for the first time after they join, it opens
+a virtual folder for them.  The time of this request is filed, and
+they are added to a queue.  It also sends another customizable
+message.  The virtual folder is kept active until a helper closes it
+or the user is "lost"; when the virtual folder is closed, it is
+written out to a file (with statistics on when it was opened, closed,
+if (and when) it was picked up by a helper, etc).
+
+A user is "lost" when:
+ - For QUIT-based requests (or queues), the user disconnects from IRC.
+ - For PART-based requests, the user parts the channel.
+ - For handle-based requests, the handle is unregistered.
+The "default" mode for queues is close-based -- which behaves as
+handle-based if the user is authed and quit-based otherwise.
+
+Helpers may also annotate an existing request, using the NOTE command.
+
+In Command Mode
+---------------
+
+The following commands are defined:
+
+LIST - show the currently open requests (unassigned first, then
+  assigned)
+
+NEXT - acts as PICKUP for the next unassigned request
+
+PICKUP <reqno> - assign request number to self
+
+REASSIGN <reqno> <helpernick|*handle> - reassign request to another
+  (online) helper
+
+CLOSE <reqno> <comment> - close request, with comment
+CLOSELAST <comment>     - close last PICKUP'ed or HANDOFF'ed request
+
+NOTE [<reqno>] <comment> - add a note to a request (if not a number, use last assigned)
+
+TOGMODE - switch between command mode and help mode
+
+IGNORE <handle>         - Ignore the specified handle (or hostmask)
+IGNORE <nick!user@host> - in the future.  Does not close current requests.
+
+ADDMANAGER <nick|*handle> - add or remove a manager or helper
+DELMANAGER <nick|*handle>   (managers may add and remove users
+ADDHELPER <nick|*handle>    and see statistics for anyone)
+DELHELPER <nick|*handle>
+
+PAGE [<explanation>] - send a page, if enabled
+
+SET [<option> <value>] - set an option:
+  - GREETING - message sent when user joins channel
+  - OPENREQ - message sent when user opens a request
+  - CLOSEREQ - message sent to requester when a request is closed
+  - CMDWORD - "command mode" escape word (for helpers in help mode)
+  - PAGEDEST - target for pages
+  - PAGEMSG - default page text (if no explanation when PAGE invoked)
+  - IDLETIME - how long (with users, not helpers in the channel) before
+               bot complains to PAGEDEST
+  - WHINETIME - how long before an unhandled request will make the bot
+                complain to PAGEDEST
+  - WHINEINTERVAL - how frequently the bot will complain about unhandled
+                    requests, or users in channel without heleprs there
+  - REASSIGN - privileges to use REASSIGN (helper, manager, owner)
+
+STATS [<nick|*handle>] - show statistics for nick/handle (must be self,
+                         or self must be a manager; defaults to self)
+
+STATSREPORT - show overall statistics (such as?)
+
+Statistics
+----------
+
+For any helper (includes managers), the following statistics are kept:
+
+- Time in channel (total, this week, this month)
+- Requests "picked up"
+- Requests closed
+- Requests handed off
+- Handoffs received

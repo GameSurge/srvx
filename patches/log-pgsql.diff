@@ -1,0 +1,275 @@
+Index: src/Makefile.am
+===================================================================
+RCS file: /cvsroot/srvx/services/src/Makefile.am,v
+retrieving revision 1.59
+diff -u -r1.59 Makefile.am
+--- src/Makefile.am	9 Sep 2003 01:56:55 -0000	1.59
++++ src/Makefile.am	28 Sep 2003 14:16:39 -0000
+@@ -9,7 +9,7 @@
+ 	./expnhelp < $(srcdir)/nickserv.help.m4 > $@
+ 
+ EXTRA_srvx_SOURCES = proto-bahamut.c proto-common.c proto-p10.c mod-snoop.c mod-memoserv.c
+-srvx_LDADD = @MODULE_OBJS@
++srvx_LDADD = @MODULE_OBJS@ -lpq
+ srvx_DEPENDENCIES = @MODULE_OBJS@
+ srvx_SOURCES = \
+ 	chanserv.c chanserv.h \
+Index: src/log.c
+===================================================================
+RCS file: /cvsroot/srvx/services/src/log.c,v
+retrieving revision 1.65
+diff -u -r1.65 log.c
+--- src/log.c	22 Aug 2003 00:26:21 -0000	1.65
++++ src/log.c	28 Sep 2003 14:16:40 -0000
+@@ -22,6 +22,8 @@
+ #include "log.h"
+ #include "helpfile.h"
+ #include "nickserv.h"
++#include "ioset.h"
++#include <postgresql/libpq-fe.h>
+ 
+ struct logDestination;
+ 
+@@ -992,6 +994,234 @@
+     ldIrc_module
+ };
+ 
++/* pgsql: log type */
++
++struct logDest_pgsql {
++    struct logDestination base;
++    struct string_list queue;
++    PGconn *conn;
++    struct io_fd *fd;
++    int recurse_level;
++};
++static struct logDest_vtable ldPgsql_vtbl;
++
++static void ldPgsql_send_next_query(struct logDest_pgsql *ld) {
++    int res;
++
++    res = PQsendQuery(ld->conn, ld->queue.list[0]);
++    if (!res) {
++        ld->recurse_level++;
++        log_module(MAIN_LOG, LOG_ERROR, "Error sending query \"%s\": %s", ld->queue.list[0], PQerrorMessage(ld->conn));
++        ld->recurse_level--;
++        return;
++    }
++    res = PQflush(ld->conn);
++    if (res == EOF) {
++        ld->recurse_level++;
++        log_module(MAIN_LOG, LOG_ERROR, "Error flushing PgSql output: %s", PQerrorMessage(ld->conn));
++        ld->recurse_level--;
++    }
++}
++
++static void ldPgsql_readable(struct io_fd *fd) {
++    struct logDest_pgsql *ld = fd->data;
++    PGresult *pgres;
++    unsigned int ii;
++    int res;
++    ExecStatusType st;
++
++    res = PQconsumeInput(ld->conn);
++    if (!res) {
++        ld->recurse_level++;
++        log_module(MAIN_LOG, LOG_ERROR, "Error consuming PgSql input: %s", PQerrorMessage(ld->conn));
++        ld->recurse_level--;
++    }
++    if (PQisBusy(ld->conn))
++        return;
++    while ((pgres = PQgetResult(ld->conn))) {
++        st = PQresultStatus(pgres);
++        if (st != PGRES_COMMAND_OK) {
++            ld->recurse_level++;
++            log_module(MAIN_LOG, LOG_ERROR, "PgSql error in \"%s\": %s", ld->queue.list[0], PQresultErrorMessage(pgres));
++            ld->recurse_level--;
++        }
++        PQclear(pgres);
++    }
++    if (ld->queue.used == 1)
++        ld->queue.list[1] = NULL;
++    free(ld->queue.list[0]);
++    ld->queue.used--;
++    for (ii = 0; ii < ld->queue.used; ++ii)
++        ld->queue.list[ii] = ld->queue.list[ii+1];
++    if (ld->queue.used)
++        ldPgsql_send_next_query(ld);
++}
++
++static struct logDestination *
++ldPgsql_open(const char *args) {
++    struct logDest_pgsql *ld;
++    ld = calloc(1, sizeof(*ld));
++    ld->base.vtbl = &ldPgsql_vtbl;
++    ld->conn = PQconnectdb(args);
++    ld->recurse_level++;
++    if (!ld->conn) {
++        log_module(MAIN_LOG, LOG_ERROR, "Unable to allocate pgsql connection");
++    } else if (PQstatus(ld->conn) == CONNECTION_BAD) {
++        log_module(MAIN_LOG, LOG_ERROR, "Pgsql connection failed: %s", PQerrorMessage(ld->conn));
++    } else {
++        int res;
++        res = PQsetnonblocking(ld->conn, 1);
++        if (res == -1)
++            log_module(MAIN_LOG, LOG_ERROR, "Unable to make pgsql non-blocking");
++        ld->fd = ioset_add(PQsocket(ld->conn));
++        ld->fd->data = ld;
++        ld->fd->connected = 1;
++        ld->fd->wants_reads = 1;
++        ld->fd->readable_cb = ldPgsql_readable;
++        while (PQflush(ld->conn)) ;
++    }
++    ld->recurse_level--;
++    return &ld->base;
++}
++
++static void
++ldPgsql_reopen(struct logDestination *self_) {
++    struct logDest_pgsql *self = (struct logDest_pgsql*)self_;
++    PQreset(self->conn);
++}
++
++static void
++ldPgsql_close(struct logDestination *self_) {
++    struct logDest_pgsql *self = (struct logDest_pgsql*)self_;
++    unsigned int ii;
++
++    PQfinish(self->conn);
++    ioset_close(self->fd->fd, 0);
++    for (ii = 0; ii < self->queue.used; ++ii)
++        free(self->queue.list[ii]);
++    self->recurse_level--;
++    free(self->queue.list);
++    free(self);
++}
++
++static void
++string_buffer_append_quoted(struct string_buffer *dest, const char *src) {
++    size_t len = strlen(src);
++    if (dest->size < dest->used + len * 2) {
++        if (dest->size < len * 2) {
++            dest->size = len * 4;
++        } else {
++            dest->size = dest->size * 2;
++        }
++        dest->list = realloc(dest->list, dest->size);
++    }
++    dest->used += PQescapeString(dest->list+dest->used, src, len);
++}
++
++static void
++string_buffer_append_time(struct string_buffer *dest, time_t when) {
++    struct tm gmt;
++    if (dest->size < dest->used + 20) {
++        if (dest->size < 20) {
++            dest->size = 40;
++        } else {
++            dest->size = dest->size * 2;
++        }
++        dest->list = realloc(dest->list, dest->size);
++    }
++    dest->used += strftime(dest->list + dest->used, dest->size - dest->used, "%Y-%m-%d %H:%M:%S", gmtime_r(&when, &gmt));
++}
++
++static void
++string_buffer_append_quoted2(struct string_buffer *dest, const char *src) {
++    if (src) {
++        string_buffer_append_string(dest, ", '");
++        string_buffer_append_quoted(dest, src);
++        string_buffer_append(dest, '\'');
++    } else {
++        string_buffer_append_string(dest, ", NULL");
++    }
++}
++
++static void
++pgsql_insert(struct logDest_pgsql *self, char *query) {
++    string_list_append(&self->queue, query);
++    if (self->queue.used == 1)
++        ldPgsql_send_next_query(self);
++}
++
++static void
++ldPgsql_audit(struct logDestination *self_, struct log_type *type, struct logEntry *entry) {
++    struct logDest_pgsql *self = (struct logDest_pgsql*)self_;
++    struct string_buffer query;
++
++    if (self->recurse_level)
++        return;
++    query.size = 512;
++    query.list = malloc(query.size);
++    query.used = 0;
++    string_buffer_append_printf(&query, "INSERT INTO srvx_audit (i_module, i_severity, i_bot, t_when, c_channel_name, c_user_nick, c_user_account, c_user_hostmask, c_command) VALUES (srvx_module_id('");
++    string_buffer_append_quoted(&query, type->name);
++    string_buffer_append_printf(&query, "'), %d, srvx_bot_id('", entry->slvl);
++    string_buffer_append_quoted(&query, entry->bot->nick);
++    string_buffer_append_string(&query, "'), '");
++    string_buffer_append_time(&query, entry->time);
++    string_buffer_append_string(&query, "'");
++    string_buffer_append_quoted2(&query, entry->channel_name);
++    string_buffer_append_quoted2(&query, entry->user_nick);
++    string_buffer_append_quoted2(&query, entry->user_account);
++    string_buffer_append_quoted2(&query, entry->user_hostmask);
++    string_buffer_append_quoted2(&query, entry->command);
++    string_buffer_append_string(&query, ");");
++    pgsql_insert(self, query.list);
++}
++
++static void
++ldPgsql_replay(struct logDestination *self_, struct log_type *type, int is_write, const char *line) {
++    struct logDest_pgsql *self = (struct logDest_pgsql*)self_;
++    struct string_buffer query;
++
++    if (self->recurse_level)
++        return;
++    query.size = 512;
++    query.list = malloc(query.size);
++    query.used = 0;
++    string_buffer_append_printf(&query, "INSERT INTO srvx_replay (i_module, b_is_write, c_text) VALUES (srvx_module_id('");
++    string_buffer_append_quoted(&query, type->name);
++    string_buffer_append_printf(&query, "'), %s, '", (is_write ? "true" : "false"));
++    string_buffer_append_quoted(&query, line);
++    string_buffer_append_string(&query, "');");
++    pgsql_insert(self, query.list);
++}
++
++static void
++ldPgsql_module(struct logDestination *self_, struct log_type *type, enum log_severity sev, const char *message) {
++    struct logDest_pgsql *self = (struct logDest_pgsql*)self_;
++    struct string_buffer query;
++
++    if (self->recurse_level)
++        return;
++    query.size = 512;
++    query.list = malloc(query.size);
++    query.used = 0;
++    string_buffer_append_printf(&query, "INSERT INTO srvx_log (i_module, i_severity, c_message) VALUES (srvx_module_id('");
++    string_buffer_append_quoted(&query, type->name);
++    string_buffer_append_printf(&query, "'), %d, '", sev);
++    string_buffer_append_quoted(&query, message);
++    string_buffer_append_string(&query, "');");
++    pgsql_insert(self, query.list);
++}
++
++static struct logDest_vtable ldPgsql_vtbl = {
++    "pgsql",
++    ldPgsql_open,
++    ldPgsql_reopen,
++    ldPgsql_close,
++    ldPgsql_audit,
++    ldPgsql_replay,
++    ldPgsql_module
++};
++
+ void
+ log_init(void)
+ {
+@@ -1003,6 +1233,7 @@
+     dict_insert(log_dest_types, ldFile_vtbl.type_name, &ldFile_vtbl);
+     dict_insert(log_dest_types, ldStd_vtbl.type_name, &ldStd_vtbl);
+     dict_insert(log_dest_types, ldIrc_vtbl.type_name, &ldIrc_vtbl);
++    dict_insert(log_dest_types, ldPgsql_vtbl.type_name, &ldPgsql_vtbl);
+     conf_register_reload(log_conf_read);
+     log_default = log_register_type("*", NULL);
+     reg_exit_func(cleanup_logs);

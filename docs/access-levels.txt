@@ -1,0 +1,31 @@
+There are different types of access within srvx.  This document
+attempts to list the privileges and restrictions for each (in the
+default configuration -- OpServ and ChanServ may be changed at
+runtime, and the defaults can be changed in the source).
+
+The basic classes of users are these:
+  Unauthenticated user
+  Unauthenticated oper
+  Authenticated user
+  Authenticated support helper
+  Authenticated network helper
+  Authenticated oper
+
+"Staff" is used to refer to the set of opers (either authenticated or
+not) plus authenticated support or networkhelpers.  A staff member
+also has an "OpServ access level."  If they are authenticated, it is
+the access level of their handle.  If they are not authenticated, it
+is zero.
+
+For ChanServ operations on a channel, there is also a "channel access
+level."  For peons, this is 100; for ops, 200; for masters, 300; for
+co-owners, 400; for owners, 500; and for staff members with security
+override on, 600 (if they have a non-override account with sufficient
+access, that is used instead).
+
+Authenticated opers and network helpers may use the !god mode in
+ChanServ to toggle security override on and off.  Support helpers have
+security override on if (and only if) they are in a designated
+"support channel."  On GamesNET, this is #support.
+
+(More documentation goes here.)

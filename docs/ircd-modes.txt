@@ -1,0 +1,35 @@
+These mode lists were gathered from the connect logs at
+netsplit.de/networks/ a while back.  They may be a little out of date.
+
+NETWORK/IRCD                    USER MODES              CHANNEL MODES
+------------                    ----------              -------------
+DALnet (Bahamut)                dioswkg Aabcefhnry      biklmnopstv LMrRc
+IRCnet (2.10.3)                  io w   aOr             biklmnopstv aeIOqr
+Undernet (ircu)                 dioswkg                 biklmnopstv
+EFnet (hybrid6.2)               dioswk  Obcfnrxyz       biklmnopstv e
+QuakeNet (ircu+lain)            dioswkg                 biklmnopstv
+IRC-Hispano (ircu2.10.H)        dioswkg hrxX            biklmnopstv Rr
+PTnet (Bahamut?)                 iowskg AabcfhOrR       biklmnopstv cdR
+EnterTheGame (Bahamut)          diowskg Aabcefhnry      biklmnopstv cRr
+WebChat (ConferenceRoom)         iowskg AabcEeFGghjLMmnpRrSTtXxy  biklmnopstv AacdejLMNOruz
+GamesNET (ircu)                 dioswkg                 biklmnopstv
+BRASnet (bras)                  dioswk  AaBbcefhjNOprRTvyz        biklmnopstv AacdeKOqRrSe
+GalaxyNet (glx)                 dioswkg                 biklmnopstv
+Voila (ircu)                    dioswkg                 biklmnopstv
+IrCQ-Net (hybrid 6b)            diosw   bcfrknxyz       biklmnopstv ed
+OpenProjectsNet (dancer-ircd)   abBcCdDeEfFgGhHiIkKlLmMnNopPrRsSUvVwWxXyYzZ0123459*@ bcdefFhiIklmnoPqstv
+UniBG (hybrid6.0+UniBG)         diows   bcfknrxyz       biklmnopstv ed
+HanIRC.org (ircu+hangul)        dioswkg                 biklmnopstv
+NewNet (nn+wiz)                 dioswkg cflu            biklmnopstv
+BrasIRC-1 (ircbr)               diowskg Aabcefhnry      biklmnopstv cRr
+ChatNet (CN-BHT+MSGCHAT)        diowskg Aabcefhnry      biklmnopstv cRr
+Planetarion (ircu.paIRCd)       dioswkg                 biklmnopstv
+GRNet (Bahamut+)                dioswkg Aacefhnrty      biklmnopstv cLMRr
+ArabChat (Bahamut+)             dioswkg AabcefhknRry    biklmnopstv cLMRr
+AustNet (austhex.servd)         dioswkg achlnTtv        biklmnopstv er
+LinkNet (? 3.8.7)               ?                       S?
+criten.net (Bahamut)            dioswkg Aabcefhnry      biklmnopstv cLMRr
+azzurra.net (Bahamut+)          diosw g Aabcefhnrxyz    biklmnopstv cRr
+oz.org (ozircd)                 dioswk  f               biklmnopstv
+ircgate.net (Unreal)            dioswk  AaBCceFfGgHhIjNOqrSTtvWxz  biklmnopstv AabCcefGHhiKLNOQqRrSuVz
+nitro.net (Bahamut+)            diosw g Aabcefhknry     biklmnopstv cRr

@@ -1,0 +1,47 @@
+This file contains various development notes useful when coding srvx.
+
+HEADER FILES
+------------
+If a file or feature is not defined in ANSI C89, an autoconf feature
+test should be used to verify that it is supported.  ANSI C89
+specifies that the following header files exist:
+  <assert.h> <ctype.h> <errno.h> <float.h> <limits.h> <locale.h>
+  <math.h> <setjmp.h> <signal.h> <stdarg.h> <stddef.h> <stdio.h>
+  <stdlib.h> <string.h> <time.h>
+You may unconditionally include the above headers, or any that are
+shipped with srvx.  ALL other headers must be conditional.
+
+DEBUG MODE
+----------
+Many libraries are in debug mode by default, and require the C
+preprocessor symbol NDEBUG to be set to disable the debug features
+(this is inspired by the behavior of assert() from the C standard).
+Code in srvx should follow this convention.
+
+ASSERTIONS
+----------
+If you know that a certain condition is illegal, you should use the
+assert() macro to verify that it is false.  Please do NOT silently
+fail by returning in these conditions.
+
+HELP FILES
+----------
+To maintain consistency, this is the format being used for the syntax
+examples in the help files:
+  - Text constants have no brackets around them
+  - Required arguments use <description-of-argument>
+  - Optional arguments use [description-of-argument]
+        Example: /msg $S COMMAND <arg1> [arg2]
+                Where COMMAND is a constant, arg1 is required, arg2 is optional
+  - If arguments have different valid values, separate them with a |
+        Example: /msg $S COMMAND <a|b|c> [foo|bar|baz]
+  - Arguments that are optional but have an extra argument (optional or not)
+    when they are used have this format: [<arg1> <arg2>] or [<arg1> [arg2]]
+  - Repeating arguments have this format: <arg1> <arg2> [<arg1> <arg2>]...
+    where both arg1 and arg2 are required for each repetition. If only one
+    argument is used in each repetition, no <> goes around the argument name
+    ([arg1]...)
+  - Commands like ChanServ's SET have the format /msg $S SET [<option> [value]]
+  - If there is a special case not covered above, try to find another command
+    that has a similar syntax, and adapt it. If that is not possible, use
+    something that makes sense.

@@ -1,0 +1,8 @@
+                SYSTEM          DMALLOC         MPATROL         BOEHM-GC
+After linking
+TIME            0h00m21s        0h52m06s        fail            0h00m43s
+SIZE            96996kB         273340kB        fail            167432kB
+
+Notes: boehm-gc complains a lot about memory leaks during startup,
+even though the dmalloc does not report it as leaked.  Not sure why
+this is so; presumably a GC root has not been registered correctly.

@@ -1,0 +1,380 @@
+Index: src/Makefile.am
+===================================================================
+RCS file: /cvsroot/srvx/services/src/Makefile.am,v
+retrieving revision 1.59
+diff -u -r1.59 Makefile.am
+--- src/Makefile.am	9 Sep 2003 01:56:55 -0000	1.59
++++ src/Makefile.am	5 Nov 2003 14:15:46 -0000
+@@ -9,7 +9,7 @@
+ 	./expnhelp < $(srcdir)/nickserv.help.m4 > $@
+ 
+ EXTRA_srvx_SOURCES = proto-bahamut.c proto-common.c proto-p10.c mod-snoop.c mod-memoserv.c
+-srvx_LDADD = @MODULE_OBJS@
++srvx_LDADD = @MODULE_OBJS@ -lpq
+ srvx_DEPENDENCIES = @MODULE_OBJS@
+ srvx_SOURCES = \
+ 	chanserv.c chanserv.h \
+Index: src/helpserv.c
+===================================================================
+RCS file: /cvsroot/srvx/services/src/helpserv.c,v
+retrieving revision 1.84
+diff -u -r1.84 helpserv.c
+--- src/helpserv.c	5 Nov 2003 13:52:23 -0000	1.84
++++ src/helpserv.c	5 Nov 2003 14:15:48 -0000
+@@ -46,6 +46,8 @@
+ #include "opserv.h"
+ #include "saxdb.h"
+ #include "timeq.h"
++#include "ioset.h"
++#include <postgresql/libpq-fe.h>
+ 
+ #define HELPSERV_CONF_NAME "services/helpserv"
+ #define HELPSERV_HELPFILE_NAME "helpserv.help"
+@@ -94,6 +96,7 @@
+ #define KEY_REQ_ON_JOIN "req_on_join"
+ #define KEY_AUTO_VOICE "auto_voice"
+ #define KEY_AUTO_DEVOICE "auto_devoice"
++#define KEY_LOG_SQL "log_sql"
+ 
+ /* General */
+ #define HSMSG_WRITE_SUCCESS      "HelpServ db write completed (in "FMT_TIME_T".%03lu seconds)."
+@@ -401,6 +404,7 @@
+     const char *description;
+     unsigned long db_backup_frequency;
+     const char *reqlogfile;
++    PGconn *sql_log;
+ } helpserv_conf;
+ 
+ static int helpserv_enabled;
+@@ -443,6 +447,7 @@
+     unsigned int req_on_join : 1;
+     unsigned int auto_voice : 1;
+     unsigned int auto_devoice : 1;
++    unsigned int log_sql : 1;
+ 
+     unsigned int helpchan_empty : 1;
+ 
+@@ -608,36 +613,153 @@
+     return dict_find(hs->users, hi->handle, NULL);
+ }
+ 
+-static void helpserv_log_request(struct helpserv_request *req, const char *reason) {
+-    char key[27+NICKLEN];
+-    char userhost[USERLEN+HOSTLEN+2];
++static struct string_list sql_queue;
++static struct io_fd *sql_fd;
+ 
+-    if (!reqlog_ctx || !req)
++static void pgsql_send_next_query() {
++    int res;
++
++    res = PQsendQuery(helpserv_conf.sql_log, sql_queue.list[0]);
++    if (!res) {
++        log_module(MAIN_LOG, LOG_ERROR, "Error sending query \"%s\": %s", sql_queue.list[0], PQerrorMessage(helpserv_conf.sql_log));
+         return;
+-    if (!reason)
+-        reason = "";
++    }
++    res = PQflush(helpserv_conf.sql_log);
++    if (res == EOF)
++        log_module(MAIN_LOG, LOG_ERROR, "Error flushing PgSql output: %s", PQerrorMessage(helpserv_conf.sql_log));
++}
++
++static void pgsql_readable(UNUSED_ARG(struct io_fd *fd)) {
++    PGconn *conn;
++    PGresult *pgres;
++    unsigned int ii;
++    int res;
++    ExecStatusType st;
++
++    conn = helpserv_conf.sql_log;
++    res = PQconsumeInput(conn);
++    if (!res)
++        log_module(MAIN_LOG, LOG_ERROR, "Error consuming PgSql input: %s", PQerrorMessage(conn));
++    if (PQisBusy(conn))
++        return;
++    while ((pgres = PQgetResult(conn))) {
++        st = PQresultStatus(pgres);
++        if (st != PGRES_COMMAND_OK)
++            log_module(MAIN_LOG, LOG_ERROR, "PgSql error in \"%s\": %s", sql_queue.list[0], PQresultErrorMessage(pgres));
++        PQclear(pgres);
++    }
++    if (sql_queue.used == 1)
++        sql_queue.list[1] = NULL;
++    free(sql_queue.list[0]);
++    sql_queue.used--;
++    for (ii = 0; ii < sql_queue.used; ++ii)
++        sql_queue.list[ii] = sql_queue.list[ii+1];
++    if (sql_queue.used)
++        pgsql_send_next_query();
++}
+ 
+-    sprintf(key, "%s-" FMT_TIME_T "-%lu", req->hs->helpserv->nick, req->opened, req->id);
+-    saxdb_start_record(reqlog_ctx, key, 1);
+-    if (req->helper) {
+-        saxdb_write_string(reqlog_ctx, KEY_REQUEST_HELPER, req->helper->handle->handle);
+-        saxdb_write_int(reqlog_ctx, KEY_REQUEST_ASSIGNED, req->assigned);
++static void
++string_buffer_append_quoted(struct string_buffer *dest, const char *src) {
++    if (src) {
++        size_t len = strlen(src);
++        string_buffer_append(dest, '\'');
++        if (dest->size < (dest->used + len * 2)) {
++            if (dest->size < len * 2)
++                dest->size = len * 4;
++            else
++                dest->size = dest->size * 2;
++            dest->list = realloc(dest->list, dest->size);
++        }
++        dest->used += PQescapeString(dest->list + dest->used, src, len);
++        string_buffer_append_string(dest, "', ");
++    } else {
++        string_buffer_append_string(dest, "NULL, ");
+     }
+-    if (req->handle) {
+-        saxdb_write_string(reqlog_ctx, KEY_REQUEST_HANDLE, req->handle->handle);
++}
++
++static void
++string_buffer_append_time(struct string_buffer *dest, time_t when) {
++    struct tm broken_out;
++    if (!when) {
++        string_buffer_append_string(dest, "NULL, ");
++        return;
+     }
+-    if (req->user) {
+-        saxdb_write_string(reqlog_ctx, KEY_REQUEST_NICK, req->user->nick);
+-        sprintf(userhost, "%s@%s", req->user->ident, req->user->hostname);
+-        saxdb_write_string(reqlog_ctx, KEY_REQUEST_USERHOST, userhost);
++    if (dest->size < dest->used + 20) {
++        if (dest->size < 20) {
++            dest->size = 40;
++        } else {
++            dest->size = dest->size * 2;
++        }
++        dest->list = realloc(dest->list, dest->size);
+     }
+-    saxdb_write_int(reqlog_ctx, KEY_REQUEST_OPENED, req->opened);
+-    saxdb_write_int(reqlog_ctx, KEY_REQUEST_CLOSED, now);
+-    saxdb_write_string(reqlog_ctx, KEY_REQUEST_CLOSEREASON, reason);
+-    saxdb_write_string_list(reqlog_ctx, KEY_REQUEST_TEXT, req->text);
+-    saxdb_end_record(reqlog_ctx);
++    dest->used += strftime(dest->list + dest->used, dest->size - dest->used, "'%Y-%m-%d %H:%M:%S', ", localtime_r(&when, &broken_out));
++}
+ 
+-    fflush(reqlog_f);
++static void
++pgsql_insert(char *query) {
++    string_list_append(&sql_queue, query);
++    if (sql_queue.used == 1)
++        pgsql_send_next_query();
++}
++
++static void helpserv_log_request(struct helpserv_request *req, const char *reason) {
++    char userhost[USERLEN+HOSTLEN+2];
++
++    if (req->user)
++        sprintf(userhost, "%s@%s", req->user->ident, req->user->hostname);
++    else
++        userhost[0] = 0;
++    if (reqlog_ctx) {
++        char key[27+NICKLEN];
++        sprintf(key, "%s-" FMT_TIME_T "-%lu", req->hs->helpserv->nick, req->opened, req->id);
++        saxdb_start_record(reqlog_ctx, key, 1);
++        if (req->helper) {
++            saxdb_write_string(reqlog_ctx, KEY_REQUEST_HELPER, req->helper->handle->handle);
++            saxdb_write_int(reqlog_ctx, KEY_REQUEST_ASSIGNED, req->assigned);
++        }
++        if (req->handle)
++            saxdb_write_string(reqlog_ctx, KEY_REQUEST_HANDLE, req->handle->handle);
++        if (req->user) {
++            saxdb_write_string(reqlog_ctx, KEY_REQUEST_NICK, req->user->nick);
++            saxdb_write_string(reqlog_ctx, KEY_REQUEST_USERHOST, userhost);
++        }
++        saxdb_write_int(reqlog_ctx, KEY_REQUEST_OPENED, req->opened);
++        saxdb_write_int(reqlog_ctx, KEY_REQUEST_CLOSED, now);
++        saxdb_write_string(reqlog_ctx, KEY_REQUEST_CLOSEREASON, reason);
++        saxdb_write_string_list(reqlog_ctx, KEY_REQUEST_TEXT, req->text);
++        saxdb_end_record(reqlog_ctx);
++        fflush(reqlog_f);
++    }
++    if (helpserv_conf.sql_log && req->hs->log_sql) {
++        struct string_buffer query, sb;
++        unsigned int ii;
++
++        sb.used = query.used = 0;
++        sb.size = query.size = 512;
++        query.list = malloc(query.size);
++        sb.list = malloc(sb.size);
++        string_buffer_append_string(&query, "INSERT INTO srvx_helpserv_reqs (c_bot, t_opened, t_assigned, t_closed, i_id, c_helper, c_user_account, c_user_nick, c_user_host, c_close_reason, c_text) VALUES (");
++        string_buffer_append_quoted(&query, req->hs->helpserv->nick);
++        string_buffer_append_time(&query, req->opened);
++        string_buffer_append_time(&query, req->assigned);
++        string_buffer_append_time(&query, now);
++        string_buffer_append_printf(&query, "%lu, ", req->id);
++        string_buffer_append_quoted(&query, req->helper ? req->helper->handle->handle : NULL);
++        string_buffer_append_quoted(&query, req->handle ? req->handle->handle : NULL);
++        string_buffer_append_quoted(&query, req->user ? req->user->nick : NULL);
++        string_buffer_append_quoted(&query, req->user ? userhost : NULL);
++        string_buffer_append_quoted(&query, reason);
++        for (ii = 0; ii < req->text->used; ++ii) {
++            string_buffer_append_string(&sb, req->text->list[ii]);
++            string_buffer_append(&sb, '\n');
++        }
++        string_buffer_append(&sb, 0);
++        string_buffer_append_quoted(&query, sb.list);
++        query.used -= 2; /* chop off ", " from append_quoted */
++        string_buffer_append_string(&query, ");");
++        pgsql_insert(query.list);
++        free(sb.list);
++    }
+ }
+ 
+ /* Searches for a request by number, nick, or account (num|nick|*account).
+@@ -2931,6 +3053,28 @@
+     OPTION_BINARY(hs->auto_devoice, "AutoDeVoice");
+ }
+ 
++static HELPSERV_OPTION(opt_log_sql) {
++    int changed = 0;
++    if (argc > 0) {
++        if (!from_opserv) {
++            helpserv_notice(user, HSMSG_SET_NEED_OPER);
++            return 0;
++        }
++        if (enabled_string(argv[0])) {
++            hs->log_sql = 1;
++            changed = 1;
++        } else if (disabled_string(argv[0])) {
++            hs->log_sql = 0;
++            changed = 1;
++        } else {
++            helpserv_notice(user, MSG_INVALID_BINARY, argv[0]);
++            return 0;
++        }
++    }
++    helpserv_notice(user, HSMSG_STRING_VALUE, "LogSql", hs->log_sql ? "Enabled" : "Disabled");
++    return changed;
++}
++
+ static HELPSERV_FUNC(cmd_set) {
+     helpserv_option_func_t *opt;
+ 
+@@ -2944,7 +3088,7 @@
+             opt_empty_interval, opt_stale_delay, opt_request_persistence,
+             opt_helper_persistence, opt_notification, opt_id_wrap,
+             opt_req_maxlen, opt_privmsg_only, opt_req_on_join, opt_auto_voice,
+-            opt_auto_devoice
++            opt_auto_devoice, opt_log_sql
+         };
+ 
+         helpserv_notice(user, HSMSG_QUEUE_OPTIONS);
+@@ -3267,6 +3411,7 @@
+     saxdb_write_int(ctx, KEY_REQ_ON_JOIN, hs->req_on_join);
+     saxdb_write_int(ctx, KEY_AUTO_VOICE, hs->auto_voice);
+     saxdb_write_int(ctx, KEY_AUTO_DEVOICE, hs->auto_devoice);
++    saxdb_write_int(ctx, KEY_LOG_SQL, hs->log_sql);
+ 
+     /* End bot record */
+     saxdb_end_record(ctx);
+@@ -3376,6 +3521,8 @@
+     hs->auto_voice = str ? enabled_string(str) : 0;
+     str = database_get_data(GET_RECORD_OBJECT(br), KEY_AUTO_DEVOICE, RECDB_QSTRING);
+     hs->auto_devoice = str ? enabled_string(str) : 0;
++    str = database_get_data(GET_RECORD_OBJECT(br), KEY_LOG_SQL, RECDB_QSTRING);
++    hs->log_sql = str ? enabled_string(str) : 0;
+ 
+     dict_foreach(users, user_read_helper, hs);
+ 
+@@ -3422,6 +3569,31 @@
+         helpserv_conf.reqlogfile = NULL;
+     }
+ 
++    if (helpserv_conf.sql_log) {
++        PQfinish(helpserv_conf.sql_log);
++        helpserv_conf.sql_log = NULL;
++    }
++    str = database_get_data(conf_node, "sql_log", RECDB_QSTRING);
++    if (str) {
++        PGconn *conn = PQconnectdb(str);
++        if (!conn) {
++            log_module(HS_LOG, LOG_ERROR, "Unable to allocate pgsql connection");
++        } else if (PQstatus(conn) == CONNECTION_BAD) {
++            log_module(HS_LOG, LOG_ERROR, "Pgsql connection failed: %s", PQerrorMessage(conn));
++            PQfinish(conn);
++        } else if (PQsetnonblocking(conn, 1) == -1) {
++            log_module(HS_LOG, LOG_ERROR, "Unable to make pgsql non-blocking");
++            PQfinish(conn);
++        } else {
++            helpserv_conf.sql_log = conn;
++            sql_fd = ioset_add(PQsocket(conn));
++            sql_fd->connected = 1;
++            sql_fd->wants_reads = 1;
++            sql_fd->readable_cb = pgsql_readable;
++            while (PQflush(conn)) ;
++        }
++    }
++
+     if (reqlog_ctx) {
+         saxdb_close_context(reqlog_ctx);
+         reqlog_ctx = NULL;
+@@ -4159,16 +4331,20 @@
+     return mktime(timeinfo);
+ }
+ 
+-/* If data != NULL, then don't add to the timeq */
+ static void helpserv_run_stats(time_t when) {
+     struct tm when_s;
++    struct string_buffer query;
+     struct helpserv_bot *hs;
+     struct helpserv_user *hs_user;
+     int i;
+     dict_iterator_t it, it2;
++    char timestamp[64];
+ 
+     last_stats_update = when;
+     localtime_r(&when, &when_s);
++    strftime(timestamp, sizeof(timestamp), "'%Y-%m-%d %H:%M:%S', ", &when_s);
++    query.size = 512;
++
+     for (it=dict_first(helpserv_bots_dict); it; it=iter_next(it)) {
+         hs = iter_data(it);
+ 
+@@ -4195,6 +4371,18 @@
+                 hs_user->reassigned_to[i] = hs_user->reassigned_to[i-1];
+             }
+ 
++            /* Log to SQL */
++            if (helpserv_conf.sql_log && hs->log_sql) {
++                query.list = malloc(query.size);
++                query.used = 0;
++                string_buffer_append_string(&query, "INSERT INTO srvx_helpserv_stats (c_bot, t_weekstart, c_helper, i_time, i_picked_up, i_closed, i_reassigned_from, i_reassigned_to) VALUES(");
++                string_buffer_append_quoted(&query, hs->helpserv->nick);
++                string_buffer_append_quoted(&query, timestamp);
++                string_buffer_append_quoted(&query, hs_user->handle->handle);
++                string_buffer_append_printf(&query, "%d, %d, %d, %d, %d);", hs_user->time_per_week[0], hs_user->picked_up[0], hs_user->closed[0], hs_user->reassigned_from[0], hs_user->reassigned_to[0]);
++                pgsql_insert(query.list);
++            }
++
+             /* Reset it for this week */
+             hs_user->time_per_week[0] = hs_user->picked_up[0] = hs_user->closed[0] = hs_user->reassigned_from[0] = hs_user->reassigned_to[0] = 0;
+         }
+@@ -4228,6 +4416,10 @@
+         saxdb_close_context(reqlog_ctx);
+     if (reqlog_f)
+         fclose(reqlog_f);
++    if (helpserv_conf.sql_log) {
++        PQfinish(helpserv_conf.sql_log);
++        helpserv_conf.sql_log = NULL;
++    }
+ }
+ 
+ void init_helpserv() {
+@@ -4293,6 +4485,7 @@
+     helpserv_define_option("REQONJOIN", opt_req_on_join);
+     helpserv_define_option("AUTOVOICE", opt_auto_voice);
+     helpserv_define_option("AUTODEVOICE", opt_auto_devoice);
++    helpserv_define_option("LOGSQL", opt_log_sql);
+ 
+     helpserv_bots_dict = dict_new();
+     dict_set_free_data(helpserv_bots_dict, helpserv_free_bot);

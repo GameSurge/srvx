@@ -1,0 +1,7 @@
+"BANEMAIL" ("/msg $S BANEMAIL <address> <reason>",
+        "Keeps srvx from sending mail to the address.  The address may be a real address, or a glob that uses * and ? wildcards.",
+        "This also prevents anyone from using matching addresses as their account email address.",
+        "$uSee Also:$u unbanemail, stats email");
+"UNBANEMAIL" ("/msg $S UNBANEMAIL <address>",
+        "Removes an email address (or glob) from the banned email address list.",
+        "$uSee Also:$u banemail, stats email");

@@ -1,0 +1,61 @@
+EMAIL COOKIE AUTHENTICATION
+---------------------------
+
+NickServ can use email authentication for various things, offloading
+some human support.  If email cookies are enabled, each handle can
+have an associated email address (if they're not enabled, current
+email addresses are preserved, but not displayed or used.)  If email
+cookies are disabled, the rest of this section does not apply.
+
+Cookies (10-character case-sensitive alphanumeric strings; they are
+base64-encoded random numbers) are used for the following things:
+
+- Handle activation.  When a new handle is registered, its password is
+  set to an unusable string.  A cookie is sent to that email address,
+  and can later be used to auth and change the password (as for
+  forgotten password changes, below).
+
+- Changing email addresses.  When an authed user requests that their
+  email address be changed, half of the cookie is sent to each; both
+  halves must be presented to complete the change.
+
+- Allowauth (in addition to the normal staff allowauth command).  A
+  cookie is sent to the handle's address, and if the user responds
+  with that cookie, they are allowauth'ed.
+
+- Changing forgotten passwords.  A user may request a cookie be sent
+  to their email address; this will allow them to auth and change
+  their password.
+
+The following limitations apply:
+
+- Only one cookie will be issued per handle at a time.  The current
+  cookie must be used or time out before another one is issued.
+
+- Cookies time out after a configurable amount of time (defaults to 24
+  hours).
+
+- Only one un-activated handle is allowed per email address.
+
+The following commands are provided (overriding non-cookie commands of
+the same name, if there is overlap):
+
+- REGISTER <handle> <password> [<email_addr>]
+  - Registers the handle.  If email address provided, emails user with
+    a cookie that allows them to activate their handle.  Otherwise,
+    sets password to what they request.
+- SET EMAIL <new_email>
+  - Mails cookie to new email address (if one already exists, mails
+    half to new, half to old).
+- AUTHCOOKIE <handle>
+  - Emails cookie for authentication.
+- RESETPASS <handle> <newpass>
+  - Begins password reset process for a handle.
+- COOKIE [<handle>] <cookie>
+  - If handle's cookie type is REGSTER, activates a handle that was
+    registered using REGISTER, setting handle's password to what is
+    specified.
+  - If handle's cookie type is EMAIL_CHANGE, changes email address.
+  - If handle's cookie type is PASSWORD_CHANGE, changes password.
+  - If handle's cookie type is ALLOWAUTH, allows user to auth if
+    password matches.

@@ -1,0 +1,72 @@
+-- This patch assumes a database prepared with the script below.
+-- Once this is set up, you can create a log destination using the
+-- "pgsql:" schema followed by a normal PostgreSQL connect string.
+-- For example:
+-- "logs" {
+--   "*.*" "pgsql:host=postgres.testnet.com port=5432 dbname=srvx user=srvx password=TeStNeT requiressl=1";
+-- };
+-- some of those options may be omitted, in which case the PostgreSQL
+-- client library will use defaults.  You may use hostaddr=10.0.0.7
+-- instead of host=postgres.testnet.com, if the database server does
+-- not have a name in DNS or in /etc/hosts.
+
+CREATE TABLE srvx_modules (
+  i_id SMALLINT PRIMARY KEY,
+  s_name VARCHAR(32) UNIQUE NOT NULL);
+
+CREATE TABLE srvx_bots (
+  i_id SMALLINT PRIMARY KEY,
+  s_name VARCHAR(32) UNIQUE NOT NULL);
+
+CREATE TABLE srvx_audit (
+  i_module SMALLINT NOT NULL REFERENCES srvx_modules(i_id),
+  i_severity SMALLINT NOT NULL,
+  i_bot SMALLINT NOT NULL REFERENCES srvx_bots(i_id),
+  t_when TIMESTAMP NOT NULL,
+  c_channel_name VARCHAR(200),
+  c_user_nick VARCHAR(30) NOT NULL,
+  c_user_account VARCHAR(30),
+  c_user_hostmask VARCHAR(80),
+  c_command VARCHAR(500) NOT NULL);
+
+CREATE TABLE srvx_replay (
+  i_module SMALLINT NOT NULL REFERENCES srvx_modules(i_id),
+  t_when TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  b_is_write BOOLEAN NOT NULL,
+  c_text VARCHAR(510) NOT NULL);
+
+CREATE TABLE srvx_log (
+  i_module SMALLINT NOT NULL REFERENCES srvx_modules(i_id),
+  i_severity SMALLINT NOT NULL,
+  t_when TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  c_message VARCHAR(1024) NOT NULL);
+
+CREATE SEQUENCE srvx_modules_id_seq MINVALUE 0 MAXVALUE 32767;
+CREATE FUNCTION srvx_module_id (VARCHAR(32)) RETURNS SMALLINT
+  LANGUAGE 'plpgsql' STABLE STRICT AS '
+  DECLARE
+    name ALIAS FOR $1;
+    new_id srvx_modules.i_id%TYPE;
+  BEGIN
+    SELECT INTO new_id i_id FROM srvx_modules WHERE s_name=name;
+    IF NOT FOUND THEN
+      SELECT INTO new_id nextval(''srvx_modules_id_seq'');
+      INSERT INTO srvx_modules (i_id, s_name) VALUES (new_id, name);
+    END IF;
+    RETURN new_id;
+  END;';
+
+CREATE SEQUENCE srvx_bots_id_seq MINVALUE 0 MAXVALUE 32767;
+CREATE FUNCTION srvx_bot_id (VARCHAR(32)) RETURNS SMALLINT
+  LANGUAGE 'plpgsql' STABLE STRICT AS '
+  DECLARE
+    name ALIAS FOR $1;
+    new_id srvx_bots.i_id%TYPE;
+  BEGIN
+    SELECT INTO new_id i_id FROM srvx_bots WHERE s_name=name;
+    IF NOT FOUND THEN
+      SELECT INTO new_id nextval(''srvx_bots_id_seq'');
+      INSERT INTO srvx_bots (i_id, s_name) VALUES (new_id, name);
+    END IF;
+    RETURN new_id;
+  END;';

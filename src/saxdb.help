@@ -1,0 +1,7 @@
+"write" ("/msg $S WRITE <dbname>",
+        "Writes out one of the databases.  Supported databases are:",
+        "  ${dblist}",
+        "$uSee also:$u writeall");
+"writeall" ("/msg $S WRITEALL",
+        "Writes out all databases at once.",
+        "$uSee also:$u write");
