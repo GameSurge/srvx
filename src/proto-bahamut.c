@@ -1258,6 +1258,8 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
             if (!add)
                 change->args[ch_arg].mode |= MODE_REMOVE;
             victim = GetUserH(modes[in_arg++]);
+            if (!victim)
+                continue;
             if ((change->args[ch_arg].member = GetUserMode(channel, victim)))
                 ch_arg++;
             break;
@@ -1314,6 +1316,7 @@ mod_chanmode_announce(struct userNode *who, struct chanNode *channel, struct mod
     char int_buff[32];
     unsigned int arg;
 
+    assert(change->argc <= change->alloc_argc);
     memset(&chbuf, 0, sizeof(chbuf));
     chbuf.channel = channel;
     chbuf.actor = who;
@@ -1406,6 +1409,7 @@ char *
 mod_chanmode_format(struct mod_chanmode *change, char *outbuff)
 {
     unsigned int used = 0;
+    assert(change->argc <= change->alloc_argc);
     if (change->modes_clear) {
         outbuff[used++] = '-';
 #define DO_MODE_CHAR(BIT, CHAR) if (change->modes_clear & MODE_##BIT) outbuff[used++] = CHAR

@@ -184,7 +184,7 @@ snoop_finalize(void) {
     snoop_cfg.bot = GetUserH(str);
     if (!snoop_cfg.bot)
         return 0;
-    change.modes_set = change.modes_clear = 0;
+    mod_chanmode_init(&change);
     change.argc = 1;
     change.args[0].mode = MODE_CHANOP;
     change.args[0].member = AddChannelUser(snoop_cfg.bot, snoop_cfg.channel);

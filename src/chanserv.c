@@ -1238,8 +1238,7 @@ expire_ban(void *data)
         struct mod_chanmode change;
         unsigned int ii;
         bans = bd->channel->channel->banlist;
-        change.modes_set = change.modes_clear = 0;
-        change.argc = 0;
+        mod_chanmode_init(&change);
         for(ii=0; ii<bans.used; ii++)
         {
             if(!strcmp(bans.list[ii]->ban, bd->mask))
@@ -1880,7 +1879,7 @@ static CHANSERV_FUNC(cmd_move)
     else if(!IsSuspended(channel->channel_info))
     {
         struct mod_chanmode change;
-        change.modes_set = change.modes_clear = 0;
+        mod_chanmode_init(&change);
         change.argc = 1;
         change.args[0].mode = MODE_CHANOP;
         change.args[0].member = AddChannelUser(chanserv, target);
@@ -2142,7 +2141,7 @@ static CHANSERV_FUNC(cmd_opchan)
         return 0;
     }
     channel->channel_info->may_opchan = 0;
-    change.modes_set = change.modes_clear = 0;
+    mod_chanmode_init(&change);
     change.argc = 1;
     change.args[0].mode = MODE_CHANOP;
     change.args[0].member = GetUserMode(channel, chanserv);
@@ -2480,7 +2479,7 @@ static CHANSERV_FUNC(cmd_up)
     struct userData *uData;
     const char *errmsg;
 
-    change.modes_set = change.modes_clear = 0;
+    mod_chanmode_init(&change);
     change.argc = 1;
     change.args[0].member = GetUserMode(channel, user);
     if(!change.args[0].member)
@@ -2522,7 +2521,7 @@ static CHANSERV_FUNC(cmd_down)
 {
     struct mod_chanmode change;
 
-    change.modes_set = change.modes_clear = 0;
+    mod_chanmode_init(&change);
     change.argc = 1;
     change.args[0].member = GetUserMode(channel, user);
     if(!change.args[0].member)
@@ -4324,7 +4323,7 @@ static CHANSERV_FUNC(cmd_say)
     }
     else
     {
-        reply("You must specify the name of a channel or user.");
+        reply("MSG_NOT_TARGET_NAME");
         return 0;
     }
     return 1;
@@ -4347,7 +4346,7 @@ static CHANSERV_FUNC(cmd_emote)
     }
     else
     {
-        reply("You must specify the name of a channel or user.");
+        reply("MSG_NOT_TARGET_NAME");
         return 0;
     }
     return 1;
@@ -4379,7 +4378,7 @@ chanserv_expire_suspension(void *data)
     channel = suspended->cData->channel;
     suspended->cData->channel = channel;
     suspended->cData->flags &= ~CHANNEL_SUSPENDED;
-    change.modes_set = change.modes_clear = 0;
+    mod_chanmode_init(&change);
     change.argc = 1;
     change.args[0].mode = MODE_CHANOP;
     change.args[0].member = AddChannelUser(chanserv, channel);
@@ -4885,35 +4884,6 @@ static MODCMD_FUNC(chan_opt_dynlimit)
 {
     CHANNEL_BINARY_OPTION("CSMSG_SET_DYNLIMIT", CHANNEL_DYNAMIC_LIMIT);
 }
-
-/* TODO: reimplement
-
-static MODCMD_FUNC(chan_opt_userinfo)
-{
-    CHANNEL_BINARY_OPTION("CSMSG_SET_USERINFO", CHANNEL_INFO_LINES);
-}
-
-static MODCMD_FUNC(chan_opt_voice)
-{
-    CHANNEL_BINARY_OPTION("CSMSG_SET_VOICE", CHANNEL_VOICE_ALL);
-}
-
-static MODCMD_FUNC(chan_opt_topicsnarf)
-{
-    if((argc > 0) && !check_user_level(channel, user, lvlEnfTopic, 1, 0))
-    {
-        reply("CSMSG_TOPIC_LOCKED", channel->name);
-        return 0;
-    }
-    CHANNEL_BINARY_OPTION("CSMSG_SET_TOPICSNARF", CHANNEL_TOPIC_SNARF);
-}
-
-static MODCMD_FUNC(chan_opt_peoninvite)
-{
-    CHANNEL_BINARY_OPTION("CSMSG_SET_PEONINVITE", CHANNEL_PEON_INVITE);
-}
-
-*/
 
 static MODCMD_FUNC(chan_opt_defaults)
 {
@@ -5644,20 +5614,11 @@ static CHANSERV_FUNC(cmd_d)
 
 static CHANSERV_FUNC(cmd_huggle)
 {
-    char response[MAXLEN];
-    const char *fmt;
     /* CTCP must be via PRIVMSG, never notice */
     if(channel)
-    {
-        fmt = user_find_message(user, "CSMSG_HUGGLES_HIM");
-        sprintf(response, fmt, user->nick);
-        irc_privmsg(cmd->parent->bot, channel->name, response);
-    }
+        send_target_message(1, channel->name, cmd->parent->bot, "CSMSG_HUGGLES_HIM", user->nick);
     else
-    {
-        fmt = user_find_message(user, "CSMSG_HUGGLES_YOU");
-        irc_privmsg(cmd->parent->bot, user->nick, fmt);
-    }
+        send_target_message(1, user->nick, cmd->parent->bot, "CSMSG_HUGGLES_YOU");
     return 1;
 }
 
@@ -5682,10 +5643,9 @@ chanserv_adjust_limit(void *data)
             return;
     }
 
+    mod_chanmode_init(&change);
     change.modes_set = MODE_LIMIT;
-    change.modes_clear = 0;
     change.new_limit = limit;
-    change.argc = 0;
     mod_chanmode_announce(chanserv, channel, &change);
 }
 
@@ -5750,7 +5710,7 @@ handle_join(struct modeNode *mNode)
         }
     }
 
-    change.modes_set = change.modes_clear = 0;
+    mod_chanmode_init(&change);
     change.argc = 1;
     if(channel->banlist.used < MAXBANS)
     {
@@ -5885,7 +5845,7 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
     if(!user->handle_info)
 	return;
 
-    change.modes_set = change.modes_clear = 0;
+    mod_chanmode_init(&change);
     change.argc = 1;
     for(channel = user->handle_info->channels; channel; channel = channel->u_next)
     {
@@ -6133,7 +6093,7 @@ handle_nick_change(struct userNode *user, UNUSED_ARG(const char *old_nick))
     unsigned int ii, jj;
     char kick_reason[MAXLEN];
 
-    change.modes_set = change.modes_clear = 0;
+    mod_chanmode_init(&change);
     change.argc = 1;
     change.args[0].mode = MODE_BAN;
     for(ii = 0; ii < user->channels.used; ++ii)
@@ -6631,7 +6591,7 @@ chanserv_channel_read(const char *key, struct record_data *hir)
     if(!(cData->flags & CHANNEL_SUSPENDED))
     {
         struct mod_chanmode change;
-        change.modes_set = change.modes_clear = 0;
+        mod_chanmode_init(&change);
         change.argc = 1;
         change.args[0].mode = MODE_CHANOP;
         change.args[0].member = AddChannelUser(chanserv, cNode);

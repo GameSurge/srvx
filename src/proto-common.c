@@ -519,8 +519,10 @@ mod_chanmode_alloc(unsigned int argc)
         res = calloc(1, sizeof(*res) + (argc-1)*sizeof(res->args[0]));
     else
         res = calloc(1, sizeof(*res));
-    if (res)
+    if (res) {
+        res->alloc_argc = argc;
         res->argc = argc;
+    }
     return res;
 }
 
@@ -544,6 +546,7 @@ mod_chanmode_apply(struct userNode *who, struct chanNode *channel, struct mod_ch
     struct banNode *bn;
     unsigned int ii, jj;
 
+    assert(change->argc <= change->alloc_argc);
     channel->modes = (channel->modes & ~change->modes_clear) | change->modes_set;
     if (change->modes_set & MODE_LIMIT)
         channel->limit = change->new_limit;

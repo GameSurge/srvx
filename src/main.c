@@ -94,6 +94,7 @@ static const struct message_entry msgtab[] = {
     { "MSG_INVALID_MODES", "$b%s$b is an invalid set of channel modes." },
     { "MSG_INVALID_GLINE", "Invalid G-line '%s'." },
     { "MSG_INVALID_DURATION", "Invalid time span '%s'." },
+    { "MSG_NOT_TARGET_NAME", "You must provide the name of a channel or user." },
     { "MSG_NOT_CHANNEL_NAME", "You must provide a valid channel name." },
     { "MSG_INVALID_CHANNEL", "You must provide the name of a channel that exists." },
     { "MSG_CHANNEL_ABSENT", "You aren't currently in $b%s$b." },

@@ -139,7 +139,7 @@ ReintroduceUser(struct userNode *user)
     unsigned int n;
 	
     irc_user(user);
-    change.modes_set = change.modes_clear = 0;
+    mod_chanmode_init(&change);
     change.argc = 1;
     for (n = 0; n < user->channels.used; n++) {
         struct modeNode *mn = user->channels.list[n];

@@ -1667,7 +1667,7 @@ static HELPSERV_FUNC(cmd_close) {
         struct modeNode *mn = GetUserMode(hs->helpchan, req_user);
         if ((!newest || !newest->helper) && mn && (mn->modes & MODE_VOICE)) {
             struct mod_chanmode change;
-            change.modes_set = change.modes_clear = 0;
+            mod_chanmode_init(&change);
             change.argc = 1;
             change.args[0].mode = MODE_REMOVE | MODE_VOICE;
             change.args[0].member = mn;
@@ -1871,7 +1871,7 @@ static int helpserv_assign(int from_opserv, struct helpserv_bot *hs, struct user
 
     if (req->user && hs->auto_voice) {
         struct mod_chanmode change;
-        change.modes_set = change.modes_clear = 0;
+        mod_chanmode_init(&change);
         change.argc = 1;
         change.args[0].mode = MODE_VOICE;
         if ((change.args[0].member = GetUserMode(hs->helpchan, req->user)))
@@ -2248,7 +2248,7 @@ static HELPSERV_FUNC(cmd_move) {
             AddChannelUser(hs->helpserv, hs->helpchan)->modes |= MODE_CHANOP;
         } else if (!helpserv_in_channel(hs, old_helpchan)) {
             struct mod_chanmode change;
-            change.modes_set = change.modes_clear = 0;
+            mod_chanmode_init(&change);
             change.argc = 1;
             change.args[0].mode = MODE_CHANOP;
             change.args[0].member = AddChannelUser(hs->helpserv, hs->helpchan);
@@ -2327,7 +2327,7 @@ static void helpserv_page_helper_gone(struct helpserv_bot *hs, struct helpserv_r
         helpserv_msguser(req->user, "HSMSG_REQ_UNASSIGNED", req->id, reason);
         if (hs->auto_devoice && mn && (mn->modes & MODE_VOICE)) {
             struct mod_chanmode change;
-            change.modes_set = change.modes_clear = 0;
+            mod_chanmode_init(&change);
             change.argc = 1;
             change.args[0].mode = MODE_REMOVE | MODE_VOICE;
             change.args[0].member = mn;
@@ -2609,7 +2609,7 @@ static struct helpserv_bot *register_helpserv(const char *nick, const char *help
         AddChannelUser(hs->helpserv, hs->helpchan)->modes |= MODE_CHANOP;
     } else {
         struct mod_chanmode change;
-        change.modes_set = change.modes_clear = 0;
+        mod_chanmode_init(&change);
         change.argc = 1;
         change.args[0].mode = MODE_CHANOP;
         change.args[0].member = AddChannelUser(hs->helpserv, hs->helpchan);
@@ -2866,7 +2866,7 @@ static void set_page_target(struct helpserv_bot *hs, enum page_source idx, const
         DelChannelUser(hs->helpserv, old_target, "Changing page target.", 0);
     if (new_target && !helpserv_in_channel(hs, new_target)) {
         struct mod_chanmode change;
-        change.modes_set = change.modes_clear = 0;
+        mod_chanmode_init(&change);
         change.argc = 1;
         change.args[0].mode = MODE_CHANOP;
         change.args[0].member = AddChannelUser(hs->helpserv, new_target);
@@ -3904,7 +3904,7 @@ static void associate_requests_bybot(struct helpserv_bot *hs, struct userNode *u
         if (hs->auto_voice && req->helper)
         {
             struct mod_chanmode change;
-            change.modes_set = change.modes_clear = 0;
+            mod_chanmode_init(&change);
             change.argc = 1;
             change.args[0].mode = MODE_VOICE;
             if ((change.args[0].member = GetUserMode(hs->helpchan, user)))
