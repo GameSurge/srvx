@@ -137,7 +137,7 @@ static void language_set_messages(struct language *lang, dict_t dict)
             log_module(MAIN_LOG, LOG_WARNING, "Unsupported record type for message %s in language %s", msgid, lang->name);
             continue;
         }
-        dict_insert(lang->messages, msgid, msg);
+        dict_insert(lang->messages, strdup(msgid), msg);
         it = iter_next(it);
         it2 = iter_next(it2);
     }
@@ -145,7 +145,8 @@ static void language_set_messages(struct language *lang, dict_t dict)
         missing++;
         it2 = iter_next(it2);
     }
-    log_module(MAIN_LOG, LOG_WARNING, "In language %s, %d extra and %d missing messages", lang->name, extra, missing);
+    if (extra || missing)
+        log_module(MAIN_LOG, LOG_WARNING, "In language %s, %d extra and %d missing messages.", lang->name, extra, missing);
 }
 
 static struct language *language_read(const char *name)
@@ -188,6 +189,7 @@ static struct language *language_read(const char *name)
     /* (Re-)initialize the language's dicts. */
     dict_delete(lang->messages);
     lang->messages = dict_new();
+    dict_set_free_keys(lang->messages, free);
     dict_set_free_data(lang->messages, free);
     lang->helpfiles = dict_new();
     dict_set_free_data(lang->helpfiles, language_free_helpfile);
@@ -219,8 +221,11 @@ static void language_read_list(void)
 
     if (!(dir = opendir("languages")))
         return;
-    while ((dirent = readdir(dir)))
+    while ((dirent = readdir(dir))) {
+        if (!strcmp(dirent->d_name, ".") || !strcmp(dirent->d_name, ".."))
+            continue;
         language_alloc(dirent->d_name);
+    }
     closedir(dir);
 }
 
