@@ -310,11 +310,6 @@ irc_svinfo() {
 }
 
 void
-irc_burst() {
-    putsock("BURST");
-}
-
-void
 irc_introduce(const char *passwd) {
     extern time_t burst_begin;
 
@@ -702,7 +697,6 @@ static CMD_FUNC(cmd_server) {
         AddServer(GetServerH(origin), argv[1], atoi(argv[2]), 0, now, 0, argv[3]);
     } else {
         self->uplink = AddServer(self, argv[1], atoi(argv[2]), 0, now, 0, argv[3]);
-        send_burst();
     }
     return 1;
 }
@@ -711,6 +705,7 @@ static CMD_FUNC(cmd_svinfo) {
     if (argc < 5) return 0;
     if ((atoi(argv[1]) < 3) || (atoi(argv[2]) > 3)) return 0;
     /* TODO: something with the timestamp we get from the other guy */
+    send_burst();
     return 1;
 }
 
@@ -1279,7 +1274,7 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
             break;
         }
     }
-    change->argc = argc; /* in case any turned out to be ignored */
+    change->argc = ch_arg; /* in case any turned out to be ignored */
     if (change->modes_set & MODE_SECRET) {
         change->modes_set &= ~(MODE_PRIVATE);
         change->modes_clear |= MODE_PRIVATE;
