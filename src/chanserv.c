@@ -6027,7 +6027,7 @@ handle_mode(struct chanNode *channel, struct userNode *user, const struct mod_ch
             bounce->args[bnc].mode = MODE_REMOVE | MODE_BAN;
             bounce->args[bnc].hostmask = ban;
             bnc++;
-            send_message(user, chanserv, "CSMSG_MASK_PROTECTED", remove);
+            send_message(user, chanserv, "CSMSG_MASK_PROTECTED", ban);
         }
     }
     if(bounce)
