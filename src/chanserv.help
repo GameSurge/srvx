@@ -5,9 +5,9 @@
         "  CHANNEL         Channel management.",
         "  BAN MANAGEMENT  Ban management.",
         "  INFORMATION     Informative commands.",
-        "  OPER            Helper/Operator commands."
+        "  OPER            Helper/IRC Operator commands."
 );
-"USER" ("$bUser commands:$b",
+"USER" ("$bUser Management Commands:$b",
         "  ACCESS      Check someone's access in a channel.",
         "  MYACCESS    Show all channels where you have access.",
         "  ADDCOOWNER  Give another person coowner status in a channel.",
@@ -24,10 +24,10 @@
         "  MDELOP             ops with accounts matching a mask.",
         "  MDELPEON           peons with accounts matching a mask.",
 	"  TRIM        Remove users inactive for a certain period.",
-        "  UP          Obtain ops in a channel you have access to.",
-        "  DOWN        Remove ops",
-        "  UPALL       Obtain ops in all channels you have access to.",
-        "  DOWNALL     Remove ops in all",
+        "  UP          Give you ops in a channel you have access to.",
+        "  DOWN        Remove your ops in a channel.",
+        "  UPALL       Give you ops in all channels you have access to.",
+        "  DOWNALL     Remove your ops in all channels.",
         "  OP          Give ops to the specified user.",
         "  DEOP        Remove ops from the specified user.",
         "  VOICE       Give voice to the specified user.",
@@ -41,7 +41,7 @@
         "  KICK        Kick a user from a channel.",
         "  BAN         Ban a user from a channel.",
         "  KICKBAN     Kick and ban a user from a channel.",
-        "  BANS        List lasting bans in a channel",
+        "  BANS        List lasting bans in a channel.",
         "  ADDBAN      Add a permanent ban for a user.",
         "  ADDTIMEDBAN Add a ban that expires in the specified time.",
         "  UNBAN       Remove the specified ban from the channel.",
@@ -69,7 +69,7 @@
         "  RESYNC      Synchronize ops and voice with the channel userlist."
 );
 "INFORMATION" ("$bInformative Commands:$b",
-        "  VERSION     Check the current running version of $C",
+        "  VERSION     Check the current running version of $C.",
         "  NETINFO     Check current network-wide information.",
         "  STAFF       Get a list of all the current staff.",
         "  IRCOPS                                    IRC operators.",
@@ -110,7 +110,7 @@
 "ADDBAN" ("/msg $C ADDBAN <#channel> <mask|nick> [Reason]",
         "Adds a ban to the channels permanent ban list, remaining in effect until removed with the DELBAN command. If it exactly matches an existing ban already in the list, the reason will be updated. If the existing ban was a timed ban, it will be extended into a permanent ban.",
         "$uSee Also:$u bans, delban, mdelban");
-"ADDUSER" ("/msg $C ADDUSER <#channel><nick|*account> <level>",
+"ADDUSER" ("/msg $C ADDUSER <#channel> <nick|*account> <level>",
         "This command adds someone to the channel user list with the specified access level.  (You may only add users to levels less than your own.)",
         "The level may be one of $bpeon$b, $bop$b, $bmaster$b, $bcoowner$b, $bowner$b, or a number between 1 and 500.  Only network staff may add level 500 users (owners).",
         "$uSee Also:$u deluser, users");
@@ -204,6 +204,8 @@
         "This command responds with various pieces of information about a channel's users, status, and registration.");
 "INVITE" ("/msg $C INVITE <#channel> [nick [reason]]",
         "Invites a user into the channel, sending them a reason if one is provided. However, unless you have at least $bmaster$b access, you can only invite yourself with this command. If no nick is provided, the user issuing the command will be invited.");
+"INVITEME" ("/msg $S INVITEME <#channel>",
+        "Invites you into the channel.");
 "IRCOPS" ("/msg $C IRCOPS",
         "Lists all the IRC operators currently online. Nicknames enclosed in parentheses are away, and likely unavailable.",
         "$uSee Also:$u staff");
@@ -339,7 +341,7 @@
         "This sets a pattern that $C allows for the topic.  A $b*$b will match any number of characters (including 0); a $b?$b will match any single character -- the same as with IRC hostmasks.  A user may set a topic if either $btopicmask$b or $benftopic$b allow it.",
         "For example, $b!set topicmask Hello *$b allows anyone to set the topic to be $bHello world$b, but they must be able to override the topic (according to the $bEnfTopic$b setting) to set the topic to $bGoodbye world$b.",
         "You may \"escape\" those characters by putting a \\ before them in the topic mask; for example, $b!set topicmask Whassup\\?$b would only allow the topic to be $bWhassup?$b, while leaving out the \\ would allow the topic to be $bWhassup!$b (among other things).",
-        "For ease of use, if the TopicMask has only one * and no ?, then using $b!topic something$b will (if $bsomething$b does not match the TopicMask and you cannot override the topic lock) replace the * with the text $bsomething$b.",
+        "For ease of use, if the TopicMask has only one * and no ?, then using $b!topic something$b will (if $bsomething$b does not match the TopicMask and you cannot override the topic lock) replace the * with the text $bsomething$b.  If there is more than one * or any ? at all, $b!topic something$b will not work like that.",
         "$uSee Also:$u set, set topic, set enftopic");
 "SET TOYS" ("/msg $C SET <#channel> TOYS <value>",
 	"This setting changes how $C will respond to commands like !8ball, or whether it responds at all.  Valid settings are:",
@@ -428,7 +430,7 @@
         "Displays up to a certain limit, all channels registered with $b$C$b that have not been visited within a certain duration. If a duration is not provided, a default will be used.",
         "$bSee Also:$b expire, search, durations");
 "UP" ("/msg $C UP <#channel>",
-        "For a peon, this will cause $b$C$b to voice the user executing the command. For anyone of level op on higher on the userlist, this will cause $b$C$b to op the user executing the command.");
+        "Grants you your normal channel privileges.  If your access in the channel is less than the GiveVoice setting, this does nothing.  Otherwise, if your access is less than the GiveOps setting, $b$C$b will give you voice.  If your access is at least GiveOps, $b$C$b will give you ops.");
 "UPALL" ("/msg $C UPALL",
         "Executes the $bup$b command for each channel you have access in.",
         "$uSee Also:$u up, down, downall");
@@ -472,4 +474,4 @@
         "$bGameSurge IRC Network$b - All the users and staff there bear with our shortcomings and bugs and let us know what needs to be fixed.",
         "$bIC5 Networks$b (and JohnM in particular) - Never afraid to critique things, even if we are the 800 pound gorilla.",
         "$bMeeko, eraser, hock(ey), KilledInAction, MadEwokHerd, Milon and Shoat$b - Hardcore beta testing and bug finding on the testnet.",
-        "$bCrips$b - Reading through all the boring messages and finding ways to make them clearer.");
+        "$bCrips and feigling$b - Reading through all the boring messages and finding ways to make them clearer.");

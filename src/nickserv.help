@@ -420,6 +420,11 @@
         "$uSee Also:$u accountinfo, nickinfo, userinfo"
         );
 };
+"SET LANGUAGE" ("/msg $S SET LANGUAGE <langname>",
+        "Sets the language that $S and other services will use when sending you messages.",
+        "If a particular message is not available in your language, it will use the closest match it has.",
+        "Supported languages are: ${modcmd:languages}",
+        "$uSee Also:$u set");
 "STATUS" {
         "/services/nickserv/disable_nicks" (
         "/msg $N STATUS",
@@ -432,8 +437,6 @@
 "USERINFO" ("/msg $N USERINFO <nick>",
         "Shows what account the nick specified is authenticated to.",
         "$uSee Also:$u auth, accountinfo");
-"VERSION" ("/msg $N VERSION",
-        "Sends you the srvx version and some additional version information that is specific to $b$N$b.");
 "GHOST" ("/msg $N GHOST <nick>",
         "This disconnects an old client that is authed to your account.  This is $bnot$b the same thing as nick ownership; the user $bmust$b be authenticated to the same account you are.",
         "$uSee Also:$u auth");
@@ -491,12 +494,13 @@
         );
 };
 "MERGE" {
-        "!services/nickserv/disable_nicks" ("/msg $N MERGE <from-nick|*from-account> <to-nick|*to-account>",
+        "!/services/nickserv/disable_nicks" (
+        "/msg $N MERGE <from-nick|*from-account> <to-nick|*to-account>",
         "Merge access from $bfrom-account$b into $bto-account$b.  This includes hostmasks, registered nicks, authed users, access in channels, and $O access (if any).  If $bto-account$b has equal  or greater access than $bfrom-account$b (or more a general hostmask, etc), $bto-account$b keeps that information.",
         "This command is only accessible to helpers and IRC operators.",
         "$uSee Also:$u rename"
         );
-        "services/nickserv/disable_nicks" ("/msg $N MERGE <from-nick|*from-account> <to-nick|*to-account>",
+        "/services/nickserv/disable_nicks" ("/msg $N MERGE <from-nick|*from-account> <to-nick|*to-account>",
         "Merge access from $bfrom-account$b into $bto-account$b.  This includes hostmasks, authed users, access in channels, and $O access (if any).  If $bto-account$b has equal  or greater access than $bfrom-account$b (or more a general hostmask, etc), $bto-account$b keeps that information.",
         "This command is only accessible to helpers and IRC operators.",
         "$uSee Also:$u rename"

@@ -13,7 +13,7 @@
 "help" ("/msg $S HELP [command]",
         "Help will show you the information for the given command.",
         "All help files will use the same syntax, with optional parameters listed in [] and required parameters listed in <>.",
-        "To see what commands are available for use with $S, type /msg $S help index. For help on any specific command or topic, type /msg $S help help command.");
+        "To see what commands are available for use with $S, type /msg $S help commands. For help on any specific command or topic, type /msg $S help command.");
 "readhelp" ("/msg $S READHELP <module>",
         "Re-reads the module's help file from disk.",
         "$uSee Also:$u help");
@@ -84,8 +84,5 @@
 "service remove" ("/msg $S SERVICE REMOVE <nick> [<quit reason>]",
         "Destroys a service.  If a default service is named, it will be recreated when srvx restarts.",
         "$uSee Also:$u service add, service rename, service trigger");
-"set language" ("/msg $S set language <langname>",
-        "Sets the language that $S and other services will use when sending you messages.",
-        "If a particular message is not available in your language, it will use the closest match it has.",
-        "Supported languages are: ${languages}",
-        "$uSee Also:$u set");
+"version" ("/msg $S version",
+        "Sends you version and copyright information for this software.");

@@ -1269,6 +1269,7 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
         default:
             if (!(flags & MCP_FROM_SERVER))
                 goto error;
+            break;
         }
     }
     change->argc = argc; /* in case any turned out to be ignored */

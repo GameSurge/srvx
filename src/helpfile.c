@@ -21,6 +21,7 @@
 #include "conf.h"
 #include "helpfile.h"
 #include "log.h"
+#include "modcmd.h"
 #include "nickserv.h"
 
 #include <dirent.h>
@@ -533,44 +534,58 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
 #define SEND_LINE() do { line[pos] = 0; if (pos > 0) irc_send(src, dest, line); chars_sent += pos; pos = 0; newline_ipos = ipos; } while (0)
 	/* Custom expansion handled by helpfile-specific function. */
 	case '{':
-	case '(':
-	    if (expand_f) {
-		char *name_end = input.list + ipos + 1;
+	case '(': {
+            struct helpfile_expansion exp;
+            char *name_end = input.list + ipos + 1, *colon = NULL;
 
-		while (*name_end != '}' && *name_end != ')' && *name_end) name_end++;
-		if (*name_end) {
-                    struct helpfile_expansion exp;
-		    *name_end = 0;
-		    exp = expand_f(input.list + ipos + 1);
-                    switch (exp.type) {
-                    case HF_STRING:
-                        free_value = value = exp.value.str;
-                        if (!value)
-                            value = "";
-                        break;
-                    case HF_TABLE:
-                        /* Must send current line, then emit table. */
-                        SEND_LINE();
-                        table_send(src, (message_dest ? message_dest->nick : dest), 0, irc_send, exp.value.table);
-                        value = "";
-                        break;
-                    default:
-                        value = "";
-                        log_module(MAIN_LOG, LOG_ERROR, "Invalid exp.type %d from expansion function %p.", exp.type, expand_f);
-                        break;
-                    }
-		    ipos = name_end - input.list;
-		    break;
-		}
-	    }
-
-	/* Let it fall through when there's no expansion function or
-	terminating ')'. */
+            while (*name_end != '}' && *name_end != ')' && *name_end) {
+                if (*name_end == ':') {
+                    colon = name_end;
+                    *colon = '\0';
+                }
+                name_end++;
+            }
+            if (!*name_end)
+                goto fallthrough;
+            *name_end = '\0';
+            if (colon) {
+                struct module *module = module_find(input.list + ipos + 1);
+                if (module && module->expand_help)
+                    exp = module->expand_help(colon + 1);
+                else {
+                    *colon = ':';
+                    goto fallthrough;
+                }
+            } else if (expand_f)
+                exp = expand_f(input.list + ipos + 1);
+            else
+                goto fallthrough;
+            switch (exp.type) {
+            case HF_STRING:
+                free_value = value = exp.value.str;
+                if (!value)
+                    value = "";
+                break;
+            case HF_TABLE:
+                /* Must send current line, then emit table. */
+                SEND_LINE();
+                table_send(src, (message_dest ? message_dest->nick : dest), 0, irc_send, exp.value.table);
+                value = "";
+                break;
+            default:
+                value = "";
+                log_module(MAIN_LOG, LOG_ERROR, "Invalid exp.type %d from expansion function %p.", exp.type, expand_f);
+                break;
+            }
+            ipos = name_end - input.list;
+            break;
+        }
 	default:
-		value = alloca(3);
-		value[0] = '$';
-		value[1] = input.list[ipos];
-		value[2] = 0;
+        fallthrough:
+            value = alloca(3);
+            value[0] = '$';
+            value[1] = input.list[ipos];
+            value[2] = 0;
 	}
 	ipos++;
         while ((pos + strlen(value) > size) || strchr(value, '\n')) {
