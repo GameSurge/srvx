@@ -3648,7 +3648,7 @@ static void helpserv_conf_read(void) {
     helpserv_conf.db_backup_frequency = str ? ParseInterval(str) : 7200;
 
     str = database_get_data(conf_node, "description", RECDB_QSTRING);
-    helpserv_conf.description = str;
+    helpserv_conf.description = str ? str : "Help Queue Manager";
 
     str = database_get_data(conf_node, "reqlogfile", RECDB_QSTRING);
     if (str && strlen(str))
