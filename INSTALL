@@ -97,17 +97,10 @@ Compiling:
   8) Copy srvx.conf.example to srvx.conf and edit to suit your
      needs. Errors in the configuration file will be logged to
      main.log (and if srvx is running in the foreground, printed to
-     stdout) when you start the daemon. If you disable nick ownership
-     or enable the email features, you should copy srvx.conf to the
-     src directory and re-run make; this will regenerate the help
-     files (especially for NickServ) to include the appropriate
-     entries.
-
-     You can also do this by hand using the expnhelp program in src:
-       ./src/expnhelp < nickserv.help.m4 > nickserv.help
+     stdout) when you start the daemon.
 
   9) You can now begin using your service bots.  You can debug by
-     running it with '-fV', it will not background itself, and it
+     running it with '-fd', it will not background itself, and it
      will be fairly verbose if you gave the configure script the
      --enable-debug flag. If you would like to run in the foreground
      with no verbosity, use the '-f' flag. If you just want to run it,
