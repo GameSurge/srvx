@@ -1518,6 +1518,7 @@ init_parse(void)
     dict_insert(irc_func_dict, "442", cmd_dummy); /* you aren't on that channel */
     dict_insert(irc_func_dict, "443", cmd_dummy); /* is already on channel (after invite?) */
     dict_insert(irc_func_dict, "461", cmd_dummy); /* Not enough parameters (after TOPIC w/ 0 args) */
+    dict_insert(irc_func_dict, "467", cmd_dummy); /* Channel key already set */
 
     num_privmsg_funcs = 16;
     privmsg_funcs = malloc(sizeof(privmsg_func_t)*num_privmsg_funcs);

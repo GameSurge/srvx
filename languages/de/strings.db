@@ -42,7 +42,7 @@
 "CSMSG_CHANNEL_OPENED" "$b%s$b wurde geöffnet.";
 "CSMSG_CHANNEL_OPTIONS" "Channel Optionen:";
 "CSMSG_CHANNEL_OWNER" "$bOwner:               $b%s";
-"CSMSG_CHANNEL_REGISTERED" "$bRegistriert:         $bvor %s.";
+"CSMSG_CHANNEL_REGISTERED" "$bRegistriert:         $b%s.";
 "CSMSG_CHANNEL_REGISTRAR" "$bRegistriert von:     $b%s";
 "CSMSG_CHANNEL_SEARCH_RESULTS" "Folgende Channel wurden gefunden:";
 "CSMSG_CHANNEL_SUSPENDED" "$b%s$b ist suspendiert:";
@@ -56,7 +56,7 @@
 "CSMSG_CHANNEL_SUSPENDED_7" " vor %s von %s; zurückgenommen vor %s: %s";
 "CSMSG_CHANNEL_TOPIC" "$bDefault Topic:       $b%s";
 "CSMSG_CHANNEL_USERS" "$bUser Anzahl:         $b%i";
-"CSMSG_CHANNEL_VISITED" "$bLetztmalig besucht:  $bvor %s.";
+"CSMSG_CHANNEL_VISITED" "$bLetztmalig besucht:  $b%s.";
 "CSMSG_CHANNELS_EXPIRED" "%i Channel verfallen.";
 "CSMSG_CONFIRM_DEFAULTS" "Um %s's Einstellungen zu resetten, musst du 'set defaults %s' benutzen.";
 "CSMSG_CONFIRM_DELETEME" "Um deinen Access zu löschen, musst du 'deleteme %s' benutzen.";

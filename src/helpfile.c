@@ -222,36 +222,13 @@ static void language_read_list(void)
     if (!(dir = opendir("languages")))
         return;
     while ((dirent = readdir(dir))) {
-        if (!strcmp(dirent->d_name, ".") || !strcmp(dirent->d_name, ".."))
+        if (dirent->d_name[0] == '.')
+            continue;
+        if (dirent->d_type != DT_DIR)
             continue;
         language_alloc(dirent->d_name);
     }
     closedir(dir);
-}
-
-static void language_read_all(void)
-{
-    struct string_list *slist;
-    struct dirent *dirent;
-    DIR *dir;
-    unsigned int ii;
-
-    /* Read into an in-memory list and sort so we are likely to load
-     * parent languages before their children (de_DE sorts after de).
-     */
-    if (!(dir = opendir("languages")))
-        return;
-    slist = alloc_string_list(4);
-    while ((dirent = readdir(dir)))
-        string_list_append(slist, strdup(dirent->d_name));
-    closedir(dir);
-    string_list_sort(slist);
-    for (ii = 0; ii < slist->used; ++ii) {
-        if (!strcmp(slist->list[ii], ".") || !strcmp(slist->list[ii], ".."))
-            continue;
-        language_read(slist->list[ii]);
-    }
-    free_string_list(slist);
 }
 
 const char *language_find_message(struct language *lang, const char *msgid) {
@@ -1029,6 +1006,8 @@ void helpfile_init(void)
 
 void helpfile_finalize(void)
 {
-    language_read_all();
+    dict_iterator_t it;
+    for (it = dict_first(languages); it; it = iter_next(it))
+        language_read(iter_key(it));
     reg_exit_func(language_cleanup);
 }

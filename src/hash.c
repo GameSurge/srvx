@@ -308,7 +308,6 @@ wipeout_channel(struct chanNode *cNode, time_t new_time, char **modes, unsigned 
             argc++;
     }
     if (argc) {
-        extern struct userNode *opserv;
         struct mod_chanmode *change;
 
         change = mod_chanmode_alloc(argc);
@@ -325,10 +324,8 @@ wipeout_channel(struct chanNode *cNode, time_t new_time, char **modes, unsigned 
             }
         }
         assert(argc == change->argc);
-        if (change->argc > 0)
-            mod_chanmode_announce(change->args[0].member->user, cNode, change);
-        else
-            mod_chanmode_announce(opserv, cNode, change);
+        change->args[0].member->modes &= ~MODE_CHANOP;
+        mod_chanmode_announce(change->args[0].member->user, cNode, change);
         mod_chanmode_free(change);
     }
 }
