@@ -24,7 +24,13 @@
 #include "modcmd.h"
 #include "nickserv.h"
 
+#if defined(HAVE_DIRENT_H)
 #include <dirent.h>
+#endif
+
+#if defined(HAVE_SYS_STAT_H)
+#include <sys/stat.h>
+#endif
 
 static const struct message_entry msgtab[] = {
     { "HFMSG_MISSING_HELPFILE", "The help file could not be found.  Sorry!" },
@@ -224,8 +230,20 @@ static void language_read_list(void)
     while ((dirent = readdir(dir))) {
         if (dirent->d_name[0] == '.')
             continue;
+#ifdef HAVE_DIRENT_D_TYPE
         if (dirent->d_type != DT_DIR)
             continue;
+#else
+        {
+            char namebuf[MAXLEN];
+            struct stat sbuf;
+            snprintf(namebuf, sizeof(namebuf), "languages/%s", dirent->d_name);
+            if (stat(namebuf, &sbuf) < 0)
+                continue;
+            if (!S_ISDIR(sbuf.st_mode))
+                continue;
+        }
+#endif
         language_alloc(dirent->d_name);
     }
     closedir(dir);
