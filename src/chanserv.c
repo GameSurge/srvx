@@ -1334,7 +1334,7 @@ expire_channels(UNUSED_ARG(void *data))
     struct userData *user;
     char delay[INTERVALLEN], reason[INTERVALLEN + 64];
 
-    intervalString(delay, chanserv_conf.channel_expire_delay);
+    intervalString(delay, chanserv_conf.channel_expire_delay, NULL);
     sprintf(reason, "Channel registration automatically expired after %s of disuse.", delay);
 
     for(channel = channelList; channel; channel = next)
@@ -1539,7 +1539,7 @@ static CHANSERV_FUNC(cmd_noregister)
         {
             dnr = iter_data(it);
             if(dnr->set)
-                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set), dnr->setter, dnr->reason);
+                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set, user->handle_info), dnr->setter, dnr->reason);
             else
                 reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, dnr->reason);
             matches++;
@@ -1548,7 +1548,7 @@ static CHANSERV_FUNC(cmd_noregister)
         {
             dnr = iter_data(it);
             if(dnr->set)
-                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set), dnr->setter, dnr->reason);
+                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set, user->handle_info), dnr->setter, dnr->reason);
             else
                 reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, dnr->reason);
             matches++;
@@ -1557,7 +1557,7 @@ static CHANSERV_FUNC(cmd_noregister)
         {
             dnr = iter_data(it);
             if(dnr->set)
-                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set), dnr->setter, dnr->reason);
+                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set, user->handle_info), dnr->setter, dnr->reason);
             else
                 reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, dnr->reason);
             matches++;
@@ -2381,7 +2381,7 @@ cmd_trim_bans(struct userNode *user, struct chanNode *channel, unsigned long dur
         count++;
     }
 
-    intervalString(interval, duration);
+    intervalString(interval, duration, user->handle_info);
     send_message(user, chanserv, "CSMSG_TRIMMED_BANS", count, channel->name, interval);
     return 1;
 }
@@ -2429,7 +2429,7 @@ cmd_trim_users(struct userNode *user, struct chanNode *channel, unsigned short m
         min_access = 1;
         max_access = UL_OWNER;
     }
-    send_message(user, chanserv, "CSMSG_TRIMMED_USERS", count, min_access, max_access, channel->name, intervalString(interval, duration));
+    send_message(user, chanserv, "CSMSG_TRIMMED_USERS", count, min_access, max_access, channel->name, intervalString(interval, duration, user->handle_info));
     return 1;
 }
 
@@ -2826,7 +2826,7 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
                             /* automated kickban */
                         }
 			else if(duration)
-			    reply("CSMSG_BAN_EXTENDED", ban, intervalString(interval, duration));
+			    reply("CSMSG_BAN_EXTENDED", ban, intervalString(interval, duration, user->handle_info));
 			else
 			    reply("CSMSG_BAN_ADDED", name, channel->name);
 
@@ -2933,7 +2933,7 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
     else if(action & ACTION_ADD_BAN)
     {
 	if(duration)
-	    reply("CSMSG_TIMED_BAN_ADDED", name, channel->name, intervalString(interval, duration));
+	    reply("CSMSG_TIMED_BAN_ADDED", name, channel->name, intervalString(interval, duration, user->handle_info));
 	else
 	    reply("CSMSG_BAN_ADDED", name, channel->name);
     }
@@ -3449,7 +3449,7 @@ cmd_list_users(struct userNode *user, struct chanNode *channel, unsigned int arg
         else if(!uData->seen)
             ary[2] = "Never";
         else
-            ary[2] = intervalString(seen, now - uData->seen);
+            ary[2] = intervalString(seen, now - uData->seen, user->handle_info);
         ary[2] = strdup(ary[2]);
         if(IsUserSuspended(uData))
             ary[3] = "Suspended";
@@ -3556,12 +3556,12 @@ static CHANSERV_FUNC(cmd_bans)
 	if(!timed)
 	    expires = "";
 	else if(ban->expires)
-	    expires = intervalString(e_buffer, ban->expires - now);
+	    expires = intervalString(e_buffer, ban->expires - now, user->handle_info);
 	else
 	    expires = msg_never;
 
 	if(ban->triggered)
-	    triggered = intervalString(t_buffer, now - ban->triggered);
+	    triggered = intervalString(t_buffer, now - ban->triggered, user->handle_info);
 	else
 	    triggered = msg_never;
 
@@ -3795,34 +3795,34 @@ show_suspension_info(struct svccmd *cmd, struct userNode *user, struct suspended
         reply("CSMSG_CHANNEL_SUSPENDED_0", suspended->suspender, suspended->reason);
         break;
     case 1: /* no issue time, expires in future */
-        intervalString(buf1, suspended->expires-now);
+        intervalString(buf1, suspended->expires-now, user->handle_info);
         reply("CSMSG_CHANNEL_SUSPENDED_1", suspended->suspender, buf1, suspended->reason);
         break;
     case 2: /* no issue time, expired */
-        intervalString(buf1, now-suspended->expires);
+        intervalString(buf1, now-suspended->expires, user->handle_info);
         reply("CSMSG_CHANNEL_SUSPENDED_2", suspended->suspender, buf1, suspended->reason);
         break;
     case 3: /* no issue time, revoked */
-        intervalString(buf1, now-suspended->revoked);
+        intervalString(buf1, now-suspended->revoked, user->handle_info);
         reply("CSMSG_CHANNEL_SUSPENDED_3", suspended->suspender, buf1, suspended->reason);
         break;
     case 4: /* issue time set, indefinite expiration */
-        intervalString(buf1, now-suspended->issued);
+        intervalString(buf1, now-suspended->issued, user->handle_info);
         reply("CSMSG_CHANNEL_SUSPENDED_4", buf1, suspended->suspender, suspended->reason);
         break;
     case 5: /* issue time set, expires in future */
-        intervalString(buf1, now-suspended->issued);
-        intervalString(buf2, suspended->expires-now);
+        intervalString(buf1, now-suspended->issued, user->handle_info);
+        intervalString(buf2, suspended->expires-now, user->handle_info);
         reply("CSMSG_CHANNEL_SUSPENDED_5", buf1, suspended->suspender, buf2, suspended->reason);
         break;
     case 6: /* issue time set, expired */
-        intervalString(buf1, now-suspended->issued);
-        intervalString(buf2, now-suspended->expires);
+        intervalString(buf1, now-suspended->issued, user->handle_info);
+        intervalString(buf2, now-suspended->expires, user->handle_info);
         reply("CSMSG_CHANNEL_SUSPENDED_6", buf1, suspended->suspender, buf2, suspended->reason);
         break;
     case 7: /* issue time set, revoked */
-        intervalString(buf1, now-suspended->issued);
-        intervalString(buf2, now-suspended->revoked);
+        intervalString(buf1, now-suspended->issued, user->handle_info);
+        intervalString(buf2, now-suspended->revoked, user->handle_info);
         reply("CSMSG_CHANNEL_SUSPENDED_7", buf1, suspended->suspender, buf2, suspended->reason);
         break;
     default:
@@ -3870,8 +3870,8 @@ static CHANSERV_FUNC(cmd_info)
             reply("CSMSG_CHANNEL_OWNER", owner->handle->handle);
     reply("CSMSG_CHANNEL_USERS", cData->userCount);
     reply("CSMSG_CHANNEL_BANS", cData->banCount);
-    reply("CSMSG_CHANNEL_VISITED", intervalString(buffer, now - cData->visited));
-    reply("CSMSG_CHANNEL_REGISTERED", intervalString(buffer, now - cData->registered));
+    reply("CSMSG_CHANNEL_VISITED", intervalString(buffer, now - cData->visited, user->handle_info));
+    reply("CSMSG_CHANNEL_REGISTERED", intervalString(buffer, now - cData->registered, user->handle_info));
 
     privileged = IsStaff(user);
     if(((uData && uData->access >= UL_COOWNER) || privileged) && cData->registrar)
@@ -3908,8 +3908,8 @@ static CHANSERV_FUNC(cmd_netinfo)
     reply("CSMSG_NETWORK_CHANNELS", registered_channels);
     reply("CSMSG_NETWORK_BANS", banCount);
     reply("CSMSG_CHANNEL_USERS", userCount);
-    reply("CSMSG_SERVICES_UPTIME", intervalString(interval, time(NULL) - boot_time));
-    reply("CSMSG_BURST_LENGTH",intervalString(interval, burst_length));
+    reply("CSMSG_SERVICES_UPTIME", intervalString(interval, time(NULL) - boot_time, user->handle_info));
+    reply("CSMSG_BURST_LENGTH", intervalString(interval, burst_length, user->handle_info));
     return 1;
 }
 
@@ -4115,7 +4115,7 @@ static CHANSERV_FUNC(cmd_seen)
     if(uData->present)
 	reply("CSMSG_USER_PRESENT", handle->handle);
     else if(uData->seen)
-        reply("CSMSG_USER_SEEN", handle->handle, channel->name, intervalString(seen, now - uData->seen));
+        reply("CSMSG_USER_SEEN", handle->handle, channel->name, intervalString(seen, now - uData->seen, user->handle_info));
     else
         reply("CSMSG_NEVER_SEEN", handle->handle, channel->name);
 
@@ -4667,7 +4667,7 @@ static CHANSERV_FUNC(cmd_unvisited)
             limit = atoi(argv[2]);
     }
 
-    intervalString(buffer, interval);
+    intervalString(buffer, interval, user->handle_info);
     reply("CSMSG_UNVISITED_HEADER", limit, buffer);
 
     for(cData = channelList; cData && matches < limit; cData = cData->next)
@@ -4675,7 +4675,7 @@ static CHANSERV_FUNC(cmd_unvisited)
 	if((now - cData->visited) < interval)
             continue;
 
-	intervalString(buffer, now - cData->visited);
+	intervalString(buffer, now - cData->visited, user->handle_info);
 	reply("CSMSG_UNVISITED_DATA", cData->channel->name, buffer);
 	matches++;
     }

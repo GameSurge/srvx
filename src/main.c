@@ -117,6 +117,20 @@ static const struct message_entry msgtab[] = {
     { "MSG_DB_WRITE_ERROR", "Error while writing database %s." },
     { "MSG_DB_WROTE_DB", "Wrote database %s (in "FMT_TIME_T".%06lu seconds)." },
     { "MSG_DB_WROTE_ALL", "Wrote all databases (in "FMT_TIME_T".%06lu seconds)." },
+    { "MSG_AND", "and" },
+    { "MSG_0_SECONDS", "0 seconds" },
+    { "MSG_YEAR", "year" },
+    { "MSG_YEARS", "years" },
+    { "MSG_WEEK", "week" },
+    { "MSG_WEEKS", "weeks" },
+    { "MSG_DAY", "day" },
+    { "MSG_DAYS", "days" },
+    { "MSG_HOUR", "hour" },
+    { "MSG_HOURS", "hours" },
+    { "MSG_MINUTE", "minute" },
+    { "MSG_MINUTES", "minutes" },
+    { "MSG_SECOND", "second" },
+    { "MSG_SECONDS", "seconds" },
     { NULL, NULL }
 };
 

@@ -357,7 +357,7 @@ static MODCMD_FUNC(cmd_expiry)
         return 1;
     }
 
-    intervalString(interval, memoserv_conf.message_expiry);
+    intervalString(interval, memoserv_conf.message_expiry, user->handle_info);
     reply("MSMSG_EXPIRY", interval, memoserv_conf.message_expiry);
     return 1;
 }

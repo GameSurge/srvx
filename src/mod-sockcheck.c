@@ -1080,7 +1080,7 @@ static MODCMD_FUNC(cmd_stats_proxycheck)
             reply("PCMSG_NOT_CACHED", hostname);
             return 0;
         }
-        intervalString(elapse_buf, now - sci->last_touched);
+        intervalString(elapse_buf, now - sci->last_touched, user->handle_info);
         switch (sci->decision) {
         case CHECKING: msg = "PCMSG_STATUS_CHECKING"; break;
         case ACCEPT: msg = "PCMSG_STATUS_ACCEPTED"; break;

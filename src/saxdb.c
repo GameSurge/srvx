@@ -423,14 +423,14 @@ static MODCMD_FUNC(cmd_stats_databases) {
         tbl.contents[ii][0] = db->name;
         tbl.contents[ii][1] = db->mondo_section ? db->mondo_section : db->filename;
         if (db->write_interval) {
-            intervalString(buf, db->write_interval);
+            intervalString(buf, db->write_interval, user->handle_info);
         } else {
             strcpy(buf, "Never");
         }
         tbl.contents[ii][2] = buf;
         if (db->last_write) {
-            intervalString(buf+INTERVALLEN, now - db->last_write);
-            intervalString(buf+INTERVALLEN*2, db->last_write_duration);
+            intervalString(buf+INTERVALLEN, now - db->last_write, user->handle_info);
+            intervalString(buf+INTERVALLEN*2, db->last_write_duration, user->handle_info);
         } else {
             strcpy(buf+INTERVALLEN, "Never");
             strcpy(buf+INTERVALLEN*2, "Never");

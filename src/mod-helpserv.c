@@ -924,7 +924,7 @@ static struct helpserv_request * create_request(struct userNode *user, struct he
         sprintf(lbuf[0], fmt, req->id);
     }
     if (req != hs->unhandled) {
-        intervalString(unh, now - hs->unhandled->opened);
+        intervalString(unh, now - hs->unhandled->opened, user->handle_info);
         fmt = user_find_message(user, "HSMSG_REQ_UNHANDLED_TIME");
         sprintf(lbuf[1], fmt, unh);
     } else {
@@ -1067,7 +1067,7 @@ static void helpserv_usermsg(struct userNode *user, struct helpserv_bot *hs, cha
         char buf[MAX_LINE_SIZE], updatestr[INTERVALLEN], timestr[MAX_LINE_SIZE];
 
         strftime(timestr, MAX_LINE_SIZE, HSFMT_TIME, localtime(&req->opened));
-        intervalString(updatestr, now - req->updated);
+        intervalString(updatestr, now - req->updated, user->handle_info);
         if (req->helper && (hs->notify >= NOTIFY_USER))
             if (user->handle_info)
                 helpserv_notify(req->helper, "HSMSG_PAGE_UPD_REQUEST_AUTHED", req->id, user->nick, user->handle_info->handle, timestr, updatestr);
@@ -1241,7 +1241,7 @@ static HELPSERV_USERCMD(usercmd_wait) {
             pos = count;
     }
     assert(pos >= 0);
-    intervalString(buf, now - req->hs->unhandled->opened);
+    intervalString(buf, now - req->hs->unhandled->opened, req->user->handle_info);
     helpserv_user_reply("HSMSG_WAIT_STATUS", pos+1, count, buf);
 }
 
@@ -1768,7 +1768,7 @@ static HELPSERV_FUNC(cmd_list) {
         }
         tbl.contents[line][1] = strdup(username);
         tbl.contents[line][2] = req->helper ? req->helper->handle->handle : "(Unassigned)";
-        intervalString(opentime, now - req->opened);
+        intervalString(opentime, now - req->opened, user->handle_info);
         tbl.contents[line][3] = strdup(opentime);
         tbl.contents[line][4] = ((req->user || req->handle->users) ? "Online" : "Offline");
     }
@@ -1802,7 +1802,7 @@ static void helpserv_show(int from_opserv, struct helpserv_bot *hs, struct userN
     else
         helpserv_notice(user, "HSMSG_REQ_INFO_2e");
     strftime(buf, MAX_LINE_SIZE, HSFMT_TIME, localtime(&req->opened));
-    intervalString(buf2, now - req->opened);
+    intervalString(buf2, now - req->opened, user->handle_info);
     helpserv_notice(user, "HSMSG_REQ_INFO_3", buf, buf2);
     helpserv_notice(user, "HSMSG_REQ_INFO_4");
     for (nn=0; nn < req->text->used; nn++)
@@ -2313,7 +2313,7 @@ static HELPSERV_FUNC(cmd_bots) {
         tbl.contents[i][1] = bot->helpchan->name;
         tbl.contents[i][2] = owner ? owner->handle->handle : "None";
         tbl.contents[i][3] = alloca(INTERVALLEN);
-        intervalString((char*)tbl.contents[i][3], now - bot->last_active);
+        intervalString((char*)tbl.contents[i][3], now - bot->last_active, user->handle_info);
     }
 
     table_send((from_opserv ? opserv : hs->helpserv), user->nick, 0, NULL, tbl);
@@ -2399,7 +2399,7 @@ static void run_whine_interval(void *data) {
         if (reqlist.used) {
             char strwhinedelay[INTERVALLEN];
 
-            intervalString(strwhinedelay, (time_t)hs->intervals[INTERVAL_WHINE_DELAY]);
+            intervalString(strwhinedelay, (time_t)hs->intervals[INTERVAL_WHINE_DELAY], NULL);
 #if ANNOYING_ALERT_PAGES
             tbl.length = reqlist.used + 1;
             tbl.width = 4;
@@ -2420,7 +2420,7 @@ static void run_whine_interval(void *data) {
                 tbl.contents[i][0] = strdup(reqid);
                 tbl.contents[i][1] = unh->user ? unh->user->nick : "Not online";
                 tbl.contents[i][2] = unh->handle ? unh->handle->handle : "Not authed";
-                intervalString(unh_time, now - unh->opened);
+                intervalString(unh_time, now - unh->opened, NULL);
                 tbl.contents[i][3] = strdup(unh_time);
             }
 
@@ -2500,11 +2500,11 @@ static void run_whine_interval(void *data) {
                 }
                 tbl.contents[i][2] = strdup(reqid);
 
-                intervalString(idle_time, now - mn->idle_since);
+                intervalString(idle_time, now - mn->idle_since, NULL);
                 tbl.contents[i][3] = strdup(idle_time);
             }
 
-            intervalString(stridledelay, (time_t)hs->intervals[INTERVAL_IDLE_DELAY]);
+            intervalString(stridledelay, (time_t)hs->intervals[INTERVAL_IDLE_DELAY], NULL);
             helpserv_page(PGSRC_STATUS, "HSMSG_PAGE_IDLE_HEADER", mode_list.used, hs->helpchan->name, stridledelay);
             table_send(hs->helpserv, hs->page_targets[PGSRC_STATUS]->name, 0, page_types[hs->page_types[PGSRC_STATUS]].func, tbl);
 
@@ -3000,7 +3000,7 @@ static int opt_interval(struct userNode *user, struct helpserv_bot *hs, int from
             return 0;
         }
         if (new_int && new_int < min) {
-            intervalString(buf, min);
+            intervalString(buf, min, user->handle_info);
             helpserv_notice(user, "HSMSG_INVALID_INTERVAL", user_find_message(user, interval_types[idx].print_name), buf);
             return 0;
         }
@@ -3008,7 +3008,7 @@ static int opt_interval(struct userNode *user, struct helpserv_bot *hs, int from
         changed = 1;
     }
     if (hs->intervals[idx]) {
-        intervalString(buf, hs->intervals[idx]);
+        intervalString(buf, hs->intervals[idx], user->handle_info);
         helpserv_notice(user, interval_types[idx].print_name, buf);
     } else
         helpserv_notice(user, interval_types[idx].print_name, user_find_message(user, "HSMSG_0_DISABLED"));

@@ -18,6 +18,7 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include "helpfile.h"
 #include "log.h"
 #include "nickserv.h"
 #include "recdb.h"
@@ -643,25 +644,29 @@ unsplit_string(char *set[], unsigned int max, char *dest)
 }
 
 char *
-intervalString2(char *output, time_t interval, int brief)
+intervalString(char *output, time_t interval, struct handle_info *hi)
 {
     static const struct {
-        const char *name;
+        const char *msg_single;
+        const char *msg_plural;
         long length;
     } unit[] = {
-        { "year", 365 * 24 * 60 * 60 },
-        { "week",   7 * 24 * 60 * 60 },
-        { "day",        24 * 60 * 60 },
-        { "hour",            60 * 60 },
-        { "minute",               60 },
-        { "second",                1 }
+        { "MSG_YEAR",   "MSG_YEARS", 365 * 24 * 60 * 60 },
+        { "MSG_WEEK",   "MSG_WEEKS",   7 * 24 * 60 * 60 },
+        { "MSG_DAY",    "MSG_DAYS",        24 * 60 * 60 },
+        { "MSG_HOUR",   "MSG_HOURS",            60 * 60 },
+        { "MSG_MINUTE", "MSG_MINUTES",               60 },
+        { "MSG_SECOND", "MSG_SECONDS",                1 }
     };
+    struct language *lang;
+    const char *msg;
     unsigned int type, words, pos, count;
 
+    lang = hi ? hi->language : lang_C;
     if(!interval)
     {
-	strcpy(output, brief ? "0s" : "0 seconds");
-	return output;
+        msg = language_find_message(lang, "MSG_0_SECONDS");
+	return strcpy(output, msg);
     }
 
     for (type = 0, words = pos = 0;
@@ -672,15 +677,15 @@ intervalString2(char *output, time_t interval, int brief)
         count = interval / unit[type].length;
         interval = interval % unit[type].length;
 
-        if (brief)
-            pos += sprintf(output + pos, "%d%c", count, unit[type].name[0]);
-        else if (words == 1)
-            pos += sprintf(output + pos, " and %d %s", count, unit[type].name);
+        if (words++ == 1) {
+            msg = language_find_message(lang, "MSG_AND");
+            pos += sprintf(output + pos, " %s ", msg);
+        }
+        if (count == 1)
+            msg = language_find_message(lang, unit[type].msg_single);
         else
-            pos += sprintf(output + pos, "%d %s", count, unit[type].name);
-        if (count != 1)
-            output[pos++] = 's';
-        words++;
+            msg = language_find_message(lang, unit[type].msg_plural);
+        pos += sprintf(output + pos, "%d %s", count, msg);
     }
 
     output[pos] = 0;

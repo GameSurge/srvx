@@ -442,13 +442,9 @@ static GLOBAL_FUNC(cmd_list)
         table.contents[nn][0] = strdup(buffer);
         table.contents[nn][1] = messageType(message);
         if(message->duration)
-        {
-            intervalString(buffer, message->posted + message->duration - now);
-        }
+            intervalString(buffer, message->posted + message->duration - now, user->handle_info);
         else
-        {
             strcpy(buffer, "Never.");
-        }
         table.contents[nn][2] = strdup(buffer);
         table.contents[nn][3] = message->from;
 	length = strlen(message->message);

@@ -162,12 +162,14 @@ void STRUCTNAME##_clean(struct STRUCTNAME *list) {\
   free(list->list);\
 }
 
-/* The longest string that's likely to be produced is "10 minutes, and 10
-   seconds." (27 characters) */
-#define INTERVALLEN	32
+/* The longest string that is likely to be produced in English is "10
+ * minutes, and 10 seconds" (27 characters).  Other languages will
+ * vary, so there's plenty of leeway.
+ */
+#define INTERVALLEN	50
 
-char *intervalString2(char *output, time_t interval, int brief);
-#define intervalString(OUTPUT, INTERVAL) intervalString2((OUTPUT), (INTERVAL), 0)
+struct handle_info;
+char *intervalString(char *output, time_t interval, struct handle_info *hi);
 int getipbyname(const char *name, unsigned long *ip);
 int set_policer_param(const char *param, void *data, void *extra);
 const char *strtab(unsigned int ii);

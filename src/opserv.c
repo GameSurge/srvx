@@ -1193,7 +1193,7 @@ static MODCMD_FUNC(cmd_whois)
 #endif
     reply("OSMSG_WHOIS_SERVER", target->uplink->name);
     reply("OSMSG_WHOIS_ACCOUNT", (target->handle_info ? target->handle_info->handle : "Not authenticated"));
-    intervalString(buffer, now - target->timestamp);
+    intervalString(buffer, now - target->timestamp, user->handle_info);
     reply("OSMSG_WHOIS_NICK_AGE", buffer);
     if (target->channels.used <= MAX_CHANNELS_WHOIS)
 	opserv_ison(user, target, "OSMSG_WHOIS_CHANNELS");
@@ -1395,8 +1395,9 @@ static MODCMD_FUNC(cmd_stats_network2) {
 #endif
         tbl.contents[nn][1] = buffer;
         ofs = strlen(buffer) + 1;
-        intervalString(buffer + ofs, now - server->link);
-        if (server->self_burst) strcat(buffer + ofs, " Bursting");
+        intervalString(buffer + ofs, now - server->link, user->handle_info);
+        if (server->self_burst)
+            strcat(buffer + ofs, " Bursting");
         tbl.contents[nn][2] = buffer + ofs;
         nn++;
     }
@@ -1428,9 +1429,9 @@ static MODCMD_FUNC(cmd_stats_trusted) {
         th = dict_find(opserv_trusted_hosts, argv[1], NULL);
         if (th) {
             if (th->issued)
-                intervalString(issued, now - th->issued);
+                intervalString(issued, now - th->issued, user->handle_info);
             if (th->expires)
-                intervalString(length, th->expires - now);
+                intervalString(length, th->expires - now, user->handle_info);
             if (th->limit)
                 sprintf(limit, "limit %lu", th->limit);
             reply("OSMSG_HOST_IS_TRUSTED",
@@ -1448,9 +1449,9 @@ static MODCMD_FUNC(cmd_stats_trusted) {
         for (it = dict_first(opserv_trusted_hosts); it; it = iter_next(it)) {
             th = iter_data(it);
             if (th->issued)
-                intervalString(issued, now - th->issued);
+                intervalString(issued, now - th->issued, user->handle_info);
             if (th->expires)
-                intervalString(length, th->expires - now);
+                intervalString(length, th->expires - now, user->handle_info);
             if (th->limit)
                 sprintf(limit, "limit %lu", th->limit);
             reply("OSMSG_HOST_IS_TRUSTED", iter_key(it),
@@ -1491,7 +1492,7 @@ static MODCMD_FUNC(cmd_stats_uptime) {
             clocks_per_sec = CLOCKS_PER_SEC;
         }
     }
-    intervalString(uptime, time(NULL)-boot_time);
+    intervalString(uptime, time(NULL)-boot_time, user->handle_info);
     times(&buf);
     reply("OSMSG_UPTIME_STATS",
           uptime, lines_processed,
@@ -1540,8 +1541,10 @@ static MODCMD_FUNC(cmd_stats_gags) {
     table.contents[0][3] = "Reason";
     for (nn=1, gag=gagList; gag; nn++, gag=gag->next) {
         char expstr[INTERVALLEN];
-        if (gag->expires) intervalString(expstr, gag->expires - now);
-        else strcpy(expstr, "Never");
+        if (gag->expires)
+            intervalString(expstr, gag->expires - now, user->handle_info);
+        else
+            strcpy(expstr, "Never");
         table.contents[nn] = calloc(table.width, sizeof(char*));
         table.contents[nn][0] = gag->mask;
         table.contents[nn][1] = gag->owner;

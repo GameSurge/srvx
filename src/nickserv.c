@@ -161,7 +161,7 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_NICK_NOT_REGISTERED", "Nick $b%s$b has not been registered to any account." },
     { "NSMSG_HANDLE_NOT_FOUND", "Could not find your account -- did you register yet?" },
     { "NSMSG_ALREADY_AUTHED", "You are already authed to account $b%s$b; you must reconnect to auth to a different account." },
-    { "NSMSG_USE_AUTHCOOKIE", "Your hostmask is not valid for account $b%s$b.  Please use the $bauthcookie$b command to grant yourself access.  (/msg $S authcookie %s)" },
+    { "NSMSG_USE_AUTHCOOKIE", "Your hostmask is not valid for account $b%1$s$b.  Please use the $bauthcookie$b command to grant yourself access.  (/msg $S authcookie %1$s)" },
     { "NSMSG_HOSTMASK_INVALID", "Your hostmask is not valid for account $b%s$b." },
     { "NSMSG_USER_IS_SERVICE", "$b%s$b is a network service; you can only use that command on real users." },
     { "NSMSG_USER_PREV_AUTH", "$b%s$b is already authenticated." },
@@ -974,17 +974,17 @@ nickserv_make_cookie(struct userNode *user, struct handle_info *hi, enum cookie_
     case ACTIVATION:
         hi->passwd[0] = 0; /* invalidate password */
         send_message(user, nickserv, "NSMSG_USE_COOKIE_REGISTER");
-        fmt = user_find_message(user, "NSEMAIL_ACTIVATION_SUBJECT");
+        fmt = handle_find_message(hi, "NSEMAIL_ACTIVATION_SUBJECT");
         snprintf(subject, sizeof(subject), fmt, netname);
-        fmt = user_find_message(user, "NSEMAIL_ACTIVATION_BODY");
+        fmt = handle_find_message(hi, "NSEMAIL_ACTIVATION_BODY");
         snprintf(body, sizeof(body), fmt, netname, cookie->cookie, nickserv->nick, self->name, hi->handle);
         first_time = 1;
         break;
     case PASSWORD_CHANGE:
         send_message(user, nickserv, "NSMSG_USE_COOKIE_RESETPASS");
-        fmt = user_find_message(user, "NSEMAIL_PASSWORD_CHANGE_SUBJECT");
+        fmt = handle_find_message(hi, "NSEMAIL_PASSWORD_CHANGE_SUBJECT");
         snprintf(subject, sizeof(subject), fmt, netname);
-        fmt = user_find_message(user, "NSEMAIL_PASSWORD_CHANGE_BODY");
+        fmt = handle_find_message(hi, "NSEMAIL_PASSWORD_CHANGE_BODY");
         snprintf(body, sizeof(body), fmt, netname, cookie->cookie, nickserv->nick, self->name, hi->handle);
         break;
     case EMAIL_CHANGE:
@@ -992,18 +992,18 @@ nickserv_make_cookie(struct userNode *user, struct handle_info *hi, enum cookie_
         hi->email_addr = cookie->data;
         if (misc) {
             send_message(user, nickserv, "NSMSG_USE_COOKIE_EMAIL_2");
-            fmt = user_find_message(user, "NSEMAIL_EMAIL_CHANGE_SUBJECT");
+            fmt = handle_find_message(hi, "NSEMAIL_EMAIL_CHANGE_SUBJECT");
             snprintf(subject, sizeof(subject), fmt, netname);
-            fmt = user_find_message(user, "NSEMAIL_EMAIL_CHANGE_BODY_NEW");
+            fmt = handle_find_message(hi, "NSEMAIL_EMAIL_CHANGE_BODY_NEW");
             snprintf(body, sizeof(body), fmt, netname, cookie->cookie+COOKIELEN/2, nickserv->nick, self->name, hi->handle, COOKIELEN/2);
             sendmail(nickserv, hi, subject, body, 1);
-            fmt = user_find_message(user, "NSEMAIL_EMAIL_CHANGE_BODY_OLD");
+            fmt = handle_find_message(hi, "NSEMAIL_EMAIL_CHANGE_BODY_OLD");
             snprintf(body, sizeof(body), fmt, netname, cookie->cookie, nickserv->nick, self->name, hi->handle, COOKIELEN/2, hi->email_addr);
         } else {
             send_message(user, nickserv, "NSMSG_USE_COOKIE_EMAIL_1");
-            fmt = user_find_message(user, "NSEMAIL_EMAIL_VERIFY_SUBJECT");
+            fmt = handle_find_message(hi, "NSEMAIL_EMAIL_VERIFY_SUBJECT");
             snprintf(subject, sizeof(subject), fmt, netname);
-            fmt = user_find_message(user, "NSEMAIL_EMAIL_VERIFY_BODY");
+            fmt = handle_find_message(hi, "NSEMAIL_EMAIL_VERIFY_BODY");
             snprintf(body, sizeof(body), fmt, netname, cookie->cookie, nickserv->nick, self->name, hi->handle);
             sendmail(nickserv, hi, subject, body, 1);
             subject[0] = 0;
@@ -1011,9 +1011,9 @@ nickserv_make_cookie(struct userNode *user, struct handle_info *hi, enum cookie_
         hi->email_addr = misc;
         break;
     case ALLOWAUTH:
-        fmt = user_find_message(user, "NSEMAIL_ALLOWAUTH_SUBJECT");
+        fmt = handle_find_message(hi, "NSEMAIL_ALLOWAUTH_SUBJECT");
         snprintf(subject, sizeof(subject), fmt, netname);
-        fmt = user_find_message(user, "NSEMAIL_ALLOWAUTH_BODY");
+        fmt = handle_find_message(hi, "NSEMAIL_ALLOWAUTH_BODY");
         snprintf(body, sizeof(body), fmt, netname, cookie->cookie, nickserv->nick, self->name, hi->handle);
         send_message(user, nickserv, "NSMSG_USE_COOKIE_AUTH");
         break;
@@ -1235,7 +1235,7 @@ static NICKSERV_FUNC(cmd_handleinfo)
     reply("NSMSG_HANDLEINFO_REGGED", ctime(&hi->registered));
 
     if (!hi->users) {
-	intervalString(buff, now - hi->lastseen);
+	intervalString(buff, now - hi->lastseen, user->handle_info);
 	reply("NSMSG_HANDLEINFO_LASTSEEN", buff);
     } else {
 	reply("NSMSG_HANDLEINFO_LASTSEEN_NOW");
@@ -1509,18 +1509,24 @@ static NICKSERV_FUNC(cmd_auth)
         reply("NSMSG_HANDLE_NOT_FOUND");
         return 0;
     }
+    /* Responses from here on look up the language used by the handle they asked about. */
     passwd = argv[pw_arg];
     if (!valid_user_for(user, hi)) {
         if (hi->email_addr && nickserv_conf.email_enabled)
-            reply("NSMSG_USE_AUTHCOOKIE", hi->handle, hi->handle);
+            send_message_type(4, user, cmd->parent->bot,
+                              handle_find_message(hi, "NSMSG_USE_AUTHCOOKIE"),
+                              hi->handle);
         else
-            reply("NSMSG_HOSTMASK_INVALID", hi->handle);
+            send_message_type(4, user, cmd->parent->bot,
+                              handle_find_message(hi, "NSMSG_HOSTMASK_INVALID"),
+                              hi->handle);
         argv[pw_arg] = "BADMASK";
         return 1;
     }
     if (!checkpass(passwd, hi->passwd)) {
         unsigned int n;
-        reply("NSMSG_PASSWORD_INVALID");
+        send_message_type(4, user, cmd->parent->bot,
+                          handle_find_message(hi, "NSMSG_PASSWORD_INVALID"));
         argv[pw_arg] = "BADPASS";
         for (n=0; n<failpw_func_used; n++) failpw_func_list[n](user, hi);
         if (nickserv_conf.autogag_enabled) {
@@ -1540,29 +1546,31 @@ static NICKSERV_FUNC(cmd_auth)
         return 1;
     }
     if (HANDLE_FLAGGED(hi, SUSPENDED)) {
-        reply("NSMSG_HANDLE_SUSPENDED");
+        send_message_type(4, user, cmd->parent->bot,
+                          handle_find_message(hi, "NSMSG_HANDLE_SUSPENDED"));
         argv[pw_arg] = "SUSPENDED";
         return 1;
     }
     maxlogins = hi->maxlogins ? hi->maxlogins : nickserv_conf.default_maxlogins;
     for (used = 0, other = hi->users; other; other = other->next_authed) {
         if (++used >= maxlogins) {
-            reply("NSMSG_MAX_LOGINS", maxlogins);
+            send_message_type(4, user, cmd->parent->bot,
+                              handle_find_message(hi, "NSMSG_MAX_LOGINS"),
+                              maxlogins);
             argv[pw_arg] = "MAXLOGINS";
             return 1;
         }
     }
 
+    set_user_handle_info(user, hi, 1);
     if (nickserv_conf.email_required && !hi->email_addr)
         reply("NSMSG_PLEASE_SET_EMAIL");
     if (!is_secure_password(hi->handle, passwd, NULL))
         reply("NSMSG_WEAK_PASSWORD");
     if (hi->passwd[0] != '$')
         cryptpass(passwd, hi->passwd);
-
     reply("NSMSG_AUTH_SUCCESS");
     argv[pw_arg] = "****";
-    set_user_handle_info(user, hi, 1);
     return 1;
 }
 
