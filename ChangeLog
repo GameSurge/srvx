@@ -2,6 +2,21 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2004-srvx/srvx--devo--1.3
 #
 
+2004-08-12 16:06:55 GMT	Zoot <zoot@gamesurge.net>	patch-77
+
+    Summary:
+      More title host checking
+    Revision:
+      srvx--devo--1.3--patch-77
+
+     * src/nickserv.c: Make oset title verify that the final combined fakehost
+       will not be truncated before storing the title. Also, supply a missing
+       format string argument.
+
+    modified files:
+     ChangeLog src/nickserv.c
+
+
 2004-08-08 17:42:01 GMT	Zoot <zoot@gamesurge.net>	patch-76
 
     Summary:

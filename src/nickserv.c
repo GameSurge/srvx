@@ -179,6 +179,7 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_STAMPED_RESETPASS", "You have already authenticated to an account once this session; you may not reset your password to authenticate again." },
     { "NSMSG_STAMPED_AUTHCOOKIE",  "You have already authenticated to an account once this session; you may not use a cookie to authenticate to another account." },
     { "NSMSG_TITLE_INVALID", "Titles cannot contain any dots; please choose another." },
+    { "NSMSG_TITLE_TRUNCATED", "That title combined with the user's account name would result in a truncated host; please choose a shorter title." },
     { "NSMSG_FAKEHOST_INVALID", "Fake hosts must be shorter than %d characters and cannot start with a dot." },
     { "NSMSG_HANDLEINFO_ON", "Account information for $b%s$b:" },
     { "NSMSG_HANDLEINFO_ID", "  Account ID: %lu" },
@@ -2443,6 +2444,12 @@ static OPTION_FUNC(opt_title)
             send_message(user, nickserv, "NSMSG_TITLE_INVALID");
             return 0;
         }
+        if ((strlen(user->handle_info->handle) + strlen(title) +
+             strlen(nickserv_conf.titlehost_suffix) + 2) > HOSTLEN) {
+            send_message(user, nickserv, "NSMSG_TITLE_TRUNCATED");
+            return 0;
+        }
+
         free(hi->fakehost);
         if (!strcmp(title, "*")) {
             hi->fakehost = NULL;
@@ -2474,7 +2481,7 @@ static OPTION_FUNC(opt_fakehost)
     if ((argc > 1) && oper_has_access(user, nickserv, nickserv_conf.set_fakehost_level, 0)) {
         fake = argv[1];
         if ((strlen(fake) > HOSTLEN) || (fake[0] == '.')) {
-            send_message(user, nickserv, "NSMSG_FAKEHOST_INVALID");
+            send_message(user, nickserv, "NSMSG_FAKEHOST_INVALID", HOSTLEN);
             return 0;
         }
         free(hi->fakehost);
