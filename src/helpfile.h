@@ -72,6 +72,12 @@ struct language
 extern struct language *lang_C;
 extern struct dict *languages;
 
+#define MSG_TYPE_NOTICE    0
+#define MSG_TYPE_PRIVMSG   1
+#define MSG_TYPE_WALLCHOPS 2
+#define MSG_TYPE_NOXLATE   4
+#define MSG_TYPE_MULTILINE 8
+
 int send_message(struct userNode *dest, struct userNode *src, const char *message, ...);
 int send_message_type(int msg_type, struct userNode *dest, struct userNode *src, const char *message, ...);
 int send_target_message(int msg_type, const char *dest, struct userNode *src, const char *format, ...);

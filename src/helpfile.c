@@ -407,7 +407,8 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
 #endif
     }
     message_source = src;
-    if (!(msg_type & 4) && !(format = handle_find_message(handle, format)))
+    if (!(msg_type & MSG_TYPE_NOXLATE)
+        && !(format = handle_find_message(handle, format)))
         return 0;
     /* fill in a buffer with the string */
     input.used = 0;
@@ -531,7 +532,18 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
 	case 'H':
 	    value = handle ? handle->handle : "Account";
 	    break;
-#define SEND_LINE() do { line[pos] = 0; if (pos > 0) irc_send(src, dest, line); chars_sent += pos; pos = 0; newline_ipos = ipos; } while (0)
+#define SEND_LINE(TRUNCED) do { \
+    line[pos] = 0; \
+    if (pos > 0) { \
+        if (!(msg_type & MSG_TYPE_MULTILINE) && (pos > 1) && TRUNCED) \
+            line[pos-2] = line[pos-1] = '.'; \
+        irc_send(src, dest, line); \
+    } \
+    chars_sent += pos; \
+    pos = 0; \
+    newline_ipos = ipos; \
+    if (!(msg_type & MSG_TYPE_MULTILINE)) return chars_sent; \
+} while (0)
 	/* Custom expansion handled by helpfile-specific function. */
 	case '{':
 	case '(': {
@@ -568,7 +580,7 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
                 break;
             case HF_TABLE:
                 /* Must send current line, then emit table. */
-                SEND_LINE();
+                SEND_LINE(0);
                 table_send(src, (message_dest ? message_dest->nick : dest), 0, irc_send, exp.value.table);
                 value = "";
                 break;
@@ -606,7 +618,7 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
                 /* word to send is too big to send now.. what to do? */
                 if (pos > 0) {
                     /* try to put it on a separate line */
-                    SEND_LINE();
+                    SEND_LINE(1);
                 } else {
                     /* already at start of line; only send part of it */
                     strncpy(line, value, avail);
@@ -619,7 +631,7 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
             }
             /* if we're looking at a newline, send the accumulated text */
             if (*value == '\n') {
-                SEND_LINE();
+                SEND_LINE(0);
                 value++;
             }
         }
@@ -636,7 +648,7 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
       send_line:
         expand_pos = pos;
         expand_ipos = ipos;
-        SEND_LINE();
+        SEND_LINE(0);
 #undef SEND_LINE
     }
     return chars_sent;
@@ -686,7 +698,7 @@ _send_help(struct userNode *dest, struct userNode *src, expand_func_t expand, co
 
     va_list ap;
     va_start(ap, format);
-    res = vsend_message(dest->nick, src, dest->handle_info, 4, expand, format, ap);
+    res = vsend_message(dest->nick, src, dest->handle_info, 12, expand, format, ap);
     va_end(ap);
     return res;
 }

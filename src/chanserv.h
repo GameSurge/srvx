@@ -81,6 +81,7 @@ struct chanData
     time_t		registered;
     time_t		visited;
     time_t 		limitAdjusted;
+    time_t              ownerTransfer;
 
     char		*topic;
     char		*greeting;

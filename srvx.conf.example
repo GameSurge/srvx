@@ -239,6 +239,8 @@
         "default_modes" "+nt";
         // minimum opserv access to set, clear or override nodelete setting?
         "nodelete_level" "1";
+        // how long before a new channel owner can give ownership away?
+        "giveownership_timeout" "1w";
     };
 
     "global" {

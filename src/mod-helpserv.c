@@ -958,7 +958,7 @@ static struct helpserv_request * create_request(struct userNode *user, struct he
     else
         send_message_type(4, user, hs->helpserv, "%s %s %s", lbuf[0], lbuf[1], lbuf[2]);
 
-    if (hs->req_on_join && req == hs->unhandled && hs->helpchan_empty) {
+    if (hs->req_on_join && req == hs->unhandled && hs->helpchan_empty && !user->uplink->burst) {
         timeq_del(0, run_empty_interval, hs, TIMEQ_IGNORE_WHEN);
         run_empty_interval(hs);
     }
@@ -1904,8 +1904,6 @@ static HELPSERV_FUNC(cmd_show) {
 
     REQUIRE_PARMS(2);
 
-    assert(hs_user);
-
     if (!(req = smart_get_request(hs, hs_user, argv[1], &num_requests))) {
         helpserv_notice(user, "HSMSG_REQ_INVALID", argv[1]);
         return 0;
@@ -1989,8 +1987,6 @@ static HELPSERV_FUNC(cmd_addnote) {
     int num_requests=0;
 
     REQUIRE_PARMS(3);
-
-    assert(hs_user);
 
     if (!(req = smart_get_request(hs, hs_user, argv[1], &num_requests))) {
         helpserv_notice(user, "HSMSG_REQ_INVALID", argv[1]);

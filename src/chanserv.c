@@ -42,8 +42,6 @@
 #define KEY_MAX_CHAN_BANS	"max_chan_bans"
 #define KEY_NICK		"nick"
 #define KEY_OLD_CHANSERV_NAME	"old_chanserv_name"
-#define KEY_MAX_SWITCH_LOAD	"max_switch_load"
-#define KEY_SWITCH_TIMEOUT	"switch_timeout"
 #define KEY_8BALL_RESPONSES     "8ball"
 #define KEY_OLD_BAN_NAMES       "old_ban_names"
 #define KEY_REFRESH_PERIOD      "refresh_period"
@@ -55,6 +53,7 @@
 #define KEY_SUPPORT_HELPER_EPITHET  "support_helper_epithet"
 #define KEY_NODELETE_LEVEL      "nodelete_level"
 #define KEY_MAX_USERINFO_LENGTH "max_userinfo_length"
+#define KEY_GIVEOWNERSHIP_PERIOD "giveownership_timeout"
 
 /* ChanServ database */
 #define KEY_CHANNELS		"channels"
@@ -100,6 +99,7 @@
 #define KEY_MAX			"max"
 #define KEY_NOTES               "notes"
 #define KEY_TOPIC_MASK          "topic_mask"
+#define KEY_OWNER_TRANSFER      "owner_transfer"
 
 /* User data */
 #define KEY_LEVEL		"level"
@@ -195,6 +195,7 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_NO_SELF_CLVL", "You cannot change your own access." },
     { "CSMSG_NO_BUMP_ACCESS", "You cannot give users access greater than or equal to your own." },
     { "CSMSG_MULTIPLE_OWNERS", "There is more than one owner in %s; please use $bCLVL$b, $bDELOWNER$b and/or $bADDOWNER$b instead." },
+    { "CSMSG_TRANSFER_WAIT", "You must wait %s before you can give ownership of $b%s$b to someone else." },
     { "CSMSG_NO_TRANSFER_SELF", "You cannot give ownership to your own account." },
     { "CSMSG_OWNERSHIP_GIVEN", "Ownership of $b%s$b has been transferred to account $b%s$b." },
 
@@ -494,6 +495,7 @@ static struct
 
     unsigned int 	greeting_length;
     unsigned int        refresh_period;
+    unsigned int        giveownership_period;
 
     unsigned int        max_owned;
     unsigned int 	max_chan_users;
@@ -1080,6 +1082,7 @@ register_channel(struct chanNode *cNode, char *registrar)
     channel->registered = now;
     channel->visited = now;
     channel->limitAdjusted = now;
+    channel->ownerTransfer = now;
     channel->flags = CHANNEL_DEFAULT_FLAGS;
     for(lvlOpt = 0; lvlOpt < NUM_LEVEL_OPTIONS; ++lvlOpt)
         channel->lvlOpts[lvlOpt] = levelOptions[lvlOpt].default_value;
@@ -5449,6 +5452,13 @@ static CHANSERV_FUNC(cmd_giveownership)
         }
         curr_user = owner;
     }
+    else if (!force && (now < (time_t)(cData->ownerTransfer + chanserv_conf.giveownership_period)))
+    {
+        char delay[INTERVALLEN];
+        intervalString(delay, cData->ownerTransfer + chanserv_conf.giveownership_period - now, user->handle_info);
+        reply("CSMSG_TRANSFER_WAIT", delay, channel->name);
+        return 0;
+    }
     if(!(new_owner_hi = modcmd_get_handle_info(user, argv[1])))
         return 0;
     if(new_owner_hi == user->handle_info)
@@ -5481,6 +5491,7 @@ static CHANSERV_FUNC(cmd_giveownership)
     new_owner->access = UL_OWNER;
     if(curr_user)
         curr_user->access = co_access;
+    cData->ownerTransfer = now;
     reply("CSMSG_OWNERSHIP_GIVEN", channel->name, new_owner_hi->handle);
     sprintf(reason, "%s ownership transferred to %s by %s.", channel->name, new_owner_hi->handle, user->handle_info->handle);
     global_message(MESSAGE_RECIPIENT_OPERS | MESSAGE_RECIPIENT_HELPERS, reason);
@@ -6367,6 +6378,8 @@ chanserv_conf_read(void)
         NickChange(chanserv, str, 0);
     str = database_get_data(conf_node, KEY_REFRESH_PERIOD, RECDB_QSTRING);
     chanserv_conf.refresh_period = str ? ParseInterval(str) : 3*60*60;
+    str = database_get_data(conf_node, KEY_GIVEOWNERSHIP_PERIOD, RECDB_QSTRING);
+    chanserv_conf.giveownership_period = str ? ParseInterval(str) : 0;
     str = database_get_data(conf_node, KEY_CTCP_SHORT_BAN_DURATION, RECDB_QSTRING);
     chanserv_conf.ctcp_short_ban_duration = str ? str : "3m";
     str = database_get_data(conf_node, KEY_CTCP_LONG_BAN_DURATION, RECDB_QSTRING);
@@ -6697,14 +6710,14 @@ chanserv_channel_read(const char *key, struct record_data *hir)
         /* We could use suspended->expires and suspended->revoked to
          * set the CHANNEL_SUSPENDED flag, but we don't. */
     }
-    else if(IsSuspended(cData))
+    else if(IsSuspended(cData) && (str = database_get_data(hir->d.object, KEY_SUSPENDER, RECDB_QSTRING)))
     {
         suspended = calloc(1, sizeof(*suspended));
         suspended->issued = 0;
         suspended->revoked = 0;
+        suspended->suspender = strdup(str);
         str = database_get_data(hir->d.object, KEY_SUSPEND_EXPIRES, RECDB_QSTRING);
         suspended->expires = str ? atoi(str) : 0;
-        suspended->suspender = strdup(database_get_data(hir->d.object, KEY_SUSPENDER, RECDB_QSTRING));
         str = database_get_data(hir->d.object, KEY_SUSPEND_REASON, RECDB_QSTRING);
         suspended->reason = strdup(str ? str : "No reason");
         suspended->previous = NULL;
@@ -6712,7 +6725,10 @@ chanserv_channel_read(const char *key, struct record_data *hir)
         suspended->cData = cData;
     }
     else
+    {
+        cData->flags &= ~CHANNEL_SUSPENDED;
         suspended = NULL; /* to squelch a warning */
+    }
 
     if(IsSuspended(cData)) {
         if(suspended->expires > now)
@@ -6734,6 +6750,8 @@ chanserv_channel_read(const char *key, struct record_data *hir)
     cData->registered = str ? (time_t)strtoul(str, NULL, 0) : now;
     str = database_get_data(channel, KEY_VISITED, RECDB_QSTRING);
     cData->visited = str ? (time_t)strtoul(str, NULL, 0) : now;
+    str = database_get_data(channel, KEY_OWNER_TRANSFER, RECDB_QSTRING);
+    cData->ownerTransfer = str ? (time_t)strtoul(str, NULL, 0) : 0;
     str = database_get_data(channel, KEY_MAX, RECDB_QSTRING);
     cData->max = str ? atoi(str) : 0;
     str = database_get_data(channel, KEY_GREETING, RECDB_QSTRING);
@@ -6976,6 +6994,8 @@ chanserv_write_channel(struct saxdb_context *ctx, struct chanData *channel)
         saxdb_end_record(ctx);
     }
 
+    if(channel->ownerTransfer)
+        saxdb_write_int(ctx, KEY_OWNER_TRANSFER, channel->ownerTransfer);
     saxdb_write_int(ctx, KEY_VISITED, high_present ? now : channel->visited);
     saxdb_end_record(ctx);
 }
