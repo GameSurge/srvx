@@ -4007,6 +4007,8 @@ void
 init_opserv(const char *nick)
 {
     OS_LOG = log_register_type("OpServ", "file:opserv.log");
+    if (nick)
+        opserv = AddService(nick, "Oper Services");
     conf_register_reload(opserv_conf_read);
 
     memset(level_strings, 0, sizeof(level_strings));
@@ -4115,11 +4117,8 @@ init_opserv(const char *nick)
 
     opserv_db_init();
     saxdb_register("OpServ", opserv_saxdb_read, opserv_saxdb_write);
-    if(nick)
-    {
-        opserv = AddService(nick, "Oper Services");
+    if (nick)
         service_register(opserv, '?');
-    }
 
     reg_exit_func(opserv_db_cleanup);
     message_register_table(msgtab);

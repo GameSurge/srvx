@@ -506,17 +506,17 @@ conf_globals(void)
     dict_t dict;
 
     info = conf_get_data("services/global/nick", RECDB_QSTRING);
-    if (info[0] == '.')
+    if (info && (info[0] == '.'))
         info = NULL;
     init_global(info);
 
     info = conf_get_data("services/nickserv/nick", RECDB_QSTRING);
-    if (info[0] == '.')
+    if (info && (info[0] == '.'))
         info = NULL;
     init_nickserv(info);
 
     info = conf_get_data("services/chanserv/nick", RECDB_QSTRING);
-    if (info[0] == '.')
+    if (info && (info[0] == '.'))
         info = NULL;
     init_chanserv(info);
 
@@ -543,7 +543,7 @@ conf_globals(void)
     }
 
     info = conf_get_data("services/opserv/nick", RECDB_QSTRING);
-    if (info[0] == '.')
+    if (info && (info[0] == '.'))
         info = NULL;
     init_opserv(info);
 }

@@ -6466,7 +6466,7 @@ chanserv_channel_read(const char *key, struct record_data *hir)
                 continue;
             cData->chOpts[chOpt] = str[0];
         }
-        if((str = database_get_data(channel, KEY_FLAGS, RECDB_QSTRING)))
+        if((str = database_get_data(obj, KEY_FLAGS, RECDB_QSTRING)))
             cData->flags = atoi(str);
     }
     else if((str = database_get_data(channel, KEY_FLAGS, RECDB_QSTRING)))
@@ -6528,11 +6528,7 @@ chanserv_channel_read(const char *key, struct record_data *hir)
         cData->flags &= ~CHANNEL_SUSPENDED;
     }
 
-    if((cData->flags & CHANNEL_SUSPENDED) && (suspended->expires > now))
-    {
-        timeq_add(suspended->expires, chanserv_expire_suspension, suspended);
-    }
-    else
+    if(!(cData->flags & CHANNEL_SUSPENDED))
     {
         struct mod_chanmode change;
         change.modes_set = change.modes_clear = 0;
@@ -6540,6 +6536,10 @@ chanserv_channel_read(const char *key, struct record_data *hir)
         change.args[0].mode = MODE_CHANOP;
         change.args[0].member = AddChannelUser(chanserv, cNode);
         mod_chanmode_announce(chanserv, cNode, &change);
+    }
+    else if(suspended->expires > now)
+    {
+        timeq_add(suspended->expires, chanserv_expire_suspension, suspended);
     }
 
     str = database_get_data(channel, KEY_REGISTERED, RECDB_QSTRING);
