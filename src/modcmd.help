@@ -70,7 +70,7 @@
         "With only a service nick, shows the helpfiles used by that service.",
         "With a list of modules, sets the order that the service will look up non-command help entries.",
         "$uSee Also:$u bind, unbind");
-"service add" ("/msg $S SERVICE ADD <nick> <description>",
+"service add" ("/msg $S SERVICE ADD <nick> <hostname> <description>",
         "Creates a new service bot.",
         "$uSee Also:$u service rename, service trigger, service remove");
 "service rename" ("/msg $S SERVICE RENAME <oldnick> <newnick>",

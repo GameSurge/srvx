@@ -891,7 +891,7 @@ modcmd_chanmsg(struct userNode *user, struct chanNode *chan, char *text, struct 
 }
 
 struct service *
-service_register(struct userNode *bot, char trigger) {
+service_register(struct userNode *bot) {
     struct service *service;
     if ((service = dict_find(services, bot->nick, NULL)))
         return service;
@@ -899,12 +899,9 @@ service_register(struct userNode *bot, char trigger) {
     module_list_init(&service->modules);
     service->commands = dict_new();
     service->bot = bot;
-    service->trigger = trigger;
     dict_set_free_data(service->commands, free_service_command);
     dict_insert(services, service->bot->nick, service);
     reg_privmsg_func(bot, modcmd_privmsg);
-    if (trigger)
-        reg_chanmsg_func(trigger, bot, modcmd_chanmsg);
     return service;
 }
 
@@ -1718,7 +1715,7 @@ static MODCMD_FUNC(cmd_helpfiles) {
 }
 
 static MODCMD_FUNC(cmd_service_add) {
-    const char *nick, *desc;
+    const char *nick, *hostname, *desc;
     struct userNode *bot;
 
     nick = argv[1];
@@ -1726,14 +1723,15 @@ static MODCMD_FUNC(cmd_service_add) {
         reply("MCMSG_BAD_SERVICE_NICK", nick);
         return 0;
     }
-    desc = unsplit_string(argv+2, argc-2, NULL);
+    hostname = argv[2];
+    desc = unsplit_string(argv+3, argc-3, NULL);
     bot = GetUserH(nick);
     if (bot && IsService(bot)) {
         reply("MCMSG_ALREADY_SERVICE", bot->nick);
         return 0;
     }
-    bot = AddService(nick, desc);
-    service_register(bot, '\0');
+    bot = AddService(nick, desc, hostname);
+    service_register(bot);
     reply("MCMSG_NEW_SERVICE", bot->nick);
     return 1;
 }
@@ -1947,6 +1945,7 @@ modcmd_saxdb_write(struct saxdb_context *ctx) {
             saxdb_write_string(ctx, "trigger", buff);
         }
         saxdb_write_string(ctx, "description", service->bot->info);
+        saxdb_write_string(ctx, "hostname", service->bot->hostname);
         if (service->privileged)
             saxdb_write_string(ctx, "privileged", "1");
         saxdb_end_record(ctx);
@@ -2030,9 +2029,8 @@ modcmd_load_bots(struct dict *db) {
 
     for (it = dict_first(db); it; it = iter_next(it)) {
         struct record_data *rd;
-        struct userNode *bot;
-        const char *nick, *desc;
-        char trigger;
+        struct service *svc;
+        const char *nick, *desc, *hostname;
 
         rd = iter_data(it);
         if (rd->type != RECDB_OBJECT) {
@@ -2041,17 +2039,18 @@ modcmd_load_bots(struct dict *db) {
         }
         nick = database_get_data(rd->d.object, "nick", RECDB_QSTRING);
         if (!nick)
-            nick = iter_key(it);
-        if (service_find(nick))
             continue;
-        desc = database_get_data(rd->d.object, "trigger", RECDB_QSTRING);
-        trigger = desc ? desc[0] : '\0';
+        svc = service_find(nick);
         desc = database_get_data(rd->d.object, "description", RECDB_QSTRING);
-        if (desc)
-        {
-            struct service *svc;
-            bot = AddService(nick, desc);
-            svc = service_register(bot, trigger);
+        hostname = database_get_data(rd->d.object, "hostname", RECDB_QSTRING);
+        if (desc) {
+            if (!svc)
+                svc = service_register(AddService(nick, desc, hostname));
+            else if (hostname)
+                strcpy(svc->bot->hostname, hostname);
+            desc = database_get_data(rd->d.object, "trigger", RECDB_QSTRING);
+            if (desc)
+                svc->trigger = desc[0];
             desc = database_get_data(rd->d.object, "privileged", RECDB_QSTRING);
             if (desc && (true_string(desc) || enabled_string(desc)))
                 svc->privileged = 1;
@@ -2089,7 +2088,7 @@ modcmd_init(void) {
     modcmd_register(modcmd_module, "stats services", cmd_stats_services, 1, 0, "flags", "+oper", NULL);
     modcmd_register(modcmd_module, "showcommands", cmd_showcommands, 1, 0, "flags", "+acceptchan", NULL);
     modcmd_register(modcmd_module, "helpfiles", cmd_helpfiles, 2, 0, "template", "bind", NULL);
-    modcmd_register(modcmd_module, "service add", cmd_service_add, 3, 0, "flags", "+oper", NULL);
+    modcmd_register(modcmd_module, "service add", cmd_service_add, 4, 0, "flags", "+oper", NULL);
     modcmd_register(modcmd_module, "service rename", cmd_service_rename, 3, 0, "flags", "+oper", NULL);
     modcmd_register(modcmd_module, "service trigger", cmd_service_trigger, 2, 0, "flags", "+oper", NULL);
     modcmd_register(modcmd_module, "service privileged", cmd_service_privileged, 2, 0, "flags", "+oper", NULL);
@@ -2358,11 +2357,20 @@ import_aliases_db() {
 
 void
 modcmd_finalize(void) {
+    dict_iterator_t it;
+
     /* Check databases. */
     saxdb_register("modcmd", modcmd_saxdb_read, modcmd_saxdb_write);
     create_default_binds();
     if (!saxdb_present)
         import_aliases_db();
+
+    /* Register services for their triggers. */
+    for (it = dict_first(services); it; it = iter_next(it)) {
+        struct service *svc = iter_data(it);
+        if (svc->trigger)
+            reg_chanmsg_func(svc->trigger, svc->bot, modcmd_chanmsg);
+    }
 
     /* Resolve command rule-templates. */
     while (pending_templates) {

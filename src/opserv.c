@@ -920,7 +920,7 @@ static MODCMD_FUNC(cmd_join)
         return 0;
     } else {
         struct mod_chanmode change;
-        change.modes_set = change.modes_clear = 0;
+        mod_chanmode_init(&change);
         change.argc = 1;
         change.args[0].mode = MODE_CHANOP;
         change.args[0].member = AddChannelUser(bot, channel);
@@ -2106,7 +2106,7 @@ static MODCMD_FUNC(cmd_addtrust)
     }
 
     count = strtoul(argv[2], &tmp, 10);
-    if (!count || *tmp != '\0') {
+    if (*tmp != '\0') {
         reply("OSMSG_BAD_NUMBER", argv[2]);
         return 0;
     }
@@ -4020,7 +4020,7 @@ init_opserv(const char *nick)
 {
     OS_LOG = log_register_type("OpServ", "file:opserv.log");
     if (nick)
-        opserv = AddService(nick, "Oper Services");
+        opserv = AddService(nick, "Oper Services", NULL);
     conf_register_reload(opserv_conf_read);
 
     memset(level_strings, 0, sizeof(level_strings));
@@ -4131,7 +4131,7 @@ init_opserv(const char *nick)
     opserv_db_init();
     saxdb_register("OpServ", opserv_saxdb_read, opserv_saxdb_write);
     if (nick)
-        service_register(opserv, '?');
+        service_register(opserv)->trigger = '?';
 
     reg_exit_func(opserv_db_cleanup);
     message_register_table(msgtab);

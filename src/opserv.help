@@ -30,9 +30,9 @@
 "ADDALERT" ("/msg $O ADDALERT <name> <reaction> <criteria>",
         "Adds the specified alert to the $b$O$b alert list.",
         "$uSee Also:$u delalert, alert reaction, trace criteria");
-"ADDTRUST" ("/msg $O ADDTRUST <ip> <number> <duration> <reason>",
+"ADDTRUST" ("/msg $O ADDTRUST <ip> <count> <duration> <reason>",
         "Allows the specified IP address to have the specified amount of clones before being removed (rather than the usual limit).",
-        "You may use 0 as the duration if you do not wish the trust to ever expire.",
+        "You may use 0 as the duration if you do not wish the trust to ever expire, and 0 as the count for unlimited connections.",
         "$uSee Also:$u deltrust, stats trusted");
 "ALERT REACTION" ("$bALERT REACTION$b",
         "Valid alert actions (to be taken when an alert is hit) are:",

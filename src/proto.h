@@ -166,7 +166,7 @@ void irc_numeric(struct userNode *user, unsigned int num, const char *format, ..
 /* stuff originally from other headers that is really protocol-specific */
 int IsChannelName(const char *name);
 int is_valid_nick(const char *nick);
-struct userNode *AddService(const char *nick, const char *desc);
+struct userNode *AddService(const char *nick, const char *desc, const char *hostname);
 struct userNode *AddClone(const char *nick, const char *ident, const char *hostname, const char *desc);
 struct server* AddServer(struct server* uplink, const char *name, int hops, time_t boot, time_t link, const char *numeric, const char *description);
 void DelServer(struct server* serv, int announce, const char *message);

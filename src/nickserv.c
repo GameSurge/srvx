@@ -3687,8 +3687,8 @@ init_nickserv(const char *nick)
     userList_init(&curr_helpers);
 
     if (nick) {
-        nickserv = AddService(nick, "Nick Services");
-        nickserv_service = service_register(nickserv, 0);
+        nickserv = AddService(nick, "Nick Services", NULL);
+        nickserv_service = service_register(nickserv);
     }
     saxdb_register("NickServ", nickserv_saxdb_read, nickserv_saxdb_write);
     reg_exit_func(nickserv_db_cleanup);

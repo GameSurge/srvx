@@ -131,7 +131,12 @@
 
     "opserv" {
         "nick" "OpServ";
+        // should use of this service be limited to global opers?
         "privileged" "1";
+        // fullname for service
+        "description" "Oper Service Bot";
+        // hostname for service; only used if "description" is also set
+        "hostname" "dances-all-night-with.srvx.net";
         // what channel should opserv send debug output to?
         "debug_channel" "#opserv";
         "debug_channel_modes" "+tinms";
@@ -165,8 +170,6 @@
             "size" "200";
             "drain-rate" "3";
         };
-        // character to make OpServ pay attention to you
-        "trigger" "?";
     };
 
     "chanserv" {
@@ -192,8 +195,6 @@
         "chan_expire_freq" "3d";
         // How long is a channel unvisited (by masters or above) before it can be expired?
         "chan_expire_delay" "30d";
-        // character to make ChanServ pay attention to you
-        "trigger" "!";
         // what !set options should we show when user calls "!set" with no arguments?
         "set_shows" ("DefaultTopic", "TopicMask", "Greeting", "UserGreeting", "Modes", "PubCmd", "InviteMe", "UserInfo", "GiveVoice", "GiveOps", "EnfOps", "EnfModes", "EnfTopic", "TopicSnarf", "Setters", "CtcpUser", "CtcpReaction", "Protect", "Toys", "DynLimit", "NoDelete");
 

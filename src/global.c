@@ -674,8 +674,8 @@ init_global(const char *nick)
 
     if(nick)
     {
-        global = AddService(nick, "Global Services");
-        global_service = service_register(global, 0);
+        global = AddService(nick, "Global Services", NULL);
+        global_service = service_register(global);
     }
     saxdb_register("Global", global_saxdb_read, global_saxdb_write);
     reg_exit_func(global_db_cleanup);

@@ -4139,7 +4139,7 @@ static MODCMD_FUNC(cmd_names)
         targData = GetTrueChannelAccess(channel->channel_info, targ->handle_info);
         if(!targData)
             continue;
-        if(pos + strlen(targ->nick) + strlen(targ->handle_info->handle) + 6 > sizeof(buf))
+        if(pos + strlen(targ->nick) + strlen(targ->handle_info->handle) + 8 > sizeof(buf))
         {
             buf[pos] = 0;
             reply("CSMSG_CHANNEL_NAMES", channel->name, buf);
@@ -7139,8 +7139,8 @@ init_chanserv(const char *nick)
     dict_set_free_data(note_types, chanserv_deref_note_type);
     if(nick)
     {
-        chanserv = AddService(nick, "Channel Services");
-        service_register(chanserv, '!');
+        chanserv = AddService(nick, "Channel Services", NULL);
+        service_register(chanserv)->trigger = '!';
         reg_chanmsg_func('\001', chanserv, chanserv_ctcp_check);
     }
     saxdb_register("ChanServ", chanserv_saxdb_read, chanserv_saxdb_write);

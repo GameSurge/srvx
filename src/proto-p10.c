@@ -1737,7 +1737,7 @@ void DelServer(struct server* serv, int announce, const char *message)
 }
 
 struct userNode *
-AddService(const char *nick, const char *desc)
+AddService(const char *nick, const char *desc, const char *hostname)
 {
     char numeric[COMBO_NUMERIC_LEN+1];
     int local_num = get_local_numeric();
@@ -1753,8 +1753,10 @@ AddService(const char *nick, const char *desc)
         log_module(MAIN_LOG, LOG_ERROR, "Unable to allocate numnick for service %s", nick);
         return 0;
     }
+    if (!hostname)
+        hostname = self->name;
     make_numeric(self, local_num, numeric);
-    return AddUser(self, nick, nick, self->name, "+oik", numeric, desc, now, "AAAAAA");
+    return AddUser(self, nick, nick, hostname, "+oik", numeric, desc, now, "AAAAAA");
 }
 
 struct userNode *

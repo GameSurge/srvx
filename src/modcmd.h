@@ -157,7 +157,7 @@ struct module *module_register(const char *name, struct log_type *clog, const ch
 struct module *module_find(const char *name);
 
 /* Register a command-using service. */
-struct service *service_register(struct userNode *bot, char trigger);
+struct service *service_register(struct userNode *bot);
 /* Find a service by name. */
 struct service *service_find(const char *name);
 /* Bind one command to a service. */
