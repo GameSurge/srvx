@@ -568,14 +568,14 @@ mod_chanmode_apply(struct userNode *who, struct chanNode *channel, struct mod_ch
              * to be more specific than an existing ban.
              */
             for (jj=0; jj<channel->banlist.used; ++jj) {
-                if (match_ircglobs(change->args[ii].hostmask, channel->banlist.list[jj]->ban)) {
+                if (match_ircglobs(change->args[ii].u.hostmask, channel->banlist.list[jj]->ban)) {
                     banList_remove(&channel->banlist, channel->banlist.list[jj]);
                     free(channel->banlist.list[jj]);
                     jj--;
                 }
             }
             bn = calloc(1, sizeof(*bn));
-            safestrncpy(bn->ban, change->args[ii].hostmask, sizeof(bn->ban));
+            safestrncpy(bn->ban, change->args[ii].u.hostmask, sizeof(bn->ban));
             if (who)
                 safestrncpy(bn->who, who->nick, sizeof(bn->who));
             else
@@ -585,7 +585,7 @@ mod_chanmode_apply(struct userNode *who, struct chanNode *channel, struct mod_ch
             break;
         case MODE_REMOVE|MODE_BAN:
             for (jj=0; jj<channel->banlist.used; ++jj) {
-                if (strcmp(channel->banlist.list[jj]->ban, change->args[ii].hostmask))
+                if (strcmp(channel->banlist.list[jj]->ban, change->args[ii].u.hostmask))
                     continue;
                 free(channel->banlist.list[jj]);
                 banList_remove(&channel->banlist, channel->banlist.list[jj]);
@@ -599,9 +599,9 @@ mod_chanmode_apply(struct userNode *who, struct chanNode *channel, struct mod_ch
         case MODE_REMOVE|MODE_VOICE:
         case MODE_REMOVE|MODE_VOICE|MODE_CHANOP:
             if (change->args[ii].mode & MODE_REMOVE)
-                change->args[ii].member->modes &= ~change->args[ii].mode;
+                change->args[ii].u.member->modes &= ~change->args[ii].mode;
             else
-                change->args[ii].member->modes |= change->args[ii].mode;
+                change->args[ii].u.member->modes |= change->args[ii].mode;
             break;
         default:
             assert(0 && "Invalid mode argument");

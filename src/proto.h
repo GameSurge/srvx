@@ -199,7 +199,7 @@ struct mod_chanmode {
         union {
             struct modeNode *member;
             const char *hostmask;
-        };
+        } u;
     } args[1];
 };
 #define MCP_ALLOW_OVB     0x0001 /* allow op, voice, ban manipulation */

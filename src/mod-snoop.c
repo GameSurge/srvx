@@ -189,7 +189,7 @@ snoop_finalize(void) {
     mod_chanmode_init(&change);
     change.argc = 1;
     change.args[0].mode = MODE_CHANOP;
-    change.args[0].member = AddChannelUser(snoop_cfg.bot, snoop_cfg.channel);
+    change.args[0].u.member = AddChannelUser(snoop_cfg.bot, snoop_cfg.channel);
     mod_chanmode_announce(snoop_cfg.bot, snoop_cfg.channel, &change);
     return 1;
 }

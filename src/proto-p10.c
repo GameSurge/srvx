@@ -2114,7 +2114,7 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
             change->args[ch_arg].mode = MODE_BAN;
             if (!add)
                 change->args[ch_arg].mode |= MODE_REMOVE;
-            change->args[ch_arg++].hostmask = modes[in_arg++];
+            change->args[ch_arg++].u.hostmask = modes[in_arg++];
             break;
         case 'o': case 'v':
         {
@@ -2132,7 +2132,7 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
                 victim = GetUserH(modes[in_arg++]);
             if (!victim)
                 continue;
-            if ((change->args[ch_arg].member = GetUserMode(channel, victim)))
+            if ((change->args[ch_arg].u.member = GetUserMode(channel, victim)))
                 ch_arg++;
             break;
         }
@@ -2233,13 +2233,13 @@ mod_chanmode_announce(struct userNode *who, struct chanNode *channel, struct mod
             chbuf.modes[chbuf.modes_used++] = mode = '-';
         switch (change->args[arg].mode & ~MODE_REMOVE) {
         case MODE_BAN:
-            mod_chanmode_append(&chbuf, 'b', change->args[arg].hostmask);
+            mod_chanmode_append(&chbuf, 'b', change->args[arg].u.hostmask);
             break;
         default:
             if (change->args[arg].mode & MODE_CHANOP)
-                mod_chanmode_append(&chbuf, 'o', change->args[arg].member->user->numeric);
+                mod_chanmode_append(&chbuf, 'o', change->args[arg].u.member->user->numeric);
             if (change->args[arg].mode & MODE_VOICE)
-                mod_chanmode_append(&chbuf, 'v', change->args[arg].member->user->numeric);
+                mod_chanmode_append(&chbuf, 'v', change->args[arg].u.member->user->numeric);
             break;
         }
     }
@@ -2275,13 +2275,13 @@ mod_chanmode_announce(struct userNode *who, struct chanNode *channel, struct mod
             chbuf.modes[chbuf.modes_used++] = mode = '+';
         switch (change->args[arg].mode) {
         case MODE_BAN:
-            mod_chanmode_append(&chbuf, 'b', change->args[arg].hostmask);
+            mod_chanmode_append(&chbuf, 'b', change->args[arg].u.hostmask);
             break;
         default:
             if (change->args[arg].mode & MODE_CHANOP)
-                mod_chanmode_append(&chbuf, 'o', change->args[arg].member->user->numeric);
+                mod_chanmode_append(&chbuf, 'o', change->args[arg].u.member->user->numeric);
             if (change->args[arg].mode & MODE_VOICE)
-                mod_chanmode_append(&chbuf, 'v', change->args[arg].member->user->numeric);
+                mod_chanmode_append(&chbuf, 'v', change->args[arg].u.member->user->numeric);
             break;
         }
     }

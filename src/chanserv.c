@@ -1195,7 +1195,7 @@ add_channel_ban(struct chanData *channel, const char *mask, char *owner, time_t 
         if(irccasecmp(mask + l1 - l2, old_name))
             continue;
         new_mask = alloca(MAXLEN);
-        sprintf(new_mask, "%.*s%s", l1-l2, mask, hidden_host_suffix);
+        sprintf(new_mask, "%.*s%s", (int)(l1-l2), mask, hidden_host_suffix);
         mask = new_mask;
     }
     safestrncpy(bd->mask, mask, sizeof(bd->mask));
@@ -1257,7 +1257,7 @@ expire_ban(void *data)
 	    {
                 change.argc = 1;
                 change.args[0].mode = MODE_REMOVE|MODE_BAN;
-                change.args[0].hostmask = bd->mask;
+                change.args[0].u.hostmask = bd->mask;
                 mod_chanmode_announce(chanserv, bd->channel->channel, &change);
                 break;
             }
@@ -1289,7 +1289,8 @@ unregister_channel(struct chanData *channel, const char *reason)
 
     timeq_del(0, NULL, channel, TIMEQ_IGNORE_FUNC | TIMEQ_IGNORE_WHEN);
 
-    if (chanserv_conf.use_registered_mode) {
+    if(chanserv_conf.use_registered_mode)
+    {
       mod_chanmode_init(&change);
       change.modes_clear |= MODE_REGISTERED;
       mod_chanmode_announce(chanserv, channel->channel, &change);
@@ -1749,11 +1750,11 @@ static CHANSERV_FUNC(cmd_register)
     cData = register_channel(channel, user->handle_info->handle);
     scan_user_presence(add_channel_user(cData, handle, UL_OWNER, 0, NULL), NULL);
     cData->modes = chanserv_conf.default_modes;
-    if (chanserv_conf.use_registered_mode)
+    if(chanserv_conf.use_registered_mode)
       cData->modes.modes_set |= MODE_REGISTERED;
     change = mod_chanmode_dup(&cData->modes, 1);
     change->args[change->argc].mode = MODE_CHANOP;
-    change->args[change->argc].member = AddChannelUser(chanserv, channel);
+    change->args[change->argc].u.member = AddChannelUser(chanserv, channel);
     change->argc++;
     mod_chanmode_announce(chanserv, channel, change);
     mod_chanmode_free(change);
@@ -1905,7 +1906,7 @@ static CHANSERV_FUNC(cmd_move)
         mod_chanmode_init(&change);
         change.argc = 1;
         change.args[0].mode = MODE_CHANOP;
-        change.args[0].member = AddChannelUser(chanserv, target);
+        change.args[0].u.member = AddChannelUser(chanserv, target);
         mod_chanmode_announce(chanserv, target, &change);
     }
 
@@ -2167,7 +2168,7 @@ static CHANSERV_FUNC(cmd_opchan)
     mod_chanmode_init(&change);
     change.argc = 1;
     change.args[0].mode = MODE_CHANOP;
-    change.args[0].member = GetUserMode(channel, chanserv);
+    change.args[0].u.member = GetUserMode(channel, chanserv);
     mod_chanmode_announce(chanserv, channel, &change);
     reply("CSMSG_OPCHAN_DONE", channel->name);
     return 1;
@@ -2504,8 +2505,8 @@ static CHANSERV_FUNC(cmd_up)
 
     mod_chanmode_init(&change);
     change.argc = 1;
-    change.args[0].member = GetUserMode(channel, user);
-    if(!change.args[0].member)
+    change.args[0].u.member = GetUserMode(channel, user);
+    if(!change.args[0].u.member)
     {
         if(argc)
             reply("MSG_CHANNEL_ABSENT", channel->name);
@@ -2535,7 +2536,7 @@ static CHANSERV_FUNC(cmd_up)
             reply("CSMSG_NO_ACCESS");
         return 0;
     }
-    change.args[0].mode &= ~change.args[0].member->modes;
+    change.args[0].mode &= ~change.args[0].u.member->modes;
     if(!change.args[0].mode)
     {
         if(argc)
@@ -2552,22 +2553,22 @@ static CHANSERV_FUNC(cmd_down)
 
     mod_chanmode_init(&change);
     change.argc = 1;
-    change.args[0].member = GetUserMode(channel, user);
-    if(!change.args[0].member)
+    change.args[0].u.member = GetUserMode(channel, user);
+    if(!change.args[0].u.member)
     {
         if(argc)
             reply("MSG_CHANNEL_ABSENT", channel->name);
 	return 0;
     }
 
-    if(!change.args[0].member->modes)
+    if(!change.args[0].u.member->modes)
     {
         if(argc)
             reply("CSMSG_ALREADY_DOWN", channel->name);
 	return 0;
     }
 
-    change.args[0].mode = MODE_REMOVE | change.args[0].member->modes;
+    change.args[0].mode = MODE_REMOVE | change.args[0].u.member->modes;
     modcmd_chanmode_announce(&change);
     return 1;
 }
@@ -2616,8 +2617,8 @@ modify_users(struct userNode *user, struct chanNode *channel, unsigned int argc,
 	if(!(victim = GetUserH(argv[ii])))
             continue;
         change->args[valid].mode = mode;
-        change->args[valid].member = GetUserMode(channel, victim);
-        if(!change->args[valid].member)
+        change->args[valid].u.member = GetUserMode(channel, victim);
+        if(!change->args[valid].u.member)
             continue;
         if(validate && !validate(user, channel, victim))
 	    continue;
@@ -2895,7 +2896,7 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
             if(irccasecmp(ban + l1 - l2, old_name))
                 continue;
             new_mask = malloc(MAXLEN);
-            sprintf(new_mask, "%.*s%s", l1-l2, ban, hidden_host_suffix);
+            sprintf(new_mask, "%.*s%s", (int)(l1-l2), ban, hidden_host_suffix);
             free(ban);
             name = ban = new_mask;
         }
@@ -2920,12 +2921,12 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
         for(n = 0; n < victimCount; ++n)
         {
             change->args[n].mode = MODE_REMOVE|MODE_CHANOP|MODE_VOICE;
-            change->args[n].member = victims[n];
+            change->args[n].u.member = victims[n];
         }
         if(!exists)
         {
             change->args[n].mode = MODE_BAN;
-            change->args[n++].hostmask = ban;
+            change->args[n++].u.hostmask = ban;
         }
         change->argc = n;
         if(cmd)
@@ -3033,7 +3034,7 @@ find_matching_bans(struct banList *bans, struct userNode *actee, const char *mas
         if(!match[ii])
             continue;
         change->args[count].mode = MODE_REMOVE | MODE_BAN;
-        change->args[count++].hostmask = bans->list[ii]->ban;
+        change->args[count++].u.hostmask = bans->list[ii]->ban;
     }
     return change;
 }
@@ -3144,7 +3145,7 @@ static CHANSERV_FUNC(cmd_unbanall)
     for(ii=0; ii<channel->banlist.used; ii++)
     {
         change->args[ii].mode = MODE_REMOVE | MODE_BAN;
-        change->args[ii].hostmask = channel->banlist.list[ii]->ban;
+        change->args[ii].u.hostmask = channel->banlist.list[ii]->ban;
     }
     modcmd_chanmode_announce(change);
     mod_chanmode_free(change);
@@ -4096,7 +4097,7 @@ static CHANSERV_FUNC(cmd_resync)
             if(!(mn->modes & MODE_CHANOP))
             {
                 changes->args[used].mode = MODE_CHANOP;
-                changes->args[used++].member = mn;
+                changes->args[used++].u.member = mn;
             }
         }
         else if(!cData->lvlOpts[lvlGiveVoice]
@@ -4105,12 +4106,12 @@ static CHANSERV_FUNC(cmd_resync)
             if(mn->modes & MODE_CHANOP)
             {
                 changes->args[used].mode = MODE_REMOVE | (mn->modes & ~MODE_VOICE);
-                changes->args[used++].member = mn;
+                changes->args[used++].u.member = mn;
             }
             if(!(mn->modes & MODE_VOICE))
             {
                 changes->args[used].mode = MODE_VOICE;
-                changes->args[used++].member = mn;
+                changes->args[used++].u.member = mn;
             }
         }
         else
@@ -4118,7 +4119,7 @@ static CHANSERV_FUNC(cmd_resync)
             if(mn->modes)
             {
                 changes->args[used].mode = MODE_REMOVE | mn->modes;
-                changes->args[used++].member = mn;
+                changes->args[used++].u.member = mn;
             }
         }
     }
@@ -4437,7 +4438,7 @@ chanserv_expire_suspension(void *data)
     mod_chanmode_init(&change);
     change.argc = 1;
     change.args[0].mode = MODE_CHANOP;
-    change.args[0].member = AddChannelUser(chanserv, channel);
+    change.args[0].u.member = AddChannelUser(chanserv, channel);
     mod_chanmode_announce(chanserv, channel, &change);
 }
 
@@ -4964,7 +4965,7 @@ static MODCMD_FUNC(chan_opt_offchannel)
                 mod_chanmode_init(&change);
                 change.argc = 1;
                 change.args[0].mode = MODE_CHANOP;
-                change.args[0].member = AddChannelUser(chanserv, channel);
+                change.args[0].u.member = AddChannelUser(chanserv, channel);
                 mod_chanmode_announce(chanserv, channel, &change);
             }
 	    cData->flags &= ~CHANNEL_OFFCHANNEL;
@@ -5858,7 +5859,7 @@ handle_join(struct modeNode *mNode)
             }
 
             change.args[0].mode = MODE_BAN;
-            change.args[0].hostmask = bData->mask;
+            change.args[0].u.hostmask = bData->mask;
             mod_chanmode_announce(chanserv, channel, &change);
             KickChannelUser(user, channel, chanserv, kick_reason);
             return 1;
@@ -5940,7 +5941,7 @@ handle_join(struct modeNode *mNode)
             if(modes & MODE_CHANOP)
                 modes &= ~MODE_VOICE;
             change.args[0].mode = modes;
-            change.args[0].member = mNode;
+            change.args[0].u.member = mNode;
             mod_chanmode_announce(chanserv, channel, &change);
         }
         if(greeting && !user->uplink->burst)
@@ -5995,7 +5996,7 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
                 change.args[0].mode = MODE_VOICE;
             else
                 change.args[0].mode = 0;
-            change.args[0].member = mn;
+            change.args[0].u.member = mn;
             if(change.args[0].mode)
                 mod_chanmode_announce(chanserv, cn, &change);
         }
@@ -6023,7 +6024,7 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
             if(!user_matches_glob(user, ban->mask, 1))
                 continue;
             change.args[0].mode = MODE_BAN;
-            change.args[0].hostmask = ban->mask;
+            change.args[0].u.hostmask = ban->mask;
             mod_chanmode_announce(chanserv, channel, &change);
             sprintf(kick_reason, "(%s) %s", ban->owner, ban->reason);
             KickChannelUser(user, channel, chanserv, kick_reason);
@@ -6157,7 +6158,7 @@ handle_mode(struct chanNode *channel, struct userNode *user, const struct mod_ch
     {
         if((change->args[ii].mode & (MODE_REMOVE|MODE_CHANOP)) == (MODE_REMOVE|MODE_CHANOP))
         {
-            const struct userNode *victim = change->args[ii].member->user;
+            const struct userNode *victim = change->args[ii].u.member->user;
             if(!protect_user(victim, user, channel->channel_info))
                 continue;
             if(!bounce)
@@ -6165,36 +6166,36 @@ handle_mode(struct chanNode *channel, struct userNode *user, const struct mod_ch
             if(!deopped)
             {
                 bounce->args[bnc].mode = MODE_REMOVE | MODE_CHANOP;
-                bounce->args[bnc].member = GetUserMode(channel, user);
-                if(bounce->args[bnc].member)
+                bounce->args[bnc].u.member = GetUserMode(channel, user);
+                if(bounce->args[bnc].u.member)
                     bnc++;
                 deopped = 1;
             }
             bounce->args[bnc].mode = MODE_CHANOP;
-            bounce->args[bnc].member = change->args[ii].member;
+            bounce->args[bnc].u.member = change->args[ii].u.member;
             bnc++;
             send_message(user, chanserv, "CSMSG_USER_PROTECTED", victim->nick);
         }
         else if(change->args[ii].mode & MODE_CHANOP)
         {
-            const struct userNode *victim = change->args[ii].member->user;
+            const struct userNode *victim = change->args[ii].u.member->user;
             if(IsService(victim) || validate_op(user, channel, (struct userNode*)victim))
                 continue;
             if(!bounce)
                 bounce = mod_chanmode_alloc(change->argc + 1 - ii);
             bounce->args[bnc].mode = MODE_REMOVE | MODE_CHANOP;
-            bounce->args[bnc].member = change->args[ii].member;
+            bounce->args[bnc].u.member = change->args[ii].u.member;
             bnc++;
         }
         else if((change->args[ii].mode & (MODE_REMOVE | MODE_BAN)) == MODE_BAN)
         {
-            const char *ban = change->args[ii].hostmask;
+            const char *ban = change->args[ii].u.hostmask;
             if(!bad_channel_ban(channel, user, ban, NULL, NULL))
                 continue;
             if(!bounce)
                 bounce = mod_chanmode_alloc(change->argc + 1 - ii);
             bounce->args[bnc].mode = MODE_REMOVE | MODE_BAN;
-            bounce->args[bnc].hostmask = ban;
+            bounce->args[bnc].u.hostmask = ban;
             bnc++;
             send_message(user, chanserv, "CSMSG_MASK_PROTECTED", ban);
         }
@@ -6240,7 +6241,7 @@ handle_nick_change(struct userNode *user, UNUSED_ARG(const char *old_nick))
         {
             if(!user_matches_glob(user, bData->mask, 1))
                 continue;
-            change.args[0].hostmask = bData->mask;
+            change.args[0].u.hostmask = bData->mask;
             mod_chanmode_announce(chanserv, channel, &change);
             sprintf(kick_reason, "(%s) %s", bData->owner, bData->reason);
             KickChannelUser(user, channel, chanserv, kick_reason);
@@ -6724,7 +6725,7 @@ chanserv_channel_read(const char *key, struct record_data *hir)
         mod_chanmode_init(&change);
         change.argc = 1;
         change.args[0].mode = MODE_CHANOP;
-        change.args[0].member = AddChannelUser(chanserv, cNode);
+        change.args[0].u.member = AddChannelUser(chanserv, cNode);
         mod_chanmode_announce(chanserv, cNode, &change);
     }
 
@@ -6748,7 +6749,7 @@ chanserv_channel_read(const char *key, struct record_data *hir)
        && (argc = split_line(str, 0, ArrayLength(argv), argv))
        && (modes = mod_chanmode_parse(cNode, argv, argc, MCP_KEY_FREE))) {
         cData->modes = *modes;
-	if (chanserv_conf.use_registered_mode)
+	if(chanserv_conf.use_registered_mode)
           cData->modes.modes_set |= MODE_REGISTERED;
         if(cData->modes.argc > 1)
             cData->modes.argc = 1;

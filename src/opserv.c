@@ -402,16 +402,16 @@ static MODCMD_FUNC(cmd_ban)
     change.argc = 1;
     change.args[0].mode = MODE_BAN;
     if (is_ircmask(argv[1]))
-        change.args[0].hostmask = strdup(argv[1]);
+        change.args[0].u.hostmask = strdup(argv[1]);
     else if ((victim = GetUserH(argv[1])))
-        change.args[0].hostmask = generate_hostmask(victim, 0);
+        change.args[0].u.hostmask = generate_hostmask(victim, 0);
     else {
 	reply("OSMSG_INVALID_IRCMASK", argv[1]);
 	return 0;
     }
     modcmd_chanmode_announce(&change);
-    reply("OSMSG_ADDED_BAN", change.args[0].hostmask, channel->name);
-    free((char*)change.args[0].hostmask);
+    reply("OSMSG_ADDED_BAN", change.args[0].u.hostmask, channel->name);
+    free((char*)change.args[0].u.hostmask);
     return 1;
 }
 
@@ -522,7 +522,7 @@ static MODCMD_FUNC(cmd_clearbans)
     change = mod_chanmode_alloc(channel->banlist.used);
     for (ii=0; ii<channel->banlist.used; ii++) {
         change->args[ii].mode = MODE_REMOVE | MODE_BAN;
-        change->args[ii].hostmask = channel->banlist.list[ii]->ban;
+        change->args[ii].u.hostmask = channel->banlist.list[ii]->ban;
     }
     modcmd_chanmode_announce(change);
     mod_chanmode_free(change);
@@ -559,7 +559,7 @@ static MODCMD_FUNC(cmd_deop)
             || !(mn->modes & MODE_CHANOP))
             continue;
         change->args[count].mode = MODE_REMOVE | MODE_CHANOP;
-        change->args[count++].member = mn;
+        change->args[count++].u.member = mn;
     }
     if (count) {
         change->argc = count;
@@ -581,7 +581,7 @@ static MODCMD_FUNC(cmd_deopall)
 	if (IsService(mn->user) || !(mn->modes & MODE_CHANOP))
             continue;
         change->args[count].mode = MODE_REMOVE | MODE_CHANOP;
-        change->args[count++].member = mn;
+        change->args[count++].u.member = mn;
     }
     if (count) {
         change->argc = count;
@@ -923,7 +923,7 @@ static MODCMD_FUNC(cmd_join)
         mod_chanmode_init(&change);
         change.argc = 1;
         change.args[0].mode = MODE_CHANOP;
-        change.args[0].member = AddChannelUser(bot, channel);
+        change.args[0].u.member = AddChannelUser(bot, channel);
         modcmd_chanmode_announce(&change);
     }
     irc_fetchtopic(bot, channel->name);
@@ -968,7 +968,7 @@ static MODCMD_FUNC(cmd_kickall)
         struct mod_chanmode change;
         mod_chanmode_init(&change);
         change.args[0].mode = MODE_CHANOP;
-        change.args[0].member = AddChannelUser(bot, channel);
+        change.args[0].u.member = AddChannelUser(bot, channel);
         modcmd_chanmode_announce(&change);
     }
     if (argc < 2) {
@@ -1018,7 +1018,7 @@ static MODCMD_FUNC(cmd_kickban)
     mod_chanmode_init(&change);
     change.argc = 1;
     change.args[0].mode = MODE_BAN;
-    change.args[0].hostmask = mask = generate_hostmask(target, 0);
+    change.args[0].u.hostmask = mask = generate_hostmask(target, 0);
     modcmd_chanmode_announce(&change);
     KickChannelUser(target, channel, cmd->parent->bot, reason);
     free(mask);
@@ -1038,13 +1038,13 @@ static MODCMD_FUNC(cmd_kickbanall)
     if (!(inchan = GetUserMode(channel, bot) ? 1 : 0)) {
         change = mod_chanmode_alloc(2);
         change->args[0].mode = MODE_CHANOP;
-        change->args[0].member = AddChannelUser(bot, channel);
+        change->args[0].u.member = AddChannelUser(bot, channel);
         change->args[1].mode = MODE_BAN;
-        change->args[1].hostmask = "*!*@*";
+        change->args[1].u.hostmask = "*!*@*";
     } else {
         change = mod_chanmode_alloc(1);
         change->args[0].mode = MODE_BAN;
-        change->args[0].hostmask = "*!*@*";
+        change->args[0].u.hostmask = "*!*@*";
     }
     modcmd_chanmode_announce(change);
     mod_chanmode_free(change);
@@ -1117,7 +1117,7 @@ static MODCMD_FUNC(cmd_op)
         if (mn->modes & MODE_CHANOP)
             continue;
         change->args[count].mode = MODE_CHANOP;
-        change->args[count++].member = mn;
+        change->args[count++].u.member = mn;
     }
     if (count) {
         change->argc = count;
@@ -1139,7 +1139,7 @@ static MODCMD_FUNC(cmd_opall)
 	if (mn->modes & MODE_CHANOP)
             continue;
         change->args[count].mode = MODE_CHANOP;
-        change->args[count++].member = mn;
+        change->args[count++].u.member = mn;
     }
     if (count) {
         change->argc = count;
@@ -1212,7 +1212,7 @@ static MODCMD_FUNC(cmd_unban)
     mod_chanmode_init(&change);
     change.argc = 1;
     change.args[0].mode = MODE_REMOVE | MODE_BAN;
-    change.args[0].hostmask = argv[1];
+    change.args[0].u.hostmask = argv[1];
     modcmd_chanmode_announce(&change);
     reply("OSMSG_UNBAN_DONE", channel->name);
     return 1;
@@ -1229,7 +1229,7 @@ static MODCMD_FUNC(cmd_voiceall)
 	if (mn->modes & (MODE_CHANOP|MODE_VOICE))
             continue;
         change->args[count].mode = MODE_VOICE;
-        change->args[count++].member = mn;
+        change->args[count++].u.member = mn;
     }
     if (count) {
         change->argc = count;
@@ -1251,7 +1251,7 @@ static MODCMD_FUNC(cmd_devoiceall)
 	if (!(mn->modes & MODE_VOICE))
             continue;
         change->args[count].mode = MODE_REMOVE | MODE_VOICE;
-        change->args[count++].member = mn;
+        change->args[count++].u.member = mn;
     }
     if (count) {
         change->argc = count;
@@ -1803,9 +1803,9 @@ opserv_shutdown_channel(struct chanNode *channel, const char *reason)
     change = mod_chanmode_alloc(2);
     change->modes_set = MODE_SECRET | MODE_INVITEONLY;
     change->args[0].mode = MODE_CHANOP;
-    change->args[0].member = AddChannelUser(opserv, channel);
+    change->args[0].u.member = AddChannelUser(opserv, channel);
     change->args[1].mode = MODE_BAN;
-    change->args[1].hostmask = "*!*@*";
+    change->args[1].u.hostmask = "*!*@*";
     mod_chanmode_announce(opserv, channel, change);
     mod_chanmode_free(change);
     for (nn=channel->members.used; nn>0; ) {
@@ -1884,7 +1884,7 @@ opserv_join_check(struct modeNode *mNode)
             if (!GetUserMode(channel, opserv)) {
                 /* If we aren't in the channel, join it. */
                 change.args[0].mode = MODE_CHANOP;
-                change.args[0].member = AddChannelUser(opserv, channel);
+                change.args[0].u.member = AddChannelUser(opserv, channel);
                 change.argc++;
             }
             if (!(channel->modes & MODE_MODERATED))
@@ -2286,8 +2286,8 @@ static MODCMD_FUNC(cmd_clone)
         mod_chanmode_init(&change);
         change.argc = 1;
         change.args[0].mode = MODE_CHANOP;
-        change.args[0].member = GetUserMode(channel, clone);
-        if (!change.args[0].member) {
+        change.args[0].u.member = GetUserMode(channel, clone);
+        if (!change.args[0].u.member) {
             reply("OSMSG_NOT_ON_CHANNEL", clone->nick, channel->name);
             return 0;
 	}

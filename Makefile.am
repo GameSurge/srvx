@@ -1,4 +1,4 @@
-EXTRA_DIST = srvx.conf.example sockcheck.conf.example
+EXTRA_DIST = FAQ srvx.conf.example sockcheck.conf.example
 SUBDIRS = @MY_SUBDIRS@
 DIST_SUBDIRS = src rx
 

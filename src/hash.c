@@ -148,7 +148,7 @@ ReintroduceUser(struct userNode *user)
 	irc_join(user, mn->channel);
         if (mn->modes) {
             change.args[0].mode = mn->modes;
-            change.args[0].member = mn;
+            change.args[0].u.member = mn;
             mod_chanmode_announce(user, mn->channel, &change);
         }
     }
@@ -327,13 +327,13 @@ wipeout_channel(struct chanNode *cNode, time_t new_time, char **modes, unsigned 
             struct modeNode *mn = cNode->members.list[nn];
             if ((mn->modes & MODE_CHANOP) && IsService(mn->user) && IsLocal(mn->user)) {
                 change->args[argc].mode = MODE_CHANOP;
-                change->args[argc].member = mn;
+                change->args[argc].u.member = mn;
                 argc++;
             }
         }
         assert(argc == change->argc);
-        change->args[0].member->modes &= ~MODE_CHANOP;
-        mod_chanmode_announce(change->args[0].member->user, cNode, change);
+        change->args[0].u.member->modes &= ~MODE_CHANOP;
+        mod_chanmode_announce(change->args[0].u.member->user, cNode, change);
         mod_chanmode_free(change);
     }
 }
