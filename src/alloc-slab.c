@@ -25,6 +25,57 @@
 # error The slab allocator requires that your system have the mmap() system call.
 #endif
 
+#define SLAB_DEBUG 1
+
+#if SLAB_DEBUG
+
+#define ALLOC_MAGIC 0x1acf
+#define FREE_MAGIC  0xfc1d
+
+struct alloc_header {
+    unsigned int file_id : 8;
+    unsigned int size : 24;
+    unsigned int line : 16;
+    unsigned int magic : 16;
+};
+
+static const char *file_ids[256];
+static struct file_id_entry {
+    const char *name;
+    unsigned int id : 8;
+} file_id_map[256];
+unsigned int file_ids_used;
+
+static int
+file_id_cmp(const void *a_, const void *b_)
+{
+    return strcmp(*(const char**)a_, *(const char**)b_);
+}
+
+static unsigned int
+get_file_id(const char *fname)
+{
+    struct file_id_entry *entry;
+
+    entry = bsearch(&fname, file_id_map, file_ids_used, sizeof(file_id_map[0]), file_id_cmp);
+    if (entry)
+        return entry->id;
+    entry = file_id_map + file_ids_used;
+    file_ids[file_ids_used] = fname;
+    entry->name = fname;
+    entry->id = file_ids_used;
+    qsort(file_id_map, ++file_ids_used, sizeof(file_id_map[0]), file_id_cmp);
+    return file_ids_used - 1;
+}
+
+typedef struct alloc_header alloc_header_t;
+
+#else
+
+typedef size_t alloc_header_t;
+
+#endif
+
 struct slab {
     struct slabset *parent;
     struct slab *prev;
@@ -199,6 +250,7 @@ slab_unalloc(void *ptr, size_t size)
     assert(size < SMALL_CUTOFF);
     slab = (struct slab*)((((unsigned long)ptr | (slab_pagesize() - 1)) + 1) - sizeof(*slab));
     *item = slab->free;
+    memset(item + 1, 0xde, size - sizeof(*item));
     slab->free = item;
 
     if (slab->used-- == slab->parent->items_per_slab
@@ -226,33 +278,52 @@ slab_unalloc(void *ptr, size_t size)
 }
 
 void *
-slab_malloc(UNUSED_ARG(const char *file), UNUSED_ARG(unsigned int line), size_t size)
+slab_malloc(const char *file, unsigned int line, size_t size)
 {
-    size_t real, *res;
+    alloc_header_t *res;
+    size_t real;
 
-    real = size + sizeof(size_t);
+    assert(size < 1 << 24);
+    real = (size + sizeof(*res) + SLAB_GRAIN - 1) & ~(SLAB_GRAIN - 1);
     if (real < SMALL_CUTOFF)
         res = slab_alloc(slabset_create(real));
     else
         res = slab_map(slab_round_up(real));
+#if SLAB_DEBUG
+    res->file_id = get_file_id(file);
+    res->size = size;
+    res->line = line;
+    res->magic = ALLOC_MAGIC;
+#else
     *res = size;
+    (void)file; (void)line;
+#endif
+    alloc_count++;
+    alloc_size += size;
     return res + 1;
 }
 
 void *
 slab_realloc(const char *file, unsigned int line, void *ptr, size_t size)
 {
-    size_t orig, *newblock;
+    alloc_header_t *orig;
+    void *newblock;
+    size_t osize;
 
     if (!ptr)
         return slab_malloc(file, line, size);
 
     verify(ptr);
-    orig = ((size_t*)ptr)[-1];
-    if (orig >= size)
+    orig = (alloc_header_t*)ptr - 1;
+#if SLAB_DEBUG
+    osize = orig->size;
+#else
+    osize = *orig;
+#endif
+    if (osize >= size)
         return ptr;
     newblock = slab_malloc(file, line, size);
-    memcpy(newblock, ptr, orig);
+    memcpy(newblock, ptr, size);
     return newblock;
 }
 
@@ -271,33 +342,54 @@ slab_strdup(const char *file, unsigned int line, const char *src)
 void
 slab_free(UNUSED_ARG(const char *file), UNUSED_ARG(unsigned int line), void *ptr)
 {
-    size_t real, *size;
+    alloc_header_t *hdr;
+    size_t real;
 
     if (!ptr)
         return;
     verify(ptr);
-    size = (size_t*)ptr - 1;
-    real = *size + sizeof(size_t);
+    hdr = (alloc_header_t*)ptr - 1;
+#if SLAB_DEBUG
+    hdr->magic = FREE_MAGIC;
+    real = hdr->size + sizeof(*hdr);
+#else
+    real = *hdr + sizeof(*hdr);
+#endif
+    real = (real + SLAB_GRAIN - 1) & ~(SLAB_GRAIN - 1);
     if (real < SMALL_CUTOFF)
-        slab_unalloc(size, real);
+        slab_unalloc(hdr, real);
     else
-        munmap(size, slab_round_up(real));
+        munmap(hdr, slab_round_up(real));
+    alloc_count--;
+    alloc_size -= real - sizeof(*hdr);
 }
 
 void
 verify(const void *ptr)
 {
-    size_t size;
+    alloc_header_t *hdr;
+    size_t real;
 
     if (!ptr)
         return;
-    else if ((size = ((size_t*)ptr)[-1] + sizeof(size_t)) >= SMALL_CUTOFF)
-        assert(((unsigned long)ptr & (slab_pagesize() - 1)) == sizeof(size_t));
+
+    hdr = (alloc_header_t*)ptr - 1;
+#if SLAB_DEBUG
+    real = hdr->size + sizeof(*hdr);
+    assert(hdr->file_id < file_ids_used);
+    assert(hdr->magic == ALLOC_MAGIC);
+#else
+    real = *hdr + sizeof(*hdr);
+#endif
+    real = (real + SLAB_GRAIN - 1) & ~(SLAB_GRAIN - 1);
+
+    if (real >= SMALL_CUTOFF)
+        assert(((unsigned long)ptr & (slab_pagesize() - 1)) == sizeof(*hdr));
     else {
         struct slab *slab;
         size_t expected;
 
-        expected = (size + SLAB_GRAIN - 1) & ~(SLAB_GRAIN - 1);
+        expected = (real + SLAB_GRAIN - 1) & ~(SLAB_GRAIN - 1);
         slab = (struct slab*)((((unsigned long)ptr | (slab_pagesize() - 1)) + 1) - sizeof(*slab));
         assert(slab->parent->size == expected);
     }
