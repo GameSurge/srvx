@@ -2448,7 +2448,7 @@ cmd_trim_users(struct userNode *user, struct chanNode *channel, unsigned short m
     if(!max_access)
     {
         min_access = 1;
-        max_access = UL_OWNER;
+        max_access = (uData->access >= UL_OWNER) ? UL_OWNER : (uData->access - 1);
     }
     send_message(user, chanserv, "CSMSG_TRIMMED_USERS", count, min_access, max_access, channel->name, intervalString(interval, duration, user->handle_info));
     return 1;
@@ -5544,6 +5544,7 @@ static CHANSERV_FUNC(cmd_unsuspend)
         return 0;
     }
     target->flags &= ~USER_SUSPENDED;
+    scan_user_presence(target, NULL);
     reply("CSMSG_USER_UNSUSPENDED", hi->handle, channel->name);
     return 1;
 }

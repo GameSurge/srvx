@@ -2373,7 +2373,7 @@ clear_chanmode(struct chanNode *channel, const char *modes)
         case 'b': remove |= MODE_BAN; break;
         case 'D': remove |= MODE_DELAYJOINS; break;
         case 'r': remove |= MODE_REGONLY; break;
-        case 'c': remove |= MODE_NOCOLORS;
+        case 'c': remove |= MODE_NOCOLORS; break;
         case 'C': remove |= MODE_NOCTCPS; break;
         }
     }
