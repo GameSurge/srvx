@@ -2406,7 +2406,7 @@ cmd_trim_users(struct userNode *user, struct chanNode *channel, unsigned short m
 	    continue;
 
 	if(((uData->access >= min_access) && (uData->access <= max_access))
-           || (max_access && (uData->access < actor->access)))
+           || (!max_access && (uData->access < actor->access)))
 	{
 	    del_channel_user(uData, 1);
 	    count++;
@@ -4947,7 +4947,7 @@ channel_level_option(enum levelOption option, struct userNode *user, struct chan
             return 0;
         }
         uData = GetChannelUser(cData, user->handle_info);
-        if(!uData || (uData->access < value))
+        if(!uData)
         {
             reply("CSMSG_BAD_SETLEVEL");
             return 0;
@@ -6000,6 +6000,7 @@ handle_mode(struct chanNode *channel, struct userNode *user, const struct mod_ch
                 bounce->args[bnc].member = GetUserMode(channel, user);
                 if(bounce->args[bnc].member)
                     bnc++;
+                deopped = 1;
             }
             bounce->args[bnc].mode = MODE_CHANOP;
             bounce->args[bnc].member = change->args[ii].member;

@@ -465,6 +465,9 @@ AddChannelUser(struct userNode *user, struct chanNode* channel)
 	modeList_append(&channel->members, mNode);
 	modeList_append(&user->channels, mNode);
 
+        if (channel->members.used == 1)
+            mNode->modes |= MODE_CHANOP;
+
         for (n=0; n<jf_used; n++) {
             /* Callbacks return true if they kick or kill the user,
              * and we can continue without removing mNode. */

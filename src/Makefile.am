@@ -1,7 +1,6 @@
 AM_CPPFLAGS = @RX_INCLUDES@
 LIBS = @LIBS@ @RX_LIBS@
 
-ARCH_REVISION=$(shell tla logs -f | tail -n 1)
 noinst_PROGRAMS = srvx
 EXTRA_PROGRAMS = checkdb globtest
 noinst_DATA = chanserv.help global.help modcmd.help nickserv.help opserv.help saxdb.help sendmail.help mod-sockcheck.help mod-helpserv.help mod-memoserv.help
