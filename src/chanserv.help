@@ -103,6 +103,11 @@
 "MYACCESS" ("/msg $S MYACCESS [<nick|*account>]",
         "Lists channels where you have access and infolines in each.",
         "Network staff may specify a nickname or *account to view the list for another user.",
+        "Your access level in the channel may be followed by a comma and one of the following characters:",
+        "  s     Your access in the channel has been suspended.",
+        "  o     AutoOp is active.",
+        "  v     AutoVoice is active.",
+        "  i     AutoInvite is active.",
         "$uSee Also:$u access, users");
 "ACCESS" ("/msg $S ACCESS <#channel> [<nick|*account>]",
         "Reports various pieces of information about a channel user, including channel and network access level, and the user's info line. If no nick or account is provided, $S returns your own information.",

@@ -2509,10 +2509,16 @@ static CHANSERV_FUNC(cmd_up)
         change.args[0].mode = MODE_CHANOP;
         errmsg = "CSMSG_ALREADY_OPPED";
     }
-    else
+    else if(uData->access >= channel->channel_info->lvlOpts[lvlGiveVoice])
     {
         change.args[0].mode = MODE_VOICE;
         errmsg = "CSMSG_ALREADY_VOICED";
+    }
+    else
+    {
+        if(argc)
+            reply("CSMSG_NO_ACCESS");
+        return 0;
     }
     change.args[0].mode &= ~change.args[0].member->modes;
     if(!change.args[0].mode)
@@ -3150,9 +3156,9 @@ static CHANSERV_FUNC(cmd_open)
 
 static CHANSERV_FUNC(cmd_myaccess)
 {
+    static struct string_buffer sbuf;
     struct handle_info *target_handle;
     struct userData *uData;
-    const char *chanName;
 
     if(argc < 2)
         target_handle = user->handle_info;
@@ -3181,11 +3187,27 @@ static CHANSERV_FUNC(cmd_myaccess)
            && (target_handle != user->handle_info)
            && !GetTrueChannelAccess(cData, user->handle_info))
             continue;
-        chanName = cData->channel->name;
+        sbuf.used = 0;
+        string_buffer_append_printf(&sbuf, "[%s (%d", cData->channel->name, uData->access);
+        if(uData->flags != USER_AUTO_OP)
+            string_buffer_append(&sbuf, ',');
+        if(IsUserSuspended(uData))
+            string_buffer_append(&sbuf, 's');
+        if(IsUserAutoOp(uData))
+        {
+            if(uData->access >= cData->lvlOpts[lvlGiveOps])
+                string_buffer_append(&sbuf, 'o');
+            else if(uData->access >= cData->lvlOpts[lvlGiveVoice])
+                string_buffer_append(&sbuf, 'v');
+        }
+        if(IsUserAutoInvite(uData) && (uData->access >= cData->lvlOpts[lvlInviteMe]))
+            string_buffer_append(&sbuf, 'i');
         if(uData->info)
-            send_message_type(4, user, cmd->parent->bot, "[%s (%d)] %s", chanName, uData->access, uData->info);
+            string_buffer_append_printf(&sbuf, ")] %s", uData->info);
         else
-            send_message_type(4, user, cmd->parent->bot, "[%s (%d)]", chanName, uData->access);
+            string_buffer_append_string(&sbuf, ")]");
+        string_buffer_append(&sbuf, '\0');
+        send_message_type(4, user, cmd->parent->bot, sbuf.list);
     }
 
     return 1;
