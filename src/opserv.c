@@ -437,7 +437,7 @@ static MODCMD_FUNC(cmd_chaninfo)
     if (channel->topic_time) {
         fmt = user_find_message(user, "OSMSG_CHANINFO_TOPIC");
         strftime(buffer, sizeof(buffer), fmt, gmtime(&channel->topic_time));
-        reply(buffer, channel->topic_nick, channel->topic);
+        send_message_type(4, user, cmd->parent->bot, buffer, channel->topic_nick, channel->topic);
     } else {
 	irc_fetchtopic(cmd->parent->bot, channel->name);
 	reply("OSMSG_CHANINFO_TOPIC_UNKNOWN");

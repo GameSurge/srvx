@@ -1124,7 +1124,8 @@ static CMD_FUNC(cmd_clearmode)
 
 static CMD_FUNC(cmd_topic)
 {
-    static struct chanNode *cn;
+    struct chanNode *cn;
+    time_t chan_ts, topic_ts;
 
     if (argc < 3)
         return 0;
@@ -1132,7 +1133,16 @@ static CMD_FUNC(cmd_topic)
         log_module(MAIN_LOG, LOG_ERROR, "Unable to find channel %s whose topic is being set", argv[1]);
         return 0;
     }
-    SetChannelTopic(cn, GetUserH(origin), argv[2], 0);
+    if (argc >= 5) {
+        /* Looks like an Asuka style topic burst. */
+        chan_ts = atoi(argv[2]);
+        topic_ts = atoi(argv[3]);
+    } else {
+        chan_ts = cn->timestamp;
+        topic_ts = now;
+    }
+    SetChannelTopic(cn, GetUserH(origin), argv[argc-1], 0);
+    cn->topic_time = topic_ts;
     return 1;
 }
 

@@ -281,6 +281,11 @@ wipeout_channel(struct chanNode *cNode, time_t new_time, char **modes, unsigned 
     char orig_key[KEYLEN+1];
     unsigned int nn, argc;
 
+    /* nuke old topic */
+    cNode->topic[0] = '\0';
+    cNode->topic_nick[0] = '\0';
+    cNode->topic_time = 0;
+
     /* remember the old modes, and update them with the new */
     orig_modes = cNode->modes;
     orig_limit = cNode->limit;
