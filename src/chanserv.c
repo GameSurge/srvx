@@ -747,25 +747,20 @@ int check_user_level(struct chanNode *channel, struct userNode *user, enum level
    user is optional, if not null, it skips checking that userNode
    (for the handle_part function) */
 static void
-scan_handle_presence(struct chanNode *channel, struct handle_info *handle, struct userNode *user)
+scan_user_presence(struct userData *uData, struct userNode *user)
 {
-    struct userData *uData;
+    struct modeNode *mn;
 
-    if(!channel->channel_info || IsSuspended(channel->channel_info))
-        return;
-
-    uData = GetTrueChannelAccess(channel->channel_info, handle);
-    if(uData)
+    if(IsSuspended(uData->channel)
+       || IsUserSuspended(uData)
+       || !(mn = find_handle_in_channel(uData->channel->channel, uData->handle, user)))
     {
-        struct modeNode *mn = find_handle_in_channel(channel, handle, user);
-
-	if(mn)
-	{
-	    uData->present = 1;
-	    uData->seen = now;
-	}
-	else
-	    uData->present = 0;
+        uData->present = 0;
+    }
+    else
+    {
+        uData->present = 1;
+        uData->seen = now;
     }
 }
 
@@ -1723,8 +1718,7 @@ static CHANSERV_FUNC(cmd_register)
         channel = AddChannel(argv[1], now, NULL, NULL);
 
     cData = register_channel(channel, user->handle_info->handle);
-    add_channel_user(cData, handle, UL_OWNER, 0, NULL);
-    scan_handle_presence(channel, handle, NULL);
+    scan_user_presence(add_channel_user(cData, handle, UL_OWNER, 0, NULL), NULL);
     cData->modes = chanserv_conf.default_modes;
     change = mod_chanmode_dup(&cData->modes, 1);
     change->args[change->argc].mode = MODE_CHANOP;
@@ -2163,10 +2157,10 @@ static CHANSERV_FUNC(cmd_adduser)
 	return 0;
     }
 
-    access = user_level_from_name(argv[1], UL_OWNER);
+    access = user_level_from_name(argv[2], UL_OWNER);
     if(!access)
     {
-	reply("CSMSG_INVALID_ACCESS", argv[1]);
+	reply("CSMSG_INVALID_ACCESS", argv[2]);
 	return 0;
     }
 
@@ -2177,7 +2171,7 @@ static CHANSERV_FUNC(cmd_adduser)
 	return 0;
     }
 
-    if(!(handle = modcmd_get_handle_info(user, argv[2])))
+    if(!(handle = modcmd_get_handle_info(user, argv[1])))
         return 0;
 
     if((actee = GetTrueChannelAccess(channel->channel_info, handle)))
@@ -2187,7 +2181,7 @@ static CHANSERV_FUNC(cmd_adduser)
     }
 
     actee = add_channel_user(channel->channel_info, handle, access, 0, NULL);
-    scan_handle_presence(channel, handle, NULL);
+    scan_user_presence(actee, NULL);
     reply("CSMSG_ADDED_USER", handle->handle, channel->name, access);
     return 1;
 }
@@ -5818,7 +5812,9 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
     {
         struct chanNode *cn;
         struct modeNode *mn;
-        if(IsSuspended(channel->channel) || !(cn = channel->channel->channel))
+        if(IsUserSuspended(channel)
+           || IsSuspended(channel->channel)
+           || !(cn = channel->channel->channel))
             continue;
 
         mn = GetUserMode(cn, user);
@@ -5895,10 +5891,10 @@ handle_part(struct userNode *user, struct chanNode *channel, UNUSED_ARG(const ch
 {
     struct chanData *cData;
     struct userData *uData;
-    struct handle_info *handle;
 
     cData = channel->channel_info;
-    if(!cData || IsSuspended(cData) || IsLocal(user)) return;
+    if(!cData || IsSuspended(cData) || IsLocal(user))
+        return;
 
     if((cData->flags & CHANNEL_DYNAMIC_LIMIT) && !channel->join_flooded)
     {
@@ -5911,11 +5907,8 @@ handle_part(struct userNode *user, struct chanNode *channel, UNUSED_ARG(const ch
 	}
     }
 
-    if((handle = user->handle_info) && (uData = GetTrueChannelAccess(cData, handle)))
-    {
-	uData->seen = now;
-	scan_handle_presence(channel, handle, user);
-    }
+    if((uData = GetTrueChannelAccess(cData, user->handle_info)))
+	scan_user_presence(uData, user);
 
     if(IsHelping(user) && IsSupportHelper(user))
     {

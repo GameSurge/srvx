@@ -106,9 +106,9 @@
 "ADDBAN" ("/msg $C ADDBAN <#channel> <mask|nick> [Reason]",
         "Adds a ban to the channels permanent ban list, remaining in effect until removed with the DELBAN command. If it exactly matches an existing ban already in the list, the reason will be updated. If the existing ban was a timed ban, it will be extended into a permanent ban.",
         "$uSee Also:$u bans, delban, mdelban");
-"ADDUSER" ("/msg $C ADDUSER <#channel> <level> <nick|*account>",
+"ADDUSER" ("/msg $C ADDUSER <#channel><nick|*account> <level>",
         "This command adds someone to the channel user list with the specified access level.  (You may only add users to levels less than your own.)",
-        "The level may be one of $bpeon$b, $bop$b, $bmaster$b, $bcoowner$b or $bowner$b (only network staff may add owners).",
+        "The level may be one of $bpeon$b, $bop$b, $bmaster$b, $bcoowner$b, $bowner$b, or a number between 1 and 500.  Only network staff may add level 500 users (owners).",
         "$uSee Also:$u deluser, users");
 "ADDTIMEDBAN" ("/msg $C ADDTIMEDBAN <#channel> <mask|nick> <Duration> [Reason]",
         "Adds an automatically expiring ban to the channel ban list. This command behaves in the exact same fashion as ADDBAN with the exception that the bans are automatically removed after the user-supplied duration. If it exactly matches an existing ban already in the list, the reason will be updated. If the existing ban was a timed ban, it will be extended. Timed bans can be removed with the DELBAN command, as with permanent bans.",

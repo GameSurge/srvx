@@ -32,7 +32,7 @@ static struct dict *modules;
 static struct dict *services;
 static struct pending_template *pending_templates;
 static struct module *modcmd_module;
-static struct modcmd *bind_command, *help_command;
+static struct modcmd *bind_command, *help_command, *version_command;
 static const struct message_entry msgtab[] = {
     { "MCMSG_VERSION", "$b"PACKAGE_STRING"$b ("CODENAME"), Built: " __DATE__ ", " __TIME__"." },
     { "MCMSG_BARE_FLAG", "Flag %.*s must be preceeded by a + or -." },
@@ -1952,7 +1952,7 @@ modcmd_init(void) {
     modcmd_register(modcmd_module, "service trigger", cmd_service_trigger, 2, 0, NULL);
     modcmd_register(modcmd_module, "service remove", cmd_service_remove, 2, 0, NULL);
     modcmd_register(modcmd_module, "dumpmessages", cmd_dump_messages, 1, 0, "oper_level", "1000", NULL);
-    modcmd_register(modcmd_module, "version", cmd_version, 1, 0, NULL);
+    version_command = modcmd_register(modcmd_module, "version", cmd_version, 1, 0, NULL);
     message_register_table(msgtab);
 }
 
@@ -2146,21 +2146,25 @@ create_default_binds(void) {
             continue;
         if (dict_size(service->commands) > 0)
             continue;
+
         /* Bind the default modules for this service to it */
         for (jj = 0; def_binds[ii].modnames[jj]; ++jj) {
             if (!(module = module_find(def_binds[ii].modnames[jj])))
                 continue;
             service_bind_module(service, module);
         }
-        /* Bind the help command to this service */
+
+        /* Bind the help and version commands to this service */
         service_bind_modcmd(service, help_command, help_command->name);
+        service_bind_modcmd(service, version_command, version_command->name);
+
         /* Now some silly hax.. (aliases that most people want) */
         if (!irccasecmp(def_binds[ii].svcname, "ChanServ")) {
-            service_make_alias(service, "addowner", "*chanserv.adduser", "owner", "$1", NULL);
-            service_make_alias(service, "addcoowner", "*chanserv.adduser", "coowner", "$1", NULL);
-            service_make_alias(service, "addmaster", "*chanserv.adduser", "master", "$1", NULL);
-            service_make_alias(service, "addop", "*chanserv.adduser", "op", "$1", NULL);
-            service_make_alias(service, "addpeon", "*chanserv.adduser", "peon", "$1", NULL);
+            service_make_alias(service, "addowner", "*chanserv.adduser", "$1", "owner", NULL);
+            service_make_alias(service, "addcoowner", "*chanserv.adduser", "$1", "coowner", NULL);
+            service_make_alias(service, "addmaster", "*chanserv.adduser", "$1", "master", NULL);
+            service_make_alias(service, "addop", "*chanserv.adduser", "$1", "op", NULL);
+            service_make_alias(service, "addpeon", "*chanserv.adduser", "$1", "peon", NULL);
             service_make_alias(service, "delowner", "*chanserv.deluser", "owner", "$1", NULL);
             service_make_alias(service, "delcoowner", "*chanserv.deluser", "coowner", "$1", NULL);
             service_make_alias(service, "delmaster", "*chanserv.deluser", "master", "$1", NULL);
