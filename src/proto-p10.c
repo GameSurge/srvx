@@ -2083,6 +2083,7 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
         case 'r': do_chan_mode(MODE_REGONLY); break;
         case 's': do_chan_mode(MODE_SECRET); break;
         case 't': do_chan_mode(MODE_TOPICLIMIT); break;
+        case 'z': do_chan_mode(MODE_REGISTERED); break;
 #undef do_chan_mode
         case 'l':
             if (add) {
@@ -2226,6 +2227,7 @@ mod_chanmode_announce(struct userNode *who, struct chanNode *channel, struct mod
         DO_MODE_CHAR(REGONLY, 'r');
         DO_MODE_CHAR(NOCOLORS, 'c');
         DO_MODE_CHAR(NOCTCPS, 'C');
+        DO_MODE_CHAR(REGISTERED, 'z');
 #undef DO_MODE_CHAR
         if (change->modes_clear & channel->modes & MODE_KEY)
             mod_chanmode_append(&chbuf, 'k', channel->key);
@@ -2264,6 +2266,7 @@ mod_chanmode_announce(struct userNode *who, struct chanNode *channel, struct mod
         DO_MODE_CHAR(REGONLY, 'r');
         DO_MODE_CHAR(NOCOLORS, 'c');
         DO_MODE_CHAR(NOCTCPS, 'C');
+        DO_MODE_CHAR(REGISTERED, 'z');
 #undef DO_MODE_CHAR
         if(change->modes_set & MODE_KEY)
             mod_chanmode_append(&chbuf, 'k', change->new_key);
@@ -2319,6 +2322,7 @@ mod_chanmode_format(struct mod_chanmode *change, char *outbuff)
         DO_MODE_CHAR(REGONLY, 'r');
         DO_MODE_CHAR(NOCOLORS, 'c');
         DO_MODE_CHAR(NOCTCPS, 'C');
+        DO_MODE_CHAR(REGISTERED, 'z');
 #undef DO_MODE_CHAR
     }
     if (change->modes_set) {
@@ -2334,6 +2338,7 @@ mod_chanmode_format(struct mod_chanmode *change, char *outbuff)
         DO_MODE_CHAR(REGONLY, 'r');
         DO_MODE_CHAR(NOCOLORS, 'c');
         DO_MODE_CHAR(NOCTCPS, 'C');
+        DO_MODE_CHAR(REGISTERED, 'z');
 #undef DO_MODE_CHAR
         switch (change->modes_set & (MODE_KEY|MODE_LIMIT)) {
         case MODE_KEY|MODE_LIMIT:
@@ -2379,6 +2384,7 @@ clear_chanmode(struct chanNode *channel, const char *modes)
         case 'r': remove |= MODE_REGONLY; break;
         case 'c': remove |= MODE_NOCOLORS; break;
         case 'C': remove |= MODE_NOCTCPS; break;
+        case 'z': remove |= MODE_REGISTERED; break;
         }
     }
 
