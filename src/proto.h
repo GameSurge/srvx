@@ -152,6 +152,7 @@ void irc_svsnick(struct userNode *from, struct userNode *target, const char *new
 /* account maintenance */
 void irc_account(struct userNode *user, const char *stamp);
 void irc_regnick(struct userNode *user);
+void irc_fakehost(struct userNode *user, const char *host);
 
 /* numeric messages */
 void irc_numeric(struct userNode *user, unsigned int num, const char *format, ...);

@@ -576,7 +576,10 @@ mod_chanmode_apply(struct userNode *who, struct chanNode *channel, struct mod_ch
             }
             bn = calloc(1, sizeof(*bn));
             safestrncpy(bn->ban, change->args[ii].hostmask, sizeof(bn->ban));
-            safestrncpy(bn->who, who->nick, sizeof(bn->who));
+            if (who)
+                safestrncpy(bn->who, who->nick, sizeof(bn->who));
+            else
+                safestrncpy(bn->who, "<unknown>", sizeof(bn->who));
             bn->set = now;
             banList_append(&channel->banlist, bn);
             break;
@@ -668,7 +671,9 @@ generate_hostmask(struct userNode *user, int options)
         strcpy(ident+1, user->ident + ((*user->ident == '~')?1:0));
     }
     hostname = user->hostname;
-    if (IsHiddenHost(user) && user->handle_info && hidden_host_suffix && !(options & GENMASK_NO_HIDING)) {
+    if (IsFakeHost(user) && IsHiddenHost(user) && !(options & GENMASK_NO_HIDING)) {
+        hostname = user->fakehost;
+    } else if (IsHiddenHost(user) && user->handle_info && hidden_host_suffix && !(options & GENMASK_NO_HIDING)) {
         hostname = alloca(strlen(user->handle_info->handle) + strlen(hidden_host_suffix) + 2);
         sprintf(hostname, "%s.%s", user->handle_info->handle, hidden_host_suffix);
     } else if (options & GENMASK_STRICT_HOST) {

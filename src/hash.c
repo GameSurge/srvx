@@ -238,6 +238,14 @@ StampUser(struct userNode *user, const char *stamp)
     user->modes |= FLAGS_STAMPED;
 }
 
+void
+assign_fakehost(struct userNode *user, const char *host, int announce)
+{
+    safestrncpy(user->fakehost, host, sizeof(user->fakehost));
+    if (announce)
+        irc_fakehost(user, host);
+}
+
 static new_channel_func_t *ncf_list;
 static unsigned int ncf_size = 0, ncf_used = 0;
 

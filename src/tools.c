@@ -340,6 +340,8 @@ user_matches_glob(struct userNode *user, const char *orig_glob, int include_nick
         return match_ircglob(inet_ntoa(user->ip), glob);
     } else {
         /* The host part of the mask isn't IP-based */
+        if (IsFakeHost(user) && match_ircglob(user->fakehost, glob))
+                return 1;
         if (hidden_host_suffix && user->handle_info) {
             char hidden_host[HOSTLEN+1];
             snprintf(hidden_host, sizeof(hidden_host), "%s.%s", user->handle_info->handle, hidden_host_suffix);

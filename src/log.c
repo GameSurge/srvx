@@ -244,7 +244,7 @@ find_severity(const char *text)
  *   KEY := LOGSET '.' SEVSET
  *   LOGSET := LOGLIT | LOGLIT ',' LOGSET
  *   LOGLIT := a registered log type
- *   SEVSET := '*' | SEVLIT | '=' SEVLIT | '<' SEVLIT | '<=' SEVLIT | '>' SEVLIT | '>=' SEVLIT | SEVLIT ',' SEVSET
+ *   SEVSET := '*' | SEVLIT | '<' SEVLIT | '<=' SEVLIT | '>' SEVLIT | '>=' SEVLIT | SEVLIT ',' SEVSET
  *   SEVLIT := one of log_severity_names
  * A KEY contains the Cartesian product of the logs in its LOGSET
  * and the severities in its SEVSET.
@@ -273,7 +273,8 @@ log_parse_sevset(char *buffer, char targets[LOG_NUM_SEVERITIES])
         int first;
 
         cont = strchr(buffer, ',');
-        if (cont) *cont++ = 0;
+        if (cont)
+            *cont++ = 0;
         if (buffer[0] == '*' && buffer[1] == 0) {
             for (bound = 0; bound < LOG_NUM_SEVERITIES; bound++) {
                 /* make people explicitly specify replay targets */

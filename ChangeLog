@@ -2,6 +2,25 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2004-srvx/srvx--devo--1.3
 #
 
+2004-05-22 04:24:57 GMT	Michael Poole <mdpoole@troilus.org>	patch-67
+
+    Summary:
+      Add fake host support (assuming your ircd supports it)
+    Revision:
+      srvx--devo--1.3--patch-67
+
+    Add definitions in various places to support assigning fake hosts to
+    users.  We will not give you (or make for you) patches to make your
+    ircd support this feature, so please do not ask.  You must set a
+    certain srvx.conf setting to be able to assign fakehosts; finding it
+    is left as an exercise to the reader.
+
+    modified files:
+     ChangeLog src/chanserv.c src/hash.c src/hash.h src/log.c
+     src/nickserv.c src/nickserv.h src/opserv.c src/proto-bahamut.c
+     src/proto-common.c src/proto-p10.c src/proto.h src/tools.c
+
+
 2004-05-22 03:00:05 GMT	Michael Poole <mdpoole@troilus.org>	patch-66
 
     Summary:

@@ -272,6 +272,12 @@ irc_account(struct userNode *user, const char *stamp)
 }
 
 void
+irc_fakehost(UNUSED_ARG(struct userNode *user), UNUSED_ARG(const char *host))
+{
+    /* not supported in bahamut */
+}
+
+void
 irc_regnick(struct userNode *user)
 {
     if (IsReggedNick(user)) {

@@ -3438,14 +3438,15 @@ cmd_list_users(struct userNode *user, struct chanNode *channel, unsigned int arg
     lData.lowest = lowest;
     lData.highest = highest;
     lData.search = (argc > 1) ? argv[1] : NULL;
-    send_list = zoot_list;
+    send_list = def_list;
+    (void)zoot_list; /* since it doesn't show user levels */
 
     if(user->handle_info)
     {
 	switch(user->handle_info->userlist_style)
 	{
 	case HI_STYLE_DEF: send_list = def_list; break;
-        case HI_STYLE_ZOOT: send_list = zoot_list; break;
+        case HI_STYLE_ZOOT: send_list = def_list; break;
 	}
     }
 

@@ -58,7 +58,7 @@
 #define FLAGS_STAMPED           0x1000 /* for users who have been stamped */
 #define FLAGS_HIDDEN_HOST       0x2000 /* user's host is masked by their account */
 #define FLAGS_REGNICK           0x4000 /* user owns their current nick */
-#define FLAGS_REGISTERING	0x8000 /* user has issued accnt register command, is waiting for email cookie */ 
+#define FLAGS_REGISTERING	0x8000 /* user has issued account register command, is waiting for email cookie */
 
 #define IsOper(x)               ((x)->modes & FLAGS_OPER)
 #define IsService(x)            ((x)->modes & FLAGS_SERVICE)
@@ -75,6 +75,7 @@
 #define IsHiddenHost(x)         ((x)->modes & FLAGS_HIDDEN_HOST)
 #define IsReggedNick(x)         ((x)->modes & FLAGS_REGNICK)
 #define IsRegistering(x)	((x)->modes & FLAGS_REGISTERING)
+#define IsFakeHost(x)           ((x)->fakehost[0] != '\0')
 #define IsLocal(x)              ((x)->uplink == self)
 
 #define NICKLEN         30
@@ -101,6 +102,7 @@ struct userNode {
     char ident[USERLEN + 1];      /* Per-host identification for user */
     char info[REALLEN + 1];       /* Free form additional client information */
     char hostname[HOSTLEN + 1];   /* DNS name or IP address */
+    char fakehost[HOSTLEN + 1];   /* Assigned fake host */
 #ifdef WITH_PROTOCOL_P10
     char numeric[COMBO_NUMERIC_LEN+1];
     unsigned int num_local : 18;
@@ -206,6 +208,7 @@ typedef void (*account_func_t) (struct userNode *user, const char *stamp);
 void reg_account_func(account_func_t handler);
 void call_account_func(struct userNode *user, const char *stamp);
 void StampUser(struct userNode *user, const char *stamp);
+void assign_fakehost(struct userNode *user, const char *host, int announce);
 
 typedef void (*new_channel_func_t) (struct chanNode *chan);
 void reg_new_channel_func(new_channel_func_t handler);

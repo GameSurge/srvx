@@ -86,6 +86,7 @@ struct handle_info {
     char *epithet;
     char *infoline;
     char *handle;
+    char *fakehost;
 #ifdef WITH_PROTOCOL_BAHAMUT
     unsigned long id;
 #endif

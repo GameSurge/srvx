@@ -39,6 +39,7 @@
 #define CMD_EOB                 "END_OF_BURST"
 #define CMD_EOB_ACK             "EOB_ACK"
 #define CMD_ERROR               "ERROR"
+#define CMD_FAKEHOST            "FAKE"
 #define CMD_GET			"GET"
 #define CMD_GLINE               "GLINE"
 #define CMD_HASH                "HASH"
@@ -120,6 +121,7 @@
 #define TOK_EOB                 "EB"
 #define TOK_EOB_ACK             "EA"
 #define TOK_ERROR               "Y"
+#define TOK_FAKEHOST            "FA"
 #define TOK_GET			"GET"
 #define TOK_GLINE               "GL"
 #define TOK_HASH                "HASH"
@@ -212,6 +214,7 @@
 #define P10_EOB                 TYPE(EOB)
 #define P10_EOB_ACK             TYPE(EOB_ACK)
 #define P10_ERROR               TYPE(ERROR)
+#define P10_FAKEHOST            TYPE(FAKEHOST)
 #define P10_GET			TYPE(GET)
 #define P10_GLINE               TYPE(GLINE)
 #define P10_HASH                TYPE(HASH)
@@ -416,6 +419,12 @@ void
 irc_account(struct userNode *user, const char *stamp)
 {
     putsock("%s " P10_ACCOUNT " %s %s", self->numeric, user->numeric, stamp);
+}
+
+void
+irc_fakehost(struct userNode *user, const char *host)
+{
+    putsock("%s " P10_FAKEHOST " %s %s", self->numeric, user->numeric, host);
 }
 
 void
@@ -1006,6 +1015,18 @@ static CMD_FUNC(cmd_account)
     return 1;
 }
 
+static CMD_FUNC(cmd_fakehost)
+{
+    struct userNode *user;
+
+    if ((argc < 3) || !origin || !GetServerH(origin))
+        return 0;
+    if (!(user = GetUserN(argv[1])))
+        return 1;
+    assign_fakehost(user, argv[2], 0);
+    return 1;
+}
+
 static CMD_FUNC(cmd_burst)
 {
     extern int rel_age;
@@ -1184,7 +1205,7 @@ static CMD_FUNC(cmd_topic)
 
 static CMD_FUNC(cmd_num_topic)
 {
-    static struct chanNode *cn;
+    struct chanNode *cn;
 
     if (!argv[0])
         return 0; /* huh? */
@@ -1469,6 +1490,8 @@ init_parse(void)
     dict_insert(irc_func_dict, TOK_NICK, cmd_nick);
     dict_insert(irc_func_dict, CMD_ACCOUNT, cmd_account);
     dict_insert(irc_func_dict, TOK_ACCOUNT, cmd_account);
+    dict_insert(irc_func_dict, CMD_FAKEHOST, cmd_fakehost);
+    dict_insert(irc_func_dict, TOK_FAKEHOST, cmd_fakehost);
     dict_insert(irc_func_dict, CMD_PASS, cmd_pass);
     dict_insert(irc_func_dict, TOK_PASS, cmd_pass);
     dict_insert(irc_func_dict, CMD_PING, cmd_ping);
@@ -1545,6 +1568,7 @@ init_parse(void)
     dict_insert(irc_func_dict, "331", cmd_num_topic);
     dict_insert(irc_func_dict, "332", cmd_num_topic);
     dict_insert(irc_func_dict, "333", cmd_num_topic);
+    dict_insert(irc_func_dict, "345", cmd_dummy); /* blah has been invited to blah */
     dict_insert(irc_func_dict, "432", cmd_error_nick); /* Erroneus [sic] nickname */
     /* ban list resetting */
     /* "stats g" responses */
@@ -2006,6 +2030,18 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
                 while (*word == ' ')
                     word++;
                 call_account_func(user, tag);
+            }
+            break;
+        case 'f':
+            if (*word) {
+                char host[MAXLEN];
+                unsigned int ii;
+                for (ii=0; (*word != ' ') && (*word != '\0'); )
+                    host[ii++] = *word++;
+                host[ii] = 0;
+                while (*word == ' ')
+                    word++;
+                assign_fakehost(user, host, 0);
             }
             break;
 	}

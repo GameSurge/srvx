@@ -115,6 +115,7 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_WHOIS_IDENT", "%s (%s@%s) from %d.%d.%d.%d" },
     { "OSMSG_WHOIS_NICK", "Nick    : %s" },
     { "OSMSG_WHOIS_HOST", "Host    : %s@%s" },
+    { "OSMSG_WHOIS_FAKEHOST", "Fakehost: %s" },
     { "OSMSG_WHOIS_IP",   "Real IP : %s" },
     { "OSMSG_WHOIS_MODES", "Modes   : +%s " },
     { "OSMSG_WHOIS_INFO", "Info    : %s" },
@@ -397,7 +398,7 @@ static MODCMD_FUNC(cmd_ban)
     struct mod_chanmode change;
     struct userNode *victim;
 
-    change.modes_set = change.modes_clear = 0;
+    mod_chanmode_init(&change);
     change.argc = 1;
     change.args[0].mode = MODE_BAN;
     if (is_ircmask(argv[1]))
@@ -537,9 +538,8 @@ static MODCMD_FUNC(cmd_clearmodes)
 	reply("OSMSG_NO_CHANNEL_MODES", channel->name);
         return 0;
     }
-    change.modes_set = 0;
+    mod_chanmode_init(&change);
     change.modes_clear = channel->modes;
-    change.argc = 0;
     modcmd_chanmode_announce(&change);
     reply("OSMSG_CLEARMODES_DONE", channel->name);
     return 1;
@@ -966,7 +966,7 @@ static MODCMD_FUNC(cmd_kickall)
      * channel, we have to join it in temporarily. */
     if (!(inchan = GetUserMode(channel, bot) ? 1 : 0)) {
         struct mod_chanmode change;
-        memset(&change, 0, sizeof(change));
+        mod_chanmode_init(&change);
         change.args[0].mode = MODE_CHANOP;
         change.args[0].member = AddChannelUser(bot, channel);
         modcmd_chanmode_announce(&change);
@@ -1015,7 +1015,7 @@ static MODCMD_FUNC(cmd_kickban)
 	reply("OSMSG_NOT_ON_CHANNEL", target->nick, channel->name);
 	return 0;
     }
-    change.modes_set = change.modes_clear = 0;
+    mod_chanmode_init(&change);
     change.argc = 1;
     change.args[0].mode = MODE_BAN;
     change.args[0].hostmask = mask = generate_hostmask(target, 0);
@@ -1169,6 +1169,8 @@ static MODCMD_FUNC(cmd_whois)
     }
     reply("OSMSG_WHOIS_NICK", target->nick);
     reply("OSMSG_WHOIS_HOST", target->ident, target->hostname);
+    if (IsFakeHost(target))
+        reply("OSMSG_WHOIS_FAKEHOST", target->fakehost);
     reply("OSMSG_WHOIS_IP", inet_ntoa(target->ip));
     if (target->modes) {
 	bpos = 0;
@@ -1206,7 +1208,7 @@ static MODCMD_FUNC(cmd_whois)
 static MODCMD_FUNC(cmd_unban)
 {
     struct mod_chanmode change;
-    change.modes_set = change.modes_clear = 0;
+    mod_chanmode_init(&change);
     change.argc = 1;
     change.args[0].mode = MODE_REMOVE | MODE_BAN;
     change.args[0].hostmask = argv[1];
@@ -1875,7 +1877,7 @@ opserv_join_check(struct modeNode *mNode)
         /* Don't moderate the channel unless it is activated and
            the number of users in the channel is over the threshold. */
         struct mod_chanmode change;
-        change.modes_set = change.modes_clear = change.argc = 0;
+        mod_chanmode_init(&change);
         channel->join_flooded = 1;
         if (opserv_conf.join_flood_moderate && (channel->members.used > opserv_conf.join_flood_moderate_threshold)) {
             if (!GetUserMode(channel, opserv)) {
@@ -2280,7 +2282,7 @@ static MODCMD_FUNC(cmd_clone)
 	    reply("MSG_CHANNEL_UNKNOWN", argv[3]);
 	    return 0;
 	}
-        change.modes_set = change.modes_clear = 0;
+        mod_chanmode_init(&change);
         change.argc = 1;
         change.args[0].mode = MODE_CHANOP;
         change.args[0].member = GetUserMode(channel, clone);
