@@ -200,7 +200,7 @@
         // how long should a person be unseen before resending infoline?
         "info_delay" "120";
         // maximum greeting length
-        "max_greetlen" "120";
+        "max_greetlen" "200";
         // maximum users in a channel userlist
         "max_chan_users" "512";
         // maximum bans on a channel banlist

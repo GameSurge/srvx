@@ -1481,14 +1481,14 @@ chanserv_add_dnr(const char *chan_name, const char *setter, const char *reason)
 }
 
 static struct dnrList
-chanserv_find_dnrs(const char *chan_name, struct handle_info *handle)
+chanserv_find_dnrs(const char *chan_name, const char *handle)
 {
     struct dnrList list;
     dict_iterator_t it;
     struct do_not_register *dnr;
 
     dnrList_init(&list);
-    if(handle && (dnr = dict_find(handle_dnrs, handle->handle, NULL)))
+    if(handle && (dnr = dict_find(handle_dnrs, handle, NULL)))
         dnrList_append(&list, dnr);
     if(chan_name && (dnr = dict_find(plain_dnrs, chan_name, NULL)))
         dnrList_append(&list, dnr);
@@ -1500,7 +1500,7 @@ chanserv_find_dnrs(const char *chan_name, struct handle_info *handle)
 }
 
 static unsigned int
-chanserv_show_dnrs(struct userNode *user, struct svccmd *cmd, const char *chan_name, struct handle_info *handle)
+chanserv_show_dnrs(struct userNode *user, struct svccmd *cmd, const char *chan_name, const char *handle)
 {
     struct dnrList list;
     struct do_not_register *dnr;
@@ -1615,7 +1615,7 @@ static CHANSERV_FUNC(cmd_noregister)
 
     reply("CSMSG_DNR_SEARCH_RESULTS");
     if(*target == '*')
-        matches = chanserv_show_dnrs(user, cmd, NULL, get_handle_info(target + 1));
+        matches = chanserv_show_dnrs(user, cmd, NULL, target + 1);
     else
         matches = chanserv_show_dnrs(user, cmd, target, NULL);
     if(!matches)
@@ -1737,7 +1737,7 @@ static CHANSERV_FUNC(cmd_register)
         if(!IsHelping(user))
             reply("CSMSG_DNR_CHANNEL", chan_name);
         else
-            chanserv_show_dnrs(user, cmd, chan_name, handle);
+            chanserv_show_dnrs(user, cmd, chan_name, handle->handle);
         return 0;
     }
 
@@ -1880,7 +1880,7 @@ static CHANSERV_FUNC(cmd_move)
                 if(!IsHelping(user))
                     reply("CSMSG_DNR_CHANNEL_MOVE", argv[1]);
                 else
-                    chanserv_show_dnrs(user, cmd, argv[1], uData->handle);
+                    chanserv_show_dnrs(user, cmd, argv[1], uData->handle->handle);
                 return 0;
             }
         }
@@ -5481,7 +5481,7 @@ static CHANSERV_FUNC(cmd_giveownership)
         if(!IsHelping(user))
             reply("CSMSG_DNR_ACCOUNT", new_owner_hi->handle);
         else
-            chanserv_show_dnrs(user, cmd, NULL, new_owner_hi);
+            chanserv_show_dnrs(user, cmd, NULL, new_owner_hi->handle);
         return 0;
     }
     if(new_owner->access >= UL_COOWNER)
@@ -6356,7 +6356,7 @@ chanserv_conf_read(void)
     str = database_get_data(conf_node, KEY_INFO_DELAY, RECDB_QSTRING);
     chanserv_conf.info_delay = str ? ParseInterval(str) : 180;
     str = database_get_data(conf_node, KEY_MAX_GREETLEN, RECDB_QSTRING);
-    chanserv_conf.greeting_length = str ? atoi(str) : 120;
+    chanserv_conf.greeting_length = str ? atoi(str) : 200;
     str = database_get_data(conf_node, KEY_ADJUST_THRESHOLD, RECDB_QSTRING);
     chanserv_conf.adjust_threshold = str ? atoi(str) : 15;
     str = database_get_data(conf_node, KEY_ADJUST_DELAY, RECDB_QSTRING);
@@ -7287,7 +7287,7 @@ init_chanserv(const char *nick)
         next_refresh = (now + chanserv_conf.refresh_period - 1) / chanserv_conf.refresh_period * chanserv_conf.refresh_period;
         timeq_add(next_refresh, chanserv_refresh_topics, NULL);
     }
-    
+
     reg_exit_func(chanserv_db_cleanup);
     message_register_table(msgtab);
 }

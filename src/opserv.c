@@ -1160,10 +1160,8 @@ static MODCMD_FUNC(cmd_whois)
     if (argv[1][0] == '*')
         target = GetUserN(argv[1]+1);
     else
-        target = GetUserH(argv[1]);
-#else
-    target = GetUserH(argv[1]);
 #endif
+    target = GetUserH(argv[1]);
     if (!target) {
         reply("MSG_NICK_UNKNOWN", argv[1]);
         return 0;
