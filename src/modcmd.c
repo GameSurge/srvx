@@ -36,7 +36,6 @@ static struct pending_template *pending_templates;
 static struct module *modcmd_module;
 static struct modcmd *bind_command, *help_command, *version_command;
 static const struct message_entry msgtab[] = {
-    { "MCMSG_VERSION", "$b"PACKAGE_STRING"$b ("CODENAME"), Built: " __DATE__ ", " __TIME__"." },
     { "MCMSG_BARE_FLAG", "Flag %.*s must be preceded by a + or -." },
     { "MCMSG_UNKNOWN_FLAG", "Unknown module flag %.*s." },
     { "MCMSG_BAD_OPSERV_LEVEL", "Invalid $O access level %s." },
@@ -120,6 +119,7 @@ static const struct message_entry msgtab[] = {
     { "MCMSG_SERVICE_REMOVED", "Service $b%s$b has been deleted." },
     { "MCMSG_FILE_NOT_OPENED", "Unable to open file $b%s$b for writing." },
     { "MCMSG_MESSAGES_DUMPED", "Messages written to $b%s$b." },
+    { "MCMSG_MESSAGE_DUMP_FAILED", "Message dump failed: %s." },
     { "MCMSG_COMMAND_FLAGS", "Command flags are %s (inferred: %s)." },
     { "MCMSG_COMMAND_ACCOUNT_FLAGS", "Requires account flags +%s, prohibits account flags +%s." },
     { "MCMSG_COMMAND_ACCESS_LEVEL", "Requires channel access %d and $O access %d." },
@@ -821,11 +821,63 @@ svccmd_invoke(struct userNode *user, struct service *service, struct chanNode *c
 void
 modcmd_privmsg(struct userNode *user, struct userNode *bot, char *text, int server_qualified) {
     struct service *service;
+
     if (!(service = dict_find(services, bot->nick, NULL))) {
         log_module(MAIN_LOG, LOG_ERROR, "modcmd_privmsg got privmsg for unhandled service %s, unregistering.", bot->nick);
         reg_privmsg_func(bot, NULL);
         return;
     }
+
+    if (text[0] == '\x01') {
+        char *term, response[MAXLEN];
+
+        text++; /* Skip leading ^A. */
+        /* Chop off final ^A. */
+        term = strchr(text, '\x01');
+        if (!term)
+            return;
+        *term = '\0';
+        /* Parse out leading text. */
+        term = strchr(text, ' ');
+        if (term) {
+            *term++ = '\0';
+            if (!*term)
+                term = NULL;
+        }
+        /* No dict lookup since these are so few. */
+        if (!irccasecmp(text, "CLIENTINFO")) {
+            /* Use \001 instead of \x01 because apparently \x01C is
+             * interpreted as ASCII FS (\034, decimal 28, hex 1C).
+             */
+            irc_notice_user(bot, user, "\001CLIENTINFO CLIENTINFO PING TIME USERINFO VERSION\x01");
+        } else if (!irccasecmp(text, "PING")) {
+            if (term) {
+                snprintf(response, sizeof(response), "\x01PONG %s\x01", term);
+                irc_notice_user(bot, user, response);
+            } else {
+                irc_notice_user(bot,user, "\x01PONG\x01");
+            }
+        } else if (!irccasecmp(text, "TIME")) {
+            struct tm tm;
+            localtime_r(&now, &tm);
+            strftime(response, sizeof(response), "\x01TIME %a %b %d %H:%M:%S %Y\x01", &tm);
+            irc_notice_user(bot, user, response);
+        } else if (!irccasecmp(text, "USERINFO")) {
+            snprintf(response, sizeof(response), "\x01USERINFO %s\x01", bot->info);
+            irc_notice_user(bot, user, response);
+        } else if (!irccasecmp(text, "VERSION")) {
+            /* This function provides copyright management information
+             * to end users of srvx. You should not alter, disable or
+             * remove this command or its accessibility to normal IRC
+             * users, except to add copyright information pertaining
+             * to changes you make to srvx.
+             */
+            snprintf(response, sizeof(response), "\x01VERSION %s (%s) %s\x01", PACKAGE_STRING, CODENAME, ARCH_VERSION);
+            irc_notice_user(bot, user, response);
+        }
+        return;
+    }
+
     if (service->msg_hook && service->msg_hook(user, bot, text, server_qualified))
         return;
     svccmd_invoke(user, service, NULL, text, server_qualified);
@@ -1768,6 +1820,7 @@ static MODCMD_FUNC(cmd_dump_messages) {
     struct saxdb_context *ctx;
     dict_iterator_t it;
     FILE *pf;
+    int res;
 
     if (!(pf = fopen(fname, "w"))) {
         reply("MCMSG_FILE_NOT_OPENED", fname);
@@ -1777,21 +1830,29 @@ static MODCMD_FUNC(cmd_dump_messages) {
         reply("MSG_INTERNAL_FAILURE");
         return 0;
     }
-    for (it = dict_first(lang_C->messages); it; it = iter_next(it))
-        saxdb_write_string(ctx, iter_key(it), iter_data(it));
-    saxdb_close_context(ctx);
-    fclose(pf);
-    reply("MCMSG_MESSAGES_DUMPED", fname);
-    return 1;
+    if ((res = setjmp(ctx->jbuf)) != 0) {
+        ctx->complex.used = 0; /* to avoid false assert()s in close */
+        saxdb_close_context(ctx);
+        fclose(pf);
+        reply("MCMSG_MESSAGE_DUMP_FAILED", strerror(res));
+        return 0;
+    } else {
+        for (it = dict_first(lang_C->messages); it; it = iter_next(it))
+            saxdb_write_string(ctx, iter_key(it), iter_data(it));
+        saxdb_close_context(ctx);
+        fclose(pf);
+        reply("MCMSG_MESSAGES_DUMPED", fname);
+        return 1;
+    }
 }
 
 static MODCMD_FUNC(cmd_version) {
     /* This function provides copyright management information to end
      * users of srvx. You should not alter, disable or remove this
-     * command or its accessibility to normal IRC users.
+     * command or its accessibility to normal IRC users, except to add
+     * copyright information pertaining to changes you make to srvx.
      */
-    reply("MCMSG_VERSION");
-    send_message_type(4, user, cmd->parent->bot, "Copyright 2000-2004 srvx Development Team.\nThe srvx Development Team includes Paul Chang, Adrian Dewhurst, Miles Peterson, Michael Poole and others.\nThe srvx Development Team can be reached at http://sf.net/projects/srvx/ or in #srvx on irc.gamesurge.net.");
+    send_message_type(4, user, cmd->parent->bot, "$b"PACKAGE_STRING"$b ("CODENAME"), Built: "__DATE__", "__TIME__".\nCopyright 2000-2004 srvx Development Team.\nThe srvx Development Team includes Paul Chang, Adrian Dewhurst, Miles Peterson, Michael Poole and others.\nThe srvx Development Team can be reached at http://sf.net/projects/srvx/ or in #srvx on irc.gamesurge.net.");
     if ((argc > 1) && !irccasecmp(argv[1], "arch"))
         send_message_type(4, user, cmd->parent->bot, "%s", ARCH_VERSION);
     return 1;

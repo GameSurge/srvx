@@ -33,5 +33,3 @@
         "$bSTAFF$b:      The message will be sent to helpers and opers.",
         "$bCHANNELS$b:   The message will be sent to all channels.",
         "$bALL$b:        A combination of USERS and CHANNELS.");
-"VERSION" ("/msg $G VERSION",
-        "$bVERSION$b causes $b$G$b to to send you the srvx version and some additional version information that is specific to $b$G$b.");

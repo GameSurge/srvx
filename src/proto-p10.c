@@ -475,6 +475,12 @@ irc_notice(struct userNode *from, const char *to, const char *message)
 }
 
 void
+irc_notice_user(struct userNode *from, struct userNode *to, const char *message)
+{
+    putsock("%s " P10_NOTICE " %s :%s", from->numeric, to->numeric, message);
+}
+
+void
 irc_privmsg(struct userNode *from, const char *to, const char *message)
 {
     putsock("%s " P10_PRIVMSG " %s :%s", from->numeric, to, message);

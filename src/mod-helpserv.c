@@ -482,7 +482,6 @@ static struct {
 static time_t last_stats_update;
 static int shutting_down;
 static FILE *reqlog_f;
-static struct saxdb_context *reqlog_ctx;
 static struct log_type *HS_LOG;
 
 #define CMD_NEED_BOT            0x001
@@ -692,33 +691,38 @@ static struct helpserv_user *GetHSUser(struct helpserv_bot *hs, struct handle_in
 static void helpserv_log_request(struct helpserv_request *req, const char *reason) {
     char key[27+NICKLEN];
     char userhost[USERLEN+HOSTLEN+2];
+    struct saxdb_context *ctx;
+    int res;
 
-    if (!reqlog_ctx || !req)
+    assert(req != NULL);
+    assert(reason != NULL);
+    if (!(ctx = saxdb_open_context(reqlog_f)))
         return;
-    if (!reason)
-        reason = "";
-
     sprintf(key, "%s-" FMT_TIME_T "-%lu", req->hs->helpserv->nick, req->opened, req->id);
-    saxdb_start_record(reqlog_ctx, key, 1);
-    if (req->helper) {
-        saxdb_write_string(reqlog_ctx, KEY_REQUEST_HELPER, req->helper->handle->handle);
-        saxdb_write_int(reqlog_ctx, KEY_REQUEST_ASSIGNED, req->assigned);
+    if ((res = setjmp(ctx->jbuf)) != 0) {
+        log_module(HS_LOG, LOG_ERROR, "Unable to log helpserv request: %s.", strerror(res));
+    } else {
+        saxdb_start_record(ctx, key, 1);
+        if (req->helper) {
+            saxdb_write_string(ctx, KEY_REQUEST_HELPER, req->helper->handle->handle);
+            saxdb_write_int(ctx, KEY_REQUEST_ASSIGNED, req->assigned);
+        }
+        if (req->handle) {
+            saxdb_write_string(ctx, KEY_REQUEST_HANDLE, req->handle->handle);
+        }
+        if (req->user) {
+            saxdb_write_string(ctx, KEY_REQUEST_NICK, req->user->nick);
+            sprintf(userhost, "%s@%s", req->user->ident, req->user->hostname);
+            saxdb_write_string(ctx, KEY_REQUEST_USERHOST, userhost);
+        }
+        saxdb_write_int(ctx, KEY_REQUEST_OPENED, req->opened);
+        saxdb_write_int(ctx, KEY_REQUEST_CLOSED, now);
+        saxdb_write_string(ctx, KEY_REQUEST_CLOSEREASON, reason);
+        saxdb_write_string_list(ctx, KEY_REQUEST_TEXT, req->text);
+        saxdb_end_record(ctx);
+        saxdb_close_context(ctx);
+        fflush(reqlog_f);
     }
-    if (req->handle) {
-        saxdb_write_string(reqlog_ctx, KEY_REQUEST_HANDLE, req->handle->handle);
-    }
-    if (req->user) {
-        saxdb_write_string(reqlog_ctx, KEY_REQUEST_NICK, req->user->nick);
-        sprintf(userhost, "%s@%s", req->user->ident, req->user->hostname);
-        saxdb_write_string(reqlog_ctx, KEY_REQUEST_USERHOST, userhost);
-    }
-    saxdb_write_int(reqlog_ctx, KEY_REQUEST_OPENED, req->opened);
-    saxdb_write_int(reqlog_ctx, KEY_REQUEST_CLOSED, now);
-    saxdb_write_string(reqlog_ctx, KEY_REQUEST_CLOSEREASON, reason);
-    saxdb_write_string_list(reqlog_ctx, KEY_REQUEST_TEXT, req->text);
-    saxdb_end_record(reqlog_ctx);
-
-    fflush(reqlog_f);
 }
 
 /* Searches for a request by number, nick, or account (num|nick|*account).
@@ -3661,20 +3665,13 @@ static void helpserv_conf_read(void) {
     str = database_get_data(conf_node, "user_escape", RECDB_QSTRING);
     helpserv_conf.user_escape = str ? str[0] : '@';
 
-    if (reqlog_ctx) {
-        saxdb_close_context(reqlog_ctx);
-        reqlog_ctx = NULL;
-    }
     if (reqlog_f) {
         fclose(reqlog_f);
         reqlog_f = NULL;
     }
-    if (helpserv_conf.reqlogfile) {
-        if (!(reqlog_f = fopen(helpserv_conf.reqlogfile, "a"))) {
-            log_module(HS_LOG, LOG_ERROR, "Unable to open request logfile (%s): %s", helpserv_conf.reqlogfile, strerror(errno));
-        } else {
-            reqlog_ctx = saxdb_open_context(reqlog_f);
-        }
+    if (helpserv_conf.reqlogfile
+        && !(reqlog_f = fopen(helpserv_conf.reqlogfile, "a"))) {
+        log_module(HS_LOG, LOG_ERROR, "Unable to open request logfile (%s): %s", helpserv_conf.reqlogfile, strerror(errno));
     }
 }
 
@@ -4461,8 +4458,6 @@ static void helpserv_db_cleanup(void) {
     dict_delete(helpserv_reqs_byhand_dict);
     dict_delete(helpserv_users_byhand_dict);
 
-    if (reqlog_ctx)
-        saxdb_close_context(reqlog_ctx);
     if (reqlog_f)
         fclose(reqlog_f);
 }

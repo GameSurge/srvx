@@ -413,8 +413,6 @@
         "$bWARN$b:       The list of channels with activity warnings.",
         "$bMODULES$b:    Shows loaded modules that implement commands.",
         "$bSERVICES$b:   Shows active service bots.");
-"VERSION" ("/msg $O VERSION ",
-        "Sends you the srvx version and all version information for $b$C$b, $b$O$b, $b$N$b, and $b$G$b.");
 
 "INDEX" "${index}";
 "SEX" ("$bSEX$b",

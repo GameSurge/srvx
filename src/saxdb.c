@@ -24,7 +24,6 @@
 #include "saxdb.h"
 #include "timeq.h"
 
-DECLARE_LIST(int_list, int);
 DEFINE_LIST(int_list, int);
 
 struct saxdb {
@@ -37,15 +36,6 @@ struct saxdb {
     time_t last_write;
     unsigned int last_write_duration;
     struct saxdb *prev;
-};
-
-struct saxdb_context {
-    FILE *output;
-    unsigned int indent;
-    struct int_list complex;
-    jmp_buf jbuf;
-    /* XXX: If jbuf is ever used, places that use saxdb_open_context() and
-     * saxdb_close_context() must be modified to fill it in */
 };
 
 #define COMPLEX(CTX) ((CTX)->complex.used ? ((CTX)->complex.list[(CTX)->complex.used-1]) : 1)
@@ -65,7 +55,8 @@ saxdb_read_db(struct saxdb *db) {
     assert(db);
     assert(db->filename);
     data = parse_database(db->filename);
-    if (!data) return;
+    if (!data)
+        return;
     if (db->writer == saxdb_mondo_writer) {
         mondo_db = data;
     } else {
@@ -145,7 +136,7 @@ saxdb_write_db(struct saxdb *db) {
     start = time(NULL);
     if ((res = setjmp(ctx.jbuf)) || (res2 = db->writer(&ctx))) {
         if (res) {
-            log_module(MAIN_LOG, LOG_ERROR, "Exception %d caught while writing to %s", res, tmp_fname);
+            log_module(MAIN_LOG, LOG_ERROR, "Error writing to %s: %s", tmp_fname, strerror(res));
         } else {
             log_module(MAIN_LOG, LOG_ERROR, "Internal error %d while writing to %s", res2, tmp_fname);
         }
@@ -188,18 +179,25 @@ saxdb_write_all(void) {
 
     for (it = dict_first(saxdbs); it; it = iter_next(it)) {
         db = iter_data(it);
-        if (!db->mondo_section) saxdb_write_db(db);
+        if (!db->mondo_section)
+            saxdb_write_db(db);
     }
 }
 
-#define saxdb_put_char(DEST, CH)   fputc(CH, (DEST)->output)
-#define saxdb_put_string(DEST, CH) fputs(CH, (DEST)->output)
+#define saxdb_put_char(DEST, CH) do { \
+    if (fputc(CH, (DEST)->output) == EOF) \
+        longjmp((DEST)->jbuf, errno); \
+    } while (0)
+#define saxdb_put_string(DEST, CH) do { \
+    if (fputs(CH, (DEST)->output) == EOF) \
+        longjmp((DEST)->jbuf, errno); \
+    } while (0)
 
 static inline void
 saxdb_put_nchars(struct saxdb_context *dest, const char *name, int len) {
-    while (len--) {
-        fputc(*name++, dest->output);
-    }
+    while (len--)
+        if (fputc(*name++, dest->output) == EOF)
+            longjmp(dest->jbuf, errno);
 }
 
 static void
@@ -209,7 +207,8 @@ saxdb_put_qstring(struct saxdb_context *dest, const char *str) {
     assert(str);
     saxdb_put_char(dest, '"');
     while ((esc = strpbrk(str, "\\\a\b\t\n\v\f\r\""))) {
-        if (esc != str) saxdb_put_nchars(dest, str, esc-str);
+        if (esc != str)
+            saxdb_put_nchars(dest, str, esc-str);
         saxdb_put_char(dest, '\\');
         switch (*esc) {
         case '\a': saxdb_put_char(dest, 'a'); break;

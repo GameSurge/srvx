@@ -370,6 +370,11 @@ irc_notice(struct userNode *from, const char *to, const char *message) {
 }
 
 void
+irc_notice_user(struct userNode *from, struct userNode *to, const char *message) {
+    putsock(":%s NOTICE %s :%s", from->nick, to->nick, message);
+}
+
+void
 irc_wallchops(UNUSED_ARG(struct userNode *from), UNUSED_ARG(const char *to), UNUSED_ARG(const char *message)) {
 }
 

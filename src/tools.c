@@ -115,7 +115,8 @@ split_line(char *line, int irc_colon, int argv_size, char *argv[])
     int argc = 0;
     int n;
     while (*line && (argc < argv_size)) {
-	while (*line == ' ') *line++ = 0;
+	while (*line == ' ')
+            *line++ = 0;
 	if (*line == ':' && irc_colon && argc > 0) {
 	    /* the rest is a single parameter */
 	    argv[argc++] = line + 1;
@@ -126,14 +127,14 @@ split_line(char *line, int irc_colon, int argv_size, char *argv[])
 	argv[argc++] = line;
 	if (argc >= argv_size)
             break;
-	while (*line != ' ' && *line) line++;
+	while (*line != ' ' && *line)
+            line++;
     }
 #ifdef NDEBUG
     n = 0;
 #else
-    for (n=argc; n<argv_size; n++) {
+    for (n=argc; n<argv_size; n++)
         argv[n] = (char*)0xFEEDBEEF;
-    }
 #endif
     return argc;
 }

@@ -145,7 +145,7 @@
         "If the note type already exists, it is modified with the new values you specify.",
         "$uSee Also:$u removenote");
 "GIVEOWNERSHIP" ("/msg $C GIVEOWNERSHIP <#channel> <nick|*account>",
-        "Transfer ownership of the channel from you to another user on the channel's userlist.  You are demoted to co-owner, and they are promoted to owner.",
+        "Transfer ownership of the channel from you to another user on the channel's userlist.  You are demoted to co-owner, and he or she is promoted to owner.",
 	"You may use *Account instead of Nick as the name argument; the * makes $C use the name of a account directly (useful if the user is not online).",
         "$uSee Also:$u clvl, access, users");
 "CSUSPEND" ("/msg $C CSUSPEND <#channel> [!]<duration> <reason>",
@@ -155,7 +155,7 @@
         "$uSee Also:$u unregister, cunsuspend, durations");
 "CUNSUSPEND" ("/msg $C CUNSUSPEND <#channel>",
         "Restores a channel's $b$C$b registration.",
-        "$bSee Also:$b csuspend, unregister");
+        "$uSee Also:$u csuspend, unregister");
 "DELBAN" ("/msg $C DELBAN <#channel> <mask|nick>",
         "Deletes a ban from the channel ban list. This command works for both permanent and timed bans alike.",
         "$uSee Also:$u addban, addtimedban, bans");
@@ -211,16 +211,16 @@
         "$uSee Also:$u staff");
 "KICK" ("/msg $C KICK <#channel> <mask|nick> [reason]",
         "Kicks the users matching the given nick or mask with the specified reason. If no reason is provided, a default will be used.",
-        "$bSee Also:$b kickban");
+        "$uSee Also:$u kickban");
 "KICKBAN" ("/msg $C KICKBAN <#channel> <mask|nick> [reason]",
         "Kicks and bans with the specified reason any users with a matching nick or hostmask. If no reason is provided, a default one will be used.",
-        "$bSee Also:$b addban, kick");
+        "$uSee Also:$u addban, kick");
 "MDELCOOWNER" ("/msg $C MDELCOOWNER <#channel> <pattern>",
         "Deletes all coowners with accounts matching the given pattern from the channel user list.",
-        "$bSee Also:$b clist, delcoowner");
+        "$uSee Also:$u clist, delcoowner");
 "MDELMASTER" ("/msg $C MDELMASTER <#channel> <pattern>",
         "Deletes all masters with accounts matching the given pattern from the channel user list.",
-        "$bSee Also:$b mdelban, mdelcoowner, mdelop, mdelowner, mdelpeon");
+        "$uSee Also:$u mdelban, mdelcoowner, mdelop, mdelowner, mdelpeon");
 "MDELOP" ("/msg $C MDELOP <#channel> <pattern>",
         "Deletes all ops with accounts matching the given pattern from the channel user list.");
 "MDELOWNER" ("/msg $C MDELOWNER <#channel> <pattern>",
@@ -412,23 +412,23 @@
         "$uSee Also:$u durations");
 "UNBAN" ("/msg $C UNBAN <#channel> <mask|nick>",
         "Unbans the specified nick or hostmask. If a nick is given, $b$C$b determines what hostmask(s) to unban.",
-        "$bSee Also:$b ban, kick, kickban");
+        "$uSee Also:$u ban, kick, kickban");
 "UNBANALL" ("/msg $C UNBANALL <#channel>",
         "Clears the specified channel's banlist. If the channel is omitted, then $bunbanall$b will be done in the channel where the command was given.",
-        "$bSee Also:$b ban, unban, unbanme");
+        "$uSee Also:$u ban, unban, unbanme");
 "UNBANME" ("/msg $C UNBANME <#channel>",
         "Unbans your hostmask from the specified channel.",
-        "$bSee Also:$b ban, unban");
+        "$uSee Also:$u ban, unban");
 "UNREGISTER" ("/msg $C UNREGISTER <#channel> [<confirmation>]",
         "Unregisters a channel that is registered with $b$C$b. $bIMPORTANT$b: Once the channel is unregistered, the userlist $bcannot$b be recovered.",
         "If you are not network staff, you must add a confimation string to the end of your line to confirm the unregistration.  If you leave it out, $C will show the proper confirmation string.",
-        "$bSee Also:$b register");
+        "$uSee Also:$u register");
 "UNSUSPEND" ("/msg $C UNSUSPEND <#channel> <nick|*account>",
         "This restores the target's access to the channel (after it has been suspended).",
         "$uSee Also:$u suspend, deluser");
 "UNVISITED" ("/msg $C UNVISITED [duration] [limit]",
         "Displays up to a certain limit, all channels registered with $b$C$b that have not been visited within a certain duration. If a duration is not provided, a default will be used.",
-        "$bSee Also:$b expire, search, durations");
+        "$uSee Also:$u expire, search, durations");
 "UP" ("/msg $C UP <#channel>",
         "Grants you your normal channel privileges.  If your access in the channel is less than the GiveVoice setting, this does nothing.  Otherwise, if your access is less than the GiveOps setting, $b$C$b will give you voice.  If your access is at least GiveOps, $b$C$b will give you ops.");
 "UPALL" ("/msg $C UPALL",
@@ -448,8 +448,6 @@
 "USERS" ("/msg $C USERS <#channel> [mask]",
         "Displays the userlist for the specified channel. If a mask is supplied, only users matching the mask will be shown.",
         "$uSee Also:$u clist, mlist, olist, plist, wlist");
-"VERSION" ("/msg $C VERSION",
-        "Sends you the srvx version and some additional version information that is specific to $b$C$b.");
 "VOICE" ("/msg $C VOICE <#channel> <nick> [nick]...",
         "Voices the specified nick in the specified channel. If the channel is omitted, then $bvoice$b will be done in the channel where the command was given.",
         "$uSee Also:$u devoice");

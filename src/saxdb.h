@@ -23,8 +23,18 @@
 
 #include "recdb.h"
 
+DECLARE_LIST(int_list, int);
+
 struct saxdb;
-struct saxdb_context;
+/* This definition should ONLY be used so callers of
+ * saxdb_open_context() can initialize jbuf properly. */
+struct saxdb_context {
+    FILE *output;
+    unsigned int indent;
+    struct int_list complex;
+    jmp_buf jbuf;
+};
+
 
 #define SAXDB_READER(NAME) int NAME(struct dict *db)
 typedef SAXDB_READER(saxdb_reader_func_t);

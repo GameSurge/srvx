@@ -23,9 +23,6 @@
        "/msg $S SET notify <1 or 0>",
        "Decides wether $S should notify you of the messages in your inbox, on authentication with $N AND when someone sends you a new message.");
        
-"VERSION" ("/msg $S VERSION",
-        "Sends you the srvx version and some additional version information that is specific to $b$S$b.");
-        
 "EXPIRY" ("/msg $S EXPIRY ",
          "Sends you the current usage of expiring old messages.");
 

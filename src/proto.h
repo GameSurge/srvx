@@ -123,6 +123,7 @@ void irc_squit(struct server *srv, const char *message, const char *service_mess
 /* messages */
 void irc_privmsg(struct userNode *from, const char *to, const char *message);
 void irc_notice(struct userNode *from, const char *to, const char *message);
+void irc_notice_user(struct userNode *from, struct userNode *to, const char *message);
 void irc_wallchops(struct userNode *from, const char *to, const char *message);
 
 /* channel maintenance */
