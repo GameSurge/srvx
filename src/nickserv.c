@@ -2097,10 +2097,8 @@ static OPTION_FUNC(opt_info)
 
 static OPTION_FUNC(opt_width)
 {
-    if (argc > 1) {
-	unsigned int new_width = strtoul(argv[1], NULL, 0);
-	hi->screen_width = new_width;
-    }
+    if (argc > 1)
+	hi->screen_width = strtoul(argv[1], NULL, 0);
 
     if ((hi->screen_width > 0) && (hi->screen_width < MIN_LINE_SIZE))
         hi->screen_width = MIN_LINE_SIZE;
@@ -2113,10 +2111,8 @@ static OPTION_FUNC(opt_width)
 
 static OPTION_FUNC(opt_tablewidth)
 {
-    if (argc > 1) {
-	unsigned int new_width = strtoul(argv[1], NULL, 0);
-	hi->table_width = new_width;
-    }
+    if (argc > 1)
+	hi->table_width = strtoul(argv[1], NULL, 0);
 
     if ((hi->table_width > 0) && (hi->table_width < MIN_LINE_SIZE))
         hi->table_width = MIN_LINE_SIZE;
@@ -2279,7 +2275,7 @@ static OPTION_FUNC(opt_email)
 
 static OPTION_FUNC(opt_maxlogins)
 {
-    char maxlogins;
+    unsigned char maxlogins;
     if (argc > 1) {
         maxlogins = strtoul(argv[1], NULL, 0);
         if ((maxlogins > nickserv_conf.hard_maxlogins) && !override) {
@@ -2795,7 +2791,7 @@ nickserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[])
             goto fail;
         }
         if (!irccasecmp(argv[i], "limit")) {
-            discrim->limit = atoi(argv[++i]);
+            discrim->limit = strtoul(argv[++i], NULL, 0);
         } else if (!irccasecmp(argv[i], "flags")) {
             nickserv_modify_handle_flags(user, nickserv, argv[++i], &discrim->flags_on, &discrim->flags_off);
         } else if (!irccasecmp(argv[i], "registered")) {

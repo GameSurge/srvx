@@ -81,7 +81,8 @@ uplink_readable(struct io_fd *fd) {
         close_socket();
         return;
     }
-    if ((eol = strpbrk(buffer, "\r\n"))) *eol = 0;
+    if ((eol = strpbrk(buffer, "\r\n")))
+        *eol = 0;
     log_replay(MAIN_LOG, false, buffer);
     if (cManager.uplink->state != DISCONNECTED)
         parse_line(buffer, 0);
@@ -95,7 +96,8 @@ socket_destroyed(struct io_fd *fd)
         log_module(MAIN_LOG, LOG_ERROR, "Connection to server lost.");
     socket_io_fd = NULL;
     cManager.uplink->state = DISCONNECTED;
-    if (self->uplink) DelServer(self->uplink, 0, NULL);
+    if (self->uplink)
+        DelServer(self->uplink, 0, NULL);
 }
 
 void replay_event_loop(void)

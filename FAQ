@@ -1,0 +1,52 @@
+srvx Frequently Asked Questions
+-------------------------------
+
+This FAQ assumes that your services are named NickServ, ChanServ and
+OpServ respectively.
+
+Q1) How do I set up srvx?
+A1) Read the README and INSTALL files, especially INSTALL.
+
+Q2) How do I set up my IRC server so srvx talks to it?
+A2) That depends on which IRC server you use.  Check its
+documentation.  #srvx WILL NOT SUPPORT YOUR IRCD QUESTIONS.
+
+Q3) I get "You must first authenticate with NickServ", help!
+A3) To register an account, /msg NickServ@services.example.com
+register YourName Password.  You must be a global IRC operator to
+register the first account; srvx gives the first account "root" level
+(1000) access.  To log in afterwards, use the "auth" command instead
+of "register".
+
+Q4) I do not like having to type "/msg NickServ@services.example.com"
+for all of my commands.  How can I change that?
+A4) If you want to disable that for the auth command, use "/msg OpServ
+modcmd NickServ.auth flags -qualified".  However, that is a BAD idea:
+if you have an auto-perform to log in, and you connect to some other
+IRC network, you will send your password to whoever or whatever is
+named NickServ on that network.
+
+Q5) When I try to register a channel with ChanServ, it tells me I have
+to have "security override" on.  Why?
+A5-1) srvx's default configuration is to only allow network staff to
+register channels.  For IRC operators and network helpers (users with
+account flag +H), security override can be enabled by sending "/msg
+ChanServ god on".  For support helpers (users with account flag +h),
+security override is enabled when the user is in the configured
+support channel.
+A5-2) If you want to allow anyone to register channels, use "/msg
+OpServ modcmd ChanServ.register flags -helping".
+
+Q6) How do I enable HelpServ?
+A6) When you run the "configure" script, you must enable the helpserv
+module; for example, "./configure --enable-modules=helpserv".  After
+you compile and start srvx with that option, "/msg OpServ bind OpServ
+helpserv *helpserv.helpserv".  After that, you can use "/msg OpServ
+helpserv help" and "/msg OpServ helpserv register"; the "helpserv"
+command acts as a gateway into the HelpServ system.
+
+Q7) How do I enable MemoServ?
+A7) When you run the "configure" script, you must enable the MemoServ
+module; for example, "./configure --enable-modules=memoserv".  Then
+see the comment near the start of src/mod-memoserv.c for configuration
+options.

@@ -374,7 +374,7 @@
         "$b3$b  No users will be protected.",
         "$uSee Also:$u set");
 "SET SETTERS" ("/msg $C SET <#channel> SETTERS <value>",
-        "This setting restricts the protection that $C enforces.  It is a numeric user level.",
+        "Users with at least this user level can use the $bset$b command for $C.",
         "$uSee Also:$u set");
 "SET TOPICREFRESH" ("/msg $C SET <#channel> TOPICREFRESH <value>",
         "This setting controls if (and how often) $C refreshes the topic to the default value.  Valid settings are:",

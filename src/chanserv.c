@@ -428,9 +428,9 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_WUT_RESPONSE", "wut" },
     { "CSMSG_BAD_NUMBER", "$b%s$b is an invalid number.  Please use a number greater than 1 with this command." },
     { "CSMSG_BAD_DIE_FORMAT", "I do not understand $b%s$b.  Please use either a single number or standard 4d6+3 format." },
-    { "CSMSG_BAD_DICE_COUNT", "%d is too many dice.  Please use at most %d." },
-    { "CSMSG_DICE_ROLL", "The total is $b%d$b from rolling %dd%d+%d." },
-    { "CSMSG_DIE_ROLL", "A $b%d$b shows on the %d-sided die." },
+    { "CSMSG_BAD_DICE_COUNT", "%lu is too many dice.  Please use at most %lu." },
+    { "CSMSG_DICE_ROLL", "The total is $b%lu$b from rolling %lud%lu+%lu." },
+    { "CSMSG_DIE_ROLL", "A $b%lu$b shows on the %lu-sided die." },
     { "CSMSG_HUGGLES_HIM", "\001ACTION huggles %s\001" },
     { "CSMSG_HUGGLES_YOU", "\001ACTION huggles you\001" },
 
@@ -643,7 +643,7 @@ user_level_from_name(const char *name, unsigned short clamp_level)
 {
     unsigned int level = 0, ii;
     if(isdigit(name[0]))
-        level = atoi(name);
+        level = strtoul(name, NULL, 10);
     else for(ii = 0; (ii < ArrayLength(accessLevels)) && !level; ++ii)
         if(!irccasecmp(name, accessLevels[ii].name))
             level = accessLevels[ii].level;
@@ -4298,12 +4298,14 @@ static CHANSERV_FUNC(cmd_events)
     unsigned int matches, limit;
 
     limit = (argc > 1) ? atoi(argv[1]) : 10;
-    if(limit < 1 || limit > 200) limit = 10;
+    if(limit < 1 || limit > 200)
+        limit = 10;
 
     memset(&discrim, 0, sizeof(discrim));
     discrim.masks.bot = chanserv;
     discrim.masks.channel_name = channel->name;
-    if(argc > 2) discrim.masks.command = argv[2];
+    if(argc > 2)
+        discrim.masks.command = argv[2];
     discrim.limit = limit;
     discrim.max_time = INT_MAX;
     discrim.severities = 1 << LOG_COMMAND;

@@ -2093,7 +2093,7 @@ static MODCMD_FUNC(cmd_addtrust)
     unsigned long interval;
     char *reason, *tmp;
     struct in_addr tmpaddr;
-    int count;
+    unsigned int count;
 
     if (dict_find(opserv_trusted_hosts, argv[1], NULL)) {
         reply("OSMSG_ALREADY_TRUSTED", argv[1]);
@@ -2128,7 +2128,7 @@ static MODCMD_FUNC(cmd_edittrust)
     unsigned long interval;
     struct trusted_host *th;
     char *reason, *tmp;
-    int count;
+    unsigned int count;
 
     th = dict_find(opserv_trusted_hosts, argv[1], NULL);
     if (!th) {
