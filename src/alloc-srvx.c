@@ -22,6 +22,7 @@
 /* cookies for anybody who recognizes these bytes without help :) */
 #define ALLOC_MAGIC 0x1acf
 #define FREE_MAGIC  0xfc1d
+const char redzone[] = { '\x03', '\x47', '\x76', '\xc7' };
 
 struct alloc_header {
     unsigned int file_id : 8;
@@ -32,6 +33,7 @@ struct alloc_header {
 
 static char file_id_map[256][32];
 static unsigned int file_ids_used;
+unsigned long alloc_count, alloc_size;
 
 static int
 file_id_cmp(const void *a_, const void *b_)
@@ -57,13 +59,16 @@ srvx_malloc(const char *file, unsigned int line, size_t size)
 {
     struct alloc_header *block;
 
-    block = malloc(sizeof(*block) + size);
+    block = malloc(sizeof(*block) + size + sizeof(redzone));
     assert(block != NULL);
     memset(block, 0, sizeof(*block) + size);
+    memcpy((char*)(block + 1) + size, redzone, sizeof(redzone));
     block->file_id = get_file_id(file);
     block->line = line;
     block->size = size;
     block->magic = ALLOC_MAGIC;
+    alloc_count++;
+    alloc_size += size;
     return block + 1;
 }
 
@@ -75,17 +80,21 @@ srvx_realloc(const char *file, unsigned int line, void *ptr, size_t size)
     if (ptr) {
         block = (struct alloc_header *)ptr - 1;
         assert(block->magic == ALLOC_MAGIC);
+        assert(0 == memcmp((char*)(block + 1) + block->size, redzone, sizeof(redzone)));
         if (block->size >= size)
             return block + 1;
     }
 
-    newblock = malloc(sizeof(*newblock) + size);
+    newblock = malloc(sizeof(*newblock) + size + sizeof(redzone));
     assert(newblock != NULL);
-    memset(newblock, 0, sizeof(*newblock) + size);
+    memset(newblock, 0, sizeof(*newblock) + size + sizeof(redzone));
+    memcpy((char*)(newblock + 1) + size, redzone, sizeof(redzone));
     newblock->file_id = get_file_id(file);
     newblock->line = line;
     newblock->size = size;
     newblock->magic = ALLOC_MAGIC;
+    alloc_count++;
+    alloc_size += size;
 
     if (ptr) {
         memcpy(newblock + 1, block + 1, block->size);
@@ -93,6 +102,8 @@ srvx_realloc(const char *file, unsigned int line, void *ptr, size_t size)
         memset(block, 0, size);
         block->magic = FREE_MAGIC;
         free(block);
+        alloc_count--;
+        alloc_size -= size - sizeof(*block);
     }
 
     return newblock + 1;
@@ -120,9 +131,12 @@ srvx_free(const char *file, unsigned int line, void *ptr)
         return;
     block = (struct alloc_header *)ptr - 1;
     assert(block->magic == ALLOC_MAGIC);
+    assert(0 == memcmp((char*)(block + 1) + block->size, redzone, sizeof(redzone)));
     size = block->size + sizeof(*block);
     memset(block, 0, size);
     block->magic = FREE_MAGIC;
     free(block);
+    alloc_count--;
+    alloc_size -= size - sizeof(*block);
     (void)file; (void)line;
 }
