@@ -2451,7 +2451,7 @@ cmd_trim_users(struct userNode *user, struct chanNode *channel, unsigned short m
     if(!max_access)
     {
         min_access = 1;
-        max_access = (uData->access >= UL_OWNER) ? UL_OWNER : (uData->access - 1);
+        max_access = (actor->access > UL_OWNER) ? UL_OWNER : (actor->access - 1);
     }
     send_message(user, chanserv, "CSMSG_TRIMMED_USERS", count, min_access, max_access, channel->name, intervalString(interval, duration, user->handle_info));
     return 1;

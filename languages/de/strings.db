@@ -233,7 +233,7 @@
 "CSMSG_TOYS_DISABLED" "Toys sind vollständig abgeschaltet.";
 "CSMSG_TOYS_PRIVATE" "Toys werden nur dem User direkt beantwortet.";
 "CSMSG_TOYS_PUBLIC" "Toys werden im Channel beantwortet.";
-"CSMSG_TRANSFER_WAIT" "Du musst %s warten, bis du jemand anderem Ownership in $b%s$b geben kannst."
+"CSMSG_TRANSFER_WAIT" "Du musst %s warten, bis du jemand anderem Ownership in $b%s$b geben kannst.";
 "CSMSG_TRIMMED_BANS" "Es wurden $b%d Bans$b von der %s Banliste gelöscht, welche für mindestens %s inaktiv waren.";
 "CSMSG_TRIMMED_USERS" "Es wurden $b%d User$b mit dem Access Level von %d bis %d von der %s Userliste gelöscht, welche für mindestens %s inaktiv waren.";
 "CSMSG_UNF_RESPONSE" "Ich will kein Teil deiner versauten Phantasien sein !";

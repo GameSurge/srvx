@@ -425,7 +425,7 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
         size = sizeof(line);
         use_color = 1;
     }
-    if (!size)
+    if (!size || !(msg_type & MSG_TYPE_MULTILINE))
         size = DEFAULT_LINE_SIZE;
     switch (msg_type & 3) {
         case 0:

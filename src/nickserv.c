@@ -2595,7 +2595,7 @@ static NICKSERV_FUNC(cmd_ounregister)
     if (!(hi = get_victim_oper(user, argv[1])))
         return 0;
     nickserv_unregister_handle(hi, user);
-    return 0;
+    return 1;
 }
 
 static NICKSERV_FUNC(cmd_status)
