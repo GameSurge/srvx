@@ -1847,12 +1847,13 @@ AddClone(const char *nick, const char *ident, const char *hostname, const char *
 
 int
 is_valid_nick(const char *nick) {
+    unsigned int ii;
     /* IRC has some of The Most Fucked-Up ideas about character sets
      * in the world.. */
     if (!isalpha(*nick) && !strchr("{|}~[\\]^_`", *nick))
         return 0;
-    for (++nick; *nick; ++nick)
-        if (!isalnum(*nick) && !strchr("{|}~[\\]^-_`", *nick))
+    for (ii = 0; nick[ii]; ++ii)
+        if (!isalnum(nick[ii]) && !strchr("{|}~[\\]^-_`", nick[ii]))
             return 0;
     if (strlen(nick) > nicklen)
         return 0;
