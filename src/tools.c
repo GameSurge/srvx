@@ -341,7 +341,7 @@ user_matches_glob(struct userNode *user, const char *orig_glob, int include_nick
     } else {
         /* The host part of the mask isn't IP-based */
         if (IsFakeHost(user) && match_ircglob(user->fakehost, glob))
-                return 1;
+            return 1;
         if (hidden_host_suffix && user->handle_info) {
             char hidden_host[HOSTLEN+1];
             snprintf(hidden_host, sizeof(hidden_host), "%s.%s", user->handle_info->handle, hidden_host_suffix);
@@ -746,7 +746,7 @@ string_buffer_append_vprintf(struct string_buffer *buf, const char *fmt, va_list
         /* pre-C99 behavior; double buffer size until it is big enough */
         va_end(working);
         VA_COPY(working, args);
-        while ((ret = vsnprintf(buf->list + buf->used, buf->size, fmt, working)) == -1) {
+        while ((ret = vsnprintf(buf->list + buf->used, buf->size - buf->used, fmt, working)) <= 0) {
             buf->size += len;
             buf->list = realloc(buf->list, buf->size);
             va_end(working);

@@ -638,7 +638,8 @@ mod_chanmode(struct userNode *who, struct chanNode *channel, char **modes, unsig
 }
 
 int
-irc_make_chanmode(struct chanNode *chan, char *out) {
+irc_make_chanmode(struct chanNode *chan, char *out)
+{
     struct mod_chanmode change;
     mod_chanmode_init(&change);
     change.modes_set = chan->modes;

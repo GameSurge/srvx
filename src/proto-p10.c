@@ -782,13 +782,11 @@ static CMD_FUNC(cmd_whois)
     }
     irc_numeric(from, RPL_WHOISUSER, "%s %s %s * :%s", who->nick, who->ident, who->hostname, who->info);
     if (his_servername && his_servercomment)
-      irc_numeric(from, RPL_WHOISSERVER, "%s %s :%s", who->nick, his_servername, his_servercomment);
+        irc_numeric(from, RPL_WHOISSERVER, "%s %s :%s", who->nick, his_servername, his_servercomment);
     else
-    irc_numeric(from, RPL_WHOISSERVER, "%s %s :%s", who->nick, who->uplink->name, who->uplink->description);
-
-    if (IsOper(who)) {
+        irc_numeric(from, RPL_WHOISSERVER, "%s %s :%s", who->nick, who->uplink->name, who->uplink->description);
+    if (IsOper(who))
         irc_numeric(from, RPL_WHOISOPERATOR, "%s :is a megalomaniacal power hungry tyrant", who->nick);
-    }
     irc_numeric(from, RPL_ENDOFWHOIS, "%s :End of /WHOIS list", who->nick);
     return 1;
 }
@@ -800,7 +798,7 @@ static CMD_FUNC(cmd_server)
 
     if (argc < 8)
         return 0;
-    if (origin) {
+    if (self->uplink) {
         /* another server introduced us */
         srv = AddServer(GetServerH(origin), argv[1], atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), argv[6], argv[argc-1]);
         if (!srv)
@@ -1989,8 +1987,8 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
 
     if (!user || !mode_change)
         return;
-    while (*word != ' ' && *word) word++;\
-    while (*word == ' ') word++; \
+    while (*word != ' ' && *word) word++;
+    while (*word == ' ') word++;
     while (1) {
 #define do_user_mode(FLAG) do { if (add) user->modes |= FLAG; else user->modes &= ~FLAG; } while (0)
 	switch (*mode_change++) {

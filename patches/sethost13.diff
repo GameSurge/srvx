@@ -1,0 +1,206 @@
+diff -purN -x {arch} srvx-1.3/src/hash.h srvx-1.3~reed-sethost/src/hash.h
+--- srvx-1.3/src/hash.h	2004-05-24 16:51:58.000000000 -0600
++++ srvx-1.3~reed-sethost/src/hash.h	2004-05-22 20:01:21.000000000 -0600
+@@ -51,7 +51,11 @@
+ #define FLAGS_DEAF		0x0020 /* deaf +d */
+ #define FLAGS_SERVICE		0x0040 /* cannot be kicked, killed or deoped +k */
+ #define FLAGS_GLOBAL		0x0080 /* receives global messages +g */
+-#define FLAGS_HELPER		0x0100 /* (network?) helper +h */
++
++// sethost - reed/apples
++// #define FLAGS_HELPER		0x0100 /* (network?) helper +h */
++#define FLAGS_SETHOST		0x0100 /* sethost +h */
++
+ #define FLAGS_PERSISTENT	0x0200 /* for reserved nicks, this isn't just one-shot */
+ #define FLAGS_GAGGED		0x0400 /* for gagged users */
+ #define FLAGS_AWAY		0x0800 /* for away users */
+@@ -67,7 +71,11 @@
+ #define IsGlobal(x)             ((x)->modes & FLAGS_GLOBAL)
+ #define IsWallOp(x)             ((x)->modes & FLAGS_WALLOP)
+ #define IsServNotice(x)         ((x)->modes & FLAGS_SERVNOTICE)
+-#define IsHelperIrcu(x)         ((x)->modes & FLAGS_HELPER)
++
++// sethost - reed/apples
++// #define IsHelperIrcu(x)         ((x)->modes & FLAGS_HELPER)
++#define IsSetHost(x)		((x)->modes & FLAGS_SETHOST)
++
+ #define IsGagged(x)             ((x)->modes & FLAGS_GAGGED)
+ #define IsPersistent(x)         ((x)->modes & FLAGS_PERSISTENT) 
+ #define IsAway(x)               ((x)->modes & FLAGS_AWAY)
+@@ -111,6 +119,9 @@ struct userNode {
+     struct in_addr ip;            /* User's IP address */
+     long modes;                   /* user flags +isw etc... */
+ 
++    // sethost - reed/apples
++    char sethost[USERLEN + HOSTLEN + 2]; /* 1 for '\0' and 1 for @ = 2 */
++
+     time_t timestamp;             /* Time of last nick change */
+     struct server *uplink;        /* Server that user is connected to */
+     struct modeList channels;     /* Vector of channels user is in */
+diff -purN -x {arch} srvx-1.3/src/opserv.c srvx-1.3~reed-sethost/src/opserv.c
+--- srvx-1.3/src/opserv.c	2004-05-24 16:51:58.000000000 -0600
++++ srvx-1.3~reed-sethost/src/opserv.c	2004-05-22 20:01:21.000000000 -0600
+@@ -1180,7 +1180,11 @@ static MODCMD_FUNC(cmd_whois)
+ 	if (IsOper(target)) buffer[bpos++] = 'o';
+ 	if (IsGlobal(target)) buffer[bpos++] = 'g';
+ 	if (IsServNotice(target)) buffer[bpos++] = 's';
+-	if (IsHelperIrcu(target)) buffer[bpos++] = 'h';
++
++	// sethost - reed/apples
++	// if (IsHelperIrcu(target)) buffer[bpos++] = 'h';
++	if (IsSetHost(target)) buffer[bpos++] = 'h';
++
+ 	if (IsService(target)) buffer[bpos++] = 'k';
+ 	if (IsDeaf(target)) buffer[bpos++] = 'd';
+         if (IsHiddenHost(target)) buffer[bpos++] = 'x';
+diff -purN -x {arch} srvx-1.3/src/proto-common.c srvx-1.3~reed-sethost/src/proto-common.c
+--- srvx-1.3/src/proto-common.c	2004-05-24 16:51:58.000000000 -0600
++++ srvx-1.3~reed-sethost/src/proto-common.c	2004-05-22 20:01:21.000000000 -0600
+@@ -662,14 +662,27 @@ generate_hostmask(struct userNode *user,
+     else
+         nickname = "*";
+     if (options & GENMASK_STRICT_IDENT)
++        // sethost - reed/apples
++        if (IsSetHost(user)) {
++          ident = alloca(strcspn(user->sethost, "@")+2);
++          safestrncpy(ident, user->sethost, strcspn(user->sethost, "@")+1);
++        }
++        else
+         ident = user->ident;
+     else if (options & GENMASK_ANY_IDENT)
+         ident = "*";
+     else {
++        // sethost - reed/apples
++        if (IsSetHost(user)) {
++          ident = alloca(strcspn(user->sethost, "@")+3);
++          ident[0] = '*';
++          safestrncpy(ident+1, user->sethost, strcspn(user->sethost, "@")+1);
++        } else {
+         ident = alloca(strlen(user->ident)+2);
+         ident[0] = '*';
+         strcpy(ident+1, user->ident + ((*user->ident == '~')?1:0));
+     }
++    }
+     hostname = user->hostname;
+     if (IsFakeHost(user) && IsHiddenHost(user) && !(options & GENMASK_NO_HIDING)) {
+         hostname = user->fakehost;
+@@ -727,6 +740,10 @@ generate_hostmask(struct userNode *user,
+             sprintf(hostname, "*.%s", user->hostname+ii+2);
+         }
+     }
++    // sethost - reed/apples
++    if (IsSetHost(user)) 
++      hostname = strchr(user->sethost, '@') + 1;
++
+     /* Emit hostmask */
+     len = strlen(ident) + strlen(hostname) + 2;
+     if (nickname) {
+diff -purN -x {arch} srvx-1.3/src/proto-p10.c srvx-1.3~reed-sethost/src/proto-p10.c
+--- srvx-1.3/src/proto-p10.c	2004-05-24 16:51:58.000000000 -0600
++++ srvx-1.3~reed-sethost/src/proto-p10.c	2004-05-22 20:58:36.000000000 -0600
+@@ -400,8 +400,12 @@ irc_user(struct userNode *user)
+             modes[modelen++] = 'd';
+         if (IsGlobal(user))
+             modes[modelen++] = 'g';
+-        if (IsHelperIrcu(user))
++        // sethost - reed/apples
++        // if (IsHelperIrcu(user))
++        if (IsSetHost(user))
+             modes[modelen++] = 'h';
++        if (IsFakeHost(user))
++            modes[modelen++] = 'f';
+         if (IsHiddenHost(user))
+             modes[modelen++] = 'x';
+         modes[modelen] = 0;
+@@ -1099,6 +1103,8 @@ static CMD_FUNC(cmd_mode)
+ {
+     struct chanNode *cn;
+     struct userNode *un;
++    char *sethost; // sethost - reed/apples
++    int i; // sethost - reed/apples
+ 
+     if (argc < 3)
+         return 0;
+@@ -1108,7 +1114,19 @@ static CMD_FUNC(cmd_mode)
+             log_module(MAIN_LOG, LOG_ERROR, "Unable to find user %s whose mode is changing.", argv[1]);
+             return 0;
+         }
++        // sethost - reed/apples
++        if (argc == 3)
+         mod_usermode(un, argv[2]);
++        else {
++          sethost = malloc(strlen(argv[2]) + 1 + strlen(argv[3]) + 1);
++          i = 0;
++          while((sethost[i++] = *argv[2]++));
++          i--;
++         sethost[i++] = ' ';
++          while((sethost[i++] = *argv[3]++));
++          mod_usermode(un, sethost); // sethost - reed/apples
++        }
++
+         return 1;
+     }
+ 
+@@ -2018,7 +2036,22 @@ void mod_usermode(struct userNode *user,
+ 	case 'd': do_user_mode(FLAGS_DEAF); break;
+ 	case 'k': do_user_mode(FLAGS_SERVICE); break;
+ 	case 'g': do_user_mode(FLAGS_GLOBAL); break;
+-	case 'h': do_user_mode(FLAGS_HELPER); break;
++	// sethost - reed/apples
++	// case 'h': do_user_mode(FLAGS_HELPER); break;
++	// I check if there's an 'h' in the first part, and if there, 
++	// then everything after the space becomes their new host.
++	case 'h': do_user_mode(FLAGS_SETHOST);
++	    if (*word) {
++		char sethost[MAXLEN];
++		unsigned int ii;
++		for (ii=0; (*word != ' ') && (*word != '\0'); )
++		    sethost[ii++] = *word++;
++		sethost[ii] = 0;
++		while (*word == ' ')
++		    word++;
++		safestrncpy(user->sethost, sethost, sizeof(user->sethost));
++	    }
++	    break;
+         case 'x': do_user_mode(FLAGS_HIDDEN_HOST); break;
+         case 'r':
+             if (*word) {
+diff -purN -x {arch} srvx-1.3/src/tools.c srvx-1.3~reed-sethost/src/tools.c
+--- srvx-1.3/src/tools.c	2004-05-24 16:51:58.000000000 -0600
++++ srvx-1.3~reed-sethost/src/tools.c	2004-05-22 21:10:26.000000000 -0600
+@@ -311,6 +311,7 @@ int
+ user_matches_glob(struct userNode *user, const char *orig_glob, int include_nick)
+ {
+     char *glob, *marker;
++    char *setident = NULL, *sethostname = NULL; // sethost - reed/apples
+ 
+     /* Make a writable copy of the glob */
+     glob = alloca(strlen(orig_glob)+1);
+@@ -331,8 +332,16 @@ user_matches_glob(struct userNode *user,
+         return 0;
+     }
+     *marker = 0;
+-    if (!match_ircglob(user->ident, glob))
+-        return 0;
++
++    // sethost - reed/apples
++    if (IsSetHost(user)) {
++      setident = alloca(strcspn(user->sethost, "@")+2);
++      safestrncpy(setident, user->sethost, strcspn(user->sethost, "@")+1);
++      sethostname = strchr(user->sethost, '@') + 1;
++    }
++
++    if (!match_ircglob(user->ident, glob) && (IsSetHost(user) && !match_ircglob(setident, glob)))
++	return 0;
+     glob = marker + 1;
+     /* Now check the host part */
+     if (isdigit(*glob) && !glob[strspn(glob, "0123456789./*?")]) {
+@@ -340,6 +349,8 @@ user_matches_glob(struct userNode *user,
+         return match_ircglob(inet_ntoa(user->ip), glob);
+     } else {
+         /* The host part of the mask isn't IP-based */
++        if (IsSetHost(user) && match_ircglob(sethostname, glob))
++                return 1;
+         if (IsFakeHost(user) && match_ircglob(user->fakehost, glob))
+                 return 1;
+         if (hidden_host_suffix && user->handle_info) {

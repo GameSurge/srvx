@@ -1047,6 +1047,7 @@ static MODCMD_FUNC(cmd_kickbanall)
         change->args[0].hostmask = "*!*@*";
     }
     modcmd_chanmode_announce(change);
+    mod_chanmode_free(change);
     if (argc < 2) {
 	reason = alloca(strlen(OSMSG_KICK_REQUESTED)+strlen(user->nick)+1);
 	sprintf(reason, OSMSG_KICK_REQUESTED, user->nick);

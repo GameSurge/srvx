@@ -47,8 +47,9 @@
 	// mind which ircd software you are using here, and that all of the
 	// services need to be at least +o.
 	// "modes" "+iok";
-        // If you want to by have *@* as the default hostmask, set
-        // default_hostmask.  This is discouraged for security reasons.
+        // If you want to by have *@* as the default hostmask for all
+        // new accounts, set default_hostmask.  This is discouraged
+        // for security reasons.
         // "default_hostmask" "1";
         // do we warn users when someone new auths to their account?
         "warn_clone_auth" "1";
