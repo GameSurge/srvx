@@ -186,6 +186,8 @@
         "max_chan_users" "512";
         // maximum bans on a channel banlist
         "max_chan_bans" "512";
+        // maximum length of a user's infoline
+        "max_userinfo_length" "400";
         // If DynLimit is on and there are N users in the channel, ChanServ will
         // try to keep the limit at N+<adjust_threshold>.
         "adjust_threshold" "15";

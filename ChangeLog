@@ -2,6 +2,24 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2004-srvx/srvx--devo--1.3
 #
 
+2004-04-28 19:53:40 GMT	Michael Poole <mdpoole@troilus.org>	patch-51
+
+    Summary:
+      Sanity check user infolines
+    Revision:
+      srvx--devo--1.3--patch-51
+
+    * Disallow infolines longer than a configured maximum length (by
+    default, 400 characters).
+    
+    * Disallow infolines that contain certain characters (currently
+    just ^A).
+
+    modified files:
+     ChangeLog languages/de/strings.db src/chanserv.c
+     srvx.conf.example
+
+
 2004-04-12 03:25:03 GMT	Michael Poole <mdpoole@troilus.org>	patch-50
 
     Summary:

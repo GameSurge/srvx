@@ -13,6 +13,7 @@
 "CSMSG_BAD_DIE_FORMAT" "Was genau soll $b%s$b sein ?  Bitte benutze eine einzelne Zahl oder das 4d6+3 Format.";
 "CSMSG_BAD_GIVEOPS" "GiveOps kann nicht niedriger sein als GiveVoice (%d).";
 "CSMSG_BAD_GIVEVOICE" "GiveVoice kann nicht höher sein als GiveOps (%d).";
+"CSMSG_BAD_INFOLINE" "Du darfst das Zeichen \\%03o nicht in deiner Infozeile haben.";
 "CSMSG_BAD_MAX_LENGTH" "$b%s$b ist keine gültige maximale Länge (Sie muss zwischen 20 und 450 Zeichen liegen).";
 "CSMSG_BAD_NOTE_ACCESS" "$b%s$b ist kein gültiger Note Zugriffstyp.";
 "CSMSG_BAD_NOTE_TYPE" "Note Typ $b%s$b existiert nicht.";
@@ -94,6 +95,7 @@
 "CSMSG_ILLEGAL_CHANNEL" "$b%s$b ist ein illegaler Channel und kann daher nicht registriert werden.";
 "CSMSG_INCORRECT_ACCESS" "%s hat Access Level $b%d$b, nicht %s.";
 "CSMSG_INFOLINE_LIST" "Der Account $b%s$b hat in folgenden Channeln Access:";
+"CSMSG_INFOLINE_TOO_LONG" "Deine Infoline darf nicht mehr als %u Zeichen haben.";
 "CSMSG_INVALID_ACCESS" "$b%s$b ist ein ungültiger Access Level.";
 "CSMSG_INVALID_MODE_LOCK" "$b%s$b ist ein ungültiger Mode Lock.";
 "CSMSG_INVALID_NUMERIC" "$b%d$b ist nicht gültig.  Wähle:";

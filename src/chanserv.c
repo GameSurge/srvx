@@ -54,6 +54,7 @@
 #define KEY_NETWORK_HELPER_EPITHET  "network_helper_epithet"
 #define KEY_SUPPORT_HELPER_EPITHET  "support_helper_epithet"
 #define KEY_NODELETE_LEVEL      "nodelete_level"
+#define KEY_MAX_USERINFO_LENGTH "max_userinfo_length"
 
 /* ChanServ database */
 #define KEY_CHANNELS		"channels"
@@ -301,6 +302,8 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_ALREADY_PRESENT", "%s is already in $b%s$b." },
     { "CSMSG_YOU_ALREADY_PRESENT", "You are already in $b%s$b." },
     { "CSMSG_LOW_CHANNEL_ACCESS", "You lack sufficient access in %s to use this command." },
+    { "CSMSG_INFOLINE_TOO_LONG", "Your infoline may not exceed %u characters." },
+    { "CSMSG_BAD_INFOLINE", "You may not use the character \\%03o in your infoline." },
 
     { "CSMSG_KICK_DONE", "Kicked $b%s$b from %s." },
     { "CSMSG_NO_BANS", "No channel bans found on $b%s$b." },
@@ -493,6 +496,7 @@ static struct
     unsigned int        max_owned;
     unsigned int 	max_chan_users;
     unsigned int 	max_chan_bans;
+    unsigned int        max_userinfo_length;
 
     struct string_list  *set_shows;
     struct string_list  *eightball;
@@ -5245,7 +5249,19 @@ static MODCMD_FUNC(user_opt_info)
 
     if(argc > 1)
     {
+        size_t bp;
         infoline = unsplit_string(argv + 1, argc - 1, NULL);
+        if(strlen(infoline) > chanserv_conf.max_userinfo_length)
+        {
+            reply("CSMSG_INFOLINE_TOO_LONG", chanserv_conf.max_userinfo_length);
+            return 0;
+        }
+        bp = strcspn(infoline, "\001");
+        if(infoline[bp])
+        {
+            reply("CSMSG_BAD_INFOLINE", infoline[bp]);
+            return 0;
+        }
         if(uData->info)
             free(uData->info);
         if(infoline[0] == '*' && infoline[1] == 0)
@@ -6255,6 +6271,8 @@ chanserv_conf_read(void)
     chanserv_conf.max_chan_users = str ? atoi(str) : 512;
     str = database_get_data(conf_node, KEY_MAX_CHAN_BANS, RECDB_QSTRING);
     chanserv_conf.max_chan_bans = str ? atoi(str) : 512;
+    str = database_get_data(conf_node, KEY_MAX_USERINFO_LENGTH, RECDB_QSTRING);
+    chanserv_conf.max_userinfo_length = str ? atoi(str) : 400;
     str = database_get_data(conf_node, KEY_NICK, RECDB_QSTRING);
     if(chanserv && str)
         NickChange(chanserv, str, 0);
