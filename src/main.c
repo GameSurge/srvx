@@ -764,14 +764,6 @@ int main(int argc, char *argv[])
 
     version();
 
-#ifdef __CYGWIN__
-    if(daemon)
-    {
-	fprintf(stderr, "Daemon mode not supported under Cygwin.\n");
-	daemon = 0;
-    }
-#endif
-
     if (replay_file) {
         /* We read a line here to "prime" the replay file parser, but
          * mostly to get the right value of "now" for when we do the
