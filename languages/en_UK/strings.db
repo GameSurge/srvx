@@ -1,0 +1,7 @@
+"CSMSG_RESYNCED_USERS" "Synchronised users in $b%s$b with the userlist.";
+"CSMSG_ACTION_INVALID" "$b%s$b is not a recognised search action.";
+"OSMSG_BAD_ACTION" "Unrecognised trace action $b%s$b.";
+"OSMSG_GSYNC_RUNNING" "Synchronising glines from %s.";
+"NSMSG_REGISTER_BAD_NICKMASK" "Could not recognise $b%s$b as either a current nick or a hostmask.";
+"NSMSG_AUTH_SUCCESS" "I recognise you.";
+"NSEMAIL_ALLOWAUTH_BODY" "This email has been sent to let you authenticate (auth) to account %5$s on %1$s.  Your cookie is %2$s.\nTo auth to that account, log on to %1$s and type the following command:\n    /msg %3$s@%4$s COOKIE %5$s %2$s\nIf you did NOT request this authorisation, you do not need to do anything.  Please contact the %1$s staff if you have questions.";

@@ -1,0 +1,28 @@
+"CHANNEL" ("$bChannel Management Commands:$b",
+        "  OPEN        Remove +ilk channel modes and any bans on you from a channel.",
+        "  USERS       List all users of a channel.",
+        "  CLIST                coowners of a channel.",
+        "  MLIST                masters of a channel.",
+        "  OLIST                ops of a channel.",
+        "  PLIST                peons of a channel.",    
+        "  BANS        List all the bans for a channel.",
+        "  TOPIC       Set the current topic, or reset it to the default topic.",
+        "  MODE        Change a channel mode.",
+        "  INVITE      Invite new users to your channel.",
+        "  INFO        Show numerical information about the users in a channel.",
+        "  SET         Change various channel settings.",
+        "  EVENTS      View a list of events relevant to a channel.",
+        "  NOTE        Set a note on a channel.",
+        "  DELNOTE     Remove a note from a channel.",
+        "  RESYNC      Synchronise ops and voice with the channel userlist."
+);
+"RESYNC" ("/msg $S RESYNC <#channel>",
+        "Synchronises users in the channel with the userlist.  This means that if the user can normally get ops, $S makes sure the user has ops.  Otherwise, if the user normally gets voice, $S makes sure the user has voice but not ops.  Otherwise, $S makes sure the user has neither voice nor ops.");
+"SET DEFAULTTOPIC" ("/msg $C SET <#channel> DEFAULTTOPIC <New default topic>",
+        "This changes the default topic for the channel.  $C will set the IRC topic to this value when the $btopic$b command is used with no arguments, when the topic refresh happens (if you have $bset topicrefresh$b), or when an unauthorised user changes the topic to something else.",
+        "$uSee Also:$u set, set topicrefresh, set enftopic, set topicmask");
+"SET ENFOPS" ("/msg $C SET <#channel> ENFOPS <value>",
+        "This setting restricts who may op users who are not at least ops on the userlist.  If $C sees someone with access below the specified access op someone not on the userlist (or who is a peon), it will deop the second user.  It is a numeric user level, or 501 to mean no one may op unrecognised users.",
+        "$uSee Also:$u set");
+        "$uSee Also:$u set");
+"Byte"	"<mike[F]> I just worked out Byte's role in the srvx team <mike[F]> It's his job to break srvx <mike[F]> Nothing else";
