@@ -111,7 +111,7 @@
 #define KEY_EXPIRES             "expires"
 #define KEY_TRIGGERED		"triggered"
 
-#define CHANNEL_DEFAULT_FLAGS   (CHANNEL_INFO_LINES)
+#define CHANNEL_DEFAULT_FLAGS   (0)
 #define CHANNEL_DEFAULT_OPTIONS "lmoooanpcnat"
 
 /* Administrative messages */
@@ -237,6 +237,8 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_CONFIRM_DEFAULTS", "To reset %s's settings to the defaults, you muse use 'set defaults %s'." },
     { "CSMSG_SETTINGS_DEFAULTED", "All settings for %s have been reset to default values." },
     { "CSMSG_BAD_SETLEVEL", "You cannot change any setting to above your level." },
+    { "CSMSG_BAD_GIVEVOICE", "You cannot change GiveVoice to above GiveOps (%d)." },
+    { "CSMSG_BAD_GIVEOPS", "You cannot change GiveOps to below GiveVoice (%d)." },
     { "CSMSG_BAD_SETTERS", "You cannot change Setters to above your level." },
     { "CSMSG_INVALID_MODE_LOCK", "$b%s$b is an invalid mode lock." },
     { "CSMSG_INVALID_NUMERIC",   "$b%d$b is not a valid choice.  Choose one:" },
@@ -246,11 +248,11 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_SET_USERGREETING",  "$bUserGreeting$b %s" },
     { "CSMSG_SET_MODES",         "$bModes       $b %s" },
     { "CSMSG_SET_NODELETE",      "$bNoDelete    $b %s" },
-    { "CSMSG_SET_USERINFO",      "$bUserInfo    $b %s" },
-    { "CSMSG_SET_VOICE",         "$bVoice       $b %s" },
     { "CSMSG_SET_DYNLIMIT",      "$bDynLimit    $b %s" },
-    { "CSMSG_SET_TOPICSNARF",    "$bTopicSnarf  $b %s" },
-    { "CSMSG_SET_PEONINVITE",    "$bPeonInvite  $b %s" },
+    { "CSMSG_SET_USERINFO",      "$bUserInfo    $b %d" },
+    { "CSMSG_SET_GIVE_VOICE",    "$bGiveVoice   $b %d" },
+    { "CSMSG_SET_TOPICSNARF",    "$bTopicSnarf  $b %d" },
+    { "CSMSG_SET_INVITEME",      "$bInviteMe    $b %d" },
     { "CSMSG_SET_ENFOPS",        "$bEnfOps      $b %d" },
     { "CSMSG_SET_GIVE_OPS",      "$bGiveOps     $b %d" },
     { "CSMSG_SET_ENFMODES",      "$bEnfModes    $b %d" },
@@ -568,14 +570,20 @@ static const struct {
     char *db_name;
     unsigned short default_value;
     unsigned int old_idx;
+    unsigned int old_flag;
+    unsigned short flag_value;
 } levelOptions[] = {
-    { "CSMSG_SET_GIVE_OPS", "giveops", 200, 2 },
-    { "CSMSG_SET_ENFOPS", "enfops", 300, 1 },
-    { "CSMSG_SET_ENFMODES", "enfmodes", 200, 3 },
-    { "CSMSG_SET_ENFTOPIC", "enftopic", 200, 4 },
-    { "CSMSG_SET_PUBCMD", "pubcmd", 0, 5 },
-    { "CSMSG_SET_SETTERS", "setters", 400, 7 },
-    { "CSMSG_SET_CTCPUSERS", "ctcpusers", 0, 9 }
+    { "CSMSG_SET_GIVE_VOICE", "givevoice", 100, ~0, CHANNEL_VOICE_ALL, 0 },
+    { "CSMSG_SET_GIVE_OPS", "giveops", 200, 2, 0, 0 },
+    { "CSMSG_SET_ENFOPS", "enfops", 300, 1, 0, 0 },
+    { "CSMSG_SET_ENFMODES", "enfmodes", 200, 3, 0, 0 },
+    { "CSMSG_SET_ENFTOPIC", "enftopic", 200, 4, 0, 0 },
+    { "CSMSG_SET_PUBCMD", "pubcmd", 0, 5, 0, 0 },
+    { "CSMSG_SET_SETTERS", "setters", 400, 7, 0, 0 },
+    { "CSMSG_SET_CTCPUSERS", "ctcpusers", 0, 9, 0, 0 },
+    { "CSMSG_SET_USERINFO", "userinfo", 1, ~0, CHANNEL_INFO_LINES, 1 },
+    { "CSMSG_SET_INVITEME", "inviteme", 1, ~0, CHANNEL_PEON_INVITE, 200 },
+    { "CSMSG_SET_TOPICSNARF", "topicsnarf", 501, ~0, CHANNEL_TOPIC_SNARF, 1 }
 };
 
 struct charOptionValues {
@@ -2885,7 +2893,7 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
             change->args[n++].hostmask = ban;
         }
         change->argc = n;
-        if (cmd)
+        if(cmd)
             modcmd_chanmode_announce(change);
         else
             mod_chanmode_announce(chanserv, channel, change);
@@ -3315,9 +3323,9 @@ zoot_list(struct listData *list)
     tmp_table.flags = list->table.flags;
     list->table.contents[0][0] = " ";
     highest = list->highest;
-    if (list->lowest != 0)
+    if(list->lowest != 0)
         lowest = list->lowest;
-    else if (highest < 100)
+    else if(highest < 100)
         lowest = 1;
     else
         lowest = highest - 100;
@@ -3655,7 +3663,7 @@ static CHANSERV_FUNC(cmd_topic)
     else
         SetChannelTopic(channel, chanserv, topic, 1);
 
-    if(cData->flags & CHANNEL_TOPIC_SNARF)
+    if(check_user_level(channel, user, lvlTopicSnarf, 1, 0))
     {
         /* Grab the topic and save it as the default topic. */
         free(cData->topic);
@@ -3740,17 +3748,13 @@ static CHANSERV_FUNC(cmd_invite)
 
 static CHANSERV_FUNC(cmd_inviteme)
 {
-    struct userData *uData;
-
     if(GetUserMode(channel, user))
     {
 	reply("CSMSG_YOU_ALREADY_PRESENT", channel->name);
 	return 0;
     }
     if(channel->channel_info
-       && !(channel->channel_info->flags & CHANNEL_PEON_INVITE)
-       && (uData = GetChannelUser(channel->channel_info, user->handle_info))
-       && (uData->access < channel->channel_info->lvlOpts[lvlGiveOps]))
+       && !check_user_level(channel, user, lvlInviteMe, 1, 0))
     {
         reply("CSMSG_LOW_CHANNEL_ACCESS", channel->name);
         return 0;
@@ -4871,6 +4875,13 @@ static MODCMD_FUNC(chan_opt_nodelete)
     CHANNEL_BINARY_OPTION("CSMSG_SET_NODELETE", CHANNEL_NODELETE);
 }
 
+static MODCMD_FUNC(chan_opt_dynlimit)
+{
+    CHANNEL_BINARY_OPTION("CSMSG_SET_DYNLIMIT", CHANNEL_DYNAMIC_LIMIT);
+}
+
+/* TODO: reimplement
+
 static MODCMD_FUNC(chan_opt_userinfo)
 {
     CHANNEL_BINARY_OPTION("CSMSG_SET_USERINFO", CHANNEL_INFO_LINES);
@@ -4879,11 +4890,6 @@ static MODCMD_FUNC(chan_opt_userinfo)
 static MODCMD_FUNC(chan_opt_voice)
 {
     CHANNEL_BINARY_OPTION("CSMSG_SET_VOICE", CHANNEL_VOICE_ALL);
-}
-
-static MODCMD_FUNC(chan_opt_dynlimit)
-{
-    CHANNEL_BINARY_OPTION("CSMSG_SET_DYNLIMIT", CHANNEL_DYNAMIC_LIMIT);
 }
 
 static MODCMD_FUNC(chan_opt_topicsnarf)
@@ -4900,6 +4906,8 @@ static MODCMD_FUNC(chan_opt_peoninvite)
 {
     CHANNEL_BINARY_OPTION("CSMSG_SET_PEONINVITE", CHANNEL_PEON_INVITE);
 }
+
+*/
 
 static MODCMD_FUNC(chan_opt_defaults)
 {
@@ -4958,10 +4966,35 @@ channel_level_option(enum levelOption option, struct userNode *user, struct chan
             reply("CSMSG_BAD_SETLEVEL");
             return 0;
         }
-        if((option == lvlSetters) && (value > uData->access))
+        switch(option)
         {
-            reply("CSMSG_BAD_SETTERS");
-            return 0;
+        case lvlGiveVoice:
+            if(value > cData->lvlOpts[lvlGiveOps])
+            {
+                reply("CSMSG_BAD_GIVEVOICE", cData->lvlOpts[lvlGiveOps]);
+                return 0;
+            }
+            break;
+        case lvlGiveOps:
+            if(value < cData->lvlOpts[lvlGiveVoice])
+            {
+                reply("CSMSG_BAD_GIVEOPS", cData->lvlOpts[lvlGiveVoice]);
+                return 0;
+            }
+            break;
+        case lvlSetters:
+            /* This test only applies to owners, since non-owners
+             * trying to set an option to above their level get caught
+             * by the CSMSG_BAD_SETLEVEL test above.
+             */
+            if(value > uData->access)
+            {
+                reply("CSMSG_BAD_SETTERS");
+                return 0;
+            }
+            break;
+        default:
+            break;
         }
         cData->lvlOpts[option] = value;
     }
@@ -5002,6 +5035,26 @@ static MODCMD_FUNC(chan_opt_setters)
 static MODCMD_FUNC(chan_opt_ctcpusers)
 {
     return channel_level_option(lvlCTCPUsers, CSFUNC_ARGS);
+}
+
+static MODCMD_FUNC(chan_opt_userinfo)
+{
+    return channel_level_option(lvlUserInfo, CSFUNC_ARGS);
+}
+
+static MODCMD_FUNC(chan_opt_givevoice)
+{
+    return channel_level_option(lvlGiveVoice, CSFUNC_ARGS);
+}
+
+static MODCMD_FUNC(chan_opt_topicsnarf)
+{
+    return channel_level_option(lvlTopicSnarf, CSFUNC_ARGS);
+}
+
+static MODCMD_FUNC(chan_opt_inviteme)
+{
+    return channel_level_option(lvlInviteMe, CSFUNC_ARGS);
 }
 
 static int
@@ -5745,9 +5798,13 @@ handle_join(struct modeNode *mNode)
         timeq_add(now + chanserv_conf.adjust_delay, chanserv_adjust_limit, cData);
     }
 
-    if(cData->lvlOpts[lvlGiveOps] == 0)
+    if(channel->join_flooded)
+    {
+        /* don't automatically give ops or voice during a join flood */
+    }
+    else if(cData->lvlOpts[lvlGiveOps] == 0)
         modes |= MODE_CHANOP;
-    else if((cData->flags & CHANNEL_VOICE_ALL) && !channel->join_flooded)
+    else if(cData->lvlOpts[lvlGiveVoice] == 0)
         modes |= MODE_VOICE;
 
     greeting = cData->greeting;
@@ -5774,17 +5831,17 @@ handle_join(struct modeNode *mNode)
             /* Ops and above were handled by the above case. */
             if(IsUserAutoOp(uData))
             {
-                if(uData->access < cData->lvlOpts[lvlGiveOps])
-                    modes |= MODE_VOICE;
-                else
+                if(uData->access >= cData->lvlOpts[lvlGiveOps])
                     modes |= MODE_CHANOP;
+                else if(uData->access >= cData->lvlOpts[lvlGiveVoice])
+                    modes |= MODE_VOICE;
             }
             if(uData->access >= UL_PRESENT)
                 cData->visited = now;
             if(cData->user_greeting)
                 greeting = cData->user_greeting;
             if(uData->info
-               && (cData->flags & CHANNEL_INFO_LINES)
+               && (uData->access >= cData->lvlOpts[lvlUserInfo])
                && ((now - uData->seen) >= chanserv_conf.info_delay)
                && !uData->present)
                 info = 1;
@@ -5836,6 +5893,7 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
         {
             if(!IsUserSuspended(channel)
                && IsUserAutoInvite(channel)
+               && (channel->access >= channel->channel->lvlOpts[lvlInviteMe])
                && (cn->modes & (MODE_KEY | MODE_INVITEONLY))
                && !self->burst)
                 irc_invite(chanserv, user, cn);
@@ -5849,7 +5907,7 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
         {
             if(channel->access >= cn->channel_info->lvlOpts[lvlGiveOps])
                 change.args[0].mode = MODE_CHANOP;
-            else
+            else if(channel->access >= cn->channel_info->lvlOpts[lvlGiveVoice])
                 change.args[0].mode = MODE_VOICE;
             change.args[0].member = mn;
             mod_chanmode_announce(chanserv, cn, &change);
@@ -5960,7 +6018,8 @@ handle_topic(struct userNode *user, struct chanNode *channel, const char *old_to
 {
     struct chanData *cData;
 
-    if(!channel->channel_info || !user || IsSuspended(channel->channel_info) || IsService(user)) return 0;
+    if(!channel->channel_info || !user || IsSuspended(channel->channel_info) || IsService(user))
+        return 0;
 
     cData = channel->channel_info;
     if(bad_topic(channel, user, channel->topic))
@@ -5973,7 +6032,7 @@ handle_topic(struct userNode *user, struct chanNode *channel, const char *old_to
         return 1;
     }
     /* With topicsnarf, grab the topic and save it as the default topic. */
-    if(cData->flags & CHANNEL_TOPIC_SNARF)
+    if(check_user_level(channel, user, lvlTopicSnarf, 0, 0))
     {
         free(cData->topic);
         cData->topic = strdup(channel->topic);
@@ -6239,14 +6298,18 @@ chanserv_conf_read(void)
     else
     {
         static const char *list[] = {
-            /* multiple choice options */
+            /* free form text */
             "DefaultTopic", "TopicMask", "Greeting", "UserGreeting", "Modes",
-            "PubCmd", "GiveOps", "EnfOps", "EnfModes", "EnfTopic", "Protect",
-            "Toys", "Setters", "TopicRefresh", "CtcpUsers", "CtcpReaction",
+            /* options based on user level */
+            "PubCmd", "InviteMe", "UserInfo", "GiveVoice", "GiveOps", "EnfOps",
+            "EnfModes", "EnfTopic", "TopicSnarf", "Setters", "CtcpUsers",
+            /* multiple choice options */
+            "CtcpReaction", "Protect", "Toys", "TopicRefresh",
             /* binary options */
-            "Voice", "UserInfo", "DynLimit", "TopicSnarf", "PeonInvite", "NoDelete",
+            "DynLimit", "NoDelete",
             /* delimiter */
-            NULL };
+            NULL
+        };
         unsigned int ii;
         strlist = alloc_string_list(ArrayLength(list)-1);
         for(ii=0; list[ii]; ii++)
@@ -6274,7 +6337,7 @@ chanserv_conf_read(void)
     chanserv_conf.eightball = strlist;
     free_string_list(chanserv_conf.old_ban_names);
     strlist = database_get_data(conf_node, KEY_OLD_BAN_NAMES, RECDB_STRING_LIST);
-    if (strlist)
+    if(strlist)
         strlist = string_list_copy(strlist);
     else
         strlist = alloc_string_list(2);
@@ -6463,20 +6526,30 @@ chanserv_channel_read(const char *key, struct record_data *hir)
     {
         enum levelOption lvlOpt;
         enum charOption chOpt;
+
+        if((str = database_get_data(obj, KEY_FLAGS, RECDB_QSTRING)))
+            cData->flags = atoi(str);
+
         for(lvlOpt = 0; lvlOpt < NUM_LEVEL_OPTIONS; ++lvlOpt)
         {
-            if(!(str = database_get_data(obj, levelOptions[lvlOpt].db_name, RECDB_QSTRING)))
-                continue;
-            cData->lvlOpts[lvlOpt] = user_level_from_name(str, UL_OWNER+1);
+            str = database_get_data(obj, levelOptions[lvlOpt].db_name, RECDB_QSTRING);
+            if(str)
+                cData->lvlOpts[lvlOpt] = user_level_from_name(str, UL_OWNER+1);
+            else if(levelOptions[lvlOpt].old_flag)
+            {
+                if(cData->flags & levelOptions[lvlOpt].old_flag)
+                    cData->lvlOpts[lvlOpt] = levelOptions[lvlOpt].flag_value;
+                else
+                    cData->lvlOpts[lvlOpt] = levelOptions[lvlOpt].default_value;
+            }
         }
+
         for(chOpt = 0; chOpt < NUM_CHAR_OPTIONS; ++chOpt)
         {
             if(!(str = database_get_data(obj, charOptions[chOpt].db_name, RECDB_QSTRING)))
                 continue;
             cData->chOpts[chOpt] = str[0];
         }
-        if((str = database_get_data(obj, KEY_FLAGS, RECDB_QSTRING)))
-            cData->flags = atoi(str);
     }
     else if((str = database_get_data(channel, KEY_FLAGS, RECDB_QSTRING)))
     {
@@ -6489,7 +6562,14 @@ chanserv_channel_read(const char *key, struct record_data *hir)
         for(lvlOpt = 0; lvlOpt < NUM_LEVEL_OPTIONS; ++lvlOpt)
         {
             unsigned short lvl;
-            switch(((count <= levelOptions[lvlOpt].old_idx) ? str : CHANNEL_DEFAULT_OPTIONS)[levelOptions[lvlOpt].old_idx])
+            if(levelOptions[lvlOpt].old_flag)
+            {
+                if(cData->flags & levelOptions[lvlOpt].old_flag)
+                    lvl = levelOptions[lvlOpt].flag_value;
+                else
+                    lvl = levelOptions[lvlOpt].default_value;
+            }
+            else switch(((count <= levelOptions[lvlOpt].old_idx) ? str : CHANNEL_DEFAULT_OPTIONS)[levelOptions[lvlOpt].old_idx])
             {
             case 'c': lvl = UL_COOWNER; break;
             case 'm': lvl = UL_MASTER; break;
@@ -6958,7 +7038,7 @@ init_chanserv(const char *nick)
     DEFINE_COMMAND(mdelpeon, 2, MODCMD_REQUIRE_CHANUSER, "access", "master", NULL);
 
     DEFINE_COMMAND(trim, 3, MODCMD_REQUIRE_CHANUSER, "access", "master", NULL);
-    DEFINE_COMMAND(opchan, 1, MODCMD_REQUIRE_REGCHAN, "access", "peon", NULL);
+    DEFINE_COMMAND(opchan, 1, MODCMD_REQUIRE_REGCHAN, "access", "1", NULL);
     DEFINE_COMMAND(clvl, 3, MODCMD_REQUIRE_CHANUSER, "access", "master", NULL);
     DEFINE_COMMAND(giveownership, 2, MODCMD_REQUIRE_CHANUSER, "access", "owner", "flags", "+loghostmask", NULL);
 
@@ -6980,7 +7060,7 @@ init_chanserv(const char *nick)
     DEFINE_COMMAND(open, 1, MODCMD_REQUIRE_CHANUSER, "template", "op", NULL);
     DEFINE_COMMAND(topic, 1, MODCMD_REQUIRE_REGCHAN, "template", "op", "flags", "+never_csuspend", NULL);
     DEFINE_COMMAND(mode, 1, MODCMD_REQUIRE_REGCHAN, "template", "op", NULL);
-    DEFINE_COMMAND(inviteme, 1, MODCMD_REQUIRE_CHANNEL, "access", "peon", NULL);
+    DEFINE_COMMAND(inviteme, 1, MODCMD_REQUIRE_CHANNEL, "access", "1", NULL);
     DEFINE_COMMAND(invite, 1, MODCMD_REQUIRE_CHANNEL, "access", "master", NULL);
     DEFINE_COMMAND(set, 1, MODCMD_REQUIRE_CHANUSER, "access", "op", NULL);
     DEFINE_COMMAND(wipeinfo, 2, MODCMD_REQUIRE_CHANUSER, "access", "master", NULL);
@@ -6990,9 +7070,9 @@ init_chanserv(const char *nick)
     DEFINE_COMMAND(addban, 2, MODCMD_REQUIRE_REGCHAN, "access", "250", NULL);
     DEFINE_COMMAND(addtimedban, 3, MODCMD_REQUIRE_REGCHAN, "access", "250", NULL);
     DEFINE_COMMAND(delban, 2, MODCMD_REQUIRE_REGCHAN, "access", "250", NULL);
-    DEFINE_COMMAND(uset, 1, MODCMD_REQUIRE_CHANUSER, "access", "peon", NULL);
+    DEFINE_COMMAND(uset, 1, MODCMD_REQUIRE_CHANUSER, "access", "1", NULL);
 
-    DEFINE_COMMAND(bans, 1, MODCMD_REQUIRE_REGCHAN, "access", "peon", "flags", "+nolog", NULL);
+    DEFINE_COMMAND(bans, 1, MODCMD_REQUIRE_REGCHAN, "access", "1", "flags", "+nolog", NULL);
     DEFINE_COMMAND(peek, 1, MODCMD_REQUIRE_REGCHAN, "access", "op", "flags", "+nolog", NULL);
 
     DEFINE_COMMAND(access, 1, 0, "flags", "+nolog,+acceptchan", NULL);
@@ -7039,7 +7119,7 @@ init_chanserv(const char *nick)
     DEFINE_CHANNEL_OPTION(enfmodes);
     DEFINE_CHANNEL_OPTION(enftopic);
     DEFINE_CHANNEL_OPTION(pubcmd);
-    DEFINE_CHANNEL_OPTION(voice);
+    DEFINE_CHANNEL_OPTION(givevoice);
     DEFINE_CHANNEL_OPTION(userinfo);
     DEFINE_CHANNEL_OPTION(dynlimit);
     DEFINE_CHANNEL_OPTION(topicsnarf);
@@ -7049,7 +7129,7 @@ init_chanserv(const char *nick)
     DEFINE_CHANNEL_OPTION(topicrefresh);
     DEFINE_CHANNEL_OPTION(ctcpusers);
     DEFINE_CHANNEL_OPTION(ctcpreaction);
-    DEFINE_CHANNEL_OPTION(peoninvite);
+    DEFINE_CHANNEL_OPTION(inviteme);
     modcmd_register(chanserv_module, "set defaults", chan_opt_defaults, 1, 0, "access", "owner", NULL);
 
     /* Alias set topic to set defaulttopic for compatibility. */

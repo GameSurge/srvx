@@ -2291,7 +2291,8 @@ static OPTION_FUNC(opt_language)
             send_message(user, nickserv, "NSMSG_LANGUAGE_NOT_FOUND", argv[1], lang->name);
         hi->language = lang;
     }
-    send_message(user, nickserv, "NSMSG_SET_LANGUAGE", hi->language->name);
+    lang = hi->language ? hi->language : lang_C;
+    send_message(user, nickserv, "NSMSG_SET_LANGUAGE", lang->name);
     return 1;
 }
 
