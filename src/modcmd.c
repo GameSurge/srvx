@@ -2024,7 +2024,7 @@ modcmd_expand(const char *variable) {
 }
 
 static void
-modcmd_load_bots(struct dict *db) {
+modcmd_load_bots(struct dict *db, int default_nick) {
     dict_iterator_t it;
 
     for (it = dict_first(db); it; it = iter_next(it)) {
@@ -2038,8 +2038,12 @@ modcmd_load_bots(struct dict *db) {
             continue;
         }
         nick = database_get_data(rd->d.object, "nick", RECDB_QSTRING);
-        if (!nick)
-            continue;
+        if (!nick) {
+            if (default_nick)
+                nick = iter_key(it);
+            else
+                continue;
+        }
         svc = service_find(nick);
         desc = database_get_data(rd->d.object, "description", RECDB_QSTRING);
         hostname = database_get_data(rd->d.object, "hostname", RECDB_QSTRING);
@@ -2060,7 +2064,7 @@ modcmd_load_bots(struct dict *db) {
 
 static void
 modcmd_conf_read(void) {
-    modcmd_load_bots(conf_get_data("services", RECDB_OBJECT));
+    modcmd_load_bots(conf_get_data("services", RECDB_OBJECT), 0);
 }
 
 void
@@ -2204,7 +2208,7 @@ modcmd_saxdb_read(struct dict *db) {
     struct record_data *rd, *rd2;
     struct service *service;
 
-    modcmd_load_bots(database_get_data(db, "bots", RECDB_OBJECT));
+    modcmd_load_bots(database_get_data(db, "bots", RECDB_OBJECT), 1);
     db2 = database_get_data(db, "services", RECDB_OBJECT);
     if (!db2) {
         log_module(MAIN_LOG, LOG_ERROR, "Missing section 'services' in modcmd db.");
