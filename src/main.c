@@ -822,12 +822,12 @@ int main(int argc, char *argv[])
     saxdb_init();
     gline_init();
     sendmail_init();
+    helpfile_init();
     conf_globals(); /* initializes the core services */
     conf_rlimits();
     modules_init();
     message_register_table(msgtab);
     modcmd_finalize();
-    helpfile_finalize();
     saxdb_finalize();
     modules_finalize();
 

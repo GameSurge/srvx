@@ -165,10 +165,8 @@ static struct language *language_read(const char *name)
 
     /* Open the directory stream; if we can't, fail. */
     snprintf(filename, sizeof(filename), "languages/%s", name);
-    if (!(dir = opendir(filename))) {
-        
+    if (!(dir = opendir(filename)))
         return NULL;
-    }
     if (!(lang = dict_find(languages, name, NULL)))
         lang = language_alloc(name);
 
@@ -993,7 +991,7 @@ void message_register_table(const struct message_entry *table)
     }
 }
 
-void helpfile_finalize(void)
+void helpfile_init(void)
 {
     message_register_table(msgtab);
     language_read_all();

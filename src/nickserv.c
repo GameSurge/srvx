@@ -262,7 +262,7 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_CLONE_AUTH", "Warning: %s (%s@%s) authed to your account." },
     { "NSMSG_SETTING_LIST", "$b$N account settings:$b" },
     { "NSMSG_INVALID_OPTION", "$b%s$b is an invalid account setting." },
-    { "NSMSG_INVALID_ANNOUNCE", "$b%s$b is an announcements value." },
+    { "NSMSG_INVALID_ANNOUNCE", "$b%s$b is an invalid announcements value." },
     { "NSMSG_SET_INFO", "$bINFO:         $b%s" },
     { "NSMSG_SET_WIDTH", "$bWIDTH:        $b%d" },
     { "NSMSG_SET_TABLEWIDTH", "$bTABLEWIDTH:   $b%d" },
@@ -2293,8 +2293,7 @@ static OPTION_FUNC(opt_language)
             send_message(user, nickserv, "NSMSG_LANGUAGE_NOT_FOUND", argv[1], lang->name);
         hi->language = lang;
     }
-    lang = hi->language ? hi->language : lang_C;
-    send_message(user, nickserv, "NSMSG_SET_LANGUAGE", lang->name);
+    send_message(user, nickserv, "NSMSG_SET_LANGUAGE", hi->language->name);
     return 1;
 }
 
@@ -2597,7 +2596,7 @@ nickserv_saxdb_write(struct saxdb_context *ctx) {
         }
         if (hi->opserv_level)
             saxdb_write_int(ctx, KEY_OPSERV_LEVEL, hi->opserv_level);
-        if (hi->language && (hi->language != lang_C))
+        if (hi->language != lang_C)
             saxdb_write_string(ctx, KEY_LANGUAGE, hi->language->name);
         saxdb_write_string(ctx, KEY_PASSWD, hi->passwd);
         saxdb_write_int(ctx, KEY_REGISTER_ON, hi->registered);
@@ -3117,7 +3116,8 @@ nickserv_db_read_handle(const char *handle, dict_t obj)
     str = database_get_data(obj, KEY_OPSERV_LEVEL, RECDB_QSTRING);
     hi->opserv_level = str ? strtoul(str, NULL, 0) : 0;
     str = database_get_data(obj, KEY_INFO, RECDB_QSTRING);
-    if (str) hi->infoline = strdup(str);
+    if (str)
+        hi->infoline = strdup(str);
     str = database_get_data(obj, KEY_REGISTER_ON, RECDB_QSTRING);
     hi->registered = str ? (time_t)strtoul(str, NULL, 0) : now;
     str = database_get_data(obj, KEY_LAST_SEEN, RECDB_QSTRING);
@@ -3143,12 +3143,16 @@ nickserv_db_read_handle(const char *handle, dict_t obj)
     str = database_get_data(obj, KEY_TABLE_WIDTH, RECDB_QSTRING);
     hi->table_width = str ? strtoul(str, NULL, 0) : 0;
     str = database_get_data(obj, KEY_LAST_QUIT_HOST, RECDB_QSTRING);
-    if (!str) str = database_get_data(obj, KEY_LAST_AUTHED_HOST, RECDB_QSTRING);
-    if (str) safestrncpy(hi->last_quit_host, str, sizeof(hi->last_quit_host));
+    if (!str)
+        str = database_get_data(obj, KEY_LAST_AUTHED_HOST, RECDB_QSTRING);
+    if (str)
+        safestrncpy(hi->last_quit_host, str, sizeof(hi->last_quit_host));
     str = database_get_data(obj, KEY_EMAIL_ADDR, RECDB_QSTRING);
-    if (str) nickserv_set_email_addr(hi, str);
+    if (str)
+        nickserv_set_email_addr(hi, str);
     str = database_get_data(obj, KEY_EPITHET, RECDB_QSTRING);
-    if (str) hi->epithet = strdup(str);
+    if (str)
+        hi->epithet = strdup(str);
     subdb = database_get_data(obj, KEY_COOKIE, RECDB_OBJECT);
     if (subdb) {
         const char *data, *type, *expires, *cookie_str;
@@ -3300,7 +3304,8 @@ nickserv_conf_read(void)
 	return;
     }
     str = database_get_data(conf_node, KEY_VALID_HANDLE_REGEX, RECDB_QSTRING);
-    if (!str) str = database_get_data(conf_node, KEY_VALID_ACCOUNT_REGEX, RECDB_QSTRING);
+    if (!str)
+        str = database_get_data(conf_node, KEY_VALID_ACCOUNT_REGEX, RECDB_QSTRING);
     if (nickserv_conf.valid_handle_regex_set) regfree(&nickserv_conf.valid_handle_regex);
     if (str) {
         int err = regcomp(&nickserv_conf.valid_handle_regex, str, REG_EXTENDED|REG_ICASE|REG_NOSUB);
@@ -3319,7 +3324,8 @@ nickserv_conf_read(void)
         nickserv_conf.valid_nick_regex_set = 0;
     }
     str = database_get_data(conf_node, KEY_NICKS_PER_HANDLE, RECDB_QSTRING);
-    if (!str) str = database_get_data(conf_node, KEY_NICKS_PER_ACCOUNT, RECDB_QSTRING);
+    if (!str)
+        str = database_get_data(conf_node, KEY_NICKS_PER_ACCOUNT, RECDB_QSTRING);
     nickserv_conf.nicks_per_handle = str ? strtoul(str, NULL, 0) : 4;
     str = database_get_data(conf_node, KEY_DISABLE_NICKS, RECDB_QSTRING);
     nickserv_conf.disable_nicks = str ? strtoul(str, NULL, 0) : 0;
@@ -3340,13 +3346,16 @@ nickserv_conf_read(void)
     str = database_get_data(conf_node, KEY_SET_EPITHET_LEVEL, RECDB_QSTRING);
     nickserv_conf.set_epithet_level = str ? strtoul(str, NULL, 0) : 1;
     str = database_get_data(conf_node, KEY_HANDLE_EXPIRE_FREQ, RECDB_QSTRING);
-    if (!str) str = database_get_data(conf_node, KEY_ACCOUNT_EXPIRE_FREQ, RECDB_QSTRING);
+    if (!str)
+        str = database_get_data(conf_node, KEY_ACCOUNT_EXPIRE_FREQ, RECDB_QSTRING);
     nickserv_conf.handle_expire_frequency = str ? ParseInterval(str) : 86400;
     str = database_get_data(conf_node, KEY_HANDLE_EXPIRE_DELAY, RECDB_QSTRING);
-    if (!str) str = database_get_data(conf_node, KEY_ACCOUNT_EXPIRE_DELAY, RECDB_QSTRING);
+    if (!str)
+        str = database_get_data(conf_node, KEY_ACCOUNT_EXPIRE_DELAY, RECDB_QSTRING);
     nickserv_conf.handle_expire_delay = str ? ParseInterval(str) : 86400*30;
     str = database_get_data(conf_node, KEY_NOCHAN_HANDLE_EXPIRE_DELAY, RECDB_QSTRING);
-    if (!str) str = database_get_data(conf_node, KEY_NOCHAN_ACCOUNT_EXPIRE_DELAY, RECDB_QSTRING);
+    if (!str)
+        str = database_get_data(conf_node, KEY_NOCHAN_ACCOUNT_EXPIRE_DELAY, RECDB_QSTRING);
     nickserv_conf.nochan_handle_expire_delay = str ? ParseInterval(str) : 86400*15;
     str = database_get_data(conf_node, "warn_clone_auth", RECDB_QSTRING);
     nickserv_conf.warn_clone_auth = str ? !disabled_string(str) : 1;

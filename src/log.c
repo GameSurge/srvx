@@ -244,7 +244,7 @@ find_severity(const char *text)
  *   KEY := LOGSET '.' SEVSET
  *   LOGSET := LOGLIT | LOGLIT ',' LOGSET
  *   LOGLIT := a registered log type
- *   SEVSET := '*' | SEVLIT | '<' SEVLIT | '<=' SEVLIT | '>' SEVLIT | '>=' SEVLIT | SEVLIG ',' SEVSET
+ *   SEVSET := '*' | SEVLIT | '=' SEVLIT | '<' SEVLIT | '<=' SEVLIT | '>' SEVLIT | '>=' SEVLIT | SEVLIT ',' SEVSET
  *   SEVLIT := one of log_severity_names
  * A KEY contains the Cartesian product of the logs in its LOGSET
  * and the severities in its SEVSET.
@@ -305,6 +305,8 @@ log_parse_sevset(char *buffer, char targets[LOG_NUM_SEVERITIES])
                 }
             }
         } else {
+            if (buffer[0] == '=')
+                buffer++;
             bound = find_severity(buffer);
             targets[bound] = 1;
         }
@@ -369,7 +371,8 @@ log_conf_read(void)
                 for (ii = 0; ii < slist->used; ++ii) {
                     type = log_register_type(slist->list[ii], NULL);
                     for (sev = 0; sev < LOG_NUM_SEVERITIES; ++sev) {
-                        if (!sevset[sev]) continue;
+                        if (!sevset[sev])
+                            continue;
                         logList_join(&type->logs[sev], &logList);
                     }
                 }

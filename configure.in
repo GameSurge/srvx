@@ -252,7 +252,6 @@ AC_ARG_ENABLE(modules,
   done
   IFS="$OIFS"
   MODULE_OBJS="$MODULE_OBJS $EXTRA_MODULE_OBJS"
-  AC_DEFINE(EXTRA_MODULES, 1, [Define if there are extra modules to be initialized.])
   AC_MSG_RESULT($module_list)
 ],
 [

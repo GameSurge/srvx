@@ -5956,7 +5956,10 @@ handle_part(struct userNode *user, struct chanNode *channel, UNUSED_ARG(const ch
     }
 
     if((uData = GetTrueChannelAccess(cData, user->handle_info)))
+    {
 	scan_user_presence(uData, user);
+        uData->seen = now;
+    }
 
     if(IsHelping(user) && IsSupportHelper(user))
     {
@@ -5977,6 +5980,8 @@ handle_part(struct userNode *user, struct chanNode *channel, UNUSED_ARG(const ch
 static void
 handle_kick(struct userNode *kicker, struct userNode *victim, struct chanNode *channel)
 {
+    struct userData *uData;
+
     if(!channel->channel_info || !kicker || IsService(kicker)
        || (kicker == victim) || IsSuspended(channel->channel_info)
        || (kicker->handle_info && kicker->handle_info == victim->handle_info))
@@ -5987,6 +5992,9 @@ handle_kick(struct userNode *kicker, struct userNode *victim, struct chanNode *c
         const char *reason = user_find_message(kicker, "CSMSG_USER_PROTECTED");
 	KickChannelUser(kicker, channel, chanserv, reason);
     }
+
+    if((uData = GetTrueChannelAccess(channel->channel_info, victim->handle_info)))
+        uData->seen = now;
 }
 
 static int
