@@ -87,6 +87,8 @@ struct cManagerNode
 #ifdef WITH_PROTOCOL_P10
 struct server* GetServerN(const char *numeric);
 struct userNode* GetUserN(const char *numeric);
+extern char *his_servername;
+extern char *his_servercomment;
 #endif
 
 /* Basic protocol parsing support. */
@@ -102,6 +104,8 @@ struct userNode *get_chanmsg_bot(unsigned char prefix);
 typedef void (*privmsg_func_t) (struct userNode *user, struct userNode *target, char *text, int server_qualified);
 void reg_privmsg_func(struct userNode *user, privmsg_func_t handler);
 void reg_notice_func(struct userNode *user, privmsg_func_t handler);
+void unreg_privmsg_func(struct userNode *user, privmsg_func_t handler);
+void unreg_notice_func(struct userNode *user, privmsg_func_t handler);
 
 typedef void (*oper_func_t) (struct userNode *user);
 void reg_oper_func(oper_func_t handler);

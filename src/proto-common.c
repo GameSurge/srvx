@@ -370,6 +370,10 @@ static CMD_FUNC(cmd_whois)
 {
     struct userNode *from;
     struct userNode *who;
+#ifdef WITH_PROTOCOL_P10
+    extern char *his_servername;
+    extern char *his_servercomment;
+#endif
 
     if (argc < 3)
         return 0;
@@ -386,7 +390,13 @@ static CMD_FUNC(cmd_whois)
         return 1;
     }
     irc_numeric(from, RPL_WHOISUSER, "%s %s %s * :%s", who->nick, who->ident, who->hostname, who->info);
+#ifdef WITH_PROTOCOL_P10
+    if (his_servername && his_servercomment)
+      irc_numeric(from, RPL_WHOISSERVER, "%s %s :%s", who->nick, his_servername, his_servercomment);
+    else
+#endif
     irc_numeric(from, RPL_WHOISSERVER, "%s %s :%s", who->nick, who->uplink->name, who->uplink->description);
+
     if (IsOper(who)) {
         irc_numeric(from, RPL_WHOISOPERATOR, "%s :is a megalomaniacal power hungry tyrant", who->nick);
     }

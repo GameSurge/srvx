@@ -295,6 +295,10 @@
     "max_cycles" "30"; // max uplink cycles before giving up
     // Admin information is traditionally: location, location, email
     "admin" ("IRC Network", "Gotham City, GO", "Mr Commissioner <james.gordon@police.gov>");
+    /* the following two settings are for ircu's HEAD_IN_SAND features, and are equivelent to
+     * the F: lines in ircu's ircd.conf. both can be disabled by commenting them out. */
+    "his_servername" "*.Generic.NET"; // hidden server name, shown in remote /whois requests
+    "his_servercomment" "The Generic, Boring IRC Network";
 };
 
 // controlling how services (mostly NickServ) send mail

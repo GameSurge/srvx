@@ -287,6 +287,9 @@ static privmsg_func_t *notice_funcs;
 static unsigned int num_notice_funcs;
 static struct dict *unbursted_channels;
 
+char *his_servername;
+char *his_servercomment;
+
 static struct userNode *AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *numeric, const char *userinfo, time_t timestamp, const char *realip);
 
 /* Numerics can be XYY, XYYY, or XXYYY; with X's identifying the
@@ -1383,6 +1386,8 @@ init_parse(void)
     const char *str, *desc;
     int numnick, usermask, max_users;
     char numer[COMBO_NUMERIC_LEN+1];
+    extern char *his_servername;
+    extern char *his_servercomment;
 
     /* read config items */
     str = conf_get_data("server/ping_freq", RECDB_QSTRING);
@@ -1405,6 +1410,10 @@ init_parse(void)
         inttobase64(numer, (numnick << 12) + (usermask & 0x00fff), 3);
     else
         inttobase64(numer, (numnick << 18) + (usermask & 0x3ffff), 5);
+    str = conf_get_data("server/his_servername", RECDB_QSTRING);
+    his_servername = str ? strdup(str) : NULL;
+    str = conf_get_data("server/his_servercomment", RECDB_QSTRING);
+    his_servercomment = str ? strdup(str) : NULL;
     str = conf_get_data("server/hostname", RECDB_QSTRING);
     desc = conf_get_data("server/description", RECDB_QSTRING);
     if (!str || !desc) {
@@ -2344,6 +2353,24 @@ reg_privmsg_func(struct userNode *user, privmsg_func_t handler)
 }
 
 void
+unreg_privmsg_func(struct userNode *user, privmsg_func_t handler)
+{
+    unsigned int x;
+
+    if (!user || handler)
+      return; /* this really only works with users */
+
+    memset(privmsg_funcs+user->num_local, 0, sizeof(privmsg_func_t));
+
+    for (x = user->num_local+1; x < num_privmsg_funcs; x++) 
+       memmove(privmsg_funcs+x-1, privmsg_funcs+x, sizeof(privmsg_func_t));
+    
+    privmsg_funcs = realloc(privmsg_funcs, num_privmsg_funcs*sizeof(privmsg_func_t)); 
+    num_privmsg_funcs--;
+}
+
+
+void
 reg_notice_func(struct userNode *user, privmsg_func_t handler)
 {
     unsigned int numeric = user->num_local;
@@ -2356,6 +2383,24 @@ reg_notice_func(struct userNode *user, privmsg_func_t handler)
     if (notice_funcs[numeric])
         log_module(MAIN_LOG, LOG_WARNING, "re-registering new notice handler for numeric %d", numeric);
     notice_funcs[numeric] = handler;
+}
+
+void
+unreg_notice_func(struct userNode *user, privmsg_func_t handler)
+{
+    unsigned int x;
+
+    if (!user || handler)
+          return; /* this really only works with users */
+
+    memset(notice_funcs+user->num_local, 0, sizeof(privmsg_func_t));
+
+    for (x = user->num_local+1; x < num_notice_funcs; x++)
+       memmove(notice_funcs+x-1, notice_funcs+x, sizeof(privmsg_func_t));
+
+    memset(notice_funcs+user->num_local, 0, sizeof(privmsg_func_t));
+    notice_funcs = realloc(notice_funcs, num_notice_funcs*sizeof(privmsg_func_t));
+    num_notice_funcs--;
 }
 
 void

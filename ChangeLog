@@ -2,6 +2,25 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2004-srvx/srvx--devo--1.3
 #
 
+2004-05-01 11:17:11 GMT	adam <akl@gamesurge.net>	patch-57
+
+    Summary:
+      introduce unreg_privmsg_func, fix minor autoinvite issue, alter account-finding on local services clients 
+    Revision:
+      srvx--devo--1.3--patch-57
+
+    * introduce unreg_privmsg_func: unreg_privmsg_func()/unreg_notice_func() - both of which reverse the effect of reg_privmsg_func()/reg_notice_func()
+    
+    * fix minor autoinvite issue: UserAutoInvite (aka: '!uset autoinvite ..') no longer invites you to channels you weren't in if the server you are on just reconnected to the network
+    
+    * alter account-finding on local services clients: non +k users on the local services server are now no longer referred to as services (at least not in regard to accounts..)
+    
+
+    modified files:
+     ChangeLog src/chanserv.c src/nickserv.c src/proto-common.c
+     src/proto-p10.c src/proto.h srvx.conf.example
+
+
 2004-04-29 01:57:00 GMT	Michael Poole <mdpoole@troilus.org>	patch-56
 
     Summary:
