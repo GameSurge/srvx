@@ -102,6 +102,24 @@ extern void srvx_free(const char *, unsigned int, void *);
 extern void verify(const void *ptr);
 #  define verify(x) verify(x)
 # endif
+#elif defined(WITH_MALLOC_SLAB)
+# define malloc(n) slab_malloc(__FILE__, __LINE__, (n))
+# undef calloc
+# define calloc(m,n) slab_malloc(__FILE__, __LINE__, (m)*(n))
+# undef realloc
+# define realloc(p,n) slab_realloc(__FILE__, __LINE__, (p), (n))
+# undef free
+# define free(p) slab_free(__FILE__, __LINE__, (p))
+# undef strdup
+# define strdup(s) slab_strdup(__FILE__, __LINE__, (s))
+extern void *slab_malloc(const char *, unsigned int, size_t);
+extern void *slab_realloc(const char *, unsigned int, void *, size_t);
+extern char *slab_strdup(const char *, unsigned int, const char *);
+extern void slab_free(const char *, unsigned int, void *);
+# if !defined(NDEBUG)
+extern void verify(const void *ptr);
+#  define verify(x) verify(x)
+# endif
 #endif
 
 #ifndef verify

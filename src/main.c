@@ -691,6 +691,12 @@ int main(int argc, char *argv[])
     FILE *file_out;
     struct sigaction sv;
 
+#if WITH_MALLOC_BOEHM_GC
+    GC_find_leak = 1;
+    GC_set_warn_proc(gc_warn_proc);
+    GC_enable_incremental();
+#endif
+
     daemon = 1;
     debug = 0;
     tools_init();
@@ -816,10 +822,6 @@ int main(int argc, char *argv[])
     MAIN_LOG = log_register_type("srvx", "file:main.log");
     if (debug)
         log_debug();
-#if WITH_MALLOC_BOEHM_GC
-    GC_set_warn_proc(gc_warn_proc);
-    GC_enable_incremental();
-#endif
     timeq_init();
     init_structs();
     init_parse();

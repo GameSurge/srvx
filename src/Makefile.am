@@ -22,7 +22,7 @@ checkversion:
 	    mv $$TMPFILE arch-version.h ; \
 	fi
 
-EXTRA_srvx_SOURCES = alloc-srvx.c proto-bahamut.c proto-common.c proto-p10.c mod-snoop.c mod-memoserv.c mod-helpserv.c mod-sockcheck.c
+EXTRA_srvx_SOURCES = alloc-slab.c alloc-srvx.c proto-bahamut.c proto-common.c proto-p10.c mod-snoop.c mod-memoserv.c mod-helpserv.c mod-sockcheck.c
 srvx_LDADD = @MODULE_OBJS@
 srvx_DEPENDENCIES = @MODULE_OBJS@
 srvx_SOURCES = \

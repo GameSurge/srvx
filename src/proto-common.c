@@ -440,16 +440,17 @@ privmsg_chan_helper(struct chanNode *cn, void *data)
         mn->idle_since = now;
 
     /* Never send a NOTICE to a channel to one of the services */
-    if (!pd->is_notice && cf->func && GetUserMode(cn, cf->service))
+    if (!pd->is_notice && cf->func
+        && ((cn->modes & MODE_REGISTERED) || GetUserMode(cn, cf->service)))
         cf->func(pd->user, cn, pd->text+1, cf->service);
 
     /* This catches *all* text sent to the channel that the services server sees */
     for (x = 0; x < ALLCHANMSG_FUNCS_MAX; x++) {
        cf = (struct chanmsg_func *)&allchanmsg_funcs[x];
        if (!cf->func)
-         break; /* end of list */
+           break; /* end of list */
        else
-       cf->func(pd->user, cn, pd->text, cf->service);
+           cf->func(pd->user, cn, pd->text, cf->service);
     }
 }
 

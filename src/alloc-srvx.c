@@ -15,6 +15,7 @@
  */
 
 #include "common.h"
+#include "log.h"
 
 #undef malloc
 #undef free
@@ -60,6 +61,11 @@ srvx_malloc(const char *file, unsigned int line, size_t size)
 
     block = malloc(sizeof(*block) + size + sizeof(redzone));
     assert(block != NULL);
+    if (block->magic == ALLOC_MAGIC && block->file_id < file_ids_used) {
+        /* Only report the error, due to possible false positives. */
+        log_module(MAIN_LOG, LOG_WARNING, "Detected possible reallocation: %p (called by %s:%u/%u; allocated by %u:%u/%u).",
+                   block, file, line, size, block->file_id, block->line, block->size);
+    }
     memset(block, 0, sizeof(*block) + size);
     memcpy((char*)(block + 1) + size, redzone, sizeof(redzone));
     block->file_id = get_file_id(file);
@@ -116,23 +122,21 @@ srvx_strdup(const char *file, unsigned int line, const char *src)
 }
 
 void
-srvx_free(const char *file, unsigned int line, void *ptr)
+srvx_free(UNUSED_ARG(const char *file), UNUSED_ARG(unsigned int line), void *ptr)
 {
     struct alloc_header *block;
     size_t size;
 
     if (!ptr)
         return;
+    verify(ptr);
     block = (struct alloc_header *)ptr - 1;
-    assert(block->magic == ALLOC_MAGIC);
-    assert(0 == memcmp((char*)(block + 1) + block->size, redzone, sizeof(redzone)));
     size = block->size;
     memset(block + 1, 0xde, size);
     block->magic = FREE_MAGIC;
     free(block);
     alloc_count--;
     alloc_size -= size;
-    (void)file; (void)line;
 }
 
 void

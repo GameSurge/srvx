@@ -84,7 +84,7 @@ static struct language *language_alloc(const char *name)
  * lang is a two-letter code according to ISO-639-1 (or three-letter
  * code according to ISO-639-2 for languages not in ISO-639-1), and
  * COUNTRY is the ISO 3166 country code in all upper case.
- * 
+ *
  * See also:
  * http://www.loc.gov/standards/iso639-2/
  * http://www.loc.gov/standards/iso639-2/langhome.html

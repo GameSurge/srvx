@@ -587,6 +587,10 @@ log_module(struct log_type *type, enum log_severity sev, const char *format, ...
         /* Special behavior before we start full operation */
         fprintf(stderr, "%s: %s\n", log_severity_names[sev], msgbuf);
     }
+    if (sev == LOG_FATAL) {
+        assert(0 && "fatal message logged");
+        _exit(1);
+    }
 }
 
 /* audit log searching */
@@ -719,7 +723,8 @@ log_entry_search(struct logSearch *discrim, entry_search_func esf, void *data)
     unsigned int matched = 0;
 
     if (discrim->type) {
-        struct logEntry *entry, *last;
+        volatile struct logEntry *last;
+        struct logEntry *entry;
 
         for (entry = discrim->type->log_oldest, last = NULL;
              entry;

@@ -79,7 +79,7 @@ if test $ac_cv_func_gettimeofday = no; then
 fi
 
 dnl We have fallbacks in case these are missing, so just check for them.
-AC_CHECK_FUNCS(bcopy memcpy memset strdup strerror strsignal localtime_r setrlimit inet_ntoa getopt getopt_long regcomp regexec regfree sysconf,,)
+AC_CHECK_FUNCS(bcopy getpagesize memcpy memset strdup strerror strsignal localtime_r setrlimit inet_ntoa getopt getopt_long regcomp regexec regfree sysconf,,)
 
 dnl Check for absolutely required library functions.
 AC_CHECK_FUNCS(select socket strcspn strspn strtod strtoul,,AC_MSG_ERROR([a required function was not found.  srvx build will fail.]))
@@ -180,6 +180,10 @@ elif test "x$withval" = "xsrvx" ; then
   AC_MSG_RESULT(srvx)
   AC_DEFINE(WITH_MALLOC_SRVX, 1, [Define if using the srvx internal debug allocator])
   MODULE_OBJS="$MODULE_OBJS alloc-srvx.\$(OBJEXT)"
+elif test "x$withval" = "xslab" ; then
+  AC_MSG_RESULT(slab)
+  AC_DEFINE(WITH_MALLOC_SLAB, 1, [Define if using the slab internal debug allocator])
+  MODULE_OBJS="$MODULE_OBJS alloc-slab.\$(OBJEXT)"
 else
   AC_MSG_ERROR([Unknown malloc type $withval])
 fi

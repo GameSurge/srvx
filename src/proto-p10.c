@@ -1579,6 +1579,7 @@ init_parse(void)
     dict_insert(irc_func_dict, "401", cmd_dummy); /* target left network */
     dict_insert(irc_func_dict, "403", cmd_dummy); /* no such channel */
     dict_insert(irc_func_dict, "404", cmd_dummy); /* cannot send to channel */
+    dict_insert(irc_func_dict, "439", cmd_dummy); /* target change too fast */
     dict_insert(irc_func_dict, "441", cmd_dummy); /* target isn't on that channel */
     dict_insert(irc_func_dict, "442", cmd_dummy); /* you aren't on that channel */
     dict_insert(irc_func_dict, "443", cmd_dummy); /* is already on channel (after invite?) */

@@ -1684,7 +1684,8 @@ static CHANSERV_FUNC(cmd_register)
             return 0;
         }
 
-        if(!IsHelping(user) && (!(mn = GetUserMode(channel, user)) || !(mn->modes & MODE_CHANOP)))
+        if(!IsHelping(user)
+           && (!(mn = GetUserMode(channel, user)) || !(mn->modes & MODE_CHANOP)))
         {
             reply("CSMSG_MUST_BE_OPPED", channel->name);
             return 0;
@@ -4456,18 +4457,21 @@ chanserv_expire_suspension(void *data)
 {
     struct suspended *suspended = data;
     struct chanNode *channel;
-    struct mod_chanmode change;
 
     if(!suspended->expires || (now < suspended->expires))
         suspended->revoked = now;
     channel = suspended->cData->channel;
     suspended->cData->channel = channel;
     suspended->cData->flags &= ~CHANNEL_SUSPENDED;
-    mod_chanmode_init(&change);
-    change.argc = 1;
-    change.args[0].mode = MODE_CHANOP;
-    change.args[0].u.member = AddChannelUser(chanserv, channel);
-    mod_chanmode_announce(chanserv, channel, &change);
+    if(!IsOffChannel(suspended->cData))
+    {
+        struct mod_chanmode change;
+        mod_chanmode_init(&change);
+        change.argc = 1;
+        change.args[0].mode = MODE_CHANOP;
+        change.args[0].u.member = AddChannelUser(chanserv, channel);
+        mod_chanmode_announce(chanserv, channel, &change);
+    }
 }
 
 static CHANSERV_FUNC(cmd_csuspend)
@@ -5494,8 +5498,15 @@ static CHANSERV_FUNC(cmd_giveownership)
     new_owner = GetChannelAccess(cData, new_owner_hi);
     if(!new_owner)
     {
-        reply("CSMSG_NO_CHAN_USER", new_owner_hi->handle, channel->name);
-        return 0;
+        if(force)
+        {
+            new_owner = add_channel_user(cData, new_owner_hi, UL_COOWNER, 0, NULL);
+        }
+        else
+        {
+            reply("CSMSG_NO_CHAN_USER", new_owner_hi->handle, channel->name);
+            return 0;
+        }
     }
     if((chanserv_get_owned_count(new_owner_hi) >= chanserv_conf.max_owned) && !force)
     {
@@ -6598,6 +6609,8 @@ ban_read_helper(const char *key, struct record_data *rd, struct chanData *chan)
     s_expires = database_get_data(rd->d.object, KEY_EXPIRES, RECDB_QSTRING);
     owner = database_get_data(rd->d.object, KEY_OWNER, RECDB_QSTRING);
     reason = database_get_data(rd->d.object, KEY_REASON, RECDB_QSTRING);
+    if (!reason || !owner)
+        return;
 
     set_time = set ? (time_t)strtoul(set, NULL, 0) : now;
     triggered_time = triggered ? (time_t)strtoul(triggered, NULL, 0) : 0;

@@ -145,18 +145,18 @@ static struct modcmd_flag {
     { "channel", MODCMD_REQUIRE_CHANNEL },
     { "chanuser", MODCMD_REQUIRE_CHANUSER },
     { "disabled", MODCMD_DISABLED },
+    { "helping", MODCMD_REQUIRE_HELPING },
     { "ignore_csuspend", MODCMD_IGNORE_CSUSPEND },
     { "joinable", MODCMD_REQUIRE_JOINABLE },
     { "keepbound", MODCMD_KEEP_BOUND },
     { "loghostmask", MODCMD_LOG_HOSTMASK },
-    { "nolog", MODCMD_NO_LOG },
     { "networkhelper", MODCMD_REQUIRE_NETWORK_HELPER },
     { "never_csuspend", MODCMD_NEVER_CSUSPEND },
+    { "nolog", MODCMD_NO_LOG },
     { "oper", MODCMD_REQUIRE_OPER },
     { "qualified", MODCMD_REQUIRE_QUALIFIED },
     { "regchan", MODCMD_REQUIRE_REGCHAN },
     { "supporthelper", MODCMD_REQUIRE_SUPPORT_HELPER },
-    { "helping", MODCMD_REQUIRE_HELPING },
     { "toy", MODCMD_TOY },
     { NULL, 0 }
 };
@@ -545,7 +545,8 @@ svccmd_can_invoke(struct userNode *user, struct userNode *bot, struct svccmd *cm
         rflags |= ACTION_STAFF;
     }
     if (cmd->min_opserv_level > 0) {
-        if (!oper_has_access(user, bot, cmd->min_opserv_level, !(options & SVCCMD_NOISY))) return 0;
+        if (!oper_has_access(user, bot, cmd->min_opserv_level, !(options & SVCCMD_NOISY)))
+            return 0;
         rflags |= ACTION_STAFF;
     }
     if (cmd->req_account_flags || cmd->deny_account_flags) {
@@ -566,7 +567,7 @@ svccmd_can_invoke(struct userNode *user, struct userNode *bot, struct svccmd *cm
     /* If it's an override, return a special value. */
     if ((flags & MODCMD_REQUIRE_CHANUSER)
         && (options & SVCCMD_NOISY)
-        && (uData->access > 500)
+        && (!uData || (uData->access > 500))
         && (!(uData = _GetChannelUser(channel->channel_info, user->handle_info, 0, 0))
             || uData->access < cmd->min_channel_access)
         && !(flags & (MODCMD_REQUIRE_STAFF|MODCMD_REQUIRE_HELPING))) {
@@ -1670,12 +1671,12 @@ static MODCMD_FUNC(cmd_showcommands) {
             if (flags & MODCMD_REQUIRE_HELPING)
                 access = "helping";
             else if (flags & MODCMD_REQUIRE_STAFF) {
-                switch (flags & MODCMD_REQUIRE_STAFF) {
-                case MODCMD_REQUIRE_OPER: access = "oper"; break;
-                case MODCMD_REQUIRE_OPER | MODCMD_REQUIRE_NETWORK_HELPER:
-                case MODCMD_REQUIRE_NETWORK_HELPER: access = "net.helper"; break;
-                default: access = "staff"; break;
-                }
+                if (flags & MODCMD_REQUIRE_OPER)
+                    access = "oper";
+                else if (flags & MODCMD_REQUIRE_NETWORK_HELPER)
+                    access = "net.helper";
+                else
+                    access = "staff";
             } else
                 access = strtab(svccmd->min_channel_access);
             tbl.contents[ii+1][1+show_opserv_level] = access;

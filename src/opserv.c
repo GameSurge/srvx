@@ -1896,8 +1896,7 @@ opserv_join_check(struct modeNode *mNode)
                 change.args[0].u.member = AddChannelUser(opserv, channel);
                 change.argc++;
             }
-            if (!(channel->modes & MODE_MODERATED))
-                change.modes_set |= MODE_MODERATED;
+            change.modes_set = (MODE_MODERATED | MODE_DELAYJOINS) & ~channel->modes;
             if (change.modes_set || change.argc)
                 mod_chanmode_announce(opserv, channel, &change);
             send_target_message(0, channel->name, opserv, "OSMSG_FLOOD_MODERATE");
