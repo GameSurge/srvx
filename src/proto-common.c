@@ -569,9 +569,10 @@ mod_chanmode_apply(struct userNode *who, struct chanNode *channel, struct mod_ch
              * to be more specific than an existing ban.
              */
             for (jj=0; jj<channel->banlist.used; ++jj) {
-                if (match_ircglobs(change->args[ii].u.hostmask, channel->banlist.list[jj]->ban)) {
-                    banList_remove(&channel->banlist, channel->banlist.list[jj]);
-                    free(channel->banlist.list[jj]);
+                bn = channel->banlist.list[jj];
+                if (match_ircglobs(change->args[ii].u.hostmask, bn->ban)) {
+                    banList_remove(&channel->banlist, bn);
+                    free(bn);
                     jj--;
                 }
             }
@@ -586,10 +587,11 @@ mod_chanmode_apply(struct userNode *who, struct chanNode *channel, struct mod_ch
             break;
         case MODE_REMOVE|MODE_BAN:
             for (jj=0; jj<channel->banlist.used; ++jj) {
-                if (strcmp(channel->banlist.list[jj]->ban, change->args[ii].u.hostmask))
+                bn = channel->banlist.list[jj];
+                if (strcmp(bn->ban, change->args[ii].u.hostmask))
                     continue;
-                free(channel->banlist.list[jj]);
-                banList_remove(&channel->banlist, channel->banlist.list[jj]);
+                free(bn);
+                banList_remove(&channel->banlist, bn);
                 break;
             }
             break;
