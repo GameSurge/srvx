@@ -2193,7 +2193,7 @@ static OPTION_FUNC(opt_announcements)
 
     switch (hi->announcements) {
     case 'y': choice = user_find_message(user, "MSG_ON"); break;
-    case 'n': choice = user_find_message(user, "MSG_ON"); break;
+    case 'n': choice = user_find_message(user, "MSG_OFF"); break;
     case '?': choice = "default"; break;
     default: choice = "unknown"; break;
     }

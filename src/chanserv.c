@@ -4162,7 +4162,7 @@ note_type_settable_by_user(struct chanNode *channel, struct note_type *ntype, st
     case NOTE_SET_CHANNEL_SETTER:
         return check_user_level(channel, user, lvlSetters, 1, 0);
     case NOTE_SET_PRIVILEGED: default:
-        return IsHelping(user);
+        return IsHelping(user) && (user->handle_info->opserv_level >= ntype->set_access.min_opserv);
     }
 }
 

@@ -1875,7 +1875,7 @@ opserv_join_check(struct modeNode *mNode)
                 change.modes_set |= MODE_MODERATED;
             if (change.modes_set || change.argc)
                 mod_chanmode_announce(opserv, channel, &change);
-            send_channel_notice(channel, opserv, "OSMSG_FLOOD_MODERATE");
+            send_target_message(0, channel->name, opserv, "OSMSG_FLOOD_MODERATE");
             opserv_alert("Warning: Possible join flood in %s (currently %d users; channel moderated).", channel->name, channel->members.used);
         } else {
             opserv_alert("Warning: Possible join flood in %s (currently %d users).", channel->name, channel->members.used);
