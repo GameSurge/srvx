@@ -98,7 +98,7 @@ srvx_realloc(const char *file, unsigned int line, void *ptr, size_t size)
     alloc_count++;
     alloc_size += size;
 
-    srvx_free(block);
+    srvx_free(file, line, block + 1);
 
     return newblock + 1;
 }

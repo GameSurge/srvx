@@ -3046,8 +3046,9 @@ find_matching_bans(struct banList *bans, struct userNode *actee, const char *mas
         if(!match[ii])
             continue;
         change->args[count].mode = MODE_REMOVE | MODE_BAN;
-        change->args[count++].u.hostmask = bans->list[ii]->ban;
+        change->args[count++].u.hostmask = strdup(bans->list[ii]->ban);
     }
+    assert(count == change->argc);
     return change;
 }
 
@@ -3080,7 +3081,11 @@ unban_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
         change = find_matching_bans(&channel->banlist, actee, mask);
         if(change)
         {
+            unsigned int ii;
+
             modcmd_chanmode_announce(change);
+            for(ii = 0; ii < change->argc; ++ii)
+                free((char*)change->args[ii].u.hostmask);
             mod_chanmode_free(change);
             acted = 1;
         }
@@ -3157,9 +3162,11 @@ static CHANSERV_FUNC(cmd_unbanall)
     for(ii=0; ii<channel->banlist.used; ii++)
     {
         change->args[ii].mode = MODE_REMOVE | MODE_BAN;
-        change->args[ii].u.hostmask = channel->banlist.list[ii]->ban;
+        change->args[ii].u.hostmask = strdup(channel->banlist.list[ii]->ban);
     }
     modcmd_chanmode_announce(change);
+    for(ii = 0; ii < change->argc; ++ii)
+        free((char*)change->args[ii].u.hostmask);
     mod_chanmode_free(change);
     reply("CSMSG_BANS_REMOVED", channel->name);
     return 1;
@@ -3168,6 +3175,7 @@ static CHANSERV_FUNC(cmd_unbanall)
 static CHANSERV_FUNC(cmd_open)
 {
     struct mod_chanmode *change;
+    unsigned int ii;
 
     change = find_matching_bans(&channel->banlist, user, NULL);
     if(!change)
@@ -3178,6 +3186,8 @@ static CHANSERV_FUNC(cmd_open)
         change->modes_clear &= ~channel->channel_info->modes.modes_set;
     modcmd_chanmode_announce(change);
     reply("CSMSG_CHANNEL_OPENED", channel->name);
+    for(ii = 0; ii < change->argc; ++ii)
+        free((char*)change->args[ii].u.hostmask);
     mod_chanmode_free(change);
     return 1;
 }
@@ -6217,7 +6227,7 @@ handle_mode(struct chanNode *channel, struct userNode *user, const struct mod_ch
             if(!bounce)
                 bounce = mod_chanmode_alloc(change->argc + 1 - ii);
             bounce->args[bnc].mode = MODE_REMOVE | MODE_BAN;
-            bounce->args[bnc].u.hostmask = ban;
+            bounce->args[bnc].u.hostmask = strdup(ban);
             bnc++;
             send_message(user, chanserv, "CSMSG_MASK_PROTECTED", ban);
         }
@@ -6226,6 +6236,9 @@ handle_mode(struct chanNode *channel, struct userNode *user, const struct mod_ch
     {
         if((bounce->argc = bnc) || bounce->modes_set || bounce->modes_clear)
             mod_chanmode_announce(chanserv, channel, bounce);
+        for(ii = 0; ii < change->argc; ++ii)
+            if(bounce->args[ii].mode == (MODE_REMOVE | MODE_BAN))
+                free((char*)bounce->args[ii].u.hostmask);
         mod_chanmode_free(bounce);
     }
 }

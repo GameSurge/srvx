@@ -523,9 +523,11 @@ static MODCMD_FUNC(cmd_clearbans)
     change = mod_chanmode_alloc(channel->banlist.used);
     for (ii=0; ii<channel->banlist.used; ii++) {
         change->args[ii].mode = MODE_REMOVE | MODE_BAN;
-        change->args[ii].u.hostmask = channel->banlist.list[ii]->ban;
+        change->args[ii].u.hostmask = strdup(channel->banlist.list[ii]->ban);
     }
     modcmd_chanmode_announce(change);
+    for (ii=0; ii<change->argc; ++ii)
+        free((char*)change->args[ii].u.hostmask);
     mod_chanmode_free(change);
     reply("OSMSG_CLEARBANS_DONE", channel->name);
     return 1;
