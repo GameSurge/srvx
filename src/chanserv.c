@@ -237,6 +237,7 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_CONFIRM_DEFAULTS", "To reset %s's settings to the defaults, you muse use 'set defaults %s'." },
     { "CSMSG_SETTINGS_DEFAULTED", "All settings for %s have been reset to default values." },
     { "CSMSG_BAD_SETLEVEL", "You cannot change any setting to above your level." },
+    { "CSMSG_BAD_SETTERS", "You cannot change Setters to above your level." },
     { "CSMSG_INVALID_MODE_LOCK", "$b%s$b is an invalid mode lock." },
     { "CSMSG_INVALID_NUMERIC",   "$b%d$b is not a valid choice.  Choose one:" },
     { "CSMSG_SET_DEFAULT_TOPIC", "$bDefaultTopic$b %s" },
@@ -2413,6 +2414,11 @@ cmd_trim_users(struct userNode *user, struct chanNode *channel, unsigned short m
 	}
     }
 
+    if(!max_access)
+    {
+        min_access = 1;
+        max_access = UL_OWNER;
+    }
     send_message(user, chanserv, "CSMSG_TRIMMED_USERS", count, min_access, max_access, channel->name, intervalString(interval, duration));
     return 1;
 }
@@ -4941,15 +4947,20 @@ channel_level_option(enum levelOption option, struct userNode *user, struct chan
             return 0;
         }
         value = user_level_from_name(argv[1], UL_OWNER+1);
-        if(!value && !isdigit(argv[1][0]))
+        if(!value && strcmp(argv[1], "0"))
 	{
 	    reply("CSMSG_INVALID_ACCESS", argv[1]);
             return 0;
         }
         uData = GetChannelUser(cData, user->handle_info);
-        if(!uData)
+        if(!uData || ((uData->access < UL_OWNER) && (value > uData->access)))
         {
             reply("CSMSG_BAD_SETLEVEL");
+            return 0;
+        }
+        if((option == lvlSetters) && (value > uData->access))
+        {
+            reply("CSMSG_BAD_SETTERS");
             return 0;
         }
         cData->lvlOpts[option] = value;
@@ -5517,10 +5528,12 @@ static CHANSERV_FUNC(cmd_d)
     const char *fmt;
 
     REQUIRE_PARAMS(2);
-    if((count = strtoul(argv[1], &sep, 10)) <= 1)
+    if((count = strtoul(argv[1], &sep, 10)) < 1)
         goto no_dice;
     if(sep[0] == 0)
     {
+        if(count == 1)
+            goto no_dice;
         sides = count;
         count = 1;
         modifier = 0;
@@ -5563,7 +5576,7 @@ static CHANSERV_FUNC(cmd_d)
         sprintf(response, fmt, total, sides);
     }
     if(channel)
-        send_target_message(5, channel->name, cmd->parent->bot, "$b%s$b: %s", user->nick, response);
+        send_channel_message(channel, cmd->parent->bot, "$b%s$b: %s", user->nick, response);
     else
         send_message_type(4, user, cmd->parent->bot, "%s", response);
     return 1;
@@ -5767,10 +5780,6 @@ handle_join(struct modeNode *mNode)
             }
             if(uData->access >= UL_PRESENT)
                 cData->visited = now;
-
-            uData->seen = now;
-            uData->present = 1;
-
             if(cData->user_greeting)
                 greeting = cData->user_greeting;
             if(uData->info
@@ -5778,6 +5787,8 @@ handle_join(struct modeNode *mNode)
                && ((now - uData->seen) >= chanserv_conf.info_delay)
                && !uData->present)
                 info = 1;
+            uData->seen = now;
+            uData->present = 1;
         }
     }
     if(!user->uplink->burst)
@@ -5791,7 +5802,7 @@ handle_join(struct modeNode *mNode)
         if(greeting && !user->uplink->burst)
             send_message_type(4, user, chanserv, "(%s) %s", channel->name, greeting);
         if(uData && info)
-            send_target_message(4, channel->name, chanserv, "[%s] %s", user->nick, uData->info);
+            send_target_message(5, channel->name, chanserv, "[%s] %s", user->nick, uData->info);
     }
     return 0;
 }
@@ -5929,7 +5940,7 @@ handle_part(struct userNode *user, struct chanNode *channel, UNUSED_ARG(const ch
 static void
 handle_kick(struct userNode *kicker, struct userNode *victim, struct chanNode *channel)
 {
-    char *reason = "CSMSG_USER_PROTECTED";
+    const char *reason = user_find_message(kicker, "CSMSG_USER_PROTECTED");
 
     if(!channel->channel_info || !kicker || IsService(kicker)
        || (kicker == victim) || IsSuspended(channel->channel_info)
@@ -6033,7 +6044,7 @@ handle_mode(struct chanNode *channel, struct userNode *user, const struct mod_ch
     }
     if(bounce)
     {
-        if((bounce->argc = bnc))
+        if((bounce->argc = bnc) || bounce->modes_set || bounce->modes_clear)
             mod_chanmode_announce(chanserv, channel, bounce);
         mod_chanmode_free(bounce);
     }

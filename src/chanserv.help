@@ -413,9 +413,9 @@
 "UNBANME" ("/msg $C UNBANME <#channel>",
         "Unbans your hostmask from the specified channel.",
         "$bSee Also:$b ban, unban");
-"UNREGISTER" ("/msg $C UNREGISTER <#channel>",
+"UNREGISTER" ("/msg $C UNREGISTER <#channel> [<confirmation>]",
         "Unregisters a channel that is registered with $b$C$b. $bIMPORTANT$b: Once the channel is unregistered, the userlist $bcannot$b be recovered.",
-        "If you are not network staff, you must add $bCONFIRM$b to the end of your line to confirm channel unregistration.",
+        "If you are not network staff, you must add a confimation string to the end of your line to confirm the unregistration.  If you leave it out, $C will show the proper confirmation string.",
         "$bSee Also:$b register");
 "UNSUSPEND" ("/msg $C UNSUSPEND <#channel> <nick|*account>",
         "This restores the target's access to the channel (after it has been suspended).",
