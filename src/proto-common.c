@@ -635,8 +635,8 @@ mod_chanmode(struct userNode *who, struct chanNode *channel, char **modes, unsig
 int
 irc_make_chanmode(struct chanNode *chan, char *out) {
     struct mod_chanmode change;
+    mod_chanmode_init(&change);
     change.modes_set = chan->modes;
-    change.modes_clear = change.argc = 0;
     change.new_limit = chan->limit;
     safestrncpy(change.new_key, chan->key, sizeof(change.new_key));
     return strlen(mod_chanmode_format(&change, out));
