@@ -52,8 +52,9 @@ module; for example, "./configure --enable-modules=memoserv".  Then
 see the comment near the start of src/mod-memoserv.c for configuration
 options.
 
-Q8) How do I enable both HelpServ and MemoServ?  In addition to the
-configuration steps above, you must mention both when you run the
-configure script.  For example, run it using "./configure
---enable-modules=memoserv,helpserv".  (You may add the snoop and/or
-sockcheck modules as well; separate the module names with commas.)
+Q8) How do I enable both HelpServ and MemoServ?
+A8) In addition to the post-install configuration steps above, you
+must mention both when you run the configure script.  For example, run
+it using "./configure --enable-modules=memoserv,helpserv".  (You may
+add the snoop and/or sockcheck modules as well; separate the module
+names with commas.)
