@@ -245,63 +245,57 @@ int mmatch(const char *old_mask, const char *new_mask)
 int
 match_ircglob(const char *text, const char *glob)
 {
-    unsigned int star_p, q_cnt;
-    while (1) {
-	switch (*glob) {
-	case 0:
-	    return !*text;
-        case '\\':
-            glob++;
-            /* intentionally not tolower(...) so people can force
-             * capitalization, or we can overload \ in the future */
-            if (*text++ != *glob++)
-                return 0;
-            break;
-	case '*':
-        case '?':
-            star_p = q_cnt = 0;
-            do {
-                if (*glob == '*')
-                    star_p = 1;
-                else if (*glob == '?')
-                    q_cnt++;
-                else
-                    break;
-                glob++;
-            } while (1);
-            while (q_cnt) {
-                if (!*text++)
-                    return 0;
-                q_cnt--;
-            }
-            if (star_p) {
-                /* if this is the last glob character, it will match any text */
-                if (!*glob)
-                    return 1;
-                /* Thanks to the loop above, we know that the next
-                 * character is a normal character.  So just look for
-                 * the right character.
-                 */
-                for (; *text; text++) {
-                    if ((tolower(*text) == tolower(*glob))
-                        && match_ircglob(text+1, glob+1)) {
-                        return 1;
-                    }
-                }
-                return 0;
-            }
-            /* if !star_p, fall through to normal character case,
-             * first checking to see if ?s carried us to the end */
-            if (!*glob && !*text)
+    const char *m = glob, *n = text;
+    const char *m_tmp = glob, *n_tmp = text;
+    int star_p;
+
+    for (;;) switch (*m) {
+    case '\0':
+        if (!*n)
+            return 1;
+    backtrack:
+        if (m_tmp == glob)
+            return 0;
+        m = m_tmp;
+        n = ++n_tmp;
+        break;
+    case '\\':
+        m++;
+        /* allow escaping to force capitalization */
+        if (*m++ != *n++)
+            return 0;
+        break;
+    case '*': case '?':
+        for (star_p = 0; ; m++) {
+            if (*m == '*')
+                star_p = 1;
+            else if (*m == '?') {
+                if (!*n++)
+                    goto backtrack;
+            } else break;
+        }
+        if (star_p) {
+            if (!*m)
                 return 1;
-	default:
-	    if (!*text)
-                return 0;
-	    while (*text && *glob && *glob != '*' && *glob != '?' && *glob != '\\') {
-		if (tolower(*text++) != tolower(*glob++))
+            else if (*m == '\\') {
+                m_tmp = ++m;
+                if (!*m)
                     return 0;
-	    }
-	}
+                for (n_tmp = n; *n && *n != *m; n++) ;
+            } else {
+                m_tmp = m;
+                for (n_tmp = n; *n && tolower(*n) != tolower(*m); n++) ;
+            }
+        }
+        /* and fall through */
+    default:
+        if (!*n)
+            return *m != '\0';
+        if (tolower(*m) != tolower(*n))
+            goto backtrack;
+        m++;
+        n++;
+        break;
     }
 }
 
