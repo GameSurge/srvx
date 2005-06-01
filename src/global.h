@@ -33,21 +33,6 @@
 #define MESSAGE_RECIPIENT_STAFF			(MESSAGE_RECIPIENT_HELPERS | MESSAGE_RECIPIENT_OPERS)
 #define MESSAGE_RECIPIENT_ALL			(MESSAGE_RECIPIENT_LUSERS | MESSAGE_RECIPIENT_CHANNELS)
 
-struct globalMessage
-{
-    unsigned long      			id;
-    long				flags;
-
-    time_t				posted;
-    unsigned long		      	duration;
-
-    char				*from;
-    char				*message;
-
-    struct globalMessage		*prev;
-    struct globalMessage 		*next;
-};
-
 void init_global(const char *nick);
 
 void global_message(long targets, char *text);

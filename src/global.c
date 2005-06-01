@@ -65,6 +65,22 @@ static const struct message_entry msgtab[] = {
 #define GLOBAL_SYNTAX()   svccmd_send_help(user, global, cmd)
 #define GLOBAL_FUNC(NAME) MODCMD_FUNC(NAME)
 
+struct globalMessage
+{
+    unsigned long      			id;
+    long				flags;
+
+    time_t                              posted;
+    char				posted_s[24];
+    unsigned long		      	duration;
+
+    char				*from;
+    char				*message;
+
+    struct globalMessage		*prev;
+    struct globalMessage 		*next;
+};
+
 struct userNode *global;
 
 static struct module *global_module;
@@ -88,9 +104,9 @@ static struct globalMessage*
 message_add(long flags, time_t posted, unsigned long duration, char *from, const char *msg)
 {
     struct globalMessage *message;
+    struct tm tm;
 
     message = malloc(sizeof(struct globalMessage));
-
     if(!message)
     {
 	return NULL;
@@ -103,11 +119,16 @@ message_add(long flags, time_t posted, unsigned long duration, char *from, const
     message->from = strdup(from);
     message->message = strdup(msg);
 
+    if ((flags & MESSAGE_OPTION_IMMEDIATE) == 0) {
+        localtime_r(&message->posted, &tm);
+        strftime(message->posted_s, sizeof(message->posted_s),
+                 "%I:%M %p, %m/%d/%Y", &tm);
+    }
+
     if(messageList)
     {
 	messageList->prev = message;
     }
-
     message->prev = NULL;
     message->next = messageList;
 
@@ -152,9 +173,12 @@ message_create(struct userNode *user, unsigned int argc, char *argv[])
 {
     unsigned long duration = 0;
     char *text = NULL;
+    char *sender;
     long flags = 0;
     unsigned int i;
 
+    sender = user->handle_info->handle;
+    
     for(i = 0; i < argc; i++)
     {
 	if((i + 1) > argc)
@@ -194,6 +218,8 @@ message_create(struct userNode *user, unsigned int argc, char *argv[])
 	    }
 	} else if (irccasecmp(argv[i], "duration") == 0) {
 	    duration = ParseInterval(argv[++i]);
+        } else if (irccasecmp(argv[i], "from") == 0) {
+            sender = argv[++i];
 	} else {
 	    global_notice(user, "MSG_INVALID_CRITERIA", argv[i]);
 	    return NULL;
@@ -210,7 +236,7 @@ message_create(struct userNode *user, unsigned int argc, char *argv[])
 	return NULL;
     }
 
-    return message_add(flags, now, duration, user->handle_info->handle, text);
+    return message_add(flags, now, duration, sender, text);
 }
 
 static const char *
@@ -257,12 +283,7 @@ notice_target(const char *target, struct globalMessage *message)
 	}
 	else
 	{
-	    char posted[24];
-	    struct tm tm;
-
-	    localtime_r(&message->posted, &tm);
-	    strftime(posted, sizeof(posted), "%I:%M %p, %m/%d/%Y", &tm);
-	    send_target_message(0, target, global, "GMSG_MESSAGE_SOURCE", messageType(message), message->from, posted);
+	    send_target_message(0, target, global, "GMSG_MESSAGE_SOURCE", messageType(message), message->from, message->posted_s);
 	}
     }
 
@@ -356,9 +377,11 @@ static GLOBAL_FUNC(cmd_notice)
 {
     struct globalMessage *message = NULL;
     const char *recipient = NULL, *text;
+    char *sender;
     long target = 0;
 
     assert(argc >= 3);
+    sender = user->handle_info->handle;
     if(!irccasecmp(argv[1], "all")) {
 	target = MESSAGE_RECIPIENT_ALL;
     } else if(!irccasecmp(argv[1], "users")) {
@@ -377,17 +400,23 @@ static GLOBAL_FUNC(cmd_notice)
 	global_notice(user, "GMSG_INVALID_TARGET", argv[1]);
 	return 0;
     }
-
-    text = unsplit_string(argv + 2, argc - 2, NULL);
-    message = message_add(target | MESSAGE_OPTION_IMMEDIATE, now, 0, user->handle_info->handle, text);
-
-    if(!message)
-    {
-	return 0;
+    if(!irccasecmp(argv[2], "from")) {
+        if (argc < 5) {
+            reply("MSG_MISSING_PARAMS", argv[0]);
+            GLOBAL_SYNTAX();
+            return 0;
+        }
+        sender = argv[3];
+        text = unsplit_string(argv + 4, argc - 4, NULL);
+    } else {
+        text = unsplit_string(argv + 2, argc - 2, NULL);
     }
 
-    recipient = messageType(message);
+    message = message_add(target | MESSAGE_OPTION_IMMEDIATE, now, 0, sender, text);
+    if(!message)
+	return 0;
 
+    recipient = messageType(message);
     message_send(message);
     message_del(message);
 

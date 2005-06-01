@@ -13,12 +13,13 @@
         "$uSee Also:$u message, messages, remove");
 "MESSAGE" ("/msg $G MESSAGE [<options> <value>] text <message>",
         "Adds a notice to the $b$G$b database. Messages are sent to users as they enter the network or the target class. $bMessage$b takes several options, which must be preceded by the name of the option being used. Options include:",
+        "$bFROM$b:     Sets the message's stated source.",
         "$bTARGET$b:   Controls the recipients of the message. This option may be used multiple times. See the $bTARGET$b help entry for details.",
         "$bDURATION$b: This option sets the length of time for which the message is valid. After this time, the message will be deleted from the $b$G$b database.",
         "$uSee Also:$u list, messages, remove, target");
 "MESSAGES" ("/msg $G MESSAGES",
         "Sends you all messages addressed to your user class.");
-"NOTICE" ("/msg $G NOTICE <target> <message>",
+"NOTICE" ("/msg $G NOTICE <target> [from <source>] <message>",
         "Immediately sends a notice to a specific target. See $btarget$b for a list of targets.",
         "$uSee Also:$u target");
 "REMOVE" ("/msg $G REMOVE <message id>",
