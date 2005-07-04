@@ -1,5 +1,6 @@
 #include "hash.h"
 #include "log.h"
+#include "helpfile.h"
 
 struct glob_test {
     const char *glob;
@@ -41,6 +42,7 @@ main(UNUSED_ARG(int argc), UNUSED_ARG(char *argv[]))
 {
     int i, j;
 
+    tools_init();
     for (i = 0; glob_yes[i].glob; i++) {
 	for (j=0; glob_yes[i].texts[j]; j++) {
 	    if (!match_ircglob(glob_yes[i].texts[j], glob_yes[i].glob)) {
@@ -71,7 +73,8 @@ main(UNUSED_ARG(int argc), UNUSED_ARG(char *argv[]))
 }
 
 /* because tools.c likes to log stuff.. */
-void log(UNUSED_ARG(enum log_type lt), UNUSED_ARG(enum log_severity ls), char *format, ...)
+void
+log_module(UNUSED_ARG(struct log_type *type), UNUSED_ARG(enum log_severity sev), const char *format, ...)
 {
     va_list va;
     va_start(va, format);
@@ -79,4 +82,12 @@ void log(UNUSED_ARG(enum log_type lt), UNUSED_ARG(enum log_severity ls), char *f
     va_end(va);
 }
 
+const char *
+language_find_message(UNUSED_ARG(struct language *lang), UNUSED_ARG(const char *msgid))
+{
+    return "Stub -- Not implemented.";
+}
+
+struct language *lang_C = NULL;
+struct log_type *MAIN_LOG = NULL;
 const char *hidden_host_suffix;

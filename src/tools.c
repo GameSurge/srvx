@@ -290,7 +290,7 @@ match_ircglob(const char *text, const char *glob)
         /* and fall through */
     default:
         if (!*n)
-            return *m != '\0';
+            return *m == '\0';
         if (tolower(*m) != tolower(*n))
             goto backtrack;
         m++;
