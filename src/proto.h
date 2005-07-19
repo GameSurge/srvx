@@ -108,8 +108,6 @@ void unreg_notice_func(struct userNode *user, privmsg_func_t handler);
 typedef void (*oper_func_t) (struct userNode *user);
 void reg_oper_func(oper_func_t handler);
 
-extern struct userList dead_users;
-
 /* replay silliness */
 void replay_read_line(void);
 void replay_event_loop(void);

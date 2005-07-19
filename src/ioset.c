@@ -406,7 +406,10 @@ ioset_run(void) {
                     fd->readable_cb(fd);
             }
             if (FD_ISSET(nn, &write_fds) && !fd->connected) {
-                int rc, arglen = sizeof(rc);
+                socklen_t arglen;
+                int rc;
+
+                arglen = sizeof(rc);
                 if (getsockopt(fd->fd, SOL_SOCKET, SO_ERROR, &rc, &arglen) < 0)
                     rc = errno;
                 fd->connected = 1;

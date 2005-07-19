@@ -2677,7 +2677,7 @@ static CHANSERV_FUNC(cmd_devoice)
 }
 
 static int
-bad_channel_ban(struct chanNode *channel, struct userNode *user, const char *ban, int *victimCount, struct modeNode **victims)
+bad_channel_ban(struct chanNode *channel, struct userNode *user, const char *ban, unsigned int *victimCount, struct modeNode **victims)
 {
     unsigned int ii;
 

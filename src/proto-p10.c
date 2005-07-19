@@ -1987,8 +1987,9 @@ DelUser(struct userNode* user, struct userNode *killer, int announce, const char
         free_user(user);
 }
 
+static void call_oper_funcs(struct userNode *user);
+
 void mod_usermode(struct userNode *user, const char *mode_change) {
-    static void call_oper_funcs(struct userNode *user);
     int add = 1;
     const char *word = mode_change;
 

@@ -44,7 +44,6 @@ struct io_fd {
     void (*destroy_cb)(struct io_fd *fd);
 };
 
-extern int clock_skew;
 extern int do_write_dbs;
 extern int do_reopen;
 

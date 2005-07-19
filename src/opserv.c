@@ -1801,9 +1801,10 @@ int
 opserv_bad_channel(const char *name)
 {
     unsigned int found;
+    int present;
 
-    dict_find(opserv_exempt_channels, name, &found);
-    if (found)
+    dict_find(opserv_exempt_channels, name, &present);
+    if (present)
         return 0;
 
     if (gline_find(name))

@@ -750,6 +750,8 @@ is_secure_password(const char *handle, const char *pass, struct userNode *user)
 {
     unsigned int i, len;
     unsigned int cnt_digits = 0, cnt_upper = 0, cnt_lower = 0;
+    int p;
+
     len = strlen(pass);
     if (len < nickserv_conf.password_min_length) {
         if (user)
@@ -761,8 +763,8 @@ is_secure_password(const char *handle, const char *pass, struct userNode *user)
             send_message(user, nickserv, "NSMSG_PASSWORD_ACCOUNT");
         return 0;
     }
-    dict_find(nickserv_conf.weak_password_dict, pass, &i);
-    if (i) {
+    dict_find(nickserv_conf.weak_password_dict, pass, &p);
+    if (p) {
         if (user)
             send_message(user, nickserv, "NSMSG_PASSWORD_DICTIONARY");
         return 0;
