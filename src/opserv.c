@@ -2562,9 +2562,14 @@ opserv_add_user_alert(struct userNode *req, const char *name, opserv_alert_react
         alert->discrim->reason = strdup(name);
     alert->reaction = reaction;
     dict_insert(opserv_user_alerts, name_dup, alert);
-    if (alert->discrim->channel)
+    /* Stick the alert into the appropriate additional alert dict(s).
+     * For channel alerts, we only use channels and min_channels;
+     * max_channels would have to be checked on /part, which we do not
+     * yet do, and which seems of questionable value.
+     */
+    if (alert->discrim->channel || alert->discrim->min_channels)
         dict_insert(opserv_channel_alerts, name_dup, alert);
-    else if (alert->discrim->mask_nick)
+    if (alert->discrim->mask_nick)
         dict_insert(opserv_nick_based_alerts, name_dup, alert);
     return alert;
 }
