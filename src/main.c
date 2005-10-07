@@ -565,12 +565,13 @@ conf_globals(void)
 static int
 set_item_rlimit(const char *name, void *data, void *extra)
 {
-    int rsrc, found;
+    long rsrc;
+    int found;
     struct record_data *rd = data;
     struct rlimit rlim;
     const char *str;
 
-    rsrc = (int)dict_find(extra, name, &found);
+    rsrc = (long)dict_find(extra, name, &found);
     if (!found) {
         log_module(MAIN_LOG, LOG_ERROR, "Invalid rlimit \"%s\" in rlimits section.", name);
         return 0;

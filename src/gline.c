@@ -186,13 +186,13 @@ gline_alternate_target(const char *target)
         if (inet_aton(hostname+1, &in)
             && (he = gethostbyaddr((char*)&in, sizeof(in), AF_INET))) {
             res = malloc((hostname - target) + 2 + strlen(he->h_name));
-            sprintf(res, "%.*s@%s", hostname - target, target, he->h_name);
+            sprintf(res, "%.*s@%s", (int)(hostname - target), target, he->h_name);
             return res;
         } else
             return NULL;
     } else if (getipbyname(hostname+1, &ip)) {
         res = malloc((hostname - target) + 18);
-        sprintf(res, "%.*s@%lu.%lu.%lu.%lu", hostname - target, target, ip & 255, (ip >> 8) & 255, (ip >> 16) & 255, (ip >> 24) & 255);
+        sprintf(res, "%.*s@%lu.%lu.%lu.%lu", (int)(hostname - target), target, ip & 255, (ip >> 8) & 255, (ip >> 16) & 255, (ip >> 24) & 255);
         return res;
     } else
         return NULL;

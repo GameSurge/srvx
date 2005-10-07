@@ -83,7 +83,7 @@ send_flowed_text(FILE *where, const char *para)
             break;
         } else if (eol && (eol < para + (80 - shift))) {
             /* Newline inside paragraph, no need to wrap. */
-            fprintf(where, "%.*s\n", eol - para, para);
+            fprintf(where, "%.*s\n", (int)(eol - para), para);
             para = eol + 1;
         } else {
             int pos;
