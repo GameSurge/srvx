@@ -40,10 +40,6 @@ extern gettimeofday(struct timeval * tv, struct timezone * tz);
 #ifndef HAVE_MEMCPY
 extern void * memcpy(void * dest, void const * src, unsigned long n)
 {
-#ifdef HAVE_BCOPY
-    bcopy(src,dest,n);
-    return dest;
-#else
 /* very slow, your fault for not having memcpy()*/
     unsigned char * td=dest;
     unsigned char * ts=src;
@@ -55,7 +51,6 @@ extern void * memcpy(void * dest, void const * src, unsigned long n)
     for (i=0; i<n; i++)
         td[i] = ts[i];
     return dest;
-#endif
 }
 #endif
 
@@ -352,4 +347,63 @@ extern char const * strerror(int errornum)
 #endif
     return "Unknown error";
 }
+#endif
+
+#ifndef HAVE_GETADDRINFO
+
+int getaddrinfo(const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res)
+{
+    /* Only support IPv4 if OS doesn't provide this function. */
+    struct sockaddr_in sin;
+
+    if (hints && hints->ai_family != AF_INET)
+        return 1;
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+
+    if (node) {
+        if (hints && hints->ai_flags & AI_NUMERICHOST) {
+            if (!inet_aton(node, &sin.sin_addr))
+                return 2;
+        } else {
+            struct hostent *he;
+            he = gethostbyname(node);
+            if (!he)
+                return 3;
+            memcpy(&sin.sin_addr, he->h_addr, he->h_length);
+        }
+    } else if (hints && hints->ai_flags & AI_PASSIVE) {
+        /* leave it unspecifed */
+    } else {
+        inet_aton("127.0.0.1", &sin.sin_addr);
+    }
+
+    if (!service)
+        sin.sin_port = ntohs(0);
+    else if (!(sin.sin_port = ntohs(atoi(service))))
+        return 4;
+
+    *res = calloc(1, sizeof(**res) + sizeof(sin));
+    (*res)->ai_family = sin.sin_family;
+    (*res)->ai_socktype = hints && hints->ai_socktype ? hints->ai_socktype : SOCK_STREAM;
+    (*res)->ai_protocol = hints && hints->ai_socktype ? hints->ai_socktype : 0;
+    (*res)->ai_addrlen = sizeof(sin);
+    (*res)->ai_addr = (struct sockaddr*)(*res + 1);
+    memcpy((*res)->ai_addr, &sin, (*res)->ai_addrlen);
+    (*res)->ai_canonname = 0;
+    (*res)->ai_next = 0;
+    return 0;
+}
+
+/* TODO: implement fallback getnameinfo() */
+
+void freeaddrinfo(struct addrinfo *res)
+{
+    struct addrinfo *next;
+    for (; res; res = next) {
+        next = res->ai_next;
+        free(res);
+    }
+}
+
 #endif

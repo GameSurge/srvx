@@ -2,6 +2,114 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2005-srvx/srvx--devo--1.3
 #
 
+2005-10-08 14:33:12 GMT	Michael Poole <mdpoole@troilus.org>	patch-28
+
+    Summary:
+      Add IPv6 support.
+    Revision:
+      srvx--devo--1.3--patch-28
+
+    configure.in: Check for struct sockaddr.sa_len and struct addrinfo.
+        Also check for freeaddrinfo, getaddrinfo and getnameinfo.
+    
+    src/common.h: Define irc_in_addr and macros to operate on it.  Declare
+        irc_ntop(), irc_ntop_mask(), irc_pton(), irc_check_mask() and
+        irc_ntoa().  Remove declaration for parse_ipmask() and undefine
+        INADDR_NONE, INADDR_LOOPBACK and MATCH_IPMASK().
+    
+    src/compat.h (struct addrinfo): Define if it and some flags if not
+        defined by the system.
+      (getaddrinfo): Declare if necessary.
+      (getnameinfo): Likewise.
+      (freeaddrinfo): Likewise.
+    
+    src/compat.c (memcpy): Do not try to fall back onto bcopy.
+      (getaddrinfo): Define if it is not defined by the system.
+      (freeaddrinfo): Likewise.
+    
+    src/gline.c (gline_alternate_target): Gut in preparation of a
+        necessary rewrite.  Blah.
+    
+    src/hash.h (struct userNode): Change type of ip field.
+    
+    src/ioset.c (ioset_connect): Update to support non-IPv4 protocols.
+    
+    src/main.c (uplink_insert): Update to support non-IPv4 protocols.
+    
+    src/mod-snoop.c (snoop_new_user): Use irc_ntoa() instead of inet_ntoa().
+    
+    src/mod-sockcheck.c (sockcheck_cache_info): Update address field type
+        and length of hostname field.
+      (sockcheck_conf): Update type of local_addr.
+      (sockcheck_issue_gline): Update to use irc_ntop().
+      (expand_var): Get client IPv4 address from its new place.
+      (sockcheck_decide): Do not print the IP twice.
+      (sockcheck_begin_test): Remove unnecessary typecast.
+      (sockcheck_start_client): Do not print the IP twice.
+      (sockcheck_queue_address): Use irc_in_addr_t and irc_ntoa() to form
+        the target hostname.
+      (cmd_hostscan): Update manipulation functions to use new macros and
+        functions for irc_in_addr_t.
+      (cmd_clearhost): Likewise.
+      (sockcheck_new_user): Likewise.
+      (sockcheck_read_conf): Use getaddrinfo() instead of IPv4-only
+        functions.
+    
+    src/nickserv.c (cmd_register): Use newer validity checks for IP.
+    
+    src/opserv.c (IDENT_DATA): Use irc_ntoa() instead of inet_ntoa().
+      (struct opservDiscrim): Update ip_mask and ip_mask_bits type.
+      (cmd_whois): Use irc_ntoa() instead of inet_ntoa().
+      (opserv_new_user_check): Use irc_ntop() instead of inet_ntoa() and
+        update to newer validity check macros.
+      (opserv_user_cleanup): Use irc_ntop() instead of inet_ntoa().
+      (cmd_addtrust): Update to irc_in_addr_t and its functions.
+      (foreach_matching_user): Use irc_pton() instead of the mess that
+        existed before.
+      (opserv_discrim_create): Use irc_pton() instead of parse_ipmask().
+      (discrim_match): Use irc_check_mask() instead of MATCH_IPMASK(), and
+        remove ip_mask_str check.
+      (opserv_discrim_search): Decide whether an IP match is fully
+        qualified based on ip_mask_bits instead of ip_mask_str.
+      (trace_domains_func): Add IPv6 support.
+      (opserv_staff_alert): Update to new IP validity check macro.
+    
+    src/proto.h (struct uplinkNode): Fix type of bind_addr field.
+    
+    src/proto-bahamut.c (AddUser): Use irc_in_addr_t.
+      (AddService): Default to an all-zero IP instead of loopback.
+      (AddClone): Likewise.
+      (irc_user): Use new layout for IPv4 in irc_in_addr_t.
+      (cmd_nick): Likewise.
+    
+    src/proto-common.c (create_socket_client): Remove unnecessary
+        typecast.
+      (generate_hostmask): Update to use irc_in_addr_t and support
+        functions instead of IPv4-specific things.
+    
+    src/proto-p10.c (irc_p10_pton): New function.
+      (irc_p10_ntop): New function.
+      (irc_user): Use irc_p10_ntop().
+      (AddClone): Use irc_p10_pton().
+    
+    src/tools.c (ctype): New array holding values of characters as hex.
+      (irc_ntop): New function.
+      (irc_ntop_mask): New function.
+      (irc_pton_ip4): New helper function.
+      (irc_pton): New function.
+      (irc_ntoa): New function.
+      (irc_check_mask): New function.
+      (user_matches_glob): Use irc_ntoa() instead of inet_ntoa().
+      (parse_ipmask): Delete this function.
+
+    modified files:
+     ChangeLog configure.in src/common.h src/compat.c src/compat.h
+     src/gline.c src/hash.h src/ioset.c src/main.c src/mod-snoop.c
+     src/mod-sockcheck.c src/nickserv.c src/opserv.c
+     src/proto-bahamut.c src/proto-common.c src/proto-p10.c
+     src/proto.h src/tools.c
+
+
 2005-10-07 02:51:12 GMT	Michael Poole <mdpoole@troilus.org>	patch-27
 
     Summary:

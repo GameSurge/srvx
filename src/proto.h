@@ -60,7 +60,7 @@ struct uplinkNode
     char		*host;
     int			port;
 
-    struct sockaddr_in 	*bind_addr;
+    struct sockaddr 	*bind_addr;
     int 		bind_addr_len;
 
     char		*password;

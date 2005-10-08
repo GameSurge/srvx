@@ -130,17 +130,22 @@ struct io_fd *
 ioset_connect(struct sockaddr *local, unsigned int sa_size, const char *peer, unsigned int port, int blocking, void *data, void (*connect_cb)(struct io_fd *fd, int error)) {
     int fd, res;
     struct io_fd *io_fd;
-    struct sockaddr_in sin;
-    unsigned long ip;
+    struct addrinfo hints, *ai;
+    char portnum[10];
 
-    if (!getipbyname(peer, &ip)) {
-        log_module(MAIN_LOG, LOG_ERROR, "getipbyname(%s) failed.", peer);
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = local ? local->sa_family : 0;
+    hints.ai_socktype = SOCK_STREAM;
+    snprintf(portnum, sizeof(portnum), "%u", port);
+    if (getaddrinfo(peer, portnum, &hints, &ai)) {
+        log_module(MAIN_LOG, LOG_ERROR, "getaddrinfo(%s, %s) failed.", peer, portnum);
         return NULL;
     }
-    sin.sin_addr.s_addr = ip;
+
     if (local) {
         if ((fd = socket(local->sa_family, SOCK_STREAM, 0)) < 0) {
             log_module(MAIN_LOG, LOG_ERROR, "socket() for %s returned errno %d (%s)", peer, errno, strerror(errno));
+            freeaddrinfo(ai);
             return NULL;
         }
         if (bind(fd, local, sa_size) < 0) {
@@ -149,18 +154,19 @@ ioset_connect(struct sockaddr *local, unsigned int sa_size, const char *peer, un
     } else {
         if ((fd = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
             log_module(MAIN_LOG, LOG_ERROR, "socket() for %s returned errno %d (%s).", peer, errno, strerror(errno));
+            freeaddrinfo(ai);
             return NULL;
         }
     }
-    sin.sin_family = AF_INET;
-    sin.sin_port = htons(port);
+
     if (blocking) {
-        res = connect(fd, (struct sockaddr*)&sin, sizeof(sin));
+        res = connect(fd, ai->ai_addr, ai->ai_addrlen);
         io_fd = ioset_add(fd);
     } else {
         io_fd = ioset_add(fd);
-        res = connect(fd, (struct sockaddr*)&sin, sizeof(sin));
+        res = connect(fd, ai->ai_addr, ai->ai_addrlen);
     }
+    freeaddrinfo(ai);
     if (!io_fd) {
         close(fd);
         return NULL;

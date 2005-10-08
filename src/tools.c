@@ -50,11 +50,21 @@ static const unsigned char convert2n[256] = {
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  52,53,54,55,56,57,58,59,60,61, 0, 0, 0, 0, 0, 0, 
+  52,53,54,55,56,57,58,59,60,61, 0, 0, 0, 0, 0, 0,
    0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,
   15,16,17,18,19,20,21,22,23,24,25,62, 0,63, 0, 0,
    0,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,
   41,42,43,44,45,46,47,48,49,50,51, 0, 0, 0, 0, 0
+};
+
+static const unsigned char ctype[256] = {
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0,
+   0,10,11,12,13,14,15, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+   0,10,11,12,13,14,15, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
 unsigned long int
@@ -76,6 +86,271 @@ const char* inttobase64(char* buf, unsigned int v, unsigned int count)
       v >>= NUMNICKLOG;
   }
   return buf;
+}
+
+unsigned int
+irc_ntop(char *output, unsigned int out_size, const irc_in_addr_t *addr)
+{
+    static const char hexdigits[] = "0123456789abcdef";
+    unsigned int pos;
+
+    assert(output);
+    assert(addr);
+
+    if (irc_in_addr_is_ipv4(*addr)) {
+        unsigned int ip4;
+
+        ip4 = (ntohs(addr->in6[6]) << 16) | ntohs(addr->in6[7]);
+        pos = snprintf(output, out_size, "%u.%u.%u.%u", (ip4 >> 24), (ip4 >> 16) & 255, (ip4 >> 8) & 255, ip4 & 255);
+   } else {
+        unsigned int part, max_start, max_zeros, curr_zeros, ii;
+
+        /* Find longest run of zeros. */
+        for (max_start = max_zeros = curr_zeros = ii = 0; ii < 8; ++ii) {
+            if (!addr->in6[ii])
+                curr_zeros++;
+            else if (curr_zeros > max_zeros) {
+                max_start = ii - curr_zeros;
+                max_zeros = curr_zeros;
+                curr_zeros = 0;
+            }
+        }
+        if (curr_zeros > max_zeros) {
+            max_start = ii - curr_zeros;
+            max_zeros = curr_zeros;
+        }
+
+        /* Print out address. */
+#define APPEND(CH) do { if (pos < out_size) output[pos] = (CH); pos++; } while (0)
+        for (pos = 0, ii = 0; ii < 8; ++ii) {
+            if ((max_zeros > 0) && (ii == max_start)) {
+                if (ii == 0)
+                    APPEND(':');
+                APPEND(':');
+                ii += max_zeros - 1;
+                continue;
+            }
+            part = ntohs(addr->in6[ii]);
+            if (part >= 0x1000)
+                APPEND(hexdigits[part >> 12]);
+            if (part >= 0x100)
+                APPEND(hexdigits[(part >> 8) & 15]);
+            if (part >= 0x10)
+                APPEND(hexdigits[(part >> 4) & 15]);
+            APPEND(hexdigits[part & 15]);
+            if (ii < 7)
+                APPEND(':');
+        }
+#undef APPEND
+        output[pos < out_size ? pos : out_size - 1] = '\0';
+    }
+
+    return pos;
+}
+
+unsigned int
+irc_ntop_mask(char *output, unsigned int out_size, const irc_in_addr_t *addr, unsigned char bits)
+{
+    char base_addr[IRC_NTOP_MAX_SIZE];
+    int len;
+
+    if (bits >= 128)
+        return irc_ntop(output, out_size, addr);
+    if (!irc_ntop(base_addr, sizeof(base_addr), addr))
+        return 0;
+    len = snprintf(output, out_size, "%s/%d", base_addr, bits);
+    if ((unsigned int)len >= out_size)
+        return 0;
+    return len;
+}
+
+static unsigned int
+irc_pton_ip4(const char *input, unsigned char *pbits, uint32_t *output)
+{
+    unsigned int dots = 0, pos = 0, part = 0, ip = 0, bits = 32;
+
+    /* Intentionally no support for bizarre IPv4 formats (plain
+     * integers, octal or hex components) -- only vanilla dotted
+     * decimal quads, optionally with trailing /nn.
+     */
+    if (input[0] == '.')
+        return 0;
+    while (1) switch (input[pos]) {
+    default:
+        if (dots < 3)
+            return 0;
+    out:
+        ip |= part << (24 - 8 * dots++);
+        *output = htonl(ip);
+        if (pbits)
+            *pbits = bits;
+        return pos;
+    case '.':
+        if (input[++pos] == '.')
+            return 0;
+        ip |= part << (24 - 8 * dots++);
+        part = 0;
+        if (input[pos] == '*') {
+            while (input[++pos] == '*') ;
+            if (input[pos] != '\0')
+                return 0;
+            if (pbits)
+                *pbits = dots * 8;
+            *output = htonl(ip);
+            return pos;
+        }
+        break;
+    case '/':
+        if (!pbits || !isdigit(input[pos + 1]))
+            return 0;
+        for (bits = 0; isdigit(input[++pos]); )
+            bits = bits * 10 + input[pos] - '0';
+        if (bits > 32)
+            return 0;
+        goto out;
+    case '0': case '1': case '2': case '3': case '4':
+    case '5': case '6': case '7': case '8': case '9':
+        part = part * 10 + input[pos++] - '0';
+        if (part > 255)
+            return 0;
+        break;
+    }
+}
+
+unsigned int
+irc_pton(irc_in_addr_t *addr, unsigned char *bits, const char *input)
+{
+    const char *part_start = NULL;
+    char *colon;
+    char *dot;
+    unsigned int part = 0, pos = 0, ii = 0, cpos = 8;
+
+    assert(input);
+    memset(addr, 0, sizeof(*addr));
+    colon = strchr(input, ':');
+    dot = strchr(input, '.');
+
+    if (colon && (!dot || (dot > colon))) {
+        /* Parse IPv6, possibly like ::127.0.0.1.
+         * This is pretty straightforward; the only trick is borrowed
+         * from Paul Vixie (BIND): when it sees a "::" continue as if
+         * it were a single ":", but note where it happened, and fill
+         * with zeros afterwards.
+         */
+        if (input[pos] == ':') {
+            if ((input[pos+1] != ':') || (input[pos+2] == ':'))
+                return 0;
+            cpos = 0;
+            pos += 2;
+            part_start = input + pos;
+        }
+        while (ii < 8) switch (input[pos]) {
+        case '0': case '1': case '2': case '3': case '4':
+        case '5': case '6': case '7': case '8': case '9':
+        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
+            part = (part << 4) | (ctype[(unsigned char)input[pos++]] & 15);
+            if (part > 0xffff)
+                return 0;
+            break;
+        case ':':
+            part_start = input + ++pos;
+            if (input[pos] == '.')
+                return 0;
+            addr->in6[ii++] = htons(part);
+            part = 0;
+            if (input[pos] == ':') {
+                if (cpos < 8)
+                    return 0;
+                cpos = ii;
+            }
+            break;
+        case '.': {
+            uint32_t ip4;
+            unsigned int len;
+            len = irc_pton_ip4(part_start, bits, &ip4);
+            if (!len || (ii > 6))
+                return 0;
+            memcpy(addr->in6 + ii, &ip4, sizeof(ip4));
+            if (bits)
+                *bits += 96;
+            ii += 2;
+            pos = part_start + len - input;
+            goto finish;
+        }
+        case '/':
+            if (!bits || !isdigit(input[pos + 1]))
+                return 0;
+            addr->in6[ii++] = htons(part);
+            for (part = 0; isdigit(input[++pos]); )
+                part = part * 10 + input[pos] - '0';
+            if (part > 128)
+                return 0;
+            *bits = part;
+            goto finish;
+        case '*':
+            while (input[++pos] == '*') ;
+            if (input[pos] != '\0' || cpos < 8)
+                return 0;
+            if (bits)
+                *bits = ii * 16;
+            return pos;
+        default:
+            addr->in6[ii++] = htons(part);
+            if (cpos == 8 && ii < 8)
+                return 0;
+            if (bits)
+                *bits = 128;
+            goto finish;
+        }
+    finish:
+        /* Shift stuff after "::" up and fill middle with zeros. */
+        if (cpos < 8) {
+            unsigned int jj;
+            for (jj = 0; jj < ii - cpos; jj++)
+                addr->in6[7 - jj] = addr->in6[ii - jj - 1];
+            for (jj = 0; jj < 8 - ii; jj++)
+                addr->in6[cpos + jj] = 0;
+        }
+    } else if (dot) {
+        unsigned int ip4;
+        pos = irc_pton_ip4(input, bits, &ip4);
+        if (pos) {
+            addr->in6[5] = htons(65535);
+            addr->in6[6] = htons(ntohl(ip4) >> 16);
+            addr->in6[7] = htons(ntohl(ip4) & 65535);
+            if (bits)
+                *bits += 96;
+        }
+    } else if (input[0] == '*') {
+        while (input[++pos] == '*') ;
+        if (input[pos] != '\0')
+            return 0;
+        if (bits)
+            *bits = 0;
+    }
+    return pos;
+}
+
+const char *irc_ntoa(const irc_in_addr_t *addr)
+{
+    static char ntoa[IRC_NTOP_MAX_SIZE];
+    irc_ntop(ntoa, sizeof(ntoa), addr);
+    return ntoa;
+}
+
+unsigned int
+irc_check_mask(const irc_in_addr_t *check, const irc_in_addr_t *mask, unsigned char bits)
+{
+    unsigned int ii;
+
+    for (ii = 0; (ii < 8) && (bits > 16); bits -= 16, ++ii)
+        if (check->in6[ii] != mask->in6[ii])
+            return 0;
+    if (ii < 8 && bits > 0
+        && (ntohs(check->in6[ii] ^ mask->in6[ii]) >> (16 - bits)))
+        return 0;
+    return 1;
 }
 
 static char irc_tolower[256];
@@ -330,11 +605,11 @@ user_matches_glob(struct userNode *user, const char *orig_glob, int include_nick
     glob = marker + 1;
     /* If it might be an IP glob, test that. */
     if (!glob[strspn(glob, "0123456789./*?")]
-        && match_ircglob(inet_ntoa(user->ip), glob))
+        && match_ircglob(irc_ntoa(&user->ip), glob))
         return 1;
     /* Check for a fakehost match. */
     if (IsFakeHost(user) && match_ircglob(user->fakehost, glob))
-            return 1;
+        return 1;
     /* Check for an account match. */
     if (hidden_host_suffix && user->handle_info) {
         char hidden_host[HOSTLEN+1];
@@ -552,74 +827,6 @@ ParseVolume(const char *volume)
         }
     }
     return accum + partial;
-}
-
-int
-parse_ipmask(const char *str, struct in_addr *addr, unsigned long *mask)
-{
-    int accum, pos;
-    unsigned long t_a, t_m;
-
-    t_a = t_m = pos = 0;
-    if (addr)
-        addr->s_addr = htonl(t_a);
-    if (mask)
-        *mask = t_m;
-    while (*str) {
-        if (!isdigit(*str))
-            return 0;
-        accum = 0;
-        do {
-            accum = (accum * 10) + *str++ - '0';
-        } while (isdigit(*str));
-        if (accum > 255)
-            return 0;
-        t_a = (t_a << 8) | accum;
-        t_m = (t_m << 8) | 255;
-        pos += 8;
-        if (*str == '.') {
-            str++;
-            while (*str == '*') {
-                str++;
-                if (*str == '.') {
-                    t_a <<= 8;
-                    t_m <<= 8;
-                    pos += 8;
-                    str++;
-                } else if (*str == 0) {
-                    t_a <<= 32 - pos;
-                    t_m <<= 32 - pos;
-                    pos = 32;
-                    goto out;
-                } else
-                    return 0;
-            }
-        } else if (*str == '/') {
-            int start = pos;
-            accum = 0;
-            do {
-                accum = (accum * 10) + *str++ - '0';
-            } while (isdigit(*str));
-            while (pos < start+accum && pos < 32) {
-                t_a = (t_a << 1) | 0;
-                t_m = (t_m << 1) | 1;
-                pos++;
-            }
-            if (pos != start+accum)
-                return 0;
-        } else if (*str == 0)
-            break;
-        else
-            return 0;
-    }
-out:
-    if (pos != 32)
-        return 0;
-    if (addr)
-        addr->s_addr = htonl(t_a);
-    if (mask)
-        *mask = t_m;
-    return 1;
 }
 
 char *

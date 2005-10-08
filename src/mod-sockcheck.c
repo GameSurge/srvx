@@ -51,11 +51,11 @@ enum sockcheck_decision {
 };
 
 typedef struct {
-    enum sockcheck_decision decision;
-    time_t last_touched;
+    irc_in_addr_t addr;
     const char *reason;
-    struct in_addr addr;
-    char hostname[16];
+    time_t last_touched;
+    enum sockcheck_decision decision;
+    char hostname[IRC_NTOP_MAX_SIZE]; /* acts as key for checked_ip_dict */
 } *sockcheck_cache_info;
 
 DECLARE_LIST(sci_list, sockcheck_cache_info);
@@ -75,7 +75,7 @@ static dict_t checked_ip_dict;
  * state and the input).  Mealy state machines require fewer states to
  * match the same input than Moore machines (where the output is only
  * a function of the current state).
- * 
+ *
  * A state is characterized by sending some data (possibly nothing),
  * waiting a certain amount of time to receive one of zero or more
  * responses, and a decision (accept, reject, continue to another
@@ -129,7 +129,7 @@ static struct {
     unsigned int max_read;
     unsigned int gline_duration;
     unsigned int max_cache_age;
-    struct sockaddr_in *local_addr;
+    struct sockaddr *local_addr;
     int local_addr_len;
 } sockcheck_conf;
 
@@ -203,11 +203,10 @@ sockcheck_list_unref(struct sockcheck_list *list)
 static void
 sockcheck_issue_gline(sockcheck_cache_info sci)
 {
-    char *target = alloca(3+strlen(sci->hostname));
-    strcpy(target, "*@");
-    strcpy(target+2, sci->hostname);
-    log_module(PC_LOG, LOG_INFO, "Issuing gline for client at IP %s hostname %s: %s", inet_ntoa(sci->addr), sci->hostname, sci->reason);
-    gline_add("ProxyCheck", target, sockcheck_conf.gline_duration, sci->reason, now, 1);
+    char addr[IRC_NTOP_MAX_SIZE + 2] = {'*', '@', '\0'};
+    irc_ntop(addr + 2, sizeof(addr) - 2, &sci->addr);
+    log_module(PC_LOG, LOG_INFO, "Issuing gline for client at %s: %s", addr + 2, sci->reason);
+    gline_add("ProxyCheck", addr, sockcheck_conf.gline_duration, sci->reason, now, 1);
 }
 
 static struct sockcheck_client *
@@ -261,7 +260,8 @@ sockcheck_print_client(const struct sockcheck_client *client)
     log_module(PC_LOG, LOG_INFO, "client %p: { addr = %p { decision = %s; last_touched = "FMT_TIME_T"; reason = %s; hostname = \"%s\" }; "
         "test_index = %d; state = %p { port = %d; type = %s; template = \"%s\"; ... }; "
         "fd = %p(%d); read = %p; read_size = %d; read_used = %d; read_pos = %d; }",
-        client, client->addr, decs[client->addr->decision], client->addr->last_touched, client->addr->reason, client->addr->hostname,
+        client, client->addr, decs[client->addr->decision], client->addr->last_touched,
+        client->addr->reason, client->addr->hostname,
         client->test_index, client->state,
         (client->state ? client->state->port : 0),
         (client->state ? decs[client->state->type] : "N/A"),
@@ -301,7 +301,7 @@ expand_var(const struct sockcheck_client *client, char var, char **p_expansion, 
         exp_length = strlen(expansion);
         break;
     case 'i':
-	exp4 = client->addr->addr.s_addr;
+	exp4 = client->addr->addr.in6_32[3];
 	exp_length = sizeof(exp4);
 	expansion = (char*)&exp4;
 	break;
@@ -435,7 +435,7 @@ sockcheck_decide(struct sockcheck_client *client, enum sockcheck_decision decisi
     case ACCEPT:
 	/* do nothing */
         if (SOCKCHECK_DEBUG) {
-            log_module(PC_LOG, LOG_INFO, "Proxy check passed for client at IP %s hostname %s.", inet_ntoa(client->addr->addr), client->addr->hostname);
+            log_module(PC_LOG, LOG_INFO, "Proxy check passed for client at %s.", client->addr->hostname);
         }
         break;
     case REJECT:
@@ -443,7 +443,7 @@ sockcheck_decide(struct sockcheck_client *client, enum sockcheck_decision decisi
 	proxies_detected++;
 	sockcheck_issue_gline(client->addr);
         if (SOCKCHECK_DEBUG) {
-            log_module(PC_LOG, LOG_INFO, "Proxy check rejects client at IP %s hostname %s (%s)", inet_ntoa(client->addr->addr), client->addr->hostname, client->addr->reason);
+            log_module(PC_LOG, LOG_INFO, "Proxy check rejects client at %s (%s)", client->addr->hostname, client->addr->reason);
         }
 	/* Don't compare test_index != 0 directly, because somebody
 	 * else may have reordered the tests already. */
@@ -669,7 +669,7 @@ sockcheck_begin_test(struct sockcheck_client *client)
         client->state = client->tests->list[client->test_index];
         client->read_pos = 0;
         client->read_used = 0;
-        client->fd = io_fd = ioset_connect((struct sockaddr*)sockcheck_conf.local_addr, sizeof(struct sockaddr), client->addr->hostname, client->state->port, 0, client, sockcheck_connected);
+        client->fd = io_fd = ioset_connect(sockcheck_conf.local_addr, sockcheck_conf.local_addr_len, client->addr->hostname, client->state->port, 0, client, sockcheck_connected);
         if (!io_fd) {
             client->test_index++;
             continue;
@@ -701,17 +701,17 @@ sockcheck_start_client(unsigned int idx)
     sockcheck_num_clients++;
     if (!tests) return;
     client = client_list[idx] = sockcheck_alloc_client(sci);
-    log_module(PC_LOG, LOG_INFO, "Proxy-checking client at %s (%s) as client %d (%p) of %d.", inet_ntoa(sci->addr), sci->hostname, idx, client, sockcheck_num_clients);
+    log_module(PC_LOG, LOG_INFO, "Proxy-checking client at %s as client %d (%p) of %d.", sci->hostname, idx, client, sockcheck_num_clients);
     client->test_rep = 0;
     client->client_index = idx;
     sockcheck_begin_test(client);
 }
 
 void
-sockcheck_queue_address(struct in_addr addr)
+sockcheck_queue_address(irc_in_addr_t addr)
 {
     sockcheck_cache_info sci;
-    char *ipstr=inet_ntoa(addr);
+    const char *ipstr = irc_ntoa(&addr);
 
     sci = dict_find(checked_ip_dict, ipstr, NULL);
     if (sci) {
@@ -1017,25 +1017,24 @@ static MODCMD_FUNC(cmd_defproxy)
 static MODCMD_FUNC(cmd_hostscan)
 {
     unsigned int n;
-    unsigned long addr;
-    struct in_addr ipaddr;
-    char hnamebuf[64];
+    irc_in_addr_t ipaddr;
+    char hnamebuf[IRC_NTOP_MAX_SIZE];
 
     for (n=1; n<argc; n++) {
 	struct userNode *un = GetUserH(argv[n]);
 
         if (un) {
-            if ((un->ip.s_addr == 0) || (ntohl(un->ip.s_addr) == INADDR_LOOPBACK)) {
+            if (!irc_in_addr_is_valid(un->ip)
+                || irc_in_addr_is_loopback(un->ip)) {
                 reply("PCMSG_UNSCANNABLE_IP", un->nick);
             } else {
-                strcpy(hnamebuf, inet_ntoa(un->ip));
+                irc_ntop(hnamebuf, sizeof(hnamebuf), &un->ip);
                 sockcheck_queue_address(un->ip);
                 reply("PCMSG_ADDRESS_QUEUED", hnamebuf);
             }
         } else {
             char *scanhost = argv[n];
-            if (getipbyname(scanhost, &addr)) {
-                ipaddr.s_addr = htonl(addr);
+            if (!irc_pton(&ipaddr, NULL, scanhost)) {
                 sockcheck_queue_address(ipaddr);
                 reply("PCMSG_ADDRESS_QUEUED", scanhost);
             } else {
@@ -1049,14 +1048,14 @@ static MODCMD_FUNC(cmd_hostscan)
 static MODCMD_FUNC(cmd_clearhost)
 {
     unsigned int n;
-    char hnamebuf[64];
+    char hnamebuf[IRC_NTOP_MAX_SIZE];
 
     for (n=1; n<argc; n++) {
         struct userNode *un = GetUserH(argv[n]);
         const char *scanhost;
 
         if (un) {
-            strcpy(hnamebuf, inet_ntoa(un->ip));
+            irc_ntop(hnamebuf, sizeof(hnamebuf), &un->ip);
             scanhost = hnamebuf;
         } else {
             scanhost = argv[n];
@@ -1106,8 +1105,8 @@ static MODCMD_FUNC(cmd_stats_proxycheck)
 static int
 sockcheck_new_user(struct userNode *user) {
     /* If they have a bum IP, or are bursting in, don't proxy-check or G-line them. */
-    if (user->ip.s_addr
-        && (ntohl(user->ip.s_addr) != INADDR_LOOPBACK)
+    if (irc_in_addr_is_valid(user->ip)
+        && !irc_in_addr_is_loopback(user->ip)
         && !user->uplink->burst)
         sockcheck_queue_address(user->ip);
     return 0;
@@ -1130,6 +1129,7 @@ static void
 sockcheck_read_conf(void)
 {
     dict_t my_node;
+    struct addrinfo *ai;
     const char *str;
 
     /* set the defaults here in case the entire record is missing */
@@ -1154,25 +1154,14 @@ sockcheck_read_conf(void)
         str = database_get_data(my_node, "gline_duration", RECDB_QSTRING);
         if (str) sockcheck_conf.gline_duration = ParseInterval(str);
 	str = database_get_data(my_node, "address", RECDB_QSTRING);
-	if (str) {
-	    struct sockaddr_in *sin;
-	    unsigned long addr;
-
-	    sockcheck_conf.local_addr_len = sizeof(*sin);
-	    if (getipbyname(str, &addr)) {
-		sin = malloc(sockcheck_conf.local_addr_len);
-		sin->sin_family = AF_INET;
-		sin->sin_port = 0;
-		sin->sin_addr.s_addr = addr;
-#ifdef HAVE_SIN_LEN
-	        sin->sin_len = 0;
-#endif
-        	memset(sin->sin_zero, 0, sizeof(sin->sin_zero));
-	        sockcheck_conf.local_addr = sin;
-	    } else {
-		log_module(PC_LOG, LOG_ERROR, "Error: Unable to get host named `%s', not checking a specific address.", str);
-		sockcheck_conf.local_addr = NULL;
-	    }
+        if (!getaddrinfo(str, NULL, NULL, &ai)) {
+	    sockcheck_conf.local_addr_len = ai->ai_addrlen;
+            sockcheck_conf.local_addr = calloc(1, ai->ai_addrlen);
+            memcpy(sockcheck_conf.local_addr, ai->ai_addr, ai->ai_addrlen);
+        } else {
+            sockcheck_conf.local_addr_len = 0;
+            sockcheck_conf.local_addr = NULL;
+            log_module(PC_LOG, LOG_ERROR, "Error: Unable to get host named `%s', not checking a specific address.", str);
 	}
     }
 }

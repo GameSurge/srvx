@@ -78,7 +78,7 @@
 #define KEY_ISSUED "issued"
 
 #define IDENT_FORMAT		"%s [%s@%s/%s]"
-#define IDENT_DATA(user)	user->nick, user->ident, user->hostname, inet_ntoa(user->ip)
+#define IDENT_DATA(user)	user->nick, user->ident, user->hostname, irc_ntoa(&user->ip)
 #define MAX_CHANNELS_WHOIS	50
 #define OSMSG_PART_REASON       "%s has no reason."
 #define OSMSG_KICK_REQUESTED    "Kick requested by %s."
@@ -318,14 +318,15 @@ opserv_free_hostinfo(void *data)
 
 typedef struct opservDiscrim {
     struct chanNode *channel;
-    char *mask_nick, *mask_ident, *mask_host, *mask_info, *server, *ip_mask_str, *reason, *accountmask;
-    unsigned long limit, ip_mask;
-    struct in_addr ip_addr;
+    char *mask_nick, *mask_ident, *mask_host, *mask_info, *server, *reason, *accountmask;
+    irc_in_addr_t ip_mask;
+    unsigned long limit;
+    time_t min_ts, max_ts;
     unsigned int min_level, max_level, domain_depth, duration, min_clones, min_channels, max_channels;
+    unsigned char ip_mask_bits;
     unsigned int match_opers : 1, option_log : 1;
     unsigned int chan_req_modes : 2, chan_no_modes : 2;
     int authed : 2, info_space : 2;
-    time_t min_ts, max_ts;
 } *discrim_t;
 
 struct discrim_and_source {
@@ -1172,7 +1173,7 @@ static MODCMD_FUNC(cmd_whois)
     reply("OSMSG_WHOIS_HOST", target->ident, target->hostname);
     if (IsFakeHost(target))
         reply("OSMSG_WHOIS_FAKEHOST", target->fakehost);
-    reply("OSMSG_WHOIS_IP", inet_ntoa(target->ip));
+    reply("OSMSG_WHOIS_IP", irc_ntoa(&target->ip));
     if (target->modes) {
 	bpos = 0;
 #define buffer_cat(str) (herelen = strlen(str), memcpy(buffer+bpos, str, herelen), bpos += herelen)
@@ -1722,6 +1723,7 @@ opserv_new_user_check(struct userNode *user)
 {
     struct opserv_hostinfo *ohi;
     struct gag_entry *gag;
+    char addr[IRC_NTOP_MAX_SIZE];
 
     /* Check to see if we should ignore them entirely. */
     if (IsLocal(user) || IsService(user))
@@ -1740,9 +1742,10 @@ opserv_new_user_check(struct userNode *user)
     }
 
     /* Add to host info struct */
-    if (!(ohi = dict_find(opserv_hostinfo_dict, inet_ntoa(user->ip), NULL))) {
+    irc_ntop(addr, sizeof(addr), &user->ip);
+    if (!(ohi = dict_find(opserv_hostinfo_dict, addr, NULL))) {
         ohi = calloc(1, sizeof(*ohi));
-        dict_insert(opserv_hostinfo_dict, strdup(inet_ntoa(user->ip)), ohi);
+        dict_insert(opserv_hostinfo_dict, strdup(addr), ohi);
         userList_init(&ohi->clients);
     }
     userList_append(&ohi->clients, user);
@@ -1760,8 +1763,10 @@ opserv_new_user_check(struct userNode *user)
     }
 
     /* Only warn or G-line if there's an untrusted max and their IP is sane. */
-    if (opserv_conf.untrusted_max && user->ip.s_addr && (ntohl(user->ip.s_addr) != INADDR_LOOPBACK)) {
-        struct trusted_host *th = dict_find(opserv_trusted_hosts, inet_ntoa(user->ip), NULL);
+    if (opserv_conf.untrusted_max
+        && irc_in_addr_is_valid(user->ip)
+        && !irc_in_addr_is_loopback(user->ip)) {
+        struct trusted_host *th = dict_find(opserv_trusted_hosts, addr, NULL);
         unsigned int limit = th ? th->limit : opserv_conf.untrusted_max;
         if (!limit) {
             /* 0 means unlimited hosts */
@@ -1771,7 +1776,7 @@ opserv_new_user_check(struct userNode *user)
                 send_message(ohi->clients.list[nn], opserv, "OSMSG_CLONE_WARNING");
         } else if (ohi->clients.used > limit) {
             char target[18];
-            sprintf(target, "*@%s", inet_ntoa(user->ip));
+            sprintf(target, "*@%s", addr);
             gline_add(opserv->nick, target, opserv_conf.clone_gline_duration, "AUTO Excessive connections from a single host.", now, 1);
         }
     }
@@ -1783,6 +1788,7 @@ static void
 opserv_user_cleanup(struct userNode *user, UNUSED_ARG(struct userNode *killer), UNUSED_ARG(const char *why))
 {
     struct opserv_hostinfo *ohi;
+    char addr[IRC_NTOP_MAX_SIZE];
 
     if (IsLocal(user)) {
         /* Try to remove it from the reserved nick dict without
@@ -1791,9 +1797,11 @@ opserv_user_cleanup(struct userNode *user, UNUSED_ARG(struct userNode *killer), 
         dict_remove(opserv_reserved_nick_dict, user->nick);
         return;
     }
-    if ((ohi = dict_find(opserv_hostinfo_dict, inet_ntoa(user->ip), NULL))) {
+    irc_ntop(addr, sizeof(addr), &user->ip);
+    if ((ohi = dict_find(opserv_hostinfo_dict, addr, NULL))) {
         userList_remove(&ohi->clients, user);
-        if (ohi->clients.used == 0) dict_remove(opserv_hostinfo_dict, inet_ntoa(user->ip));
+        if (ohi->clients.used == 0)
+            dict_remove(opserv_hostinfo_dict, addr);
     }
 }
 
@@ -2118,7 +2126,7 @@ static MODCMD_FUNC(cmd_addtrust)
 {
     unsigned long interval;
     char *reason, *tmp;
-    struct in_addr tmpaddr;
+    irc_in_addr_t tmpaddr;
     unsigned int count;
 
     if (dict_find(opserv_trusted_hosts, argv[1], NULL)) {
@@ -2126,7 +2134,7 @@ static MODCMD_FUNC(cmd_addtrust)
         return 0;
     }
 
-    if (!inet_aton(argv[1], &tmpaddr)) {
+    if (!irc_pton(&tmpaddr, NULL, argv[1])) {
         reply("OSMSG_BAD_IP", argv[1]);
         return 0;
     }
@@ -2446,15 +2454,8 @@ foreach_matching_user(const char *hostmask, discrim_search_func func, void *extr
     discrim->info_space = -1;
     dupmask = strdup(hostmask);
     if (split_ircmask(dupmask, &discrim->mask_nick, &discrim->mask_ident, &discrim->mask_host)) {
-        if (discrim->mask_host && !discrim->mask_host[strspn(discrim->mask_host, "0123456789.?*")]) {
-            if (!parse_ipmask(discrim->mask_host, &discrim->ip_addr, &discrim->ip_mask)) {
-                log_module(OS_LOG, LOG_ERROR, "Couldn't parse %s as an IP mask!", discrim->mask_host);
-                free(discrim);
-                free(dupmask);
-                return 0;
-            }
-            discrim->mask_host = 0;
-        }
+        if (!irc_pton(&discrim->ip_mask, &discrim->ip_mask_bits, discrim->mask_host))
+            discrim->ip_mask_bits = 0;
         matched = opserv_discrim_search(discrim, func, extra);
     } else {
 	log_module(OS_LOG, LOG_ERROR, "Couldn't split IRC mask for gag %s!", hostmask);
@@ -2939,8 +2940,11 @@ opserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[], in
 	} else if (irccasecmp(argv[i], "server") == 0) {
 	    discrim->server = argv[++i];
 	} else if (irccasecmp(argv[i], "ip") == 0) {
-	    j = parse_ipmask(argv[++i], &discrim->ip_addr, &discrim->ip_mask);
-	    if (!j) discrim->ip_mask_str = argv[i];
+            j = irc_pton(&discrim->ip_mask, &discrim->ip_mask_bits, argv[++i]);
+            if (!j) {
+                send_message(user, opserv, "OSMSG_BAD_IP", argv[i]);
+                goto fail;
+            }
     } else if (irccasecmp(argv[i], "account") == 0) {
         if (discrim->authed == 0) {
             send_message(user, opserv, "OSMSG_ACCOUNTMASK_AUTHED");
@@ -3106,21 +3110,20 @@ discrim_match(discrim_t discrim, struct userNode *user)
         || (discrim->mask_info && !match_ircglob(user->info, discrim->mask_info))
         || (discrim->server && !match_ircglob(user->uplink->name, discrim->server))
         || (discrim->accountmask && (!user->handle_info || !match_ircglob(user->handle_info->handle, discrim->accountmask)))
-        || (discrim->ip_mask && !MATCH_IPMASK(user->ip, discrim->ip_addr, discrim->ip_mask))) {
+        || (discrim->ip_mask_bits && !irc_check_mask(&user->ip, &discrim->ip_mask, discrim->ip_mask_bits))
+        )
         return 0;
-    }
-    if (discrim->channel && !GetUserMode(discrim->channel, user)) return 0;
+    if (discrim->channel && !GetUserMode(discrim->channel, user))
+        return 0;
     access = user->handle_info ? user->handle_info->opserv_level : 0;
     if ((access < discrim->min_level)
         || (access > discrim->max_level)) {
         return 0;
     }
-    if (discrim->ip_mask_str) {
-        if (!match_ircglob(inet_ntoa(user->ip), discrim->ip_mask_str)) return 0;
-    }
     if (discrim->min_clones > 1) {
-        struct opserv_hostinfo *ohi = dict_find(opserv_hostinfo_dict, inet_ntoa(user->ip), NULL);
-        if (!ohi || (ohi->clients.used < discrim->min_clones)) return 0;
+        struct opserv_hostinfo *ohi = dict_find(opserv_hostinfo_dict, irc_ntoa(&user->ip), NULL);
+        if (!ohi || (ohi->clients.used < discrim->min_clones))
+            return 0;
     }
     return 1;
 }
@@ -3147,8 +3150,8 @@ opserv_discrim_search(discrim_t discrim, discrim_search_func dsf, void *data)
                 userList_append(&matched, mn->user);
             }
         }
-    } else if (discrim->ip_mask_str && !discrim->ip_mask_str[strcspn(discrim->ip_mask_str, "?*")]) {
-        struct opserv_hostinfo *ohi = dict_find(opserv_hostinfo_dict, discrim->ip_mask_str, NULL);
+    } else if (discrim->ip_mask_bits == 128) {
+        struct opserv_hostinfo *ohi = dict_find(opserv_hostinfo_dict, irc_ntoa(&discrim->ip_mask), NULL);
         if (!ohi) {
             userList_clean(&matched);
             return 0;
@@ -3293,29 +3296,42 @@ static int
 trace_domains_func(struct userNode *match, void *extra)
 {
     struct discrim_and_source *das = extra;
+    irc_in_addr_t ip;
     unsigned long *count;
     unsigned int depth;
     char *hostname;
+    char ipmask[IRC_NTOP_MASK_MAX_SIZE];
 
-    if (!match->hostname[strspn(match->hostname, "0123456789.")]) {
-        char ipmask[16];
-        unsigned long matchip = ntohl(match->ip.s_addr);
-        /* raw IP address.. use up to first three octets of IP */
-        switch (das->discrim->domain_depth) {
-        default:
-            snprintf(ipmask, sizeof(ipmask), "%lu.%lu.%lu.*", (matchip>>24)&255, (matchip>>16)&255, (matchip>>8)&255);
-            break;
-        case 2:
-            snprintf(ipmask, sizeof(ipmask), "%lu.%lu.*", (matchip>>24)&255, (matchip>>16)&255);
-            break;
-        case 1:
-            snprintf(ipmask, sizeof(ipmask), "%lu.*", (matchip>>24)&255);
-            break;
-        }
+    if (irc_pton(&ip, NULL, match->hostname)) {
+        if (irc_in_addr_is_ipv4(ip)) {
+            unsigned long matchip = ntohl(ip.in6_32[3]);
+            /* raw IP address.. use up to first three octets of IP */
+            switch (das->discrim->domain_depth) {
+            default:
+                snprintf(ipmask, sizeof(ipmask), "%lu.%lu.%lu.*", (matchip>>24)&255, (matchip>>16)&255, (matchip>>8)&255);
+                break;
+            case 2:
+                snprintf(ipmask, sizeof(ipmask), "%lu.%lu.*", (matchip>>24)&255, (matchip>>16)&255);
+                break;
+            case 1:
+                snprintf(ipmask, sizeof(ipmask), "%lu.*", (matchip>>24)&255);
+                break;
+            }
+        } else if (irc_in_addr_is_ipv6(ip)) {
+            switch (das->discrim->domain_depth) {
+            case 1:  depth = 16; goto ipv6_pfx;
+            case 2:  depth = 24; goto ipv6_pfx;
+            case 3:  depth = 32; goto ipv6_pfx;
+            default: depth = das->discrim->domain_depth;
+            ipv6_pfx:
+                irc_ntop_mask(ipmask, sizeof(ipmask), &ip, depth);
+            }
+        } else safestrncpy(ipmask, match->hostname, sizeof(ipmask));
+        ipmask[sizeof(ipmask) - 1] = '\0';
         hostname = ipmask;
     } else {
         hostname = match->hostname + strlen(match->hostname);
-        for (depth=das->discrim->domain_depth; 
+        for (depth=das->discrim->domain_depth;
              depth && (hostname > match->hostname);
              depth--) {
             hostname--;
@@ -3764,7 +3780,7 @@ opserv_staff_alert(struct userNode *user, UNUSED_ARG(struct handle_info *old_han
     else
         return;
 
-    if (user->ip.s_addr)
+    if (irc_in_addr_is_valid(user->ip))
         send_channel_notice(opserv_conf.staff_auth_channel, opserv, IDENT_FORMAT" authed to %s account %s", IDENT_DATA(user), type, user->handle_info->handle);
     else
         send_channel_notice(opserv_conf.staff_auth_channel, opserv, "%s [%s@%s] authed to %s account %s", user->nick, user->ident, user->hostname, type, user->handle_info->handle);

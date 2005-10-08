@@ -73,13 +73,22 @@ AC_CHECK_MEMBER([struct dirent.d_type],
         [AC_DEFINE(HAVE_DIRENT_D_TYPE, 1, [Define if struct dirent exists and includes the d_type element.])],,[#include <dirent.h>])
 
 dnl portability stuff, hurray! -Jedi
+AC_CHECK_MEMBER([struct sockaddr.sa_len],
+                [AC_DEFINE([HAVE_SOCKADDR_SA_LEN],,[Define if struct sockaddr has sa_len field])],
+                [],[#include <sys/types.h>
+#include <sys/socket.h>])
+AC_CHECK_MEMBER([struct addrinfo.ai_flags],
+                [AC_DEFINE([HAVE_STRUCT_ADDRINFO],,[Define if struct addrinfo declared])],
+                [],[#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>])
 AC_CHECK_FUNCS(gettimeofday)
 if test $ac_cv_func_gettimeofday = no; then
   AC_CHECK_FUNCS(ftime,,AC_MSG_ERROR([ftime or gettimeofday required.  srvx build will fail.]))
 fi
 
 dnl We have fallbacks in case these are missing, so just check for them.
-AC_CHECK_FUNCS(bcopy getpagesize memcpy memset strdup strerror strsignal localtime_r setrlimit inet_ntoa getopt getopt_long regcomp regexec regfree sysconf,,)
+AC_CHECK_FUNCS(freeaddrinfo getaddrinfo getnameinfo getpagesize memcpy memset strdup strerror strsignal localtime_r setrlimit getopt getopt_long regcomp regexec regfree sysconf,,)
 
 dnl Check for absolutely required library functions.
 AC_CHECK_FUNCS(select socket strcspn strspn strtod strtoul,,AC_MSG_ERROR([a required function was not found.  srvx build will fail.]))

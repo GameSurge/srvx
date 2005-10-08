@@ -141,10 +141,9 @@ uplink_insert(const char *key, void *data, UNUSED_ARG(void *extra))
 {
     struct uplinkNode *uplink = malloc(sizeof(struct uplinkNode));
     struct record_data *rd = data;
+    struct addrinfo hints, *ai;
     int enabled = 1;
     char *str;
-    struct sockaddr_in *sin;
-    unsigned long addr;
 
     if(!uplink)
     {
@@ -174,15 +173,17 @@ uplink_insert(const char *key, void *data, UNUSED_ARG(void *extra))
     uplink->tries = 0;
 
     str = database_get_data(rd->d.object, "bind_address", RECDB_QSTRING);
-    uplink->bind_addr_len = sizeof(*sin);
-    if (str && getipbyname(str, &addr)) 
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_flags = AI_PASSIVE;
+    hints.ai_socktype = SOCK_STREAM;
+    if (!getaddrinfo(str, NULL, &hints, &ai))
     {
-	sin = calloc(1, uplink->bind_addr_len);
-	sin->sin_family = AF_INET;
-	sin->sin_addr.s_addr = addr;
-	uplink->bind_addr = sin;
-    } 
-    else 
+        uplink->bind_addr_len = ai->ai_addrlen;
+	uplink->bind_addr = calloc(1, ai->ai_addrlen);
+        memcpy(uplink->bind_addr, ai->ai_addr, ai->ai_addrlen);
+        freeaddrinfo(ai);
+    }
+    else
     {
 	uplink->bind_addr = NULL;
 	uplink->bind_addr_len = 0;

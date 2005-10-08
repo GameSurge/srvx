@@ -53,6 +53,14 @@ char *alloca();
 #include <sys/types.h>
 #endif
 
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
+#ifdef HAVE_NETDB_H
+#include <netdb.h>
+#endif
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -85,6 +93,32 @@ extern char * strdup(char const * str);
 
 #ifndef HAVE_STRERROR
 extern char const * strerror(int errornum);
+#endif
+
+#ifndef HAVE_STRUCT_ADDRINFO
+
+struct addrinfo {
+    int ai_flags;
+    int ai_family;
+    int ai_socktype;
+    int ai_protocol;
+    size_t ai_addrlen;
+    struct sockaddr *ai_addr;
+    char *ai_canonname;
+    struct addrinfo *ai_next;
+};
+
+#define AI_PASSIVE 1
+#define AI_CANONNAME 2
+
+#endif /* !defined(HAVE_STRUCT_ADDRINFO) */
+
+#ifndef HAVE_GETADDRINFO
+
+int getaddrinfo(const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res);
+int getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags);
+void freeaddrinfo(struct addrinfo *res);
+
 #endif
 
 #endif /* COMPAT_H */

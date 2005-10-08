@@ -38,13 +38,6 @@ extern struct tm *localtime_r(const time_t *clock, struct tm *res);
 #define false 0
 #endif
 
-#ifndef INADDR_NONE
-#define INADDR_NONE 0xffffffffL
-#endif
-#ifndef INADDR_LOOPBACK
-#define INADDR_LOOPBACK 0x7f000001L
-#endif
-
 #define ArrayLength(x)		(sizeof(x)/sizeof(x[0]))
 #define safestrncpy(dest, src, len) do { char *d = (dest); const char *s = (src); size_t l = strlen(s)+1;  if ((len) < l) l = (len); memmove(d, s, l); d[l-1] = 0; } while (0)
 
@@ -130,6 +123,38 @@ extern time_t now;
 extern int quit_services;
 extern struct log_type *MAIN_LOG;
 
+typedef union irc_in_addr {
+    uint32_t in6_32[4];
+    uint16_t in6[8];
+    uint8_t in6_8[16];
+} irc_in_addr_t;
+
+#define irc_in_addr_is_valid(ADDR) (((ADDR).in6[0] && (ADDR).in6[0] != 65535) \
+                                    || (ADDR).in6[1] != (ADDR).in6[0] \
+                                    || (ADDR).in6[2] != (ADDR).in6[0] \
+                                    || (ADDR).in6[3] != (ADDR).in6[0] \
+                                    || (ADDR).in6[4] != (ADDR).in6[0] \
+                                    || (ADDR).in6[5] != (ADDR).in6[0] \
+                                    || (ADDR).in6[6] != (ADDR).in6[0] \
+                                    || (ADDR).in6[7] != (ADDR).in6[0])
+#define irc_in_addr_is_ipv4(ADDR) (!(ADDR).in6[0] && !(ADDR).in6[1] \
+                                   && !(ADDR).in6[2] && !(ADDR).in6[3] \
+                                   && !(ADDR).in6[4] && (ADDR).in6[6] \
+                                   && (!(ADDR).in6[5] || (ADDR).in6[5] == 65535))
+#define irc_in_addr_is_ipv6(ADDR) !irc_in_addr_is_ipv4(ADDR)
+#define irc_in_addr_is_loopback(ADDR) (irc_in_addr_is_ipv4(ADDR) ? (ADDR).in6_8[12] == 127 \
+                                       : (ADDR).in6[0] == 0 && (ADDR).in6[1] == 0 \
+                                       && (ADDR).in6[2] == 0 && (ADDR).in6[3] == 0 \
+                                       && (ADDR).in6[4] == 0 && (ADDR).in6[5] == 0 \
+                                       && (ADDR).in6[6] == 0 && (ADDR).in6[7] == 1)
+#define IRC_NTOP_MAX_SIZE 40
+unsigned int irc_ntop(char *output, unsigned int out_size, const irc_in_addr_t *addr);
+#define IRC_NTOP_MASK_MAX_SIZE (IRC_NTOP_MAX_SIZE + 4)
+unsigned int irc_ntop_mask(char *output, unsigned int out_size, const irc_in_addr_t *addr, unsigned char bits);
+unsigned int irc_pton(irc_in_addr_t *addr, unsigned char *bits, const char *input);
+unsigned int irc_check_mask(const irc_in_addr_t *check, const irc_in_addr_t *mask, unsigned char bits);
+const char *irc_ntoa(const irc_in_addr_t *addr);
+
 int create_socket_client(struct uplinkNode *target);
 void close_socket(void);
 
@@ -154,8 +179,6 @@ char *sanitize_ircmask(char *text);
 
 unsigned long ParseInterval(const char *interval);
 unsigned long ParseVolume(const char *volume);
-int parse_ipmask(const char *str, struct in_addr *addr, unsigned long *mask);
-#define MATCH_IPMASK(test, addr, mask) (((ntohl(test.s_addr) & mask) ^ (ntohl(addr.s_addr) & mask)) == 0)
 
 #define MD5_CRYPT_LENGTH 42
 /* buffer[] must be at least MD5_CRYPT_LENGTH bytes long */

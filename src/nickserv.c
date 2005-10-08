@@ -1111,6 +1111,7 @@ nickserv_set_email_addr(struct handle_info *hi, const char *new_email_addr)
 
 static NICKSERV_FUNC(cmd_register)
 {
+    irc_in_addr_t ip;
     struct handle_info *hi;
     const char *email_addr, *password;
     int no_auth;
@@ -1195,7 +1196,7 @@ static NICKSERV_FUNC(cmd_register)
         string_list_append(hi->masks, strdup("*@*"));
     } else {
         string_list_append(hi->masks, generate_hostmask(user, GENMASK_OMITNICK|GENMASK_NO_HIDING|GENMASK_ANY_IDENT));
-        if (user->ip.s_addr && user->hostname[strspn(user->hostname, "0123456789.")])
+        if (irc_in_addr_is_valid(user->ip) && !irc_pton(&ip, NULL, user->hostname))
             string_list_append(hi->masks, generate_hostmask(user, GENMASK_OMITNICK|GENMASK_BYIP|GENMASK_NO_HIDING|GENMASK_ANY_IDENT));
     }
 

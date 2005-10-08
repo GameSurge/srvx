@@ -112,7 +112,7 @@ is_valid_nick(const char *nick) {
 }
 
 struct userNode *
-AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *userinfo, time_t timestamp, struct in_addr realip, const char *stamp) {
+AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *userinfo, time_t timestamp, irc_in_addr_t realip, const char *stamp) {
     struct userNode *uNode, *oldUser;
     unsigned int nn;
 
@@ -174,7 +174,7 @@ struct userNode *
 AddService(const char *nick, const char *modes, const char *desc, const char *hostname) {
     time_t timestamp = now;
     struct userNode *old_user = GetUserH(nick);
-    struct in_addr ipaddr = { INADDR_LOOPBACK };
+    static const irc_in_addr_t ipaddr;
     if (old_user) {
         if (IsLocal(old_user))
             return old_user;
@@ -189,7 +189,7 @@ struct userNode *
 AddClone(const char *nick, const char *ident, const char *hostname, const char *desc) {
     time_t timestamp = now;
     struct userNode *old_user = GetUserH(nick);
-    struct in_addr ipaddr = { INADDR_LOOPBACK };
+    static const irc_in_addr_t ipaddr;
     if (old_user) {
         if (IsLocal(old_user))
             return old_user;
@@ -258,7 +258,7 @@ irc_user(struct userNode *user) {
     modes[modelen] = 0;
     putsock("NICK %s %d "FMT_TIME_T" +%s %s %s %s %d %u :%s",
             user->nick, user->uplink->hops+2, user->timestamp, modes,
-            user->ident, user->hostname, user->uplink->name, 0, ntohl(user->ip.s_addr), user->info);
+            user->ident, user->hostname, user->uplink->name, 0, ntohl(user->ip.in6_32[3]), user->info);
 }
 
 void
@@ -780,12 +780,13 @@ static CMD_FUNC(cmd_nick) {
         /* new nick from a server */
         char id[8];
         unsigned long stamp;
-        struct in_addr ip;
+        irc_in_addr_t ip;
 
         if (argc < 10) return 0;
         stamp = strtoul(argv[8], NULL, 0);
         if (stamp) inttobase64(id, stamp, IDLEN);
-        ip.s_addr = (argc > 10) ? atoi(argv[9]) : 0;
+        if (argc > 10)
+            ip.in6_32[3] = htonl(atoi(argv[9]));
         un = AddUser(GetServerH(argv[7]), argv[1], argv[5], argv[6], argv[4], argv[argc-1], atoi(argv[3]), ip, (stamp ? id : 0));
     }
     return 1;

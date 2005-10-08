@@ -100,7 +100,7 @@ snoop_new_user(struct userNode *user) {
     if (!snoop_cfg.enabled) return 0;
     if (user->uplink->burst && !snoop_cfg.show_bursts) return 0;
     UPDATE_TIMESTAMP();
-    SNOOP("$bNICK$b %s %s@%s [%s] on %s", user->nick, user->ident, user->hostname, inet_ntoa(user->ip), user->uplink->name);
+    SNOOP("$bNICK$b %s %s@%s [%s] on %s", user->nick, user->ident, user->hostname, irc_ntoa(&user->ip), user->uplink->name);
     return 0;
 }
 

@@ -374,13 +374,84 @@ irc_server(struct server *srv)
     }
 }
 
+static void
+irc_p10_pton(irc_in_addr_t *ip, const char *input)
+{
+    if (strlen(input) == 6) {
+        unsigned int value;
+        memset(ip, 0, 6 * sizeof(ip->in6[0]));
+        value = base64toint(input, 6);
+        ip->in6[6] = htons(value >> 16);
+        ip->in6[7] = htons(value & 65535);
+    } else {
+        unsigned int pos = 0;
+        do {
+            if (*input == '_') {
+                unsigned int left;
+                for (left = (25 - strlen(input)) / 3; left; left--)
+                    ip->in6[pos++] = 0;
+                input++;
+            } else {
+                ip->in6[pos++] = ntohs(base64toint(input, 3));
+                input += 3;
+            }
+        } while (pos < 8);
+    }
+}
+
+static void
+irc_p10_ntop(char *output, const irc_in_addr_t *ip)
+{
+    if (irc_in_addr_is_ipv4(*ip)) {
+        unsigned int in4;
+        in4 = (ntohs(ip->in6[6]) << 16) | ntohs(ip->in6[7]);
+        inttobase64(output, in4, 6);
+        output[6] = '\0';
+    } else if (irc_in_addr_is_ipv6(*ip)) {
+        unsigned int max_start, max_zeros, curr_zeros, zero, ii;
+        /* Can start by printing out the leading non-zero parts. */
+        for (ii = 0; (ip->in6[ii]) && (ii < 8); ++ii) {
+            inttobase64(output, ntohs(ip->in6[ii]), 3);
+            output += 3;
+        }
+        /* Find the longest run of zeros. */
+        for (max_start = zero = ii, max_zeros = curr_zeros = 0; ii < 8; ++ii) {
+            if (!ip->in6[ii])
+                curr_zeros++;
+            else if (curr_zeros > max_zeros) {
+                max_start = ii - curr_zeros;
+                max_zeros = curr_zeros;
+                curr_zeros = 0;
+            }
+        }
+        if (curr_zeros > max_zeros) {
+            max_start = ii - curr_zeros;
+            max_zeros = curr_zeros;
+            curr_zeros = 0;
+        }
+        /* Print the rest of the address */
+        for (ii = zero; ii < 8; ) {
+            if ((ii == max_start) && max_zeros) {
+                *output++ = '_';
+                ii += max_zeros;
+            } else {
+                inttobase64(output, ntohs(ip->in6[ii]), 3);
+                output += 3;
+            }
+        }
+        *output = '\0';
+    } else {
+        strcpy(output, "???");
+    }
+}
+
 void
 irc_user(struct userNode *user)
 {
-    char b64ip[7];
+    char b64ip[25];
     if (!user)
         return;
-    inttobase64(b64ip, ntohl(user->ip.s_addr), 6);
+    irc_p10_ntop(b64ip, &user->ip);
     if (user->modes) {
         int modelen;
         char modes[32];
@@ -1912,7 +1983,7 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
     safestrncpy(uNode->info, userinfo, sizeof(uNode->info));
     safestrncpy(uNode->hostname, hostname, sizeof(uNode->hostname));
     safestrncpy(uNode->numeric, numeric, sizeof(uNode->numeric));
-    uNode->ip.s_addr = htonl(base64toint(realip, 6));
+    irc_p10_pton(&uNode->ip, realip);
     uNode->timestamp = timestamp;
     modeList_init(&uNode->channels);
     uNode->uplink = uplink;

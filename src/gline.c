@@ -170,8 +170,6 @@ static char *
 gline_alternate_target(const char *target)
 {
     const char *hostname;
-    unsigned long ip;
-    char *res;
 
     /* If no host part, bail. */
     if (!(hostname = strchr(target, '@')))
@@ -179,23 +177,17 @@ gline_alternate_target(const char *target)
     /* If host part contains wildcards, bail. */
     if (hostname[strcspn(hostname, "*?/")])
         return NULL;
-    /* If host part looks like an IP, parse it that way. */
-    if (!hostname[strspn(hostname+1, "0123456789.")+1]) {
-        struct in_addr in;
-        struct hostent *he;
-        if (inet_aton(hostname+1, &in)
-            && (he = gethostbyaddr((char*)&in, sizeof(in), AF_INET))) {
-            res = malloc((hostname - target) + 2 + strlen(he->h_name));
-            sprintf(res, "%.*s@%s", (int)(hostname - target), target, he->h_name);
-            return res;
-        } else
-            return NULL;
-    } else if (getipbyname(hostname+1, &ip)) {
-        res = malloc((hostname - target) + 18);
-        sprintf(res, "%.*s@%lu.%lu.%lu.%lu", (int)(hostname - target), target, ip & 255, (ip >> 8) & 255, (ip >> 16) & 255, (ip >> 24) & 255);
-        return res;
-    } else
-        return NULL;
+    /* Get parsed address and canonical name for host. */
+#if 0
+    irc_in_addr_t in; /* move this to the right place */
+    if (irc_pton(&in, NULL, hostname+1)) {
+        if (getnameinfo(/*TODO*/))
+              return NULL;
+    } else if (!getaddrinfo(/*TODO*/)) {
+    } else return NULL;
+#else
+    return NULL;
+#endif
 }
 
 struct gline *

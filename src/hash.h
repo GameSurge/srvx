@@ -108,7 +108,7 @@ struct userNode {
     unsigned int num_local : 18;
 #endif
     unsigned int dead : 1;        /* Is user waiting to be recycled? */
-    struct in_addr ip;            /* User's IP address */
+    irc_in_addr_t ip;             /* User's IP address */
     long modes;                   /* user flags +isw etc... */
 
     time_t timestamp;             /* Time of last nick change */
