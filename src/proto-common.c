@@ -543,6 +543,8 @@ mod_chanmode_dup(struct mod_chanmode *orig, unsigned int extra)
         res->modes_clear = orig->modes_clear;
         res->new_limit = orig->new_limit;
         memcpy(res->new_key, orig->new_key, sizeof(res->new_key));
+        memcpy(res->new_upass, orig->new_upass, sizeof(res->new_upass));
+        memcpy(res->new_apass, orig->new_apass, sizeof(res->new_apass));
         res->argc = orig->argc;
         memcpy(res->args, orig->args, orig->argc*sizeof(orig->args[0]));
     }
@@ -561,6 +563,10 @@ mod_chanmode_apply(struct userNode *who, struct chanNode *channel, struct mod_ch
         channel->limit = change->new_limit;
     if (change->modes_set & MODE_KEY)
         strcpy(channel->key, change->new_key);
+    if (change->modes_set & MODE_UPASS)
+       strcpy(channel->upass, change->new_upass);
+    if (change->modes_set & MODE_APASS)
+       strcpy(channel->apass, change->new_apass);
     for (ii = 0; ii < change->argc; ++ii) {
         switch (change->args[ii].mode) {
         case MODE_BAN:
@@ -648,6 +654,8 @@ irc_make_chanmode(struct chanNode *chan, char *out)
     change.modes_set = chan->modes;
     change.new_limit = chan->limit;
     safestrncpy(change.new_key, chan->key, sizeof(change.new_key));
+    safestrncpy(change.new_upass, chan->upass, sizeof(change.new_upass));
+    safestrncpy(change.new_apass, chan->apass, sizeof(change.new_apass));
     return strlen(mod_chanmode_format(&change, out));
 }
 

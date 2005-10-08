@@ -41,6 +41,8 @@
 #define MODE_NOCOLORS           0x2000 /* +c */
 #define MODE_NOCTCPS            0x4000 /* +C */
 #define MODE_REGISTERED         0x8000 /* Bahamut +r */
+#define MODE_APASS		0x10000 /* +A adminpass */
+#define MODE_UPASS		0x20000 /* +U userpass */
 #define MODE_REMOVE             0x80000000
 
 #define FLAGS_OPER		0x0001 /* Operator +O */
@@ -125,6 +127,8 @@ struct chanNode {
     chan_mode_t modes;
     unsigned int limit, locks;
     char key[KEYLEN + 1];
+    char upass[KEYLEN + 1];
+    char apass[KEYLEN + 1];
     time_t timestamp; /* creation time */
 
     char topic[TOPICLEN + 1];
@@ -152,6 +156,7 @@ struct modeNode {
     struct chanNode *channel;
     struct userNode *user;
     long modes;
+    int oplevel;
     time_t idle_since;
 };
 

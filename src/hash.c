@@ -289,6 +289,8 @@ wipeout_channel(struct chanNode *cNode, time_t new_time, char **modes, unsigned 
     unsigned int orig_limit;
     chan_mode_t orig_modes;
     char orig_key[KEYLEN+1];
+    char orig_apass[KEYLEN+1];
+    char orig_upass[KEYLEN+1];
     unsigned int nn, argc;
 
     /* nuke old topic */
@@ -300,6 +302,8 @@ wipeout_channel(struct chanNode *cNode, time_t new_time, char **modes, unsigned 
     orig_modes = cNode->modes;
     orig_limit = cNode->limit;
     strcpy(orig_key, cNode->key);
+    strcpy(orig_upass, cNode->upass);
+    strcpy(orig_apass, cNode->apass);
     cNode->modes = 0;
     mod_chanmode(NULL, cNode, modes, modec, 0);
     cNode->timestamp = new_time;
@@ -323,6 +327,8 @@ wipeout_channel(struct chanNode *cNode, time_t new_time, char **modes, unsigned 
         change->modes_set = orig_modes;
         change->new_limit = orig_limit;
         strcpy(change->new_key, orig_key);
+        strcpy(change->new_upass, orig_upass);
+        strcpy(change->new_apass, orig_apass);
         for (nn = argc = 0; nn < cNode->members.used; ++nn) {
             struct modeNode *mn = cNode->members.list[nn];
             if ((mn->modes & MODE_CHANOP) && IsService(mn->user) && IsLocal(mn->user)) {
@@ -475,7 +481,8 @@ AddChannelUser(struct userNode *user, struct chanNode* channel)
 	modeList_append(&user->channels, mNode);
 
         if (channel->members.used == 1
-            && !(channel->modes & MODE_REGISTERED))
+            && !(channel->modes & MODE_REGISTERED)
+            && !(channel->modes & MODE_APASS))
             mNode->modes |= MODE_CHANOP;
 
         for (n=0; n<jf_used; n++) {
@@ -564,7 +571,9 @@ DelChannelUser(struct userNode* user, struct chanNode* channel, const char *reas
     /* free memory */
     free(mNode);
 
-    if (!deleting && !channel->members.used && !channel->locks && !(channel->modes & MODE_REGISTERED))
+    /* A single check for APASS only should be enough here */
+    if (!deleting && !channel->members.used && !channel->locks 
+        && !(channel->modes & MODE_REGISTERED) && !(channel->modes & MODE_APASS))
         DelChannel(channel);
 }
 

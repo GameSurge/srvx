@@ -296,6 +296,8 @@ static struct userNode *AddUser(struct server* uplink, const char *nick, const c
 
 extern int off_channel;
 
+static int parse_oplevel(char *str);
+
 /* Numerics can be XYY, XYYY, or XXYYY; with X's identifying the
  * server and Y's indentifying the client on that server. */
 struct server*
@@ -981,6 +983,7 @@ static CMD_FUNC(cmd_error_nick)
 
 struct create_desc {
     struct userNode *user;
+    int oplevel;
     time_t when;
 };
 
@@ -988,7 +991,12 @@ static void
 join_helper(struct chanNode *chan, void *data)
 {
     struct create_desc *cd = data;
-    AddChannelUser(cd->user, chan);
+    struct modeNode *mNode;
+
+    mNode = AddChannelUser(cd->user, chan);
+    mNode->oplevel = cd->oplevel;
+    if (mNode->oplevel >= 0)
+        mNode->modes |= MODE_CHANOP;
 }
 
 static void
@@ -1105,6 +1113,7 @@ static CMD_FUNC(cmd_burst)
     struct userNode *un;
     struct modeNode *mNode;
     long mode;
+    int oplevel = -1;
     char *user, *end, sep;
     time_t in_timestamp;
 
@@ -1117,7 +1126,8 @@ static CMD_FUNC(cmd_burst)
             const char *pos;
             int n_modes;
             for (pos=argv[next], n_modes = 1; *pos; pos++)
-                if ((*pos == 'k') || (*pos == 'l'))
+                if ((*pos == 'k') || (*pos == 'l') || (*pos == 'A')
+                    || (*pos == 'U'))
                     n_modes++;
             unsplit_string(argv+next, n_modes, modes);
             next += n_modes;
@@ -1143,12 +1153,18 @@ static CMD_FUNC(cmd_burst)
         if (sep == ':') {
             mode = 0;
             while ((sep = *end++)) {
-                if (sep == 'o')
+                if (sep == 'o') {
                     mode |= MODE_CHANOP;
-                else if (sep == 'v')
+                    oplevel = -1;
+                } else if (sep == 'v') {
                     mode |= MODE_VOICE;
-                else if (isdigit(sep)) {
+                    oplevel = -1;
+                } else if (isdigit(sep)) {
                     mode |= MODE_CHANOP;
+                    if (oplevel >= 0)
+                        oplevel += parse_oplevel(end);
+                    else
+                        oplevel = parse_oplevel(end);
                     while (isdigit(*end)) end++;
                 } else
                     break;
@@ -1160,8 +1176,10 @@ static CMD_FUNC(cmd_burst)
             res = 0;
             continue;
         }
-        if ((mNode = AddChannelUser(un, cNode)))
+        if ((mNode = AddChannelUser(un, cNode))) {
             mNode->modes = mode;
+            mNode->oplevel = oplevel;
+        }
     }
 
     return res;
@@ -1710,15 +1728,38 @@ static void
 parse_foreach(char *target_list, foreach_chanfunc cf, foreach_nonchan nc, foreach_userfunc uf, foreach_nonuser nu, void *data)
 {
     char *j, old;
+    char *cPos, *hPos;
+    int oplevel;
+
     do {
         j = target_list;
         while (*j != 0 && *j != ',')
             j++;
         old = *j;
         *j = 0;
+
+        hPos = strchr(target_list,'#');
+        cPos = strchr(target_list,':');
+
+        /*
+         * Check if both a '#' and a ':' is in the target's name
+         * and if cPos < hPos.
+         * If that's the case, voila, we've found a join with an oplevel
+         */
+        if (hPos && cPos && (cPos < hPos))
+        {
+            oplevel = parse_oplevel(target_list);
+            target_list = hPos + 1;
+        }
+        else
+            oplevel = -1;
+
         if (IsChannelName(target_list)
             || (target_list[0] == '0' && target_list[1] == '\0')) {
             struct chanNode *chan = GetChannel(target_list);
+            struct create_desc *cd = (struct create_desc*) data;
+
+            cd->oplevel = oplevel;
             if (chan) {
                 if (cf)
                     cf(chan, data);
@@ -2193,6 +2234,37 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
                 }
             }
             break;
+        case 'U':
+            if (add)
+            {
+              if (in_arg >= argc)
+                  goto error;
+              change->modes_set |= MODE_UPASS;
+              safestrncpy(change->new_upass, modes[in_arg++], sizeof(change->new_upass));
+            } else {
+                change->modes_clear |= MODE_UPASS;
+                if (!(flags & MCP_UPASS_FREE)) {
+                    if (in_arg >= argc)
+                        goto error;
+                    in_arg++;
+                }
+            }
+            break;
+        case 'A':
+            if (add) {
+                if (in_arg >= argc)
+                    goto error;
+                change->modes_set |= MODE_APASS;
+                safestrncpy(change->new_apass, modes[in_arg++], sizeof(change->new_apass));
+            } else {
+                change->modes_clear |= MODE_APASS;
+                if (!(flags & MCP_APASS_FREE)) {
+                    if (in_arg >= argc)
+                      goto error;
+                    in_arg++;
+                }
+            }
+            break;
         case 'b':
             if (!(flags & MCP_ALLOW_OVB))
                 goto error;
@@ -2206,6 +2278,25 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
         case 'o': case 'v':
         {
             struct userNode *victim;
+            char *oplevel_str;
+            int oplevel;
+
+            oplevel_str = strchr(modes[in_arg], ':');
+
+            /* XXYYY M #channel +o XXYYY:<oplevel> */
+            if (oplevel_str)
+            {
+                oplevel = parse_oplevel(oplevel_str+1);
+                *oplevel_str = 0;
+            }
+            else if (channel->modes & MODE_UPASS)
+            {
+                /* TODO: need to set oplevel based on issuer's oplevel */
+                oplevel = -1;
+            }
+            else
+                oplevel = -1;
+
             if (!(flags & MCP_ALLOW_OVB))
                 goto error;
             if (in_arg >= argc)
@@ -2220,7 +2311,11 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
             if (!victim)
                 continue;
             if ((change->args[ch_arg].u.member = GetUserMode(channel, victim)))
+            {
+                /* Apply the oplevel change */
+                change->args[ch_arg].u.member->oplevel = oplevel;
                 ch_arg++;
+            }
             break;
         }
         default:
@@ -2313,6 +2408,10 @@ mod_chanmode_announce(struct userNode *who, struct chanNode *channel, struct mod
 #undef DO_MODE_CHAR
         if (change->modes_clear & channel->modes & MODE_KEY)
             mod_chanmode_append(&chbuf, 'k', channel->key);
+        if (change->modes_clear & channel->modes & MODE_UPASS)
+            mod_chanmode_append(&chbuf, 'U', channel->upass);
+        if (change->modes_clear * channel->modes & MODE_APASS)
+            mod_chanmode_append(&chbuf, 'A', channel->apass);
     }
     for (arg = 0; arg < change->argc; ++arg) {
         if (!(change->args[arg].mode & MODE_REMOVE))
@@ -2352,6 +2451,10 @@ mod_chanmode_announce(struct userNode *who, struct chanNode *channel, struct mod
 #undef DO_MODE_CHAR
         if(change->modes_set & MODE_KEY)
             mod_chanmode_append(&chbuf, 'k', change->new_key);
+        if (change->modes_set & MODE_UPASS)
+            mod_chanmode_append(&chbuf, 'U', change->new_upass);
+        if (change->modes_set & MODE_APASS)
+            mod_chanmode_append(&chbuf, 'A', change->new_apass);
         if(change->modes_set & MODE_LIMIT) {
             sprintf(int_buff, "%d", change->new_limit);
             mod_chanmode_append(&chbuf, 'l', int_buff);
@@ -2400,6 +2503,8 @@ mod_chanmode_format(struct mod_chanmode *change, char *outbuff)
         DO_MODE_CHAR(NOPRIVMSGS, 'n');
         DO_MODE_CHAR(LIMIT, 'l');
         DO_MODE_CHAR(KEY, 'k');
+        DO_MODE_CHAR(UPASS, 'U');
+        DO_MODE_CHAR(APASS, 'A');
         DO_MODE_CHAR(DELAYJOINS, 'D');
         DO_MODE_CHAR(REGONLY, 'r');
         DO_MODE_CHAR(NOCOLORS, 'c');
@@ -2422,9 +2527,50 @@ mod_chanmode_format(struct mod_chanmode *change, char *outbuff)
         DO_MODE_CHAR(NOCTCPS, 'C');
         DO_MODE_CHAR(REGISTERED, 'z');
 #undef DO_MODE_CHAR
-        switch (change->modes_set & (MODE_KEY|MODE_LIMIT)) {
+        switch (change->modes_set & (MODE_KEY|MODE_LIMIT|MODE_APASS|MODE_UPASS)) {
+        /* Doing this implementation has been a pain in the arse, I hope I didn't forget a possible combination */
+        case MODE_KEY|MODE_LIMIT|MODE_APASS|MODE_UPASS:
+            used += sprintf(outbuff+used, "lkAU %d %s %s %s", change->new_limit, change->new_key, change->new_apass, change->new_upass);
+            break;
+
+        case MODE_KEY|MODE_LIMIT|MODE_APASS:
+            used += sprintf(outbuff+used, "lkA %d %s %s", change->new_limit, change->new_key, change->new_apass);
+            break;
+        case MODE_KEY|MODE_LIMIT|MODE_UPASS:
+            used += sprintf(outbuff+used, "lkU %d %s %s", change->new_limit, change->new_key, change->new_upass);
+            break;
+        case MODE_KEY|MODE_APASS|MODE_UPASS:
+            used += sprintf(outbuff+used, "kAU %s %s %s", change->new_key, change->new_apass, change->new_upass);
+            break;
+
+        case MODE_KEY|MODE_APASS:
+            used += sprintf(outbuff+used, "kA %s %s", change->new_key, change->new_apass);
+            break;
+        case MODE_KEY|MODE_UPASS:
+            used += sprintf(outbuff+used, "kU %s %s", change->new_key, change->new_upass);
+            break;
         case MODE_KEY|MODE_LIMIT:
             used += sprintf(outbuff+used, "lk %d %s", change->new_limit, change->new_key);
+            break;
+        case MODE_LIMIT|MODE_UPASS:
+            used += sprintf(outbuff+used, "lU %d %s", change->new_limit, change->new_upass);
+            break;
+        case MODE_LIMIT|MODE_APASS:
+            used += sprintf(outbuff+used, "lA %d %s", change->new_limit, change->new_apass);
+            break;
+        case MODE_APASS|MODE_UPASS:
+            used += sprintf(outbuff+used, "AU %s %s", change->new_apass, change->new_upass);
+            break;
+
+        case MODE_LIMIT|MODE_APASS|MODE_UPASS:
+            used += sprintf(outbuff+used, "lAU %d %s %s", change->new_limit, change->new_apass, change->new_upass);
+            break;
+
+        case MODE_APASS:
+            used += sprintf(outbuff+used, "A %s", change->new_apass);
+            break;
+        case MODE_UPASS:
+            used += sprintf(outbuff+used, "U %s", change->new_upass);
             break;
         case MODE_KEY:
             used += sprintf(outbuff+used, "k %s", change->new_key);
@@ -2456,6 +2602,14 @@ clear_chanmode(struct chanNode *channel, const char *modes)
         case 'k':
             remove |= MODE_KEY;
             channel->key[0] = '\0';
+            break;
+        case 'A':
+            remove |= MODE_APASS;
+            channel->apass[0] = '\0';
+            break;
+        case 'U':
+            remove |= MODE_UPASS;
+            channel->upass[0] = '\0';
             break;
         case 'l':
             remove |= MODE_LIMIT;
@@ -2615,4 +2769,16 @@ send_burst(void)
     unbursted_channels = dict_new();
     for (it = dict_first(channels); it; it = iter_next(it))
         dict_insert(unbursted_channels, iter_key(it), iter_data(it));
+}
+
+/*
+ * Oplevel parsing
+ */
+static int
+parse_oplevel(char *str)
+{
+    int oplevel = 0;
+    while (isdigit(*str))
+        oplevel = oplevel * 10 + *str++ - '0';
+    return oplevel;
 }
