@@ -754,14 +754,13 @@ static MODCMD_FUNC(cmd_restart)
 static struct gline *
 opserv_block(struct userNode *target, char *src_handle, char *reason, unsigned long duration)
 {
-    char *mask;
-    mask = alloca(MAXLEN);
-    snprintf(mask, MAXLEN, "*@%s", target->hostname);
-    if (!reason) {
-        reason = alloca(MAXLEN);
-        snprintf(reason, MAXLEN, "G-line requested by %s.", src_handle);
-    }
-    if (!duration) duration = opserv_conf.block_gline_duration;
+    char mask[IRC_NTOP_MAX_SIZE+3] = { '*', '@', '\0' };
+    irc_ntop(mask + 2, sizeof(mask) - 2, &target->ip);
+    if (!reason)
+        snprintf(reason = alloca(MAXLEN), MAXLEN,
+                 "G-line requested by %s.", src_handle);
+    if (!duration)
+        duration = opserv_conf.block_gline_duration;
     return gline_add(src_handle, mask, duration, reason, now, 1);
 }
 
@@ -1782,8 +1781,8 @@ opserv_new_user_check(struct userNode *user)
             for (nn=0; nn<ohi->clients.used; nn++)
                 send_message(ohi->clients.list[nn], opserv, "OSMSG_CLONE_WARNING");
         } else if (ohi->clients.used > limit) {
-            char target[18];
-            sprintf(target, "*@%s", addr);
+            char target[IRC_NTOP_MAX_SIZE + 3] = { '*', '@', '\0' };
+            strcpy(target + 2, addr);
             gline_add(opserv->nick, target, opserv_conf.clone_gline_duration, "AUTO Excessive connections from a single host.", now, 1);
         }
     }
