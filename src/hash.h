@@ -86,6 +86,7 @@
 #define REALLEN         50
 #define TOPICLEN        250
 #define CHANNELLEN      200
+#define MAXOPLEVEL      999
 
 #define MAXMODEPARAMS	6
 #define MAXBANS		45
@@ -155,8 +156,8 @@ struct banNode {
 struct modeNode {
     struct chanNode *channel;
     struct userNode *user;
-    long modes;
-    int oplevel;
+    unsigned short modes;
+    short oplevel;
     time_t idle_since;
 };
 

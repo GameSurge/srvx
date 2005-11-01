@@ -983,7 +983,6 @@ static CMD_FUNC(cmd_error_nick)
 
 struct create_desc {
     struct userNode *user;
-    int oplevel;
     time_t when;
 };
 
@@ -991,12 +990,7 @@ static void
 join_helper(struct chanNode *chan, void *data)
 {
     struct create_desc *cd = data;
-    struct modeNode *mNode;
-
-    mNode = AddChannelUser(cd->user, chan);
-    mNode->oplevel = cd->oplevel;
-    if (mNode->oplevel >= 0)
-        mNode->modes |= MODE_CHANOP;
+    AddChannelUser(cd->user, chan);
 }
 
 static void
@@ -1728,8 +1722,6 @@ static void
 parse_foreach(char *target_list, foreach_chanfunc cf, foreach_nonchan nc, foreach_userfunc uf, foreach_nonuser nu, void *data)
 {
     char *j, old;
-    char *cPos, *hPos;
-    int oplevel;
 
     do {
         j = target_list;
@@ -1738,28 +1730,10 @@ parse_foreach(char *target_list, foreach_chanfunc cf, foreach_nonchan nc, foreac
         old = *j;
         *j = 0;
 
-        hPos = strchr(target_list,'#');
-        cPos = strchr(target_list,':');
-
-        /*
-         * Check if both a '#' and a ':' is in the target's name
-         * and if cPos < hPos.
-         * If that's the case, voila, we've found a join with an oplevel
-         */
-        if (hPos && cPos && (cPos < hPos))
-        {
-            oplevel = parse_oplevel(target_list);
-            target_list = hPos + 1;
-        }
-        else
-            oplevel = -1;
-
         if (IsChannelName(target_list)
             || (target_list[0] == '0' && target_list[1] == '\0')) {
             struct chanNode *chan = GetChannel(target_list);
-            struct create_desc *cd = (struct create_desc*) data;
 
-            cd->oplevel = oplevel;
             if (chan) {
                 if (cf)
                     cf(chan, data);
@@ -2168,7 +2142,7 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
 }
 
 struct mod_chanmode *
-mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, unsigned int flags)
+mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, unsigned int flags, short base_oplevel)
 {
     struct mod_chanmode *change;
     unsigned int ii, in_arg, ch_arg, add;
@@ -2282,20 +2256,22 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
             int oplevel;
 
             oplevel_str = strchr(modes[in_arg], ':');
-
-            /* XXYYY M #channel +o XXYYY:<oplevel> */
             if (oplevel_str)
             {
-                oplevel = parse_oplevel(oplevel_str+1);
-                *oplevel_str = 0;
+                /* XXYYY M #channel +o XXYYY:<oplevel> */
+                *oplevel_str++ = '\0';
+                oplevel = parse_oplevel(oplevel_str);
+                if (oplevel <= base_oplevel && !(flags & MCP_FROM_SERVER))
+                    oplevel = base_oplevel + 1;
             }
             else if (channel->modes & MODE_UPASS)
-            {
-                /* TODO: need to set oplevel based on issuer's oplevel */
-                oplevel = -1;
-            }
+                oplevel = base_oplevel + 1;
             else
                 oplevel = -1;
+
+            /* Check that oplevel is within bounds. */
+            if (oplevel > MAXOPLEVEL)
+                oplevel = MAXOPLEVEL;
 
             if (!(flags & MCP_ALLOW_OVB))
                 goto error;

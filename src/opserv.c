@@ -457,15 +457,12 @@ static MODCMD_FUNC(cmd_chaninfo)
     }
     reply("OSMSG_CHANINFO_USER_COUNT", channel->members.used);
     for (n=0; n<channel->members.used; n++) {
-	    moden = channel->members.list[n];
-	    if (moden->modes & MODE_CHANOP)
-        {
-                if (moden->oplevel >= 0)
-                {
-                    send_message_type(4, user, cmd->parent->bot, " (%d)@%s (%s@%s)", moden->oplevel, moden->user->nick, moden->user->ident, moden->user->hostname);
-                } else {
-                    send_message_type(4, user, cmd->parent->bot, " @%s (%s@%s)", moden->user->nick, moden->user->ident, moden->user->hostname);
-                }
+        moden = channel->members.list[n];
+        if (moden->modes & MODE_CHANOP) {
+            if (moden->oplevel >= 0)
+                send_message_type(4, user, cmd->parent->bot, " @%s:%d (%s@%s)", moden->user->nick, moden->oplevel, moden->user->ident, moden->user->hostname);
+            else
+                send_message_type(4, user, cmd->parent->bot, " @%s (%s@%s)", moden->user->nick, moden->user->ident, moden->user->hostname);
         }
     }
     for (n=0; n<channel->members.used; n++) {
@@ -1077,7 +1074,7 @@ static MODCMD_FUNC(cmd_kickbanall)
     if (!inchan)
         DelChannelUser(bot, channel, "My work here is done", 0);
     reply("OSMSG_KICKALL_DONE", channel->name);
-    return 1;    
+    return 1;
 }
 
 static MODCMD_FUNC(cmd_part)

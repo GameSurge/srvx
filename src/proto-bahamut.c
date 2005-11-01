@@ -1225,7 +1225,7 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
 }
 
 struct mod_chanmode *
-mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, unsigned int flags)
+mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, unsigned int flags, short base_oplevel)
 {
     struct mod_chanmode *change;
     unsigned int ii, in_arg, ch_arg, add;
@@ -1334,6 +1334,7 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
   error:
     mod_chanmode_free(change);
     return NULL;
+    (void)base_oplevel;
 }
 
 struct chanmode_buffer {

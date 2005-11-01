@@ -365,7 +365,7 @@ AddChannel(const char *name, time_t time_, const char *modes, char *banlist)
         strcpy(cNode->name, name);
         banList_init(&cNode->banlist);
         modeList_init(&cNode->members);
-        mod_chanmode(NULL, cNode, argv, nn, 0);
+        mod_chanmode(NULL, cNode, argv, nn, MCP_FROM_SERVER);
         dict_insert(channels, cNode->name, cNode);
         cNode->timestamp = time_;
         rel_age = 1;
@@ -373,7 +373,7 @@ AddChannel(const char *name, time_t time_, const char *modes, char *banlist)
         wipeout_channel(cNode, time_, argv, nn);
         rel_age = 1;
     } else if (cNode->timestamp == time_) {
-        mod_chanmode(NULL, cNode, argv, nn, 0);
+        mod_chanmode(NULL, cNode, argv, nn, MCP_FROM_SERVER);
         rel_age = 0;
     } else {
         rel_age = -1;
@@ -471,6 +471,7 @@ AddChannelUser(struct userNode *user, struct chanNode* channel)
 	mNode->channel = channel;
 	mNode->user = user;
 	mNode->modes = 0;
+        mNode->oplevel = -1;
         mNode->idle_since = now;
 
 	/* Add modeNode to channel and to user.

@@ -218,7 +218,7 @@ struct mod_chanmode {
 
 struct mod_chanmode *mod_chanmode_alloc(unsigned int argc);
 struct mod_chanmode *mod_chanmode_dup(struct mod_chanmode *orig, unsigned int extra);
-struct mod_chanmode *mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, unsigned int flags);
+struct mod_chanmode *mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, unsigned int flags, short base_oplevel);
 void mod_chanmode_apply(struct userNode *who, struct chanNode *channel, struct mod_chanmode *change);
 void mod_chanmode_announce(struct userNode *who, struct chanNode *channel, struct mod_chanmode *change);
 char *mod_chanmode_format(struct mod_chanmode *desc, char *buffer);

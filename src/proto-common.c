@@ -628,12 +628,18 @@ mod_chanmode_free(struct mod_chanmode *change)
 int
 mod_chanmode(struct userNode *who, struct chanNode *channel, char **modes, unsigned int argc, unsigned int flags)
 {
+    struct modeNode *member;
     struct mod_chanmode *change;
     unsigned int ii;
+    short base_oplevel;
 
     if (!modes || !modes[0])
         return 0;
-    if (!(change = mod_chanmode_parse(channel, modes, argc, flags)))
+    if (who && (member = GetUserMode(channel, who)))
+        base_oplevel = member->oplevel;
+    else
+        base_oplevel = MAXOPLEVEL;
+    if (!(change = mod_chanmode_parse(channel, modes, argc, flags, base_oplevel)))
         return 0;
     if (flags & MC_ANNOUNCE)
         mod_chanmode_announce(who, channel, change);

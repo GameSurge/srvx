@@ -3768,8 +3768,10 @@ static CHANSERV_FUNC(cmd_topic)
 
 static CHANSERV_FUNC(cmd_mode)
 {
+    struct userData *uData;
     struct mod_chanmode *change;
-    
+    short base_oplevel;
+
     if(argc < 2)
     {
         change = &channel->channel_info->modes;
@@ -3781,7 +3783,14 @@ static CHANSERV_FUNC(cmd_mode)
 	return 1;
     }
 
-    change = mod_chanmode_parse(channel, argv+1, argc-1, MCP_KEY_FREE|MCP_REGISTERED);
+    uData = GetChannelUser(channel->channel_info, user->handle_info);
+    if (!uData)
+        base_oplevel = MAXOPLEVEL;
+    else if (uData->access >= UL_OWNER)
+        base_oplevel = 1;
+    else
+        base_oplevel = 1 + UL_OWNER - uData->access;
+    change = mod_chanmode_parse(channel, argv+1, argc-1, MCP_KEY_FREE|MCP_REGISTERED, base_oplevel);
     if(!change)
     {
 	reply("MSG_INVALID_MODES", unsplit_string(argv+1, argc-1, NULL));
@@ -4905,7 +4914,7 @@ static MODCMD_FUNC(chan_opt_modes)
 	{
             memset(&channel->channel_info->modes, 0, sizeof(channel->channel_info->modes));
 	}
-	else if(!(new_modes = mod_chanmode_parse(channel, argv+1, argc-1, MCP_KEY_FREE|MCP_REGISTERED)))
+	else if(!(new_modes = mod_chanmode_parse(channel, argv+1, argc-1, MCP_KEY_FREE|MCP_REGISTERED, 0)))
 	{
             reply("CSMSG_INVALID_MODE_LOCK", unsplit_string(argv+1, argc-1, NULL));
             return 0;
@@ -6450,7 +6459,8 @@ chanserv_conf_read(void)
         str = "+nt";
     safestrncpy(mode_line, str, sizeof(mode_line));
     ii = split_line(mode_line, 0, ArrayLength(modes), modes);
-    if((change = mod_chanmode_parse(NULL, modes, ii, MCP_KEY_FREE)) && (change->argc < 2))
+    if((change = mod_chanmode_parse(NULL, modes, ii, MCP_KEY_FREE, 0))
+       && (change->argc < 2))
     {
         chanserv_conf.default_modes = *change;
         mod_chanmode_free(change);
@@ -6817,7 +6827,7 @@ chanserv_channel_read(const char *key, struct record_data *hir)
     if(!IsSuspended(cData)
        && (str = database_get_data(channel, KEY_MODES, RECDB_QSTRING))
        && (argc = split_line(str, 0, ArrayLength(argv), argv))
-       && (modes = mod_chanmode_parse(cNode, argv, argc, MCP_KEY_FREE))) {
+       && (modes = mod_chanmode_parse(cNode, argv, argc, MCP_KEY_FREE, 0))) {
         cData->modes = *modes;
 	if(off_channel > 0)
           cData->modes.modes_set |= MODE_REGISTERED;
