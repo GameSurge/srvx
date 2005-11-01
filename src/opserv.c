@@ -1738,7 +1738,7 @@ opserv_new_user_check(struct userNode *user)
 
     /* Gag them if appropriate. */
     for (gag = gagList; gag; gag = gag->next) {
-        if (user_matches_glob(user, gag->mask, 1)) {
+        if (user_matches_glob(user, gag->mask, MATCH_USENICK)) {
             gag_helper_func(user, NULL);
             break;
         }
@@ -3758,7 +3758,7 @@ opserv_alert_check_nick(struct userNode *user, UNUSED_ARG(const char *old_nick))
     /* Gag them if appropriate (and only if). */
     user->modes &= ~FLAGS_GAGGED;
     for (gag = gagList; gag; gag = gag->next) {
-        if (user_matches_glob(user, gag->mask, 1)) {
+        if (user_matches_glob(user, gag->mask, MATCH_USENICK)) {
             gag_helper_func(user, NULL);
             break;
         }

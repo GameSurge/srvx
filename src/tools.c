@@ -577,7 +577,7 @@ match_ircglob(const char *text, const char *glob)
 extern const char *hidden_host_suffix;
 
 int
-user_matches_glob(struct userNode *user, const char *orig_glob, int include_nick)
+user_matches_glob(struct userNode *user, const char *orig_glob, int flags)
 {
     char *glob, *marker;
 
@@ -585,9 +585,9 @@ user_matches_glob(struct userNode *user, const char *orig_glob, int include_nick
     glob = alloca(strlen(orig_glob)+1);
     strcpy(glob, orig_glob);
     /* Check the nick, if it's present */
-    if (include_nick) {
+    if (flags & MATCH_USENICK) {
         if (!(marker = strchr(glob, '!'))) {
-            log_module(MAIN_LOG, LOG_ERROR, "user_matches_glob(\"%s\", \"%s\", %d) called, and glob doesn't include a '!'", user->nick, orig_glob, include_nick);
+            log_module(MAIN_LOG, LOG_ERROR, "user_matches_glob(\"%s\", \"%s\", %d) called, and glob doesn't include a '!'", user->nick, orig_glob, flags);
             return 0;
         }
         *marker = 0;
@@ -596,17 +596,13 @@ user_matches_glob(struct userNode *user, const char *orig_glob, int include_nick
     }
     /* Check the ident */
     if (!(marker = strchr(glob, '@'))) {
-        log_module(MAIN_LOG, LOG_ERROR, "user_matches_glob(\"%s\", \"%s\", %d) called, and glob doesn't include an '@'", user->nick, orig_glob, include_nick);
+        log_module(MAIN_LOG, LOG_ERROR, "user_matches_glob(\"%s\", \"%s\", %d) called, and glob doesn't include an '@'", user->nick, orig_glob, flags);
         return 0;
     }
     *marker = 0;
     if (!match_ircglob(user->ident, glob))
         return 0;
     glob = marker + 1;
-    /* If it might be an IP glob, test that. */
-    if (!glob[strspn(glob, "0123456789./*?")]
-        && match_ircglob(irc_ntoa(&user->ip), glob))
-        return 1;
     /* Check for a fakehost match. */
     if (IsFakeHost(user) && match_ircglob(user->fakehost, glob))
         return 1;
@@ -617,6 +613,13 @@ user_matches_glob(struct userNode *user, const char *orig_glob, int include_nick
         if (match_ircglob(hidden_host, glob))
             return 1;
     }
+    /* If only matching the visible hostnames, bail early. */
+    if ((flags & MATCH_VISIBLE) && (IsFakeHost(user) || IsHiddenHost(user)))
+        return 0;
+    /* If it might be an IP glob, test that. */
+    if (!glob[strspn(glob, "0123456789./*?")]
+        && match_ircglob(irc_ntoa(&user->ip), glob))
+        return 1;
     /* None of the above; could only be a hostname match. */
     return match_ircglob(user->hostname, glob);
 }

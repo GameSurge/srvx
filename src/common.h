@@ -170,7 +170,9 @@ int split_line(char *line, int irc_colon, int argv_size, char *argv[]);
 #define match_ircglobs !mmatch
 int mmatch(const char *glob, const char *newglob);
 int match_ircglob(const char *text, const char *glob);
-int user_matches_glob(struct userNode *user, const char *glob, int include_nick);
+#define MATCH_USENICK 1
+#define MATCH_VISIBLE 2
+int user_matches_glob(struct userNode *user, const char *glob, int flags);
 
 int is_ircmask(const char *text);
 int is_gline(const char *text);

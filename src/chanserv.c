@@ -2702,7 +2702,7 @@ bad_channel_ban(struct chanNode *channel, struct userNode *user, const char *ban
         if(IsService(mn->user))
             continue;
 
-        if(!user_matches_glob(mn->user, ban, 1))
+        if(!user_matches_glob(mn->user, ban, MATCH_USENICK | MATCH_VISIBLE))
             continue;
 
         if(protect_user(mn->user, user, channel->channel_info))
@@ -3043,7 +3043,8 @@ find_matching_bans(struct banList *bans, struct userNode *actee, const char *mas
     {
         for(ii = count = 0; ii < bans->used; ++ii)
         {
-            match[ii] = user_matches_glob(actee, bans->list[ii]->ban, 1);
+            match[ii] = user_matches_glob(actee, bans->list[ii]->ban,
+                                          MATCH_USENICK | MATCH_VISIBLE);
             if(match[ii])
                 count++;
         }
@@ -3118,7 +3119,8 @@ unban_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
 	while(ban)
 	{
 	    if(actee)
-		for( ; ban && !user_matches_glob(actee, ban->mask, 1);
+		for( ; ban && !user_matches_glob(actee, ban->mask,
+                                                 MATCH_USENICK | MATCH_VISIBLE);
 		     ban = ban->next);
 	    else
 		for( ; ban && !match_ircglobs(mask, ban->mask);
@@ -5888,7 +5890,7 @@ handle_join(struct modeNode *mNode)
         unsigned int ii;
         for(ii = 0; ii < channel->banlist.used; ii++)
         {
-            if(user_matches_glob(user, channel->banlist.list[ii]->ban, 1))
+            if(user_matches_glob(user, channel->banlist.list[ii]->ban, MATCH_USENICK | MATCH_VISIBLE))
             {
                 /* Riding a netburst.  Naughty. */
                 KickChannelUser(user, channel, chanserv, "User from far side of netsplit should have been banned - bye.");
@@ -5903,8 +5905,8 @@ handle_join(struct modeNode *mNode)
     {
         /* Not joining through a ban. */
         for(bData = cData->bans;
-                bData && !user_matches_glob(user, bData->mask, 1);
-                bData = bData->next);
+            bData && !user_matches_glob(user, bData->mask, MATCH_USENICK | MATCH_VISIBLE);
+            bData = bData->next);
 
         if(bData)
         {
@@ -6085,14 +6087,14 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
            || IsSuspended(channel->channel_info))
             continue;
         for(jj = 0; jj < channel->banlist.used; ++jj)
-            if(user_matches_glob(user, channel->banlist.list[jj]->ban, 1))
+            if(user_matches_glob(user, channel->banlist.list[jj]->ban, MATCH_USENICK | MATCH_VISIBLE))
                 break;
         if(jj < channel->banlist.used)
             continue;
         for(ban = channel->channel_info->bans; ban; ban = ban->next)
         {
             char kick_reason[MAXLEN];
-            if(!user_matches_glob(user, ban->mask, 1))
+            if(!user_matches_glob(user, ban->mask, MATCH_USENICK | MATCH_VISIBLE))
                 continue;
             change.args[0].mode = MODE_BAN;
             change.args[0].u.hostmask = ban->mask;
@@ -6305,7 +6307,7 @@ handle_nick_change(struct userNode *user, UNUSED_ARG(const char *old_nick))
             continue;
         /* Look for a matching ban already on the channel. */
         for(jj = 0; jj < channel->banlist.used; ++jj)
-            if(user_matches_glob(user, channel->banlist.list[jj]->ban, 1))
+            if(user_matches_glob(user, channel->banlist.list[jj]->ban, MATCH_USENICK | MATCH_VISIBLE))
                 break;
         /* Need not act if we found one. */
         if(jj < channel->banlist.used)
@@ -6313,7 +6315,7 @@ handle_nick_change(struct userNode *user, UNUSED_ARG(const char *old_nick))
         /* Look for a matching ban in this channel. */
         for(bData = channel->channel_info->bans; bData; bData = bData->next)
         {
-            if(!user_matches_glob(user, bData->mask, 1))
+            if(!user_matches_glob(user, bData->mask, MATCH_USENICK | MATCH_VISIBLE))
                 continue;
             change.args[0].u.hostmask = bData->mask;
             mod_chanmode_announce(chanserv, channel, &change);
