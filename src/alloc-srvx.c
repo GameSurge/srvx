@@ -63,8 +63,9 @@ srvx_malloc(const char *file, unsigned int line, size_t size)
     assert(block != NULL);
     if (block->magic == ALLOC_MAGIC && block->file_id < file_ids_used) {
         /* Only report the error, due to possible false positives. */
-        log_module(MAIN_LOG, LOG_WARNING, "Detected possible reallocation: %p (called by %s:%u/%u; allocated by %u:%u/%u).",
-                   block, file, line, size, block->file_id, block->line, block->size);
+        log_module(MAIN_LOG, LOG_WARNING, "Detected possible reallocation: %p (called by %s:%u/%lu; allocated by %u:%u/%u).",
+                   block, file, line, (unsigned long)size,
+                   block->file_id, block->line, block->size);
     }
     memset(block, 0, sizeof(*block) + size);
     memcpy((char*)(block + 1) + size, redzone, sizeof(redzone));

@@ -368,10 +368,10 @@ irc_server(struct server *srv)
     inttobase64(extranum, srv->num_mask, (srv->numeric[1] || (srv->num_mask >= 64*64)) ? 3 : 2);
     if (srv == self) {
         /* The +s, ignored by Run's ircu, means "service" to Undernet's ircu */
-        putsock(P10_SERVER " %s %d %li %li J10 %s%s +s :%s",
+        putsock(P10_SERVER " %s %d %li %li J10 %s%s +s6 :%s",
                 srv->name, srv->hops+1, srv->boot, srv->link, srv->numeric, extranum, srv->description);
     } else {
-        putsock("%s " P10_SERVER " %s %d %li %li %c10 %s%s +s :%s",
+        putsock("%s " P10_SERVER " %s %d %li %li %c10 %s%s +s6 :%s",
                 self->numeric, srv->name, srv->hops+1, srv->boot, srv->link, (srv->self_burst ? 'J' : 'P'), srv->numeric, extranum, srv->description);
     }
 }

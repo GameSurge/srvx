@@ -97,7 +97,7 @@ struct slabset {
 #define SLAB_MIN     (2 * sizeof(void*))
 #define SLAB_GRAIN   sizeof(void*)
 #define SLAB_ALIGN   SLAB_GRAIN
-#define SMALL_CUTOFF 580
+#define SMALL_CUTOFF 576
 /* Element size < SMALL_CUTOFF -> use small slabs.
  * Larger elements are allocated directly using mmap().  The largest
  * regularly allocated struct in srvx 1.x is smaller than

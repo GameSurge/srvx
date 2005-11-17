@@ -2,6 +2,28 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2005-srvx/srvx--devo--1.3
 #
 
+2005-11-17 20:43:26 GMT	Michael Poole <mdpoole@troilus.org>	patch-33
+
+    Summary:
+      Fixes for LP64 models; announce IPv6 support.
+    Revision:
+      srvx--devo--1.3--patch-33
+
+    src/alloc-slab.c (SMALL_CUTOFF): Adjust to a multiple of 8.
+    
+    src/alloc-srvx.c (srvx_malloc): Fix format string for LP64.
+    
+    src/md5.h (UINT4): Fix typedef for LP64.
+    
+    src/opserv.c (cmd_warn): Fix whitespace.
+    
+    src/proto-p10.c (irc_server): Announce IPv6 support.
+
+    modified files:
+     ChangeLog src/alloc-slab.c src/alloc-srvx.c src/md5.h
+     src/opserv.c src/proto-p10.c
+
+
 2005-11-01 00:37:44 GMT	Michael Poole <mdpoole@troilus.org>	patch-32
 
     Summary:

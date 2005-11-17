@@ -478,7 +478,7 @@ static MODCMD_FUNC(cmd_chaninfo)
     return 1;
 }
 
-static MODCMD_FUNC(cmd_warn) 
+static MODCMD_FUNC(cmd_warn)
 {
     char *reason, *message;
 
