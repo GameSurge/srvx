@@ -412,8 +412,9 @@
         "$uSee Also:$u unsuspend, deluser");
 "TOPIC" ("/msg $C TOPIC <#channel> [topic]",
         "Sets the current topic for the specified channel.  If no topic is specified, then set the current topic to the default topic.");
-"TRIM" ("/msg $C TRIM <#channel> <target> <duration>",
+"TRIM" ("/msg $C TRIM <#channel> <target> <duration> [vacation]",
 	"The trim command removes target objects inactive for more than a certain duration from a channel. The target must be a channel access level, a range of access levels (for example, \"300-399\"), \"users\" or \"bans\". The duration argument specifies the amount of time the target has been inactive for to be removed.",
+        "If the vacation argument is given for the users target, users who are on vacation will be trimmed.  By default they are skipped.",
         "$uSee Also:$u durations");
 "UNBAN" ("/msg $C UNBAN <#channel> <mask|nick>",
         "Unbans the specified nick or hostmask. If a nick is given, $b$C$b determines what hostmask(s) to unban.",

@@ -2439,7 +2439,7 @@ cmd_trim_bans(struct userNode *user, struct chanNode *channel, unsigned long dur
 }
 
 static int
-cmd_trim_users(struct userNode *user, struct chanNode *channel, unsigned short min_access, unsigned short max_access, unsigned long duration)
+cmd_trim_users(struct userNode *user, struct chanNode *channel, unsigned short min_access, unsigned short max_access, unsigned long duration, int vacation)
 {
     struct userData *actor, *uData, *next;
     char interval[INTERVALLEN];
@@ -2465,7 +2465,9 @@ cmd_trim_users(struct userNode *user, struct chanNode *channel, unsigned short m
     {
 	next = uData->next;
 
-	if((uData->seen > limit) || uData->present)
+	if((uData->seen > limit)
+           || uData->present
+           || (HANDLE_FLAGGED(uData->handle, FROZEN) && !vacation))
 	    continue;
 
 	if(((uData->access >= min_access) && (uData->access <= max_access))
@@ -2489,9 +2491,11 @@ static CHANSERV_FUNC(cmd_trim)
 {
     unsigned long duration;
     unsigned short min_level, max_level;
+    int vacation;
 
     REQUIRE_PARAMS(3);
 
+    vacation = argc > 3 && !strcmp(argv[3], "vacation");
     duration = ParseInterval(argv[2]);
     if(duration < 60)
     {
@@ -2506,17 +2510,17 @@ static CHANSERV_FUNC(cmd_trim)
     }
     else if(!irccasecmp(argv[1], "users"))
     {
-	cmd_trim_users(user, channel, 0, 0, duration);
+	cmd_trim_users(user, channel, 0, 0, duration, vacation);
 	return 1;
     }
     else if(parse_level_range(&min_level, &max_level, argv[1]))
     {
-	cmd_trim_users(user, channel, min_level, max_level, duration);
+	cmd_trim_users(user, channel, min_level, max_level, duration, vacation);
 	return 1;
     }
     else if((min_level = user_level_from_name(argv[1], UL_OWNER)))
     {
-	cmd_trim_users(user, channel, min_level, min_level, duration);
+	cmd_trim_users(user, channel, min_level, min_level, duration, vacation);
 	return 1;
     }
     else
