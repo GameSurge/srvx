@@ -694,8 +694,9 @@ generate_hostmask(struct userNode *user, int options)
     } else if (IsHiddenHost(user) && user->handle_info && hidden_host_suffix && !(options & GENMASK_NO_HIDING)) {
         hostname = alloca(strlen(user->handle_info->handle) + strlen(hidden_host_suffix) + 2);
         sprintf(hostname, "%s.%s", user->handle_info->handle, hidden_host_suffix);
-    } else if (options & GENMASK_STRICT_HOST && options & GENMASK_BYIP) {
-        hostname = (char*)irc_ntoa(&user->ip);
+    } else if (options & GENMASK_STRICT_HOST) {
+        if (options & GENMASK_BYIP)
+            hostname = (char*)irc_ntoa(&user->ip);
     } else if ((options & GENMASK_BYIP) || irc_pton(&ip, NULL, hostname)) {
         /* Should generate an IP-based hostmask. */
         hostname = alloca(IRC_NTOP_MAX_SIZE);
