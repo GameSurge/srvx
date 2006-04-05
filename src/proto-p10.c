@@ -597,6 +597,21 @@ irc_pong(const char *who, const char *data)
 }
 
 void
+irc_pong_asll(const char *who, const char *orig_ts)
+{
+    char *delim;
+    struct timeval orig;
+    struct timeval now;
+    int diff;
+
+    orig.tv_sec = strtoul(orig_ts, &delim, 10);
+    orig.tv_usec = (*delim == '.') ? strtoul(delim + 1, NULL, 10) : 0;
+    gettimeofday(&now, NULL);
+    diff = (now.tv_sec - orig.tv_sec) * 1000 + (now.tv_usec - orig.tv_usec) / 1000;
+    putsock("%s " P10_PONG " %s %s %d " FMT_TIME_T ".%06u", self->numeric, who, orig_ts, diff, now.tv_sec, (unsigned)now.tv_usec);
+}
+
+void
 irc_pass(const char *passwd)
 {
     putsock(P10_PASS " :%s", passwd);
@@ -957,8 +972,8 @@ static CMD_FUNC(cmd_ping)
     struct server *srv;
     struct userNode *un;
 
-    if(argc > 3)
-        irc_pong(argv[2], argv[1]);
+    if (argc > 3)
+        irc_pong_asll(argv[2], argv[3]);
     else if ((srv = GetServerH(origin)))
         irc_pong(self->name, srv->numeric);
     else if ((un = GetUserH(origin)))
