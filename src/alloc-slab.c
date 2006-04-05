@@ -331,6 +331,7 @@ slab_unalloc(void *ptr, size_t size)
         free_slab_count++;
 #endif
     }
+    (void)size;
 }
 
 void *
