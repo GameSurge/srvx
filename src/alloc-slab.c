@@ -431,6 +431,8 @@ slab_free(const char *file, unsigned int line, void *ptr)
     }
 }
 
+/* Undefine the verify macro in case we're not debugging. */
+#undef verify
 void
 verify(const void *ptr)
 {
