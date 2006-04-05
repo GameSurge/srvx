@@ -20,11 +20,15 @@ AC_C_INLINE
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
-AC_PROG_RANLIB
 AC_PROG_INSTALL
+AC_PROG_LIBTOOL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_GCC_TRADITIONAL
+
+dnl Look for a GNU Arch program
+AC_CHECK_PROGS(GNU_ARCH, [baz tla])
+AM_CONDITIONAL(HAS_GNU_ARCH, test z$GNU_ARCH != z)
 
 dnl nice that unixes can all follow a standard.
 case $target in
@@ -67,10 +71,6 @@ AC_STRUCT_TM
 
 dnl Would rather not bail on headers, BSD has alot of the functions elsewhere. -Jedi
 AC_CHECK_HEADERS(fcntl.h malloc.h netdb.h netinet/in.h sys/resource.h sys/timeb.h sys/times.h sys/param.h sys/socket.h sys/time.h sys/types.h sys/wait.h unistd.h getopt.h memory.h regex.h arpa/inet.h sys/mman.h sys/stat.h dirent.h,,)
-
-dnl Cygwin does not have d_type in struct dirent.  We use stat() as a fallback.
-AC_CHECK_MEMBER([struct dirent.d_type],
-        [AC_DEFINE(HAVE_DIRENT_D_TYPE, 1, [Define if struct dirent exists and includes the d_type element.])],,[#include <dirent.h>])
 
 dnl portability stuff, hurray! -Jedi
 AC_CHECK_MEMBER([struct sockaddr.sa_len],

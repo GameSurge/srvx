@@ -171,8 +171,10 @@ static struct language *language_read(const char *name)
 
     /* Open the directory stream; if we can't, fail. */
     snprintf(filename, sizeof(filename), "languages/%s", name);
-    if (!(dir = opendir(filename)))
+    if (!(dir = opendir(filename))) {
+        log_module(MAIN_LOG, LOG_ERROR, "Unable to open language directory languages/%s: %s", name, strerror(errno));
         return NULL;
+    }
     if (!(lang = dict_find(languages, name, NULL)))
         lang = language_alloc(name);
 
@@ -222,28 +224,25 @@ static struct language *language_read(const char *name)
 
 static void language_read_list(void)
 {
+    struct stat sbuf;
     struct dirent *dirent;
     DIR *dir;
+    char namebuf[MAXLEN];
 
     if (!(dir = opendir("languages")))
         return;
     while ((dirent = readdir(dir))) {
         if (dirent->d_name[0] == '.')
             continue;
-#ifdef HAVE_DIRENT_D_TYPE
-        if (dirent->d_type != DT_DIR)
+        snprintf(namebuf, sizeof(namebuf), "languages/%s", dirent->d_name);
+        if (stat(namebuf, &sbuf) < 0) {
+            log_module(MAIN_LOG, LOG_INFO, "Skipping language entry '%s' (unable to stat).", dirent->d_name);
             continue;
-#else
-        {
-            char namebuf[MAXLEN];
-            struct stat sbuf;
-            snprintf(namebuf, sizeof(namebuf), "languages/%s", dirent->d_name);
-            if (stat(namebuf, &sbuf) < 0)
-                continue;
-            if (!S_ISDIR(sbuf.st_mode))
-                continue;
         }
-#endif
+        if (!S_ISDIR(sbuf.st_mode)) {
+            log_module(MAIN_LOG, LOG_INFO, "Skipping language entry '%s' (not directory).", dirent->d_name);
+            continue;
+        }
         language_alloc(dirent->d_name);
     }
     closedir(dir);

@@ -8,12 +8,13 @@ EXTRA_DIST = $(noinst_DATA)
 BUILT_SOURCES = arch-version.h
 noinst_HEADERS = arch-version.h
 
+if HAS_GNU_ARCH
 .PHONY: checkversion
 arch-version.h: checkversion
 checkversion:
-	@tla logs -f >/dev/null || exit 0; \
+	@$(GNU_ARCH) logs -f >/dev/null || exit 0; \
 	TMPFILE=`mktemp arch-version.h.XXXXXX` || exit 1 ; \
-	echo "#define ARCH_VERSION \"`tla logs -f | tail -n 1`\"" >> $$TMPFILE ; \
+	echo "#define ARCH_VERSION \"`$(GNU_ARCH) logs -f | tail -n 1`\"" >> $$TMPFILE ; \
 	if diff -q arch-version.h $$TMPFILE >/dev/null 2>&1 ; then \
 	    rm $$TMPFILE ; \
         else \
@@ -21,6 +22,7 @@ checkversion:
 	    rm -f arch-version.h ; \
 	    mv $$TMPFILE arch-version.h ; \
 	fi
+endif
 
 EXTRA_srvx_SOURCES = alloc-slab.c alloc-srvx.c proto-bahamut.c proto-common.c proto-p10.c mod-snoop.c mod-memoserv.c mod-helpserv.c mod-sockcheck.c
 srvx_LDADD = @MODULE_OBJS@
