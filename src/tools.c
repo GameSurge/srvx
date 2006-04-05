@@ -538,7 +538,7 @@ match_ircglob(const char *text, const char *glob)
         m++;
         /* allow escaping to force capitalization */
         if (*m++ != *n++)
-            return 0;
+            goto backtrack;
         break;
     case '*': case '?':
         for (star_p = 0; ; m++) {
