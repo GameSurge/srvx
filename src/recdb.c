@@ -621,6 +621,7 @@ parse_database(const char *filename)
     /* Try mmap */
     if (!mmap_error && (recdb.s = mmap(NULL, recdb.length, PROT_READ|PROT_WRITE, MAP_PRIVATE, fileno(recdb.f), 0)) != MAP_FAILED) {
         recdb.type = RECDB_MMAP;
+        madvise(recdb.s, recdb.length, MADV_SEQUENTIAL);
     } else {
         /* Fall back to stdio */
         if (!mmap_error) {
