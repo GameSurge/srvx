@@ -1072,7 +1072,7 @@ static void helpserv_usermsg(struct userNode *user, struct helpserv_bot *hs, cha
             if (user->handle_info)
                 helpserv_notify(req->helper, "HSMSG_PAGE_UPD_REQUEST_AUTHED", req->id, user->nick, user->handle_info->handle, timestr, updatestr);
             else
-                helpserv_notify(req->helper, "HSMSG_PAGE_UPD_REQUESTNOT_AUTHED", req->id, user->nick, timestr, updatestr);
+                helpserv_notify(req->helper, "HSMSG_PAGE_UPD_REQUEST_NOT_AUTHED", req->id, user->nick, timestr, updatestr);
         else
             if (user->handle_info)
                 helpserv_page(PGSRC_STATUS, "HSMSG_PAGE_UPD_REQUEST_AUTHED", req->id, user->nick, user->handle_info->handle, timestr, updatestr);
