@@ -383,6 +383,8 @@ irc_p10_pton(irc_in_addr_t *ip, const char *input)
         unsigned int value;
         memset(ip, 0, 6 * sizeof(ip->in6[0]));
         value = base64toint(input, 6);
+        if (value)
+            ip->in6[5] = htons(65535);
         ip->in6[6] = htons(value >> 16);
         ip->in6[7] = htons(value & 65535);
     } else {
@@ -404,7 +406,9 @@ irc_p10_pton(irc_in_addr_t *ip, const char *input)
 static void
 irc_p10_ntop(char *output, const irc_in_addr_t *ip)
 {
-    if (irc_in_addr_is_ipv4(*ip)) {
+    if (!irc_in_addr_is_valid(*ip)) {
+        strcpy(output, "AAAAAA");
+    } else if (irc_in_addr_is_ipv4(*ip)) {
         unsigned int in4;
         in4 = (ntohs(ip->in6[6]) << 16) | ntohs(ip->in6[7]);
         inttobase64(output, in4, 6);
