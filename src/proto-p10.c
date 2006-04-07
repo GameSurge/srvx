@@ -2274,6 +2274,8 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
             char *oplevel_str;
             int oplevel;
 
+            if (in_arg >= argc)
+                goto error;
             oplevel_str = strchr(modes[in_arg], ':');
             if (oplevel_str)
             {
