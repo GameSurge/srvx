@@ -5894,7 +5894,7 @@ handle_join(struct modeNode *mNode)
         unsigned int ii;
         for(ii = 0; ii < channel->banlist.used; ii++)
         {
-            if(user_matches_glob(user, channel->banlist.list[ii]->ban, MATCH_USENICK | MATCH_VISIBLE))
+            if(user_matches_glob(user, channel->banlist.list[ii]->ban, MATCH_USENICK))
             {
                 /* Riding a netburst.  Naughty. */
                 KickChannelUser(user, channel, chanserv, "User from far side of netsplit should have been banned - bye.");
@@ -5909,7 +5909,7 @@ handle_join(struct modeNode *mNode)
     {
         /* Not joining through a ban. */
         for(bData = cData->bans;
-            bData && !user_matches_glob(user, bData->mask, MATCH_USENICK | MATCH_VISIBLE);
+            bData && !user_matches_glob(user, bData->mask, MATCH_USENICK);
             bData = bData->next);
 
         if(bData)
@@ -6010,6 +6010,10 @@ handle_join(struct modeNode *mNode)
             uData->present = 1;
         }
     }
+
+    /* If user joining normally (not during burst), apply op or voice,
+     * and send greeting/userinfo as appropriate.
+     */
     if(!user->uplink->burst)
     {
         if(modes)
@@ -6020,7 +6024,7 @@ handle_join(struct modeNode *mNode)
             change.args[0].u.member = mNode;
             mod_chanmode_announce(chanserv, channel, &change);
         }
-        if(greeting && !user->uplink->burst)
+        if(greeting)
             send_message_type(4, user, chanserv, "(%s) %s", channel->name, greeting);
         if(uData && info)
             send_target_message(5, channel->name, chanserv, "[%s] %s", user->nick, uData->info);
@@ -6091,7 +6095,7 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
            || IsSuspended(channel->channel_info))
             continue;
         for(jj = 0; jj < channel->banlist.used; ++jj)
-            if(user_matches_glob(user, channel->banlist.list[jj]->ban, MATCH_USENICK | MATCH_VISIBLE))
+            if(user_matches_glob(user, channel->banlist.list[jj]->ban, MATCH_USENICK))
                 break;
         if(jj < channel->banlist.used)
             continue;
@@ -6311,7 +6315,7 @@ handle_nick_change(struct userNode *user, UNUSED_ARG(const char *old_nick))
             continue;
         /* Look for a matching ban already on the channel. */
         for(jj = 0; jj < channel->banlist.used; ++jj)
-            if(user_matches_glob(user, channel->banlist.list[jj]->ban, MATCH_USENICK | MATCH_VISIBLE))
+            if(user_matches_glob(user, channel->banlist.list[jj]->ban, MATCH_USENICK))
                 break;
         /* Need not act if we found one. */
         if(jj < channel->banlist.used)
