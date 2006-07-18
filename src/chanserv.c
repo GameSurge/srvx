@@ -227,7 +227,7 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_TOPIC_SET", "Topic is now '%s'." },
     { "CSMSG_NO_TOPIC", "$b%s$b does not have a default topic." },
     { "CSMSG_TOPICMASK_CONFLICT1", "I do not know how to make that topic work with the current topic mask in $b%s$b, which is: %s" },
-    { "CSMSG_TOPICMASK_CONFLICT2", "Please make sure your topic at most %d characters and matches the topic mask pattern." },
+    { "CSMSG_TOPICMASK_CONFLICT2", "Please make sure your topic is at most %d characters and matches the topic mask pattern." },
     { "CSMSG_TOPIC_LOCKED", "The %s topic is locked." },
     { "CSMSG_MASK_BUT_NO_TOPIC", "Warning: $b%s$b does not have a default topic, but you just set the topic mask." },
     { "CSMSG_TOPIC_MISMATCH", "Warning: The default topic for $b%s$b does not match the topic mask; changing it anyway." },
