@@ -3606,7 +3606,7 @@ nickserv_reclaim(struct userNode *user, struct nick_info *ni, enum reclaim_actio
         break;
     case RECLAIM_KILL:
         msg = user_find_message(user, "NSMSG_RECLAIM_KILL");
-        irc_kill(nickserv, user, msg);
+        DelUser(user, nickserv, 1, msg);
         break;
     }
 }
