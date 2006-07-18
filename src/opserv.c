@@ -3462,6 +3462,8 @@ opserv_cdiscrim_create(struct userNode *user, unsigned int argc, char *argv[])
 
     discrim = calloc(1, sizeof(*discrim));
     discrim->limit = 25;
+    discrim->max_users = ~0;
+    discrim->max_ts = (time_t)~0;
 
     for (i = 0; i < argc; i++) {
 	/* Assume all criteria require arguments. */
@@ -3532,10 +3534,10 @@ cdiscrim_match(cdiscrim_t discrim, struct chanNode *chan)
 {
     if ((discrim->name && !match_ircglob(chan->name, discrim->name)) ||
         (discrim->topic && !match_ircglob(chan->topic, discrim->topic)) ||
-        (discrim->min_users && chan->members.used < discrim->min_users) ||
-        (discrim->max_users && chan->members.used > discrim->max_users) ||
-        (discrim->min_ts && chan->timestamp < discrim->min_ts) ||
-            (discrim->max_ts && chan->timestamp > discrim->max_ts)) {
+        (chan->members.used < discrim->min_users) ||
+        (chan->members.used > discrim->max_users) ||
+        (chan->timestamp < discrim->min_ts) ||
+        (chan->timestamp > discrim->max_ts)) {
 	return 0;
     }
     return 1;
