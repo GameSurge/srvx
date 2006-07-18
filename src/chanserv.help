@@ -56,7 +56,7 @@
         "  CLIST                coowners of a channel.",
         "  MLIST                masters of a channel.",
         "  OLIST                ops of a channel.",
-        "  PLIST                peons of a channel.",    
+        "  PLIST                peons of a channel.",
         "  BANS        List all the bans for a channel.",
         "  TOPIC       Set the current topic, or reset it to the default topic.",
         "  MODE        Change a channel mode.",
@@ -130,8 +130,11 @@
         "$uFor assistance, please join to #support$u",
         "Example: *!*serv@*.gamesurge.net would ban anyone with ident 'serv' and a gamesurge.net hostname from joining the channel.",
         "$uSee Also:$u unban, unbanall, unbanme");
-"BANS" ("/msg $C BANS <#channel>",
+"BANS" ("/msg $C BANS <#channel> [mask|nick]",
         "This command lists all permanent and timed bans in the channel.",
+        "If a nickname is specified, lists any bans that visibly match that user.",
+        "If a hostmask with no wildcards is specified, lists any bans that match that hostmask.",
+        "If a hostmask with wildcards is specified, lists any bans included in that mask.",
         "$uSee Also:$u addban, delban, mdelban");
 "CLIST" ("/msg $C CLIST <#channel> [mask]",
         "This command lists all users of level $bCoowner$b on a channel's userlist. If a mask is supplied, only coowners matching the mask will be shown.",

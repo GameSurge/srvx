@@ -3592,23 +3592,37 @@ static CHANSERV_FUNC(cmd_plist)
 
 static CHANSERV_FUNC(cmd_bans)
 {
+    struct userNode *search_u = NULL;
     struct helpfile_table tbl;
-    unsigned int matches = 0, timed = 0, ii;
+    unsigned int matches = 0, timed = 0, search_wilds = 0, ii;
     char t_buffer[INTERVALLEN], e_buffer[INTERVALLEN], *search;
     const char *msg_never, *triggered, *expires;
     struct banData *ban, **bans;
 
-    if(argc > 1)
-	search = argv[1];
-    else
+    if(argc < 2)
         search = NULL;
+    else if(strchr(search = argv[1], '!'))
+    {
+	search = argv[1];
+        search_wilds = search[strcspn(search, "?*")];
+    }
+    else if(!(search_u = GetUserH(search)))
+        reply("MSG_NICK_UNKNOWN", search);
 
     bans = alloca(channel->channel_info->banCount * sizeof(struct banData *));
 
     for(ban = channel->channel_info->bans; ban; ban = ban->next)
     {
-	if(search && !match_ircglobs(search, ban->mask))
-	    continue;
+        if(search_u)
+        {
+            if(!user_matches_glob(search_u, ban->mask, MATCH_USENICK | MATCH_VISIBLE))
+                continue;
+        }
+	else if(search)
+        {
+            if(search_wilds ? !match_ircglobs(search, ban->mask) : !match_ircglob(search, ban->mask))
+                continue;
+        }
 	bans[matches++] = ban;
 	if(ban->expires)
             timed = 1;
