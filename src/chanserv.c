@@ -420,6 +420,7 @@ static const struct message_entry msgtab[] = {
 
 /* Channel configuration */
     { "CSMSG_INVALID_OPTION", "$b%s$b is not a valid %s option." },
+    { "CSMSG_INVALID_CFLAG", "$b%s$b is not a recognized channel flag." },
     { "CSMSG_CHANNEL_OPTIONS", "Channel Options:" },
     { "CSMSG_GREETING_TOO_LONG", "Your greeting ($b%d$b characters) must be shorter than $b%d$b characters." },
 
