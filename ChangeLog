@@ -2,6 +2,20 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2006/srvx--devo--1.3
 #
 
+2006-07-29 01:34:17 GMT	Michael Poole <mdpoole@troilus.org>	patch-21
+
+    Summary:
+      Fix ?csearch max timestamp default value.
+    Revision:
+      srvx--devo--1.3--patch-21
+
+    src/opserv.c (opserv_cdiscrim_create): Fix default value for max_ts.
+        (With an expression only a coder could love.  Improvements wanted.)
+
+    modified files:
+     ChangeLog src/opserv.c
+
+
 2006-07-18 03:13:31 GMT	Michael Poole <mdpoole@troilus.org>	patch-20
 
     Summary:

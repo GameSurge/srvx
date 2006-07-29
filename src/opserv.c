@@ -3463,7 +3463,8 @@ opserv_cdiscrim_create(struct userNode *user, unsigned int argc, char *argv[])
     discrim = calloc(1, sizeof(*discrim));
     discrim->limit = 25;
     discrim->max_users = ~0;
-    discrim->max_ts = (time_t)~0;
+    /* So, time_t is frequently signed.  Fun. */
+    discrim->max_ts = (1ul << (CHAR_BIT * sizeof(time_t) - 1)) - 1;
 
     for (i = 0; i < argc; i++) {
 	/* Assume all criteria require arguments. */
