@@ -6175,6 +6175,8 @@ handle_part(struct modeNode *mn, UNUSED_ARG(const char *reason))
     {
 	scan_user_presence(uData, mn->user);
         uData->seen = now;
+        if (uData->access >= UL_PRESENT)
+            cData->visited = now;
     }
 
     if(IsHelping(mn->user) && IsSupportHelper(mn->user))
