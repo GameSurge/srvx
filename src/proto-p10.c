@@ -1388,19 +1388,6 @@ static CMD_FUNC(cmd_kill)
     return 1;
 }
 
-static CMD_FUNC(cmd_part)
-{
-    struct userNode *user;
-
-    if (argc < 2)
-        return 0;
-    user = GetUserH(origin);
-    if (!user)
-        return 0;
-    parse_foreach(argv[1], part_helper, NULL, NULL, NULL, user);
-    return 1;
-}
-
 static CMD_FUNC(cmd_kick)
 {
     if (argc < 3)
@@ -2056,7 +2043,7 @@ DelUser(struct userNode* user, struct userNode *killer, int announce, const char
 
     /* remove user from all channels */
     while (user->channels.used > 0)
-        DelChannelUser(user, user->channels.list[user->channels.used-1]->channel, false, 0);
+        DelChannelUser(user, user->channels.list[user->channels.used-1]->channel, NULL, false);
 
     /* Call these in reverse order so ChanServ can update presence
        information before NickServ nukes the handle_info. */

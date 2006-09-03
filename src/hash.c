@@ -440,7 +440,7 @@ DelChannel(struct chanNode *channel)
 
     /* go through all channel members and delete them from the channel */
     for (n=channel->members.used; n>0; )
-	DelChannelUser(channel->members.list[--n]->user, channel, false, 1);
+	DelChannelUser(channel->members.list[--n]->user, channel, NULL, 1);
 
     /* delete all channel bans */
     for (n=channel->banlist.used; n>0; )
@@ -550,7 +550,7 @@ DelChannelUser(struct userNode* user, struct chanNode* channel, const char *reas
     struct modeNode* mNode;
     unsigned int n;
 
-    if (reason)
+    if (IsLocal(user) && reason)
         irc_part(user, channel, reason);
 
     mNode = GetUserMode(channel, user);

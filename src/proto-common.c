@@ -464,10 +464,30 @@ privmsg_invalid(char *name, void *data)
     irc_numeric(pd->user, ERR_NOSUCHNICK, "%s@%s :No such nick", name, self->name);
 }
 
+struct part_desc {
+    struct userNode *user;
+    const char *text;
+};
+
 static void
 part_helper(struct chanNode *cn, void *data)
 {
-    DelChannelUser(data, cn, false, 0);
+    struct part_desc *desc = data;
+    DelChannelUser(desc->user, cn, desc->text, false);
+}
+
+static CMD_FUNC(cmd_part)
+{
+    struct part_desc desc;
+
+    if (argc < 2)
+        return 0;
+    desc.user = GetUserH(origin);
+    if (!desc.user)
+        return 0;
+    desc.text = (argc > 2) ? argv[argc - 1] : NULL;
+    parse_foreach(argv[1], part_helper, NULL, NULL, NULL, &desc);
+    return 1;
 }
 
 void

@@ -210,7 +210,7 @@ DelUser(struct userNode* user, struct userNode *killer, int announce, const char
     unsigned int nn;
 
     for (nn=user->channels.used; nn>0;) {
-        DelChannelUser(user, user->channels.list[--nn]->channel, false, 0);
+        DelChannelUser(user, user->channels.list[--nn]->channel, NULL, false);
     }
     for (nn=duf_used; nn>0; ) duf_list[--nn](user, killer, why);
     user->uplink->clients--;
@@ -889,12 +889,6 @@ static CMD_FUNC(cmd_topic) {
     } else {
         SetChannelTopic(cn, GetUserH(argv[2]), argv[4], 0);
     }
-    return 1;
-}
-
-static CMD_FUNC(cmd_part) {
-    if (argc < 2) return 0;
-    parse_foreach(argv[1], part_helper, NULL, NULL, NULL, GetUserH(origin));
     return 1;
 }
 
