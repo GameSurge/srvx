@@ -5526,7 +5526,7 @@ static CHANSERV_FUNC(cmd_giveownership)
         }
         curr_user = owner;
     }
-    else if (!force && (now < (time_t)(cData->ownerTransfer + chanserv_conf.giveownership_period)))
+    else if(!force && (now < (time_t)(cData->ownerTransfer + chanserv_conf.giveownership_period)))
     {
         char delay[INTERVALLEN];
         intervalString(delay, cData->ownerTransfer + chanserv_conf.giveownership_period - now, user->handle_info);
@@ -5565,11 +5565,14 @@ static CHANSERV_FUNC(cmd_giveownership)
             chanserv_show_dnrs(user, cmd, NULL, new_owner_hi->handle);
         return 0;
     }
-    confirm = make_confirmation_string(curr_user);
-    if(!force && ((argc < 3) || strcmp(argv[2], confirm)))
+    if(curr_user && !force && curr_user->access <= UL_OWNER)
     {
-        reply("CSMSG_CONFIRM_GIVEOWNERSHIP", new_owner_hi->handle, confirm);
-        return 0;
+        confirm = make_confirmation_string(curr_user);
+        if(!force && ((argc < 3) || strcmp(argv[2], confirm)))
+        {
+            reply("CSMSG_CONFIRM_GIVEOWNERSHIP", new_owner_hi->handle, confirm);
+            return 0;
+        }
     }
     if(new_owner->access >= UL_COOWNER)
         co_access = new_owner->access;
