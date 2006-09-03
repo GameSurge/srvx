@@ -11,6 +11,9 @@
 #ifdef HAVE_MEMORY_H
 # include <memory.h>
 #endif
+#ifdef HAVE_ARPA_INET_H
+# include <arpa/inet.h>
+#endif
 
 #if !defined(HAVE_GETTIMEOFDAY) && defined(HAVE_FTIME)
 extern gettimeofday(struct timeval * tv, struct timezone * tz);
@@ -363,8 +366,14 @@ int getaddrinfo(const char *node, const char *service, const struct addrinfo *hi
 
     if (node) {
         if (hints && hints->ai_flags & AI_NUMERICHOST) {
+#if HAVE_INET_ATON
             if (!inet_aton(node, &sin.sin_addr))
                 return 2;
+#else
+            sin.sin_addr.s_addr = inet_addr(node);
+            if (sin.sin_addr.s_addr == INADDR_NONE)
+                return 2;
+#endif
         } else {
             struct hostent *he;
             he = gethostbyname(node);

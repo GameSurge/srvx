@@ -110,6 +110,7 @@ struct addrinfo {
 
 #define AI_PASSIVE 1
 #define AI_CANONNAME 2
+#define AI_NUMERICHOST 4
 
 #endif /* !defined(HAVE_STRUCT_ADDRINFO) */
 

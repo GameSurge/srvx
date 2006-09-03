@@ -313,7 +313,7 @@ irc_pton(irc_in_addr_t *addr, unsigned char *bits, const char *input)
                 addr->in6[cpos + jj] = 0;
         }
     } else if (dot) {
-        unsigned int ip4;
+        uint32_t ip4;
         pos = irc_pton_ip4(input, bits, &ip4);
         if (pos) {
             addr->in6[5] = htons(65535);
