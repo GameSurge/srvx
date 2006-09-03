@@ -2562,10 +2562,8 @@ static NICKSERV_FUNC(cmd_ounregnick)
 	reply("NSMSG_NICK_NOT_REGISTERED", argv[1]);
 	return 0;
     }
-    if (ni->owner->opserv_level >= user->handle_info->opserv_level) {
-	reply("MSG_USER_OUTRANKED", ni->nick);
-	return 0;
-    }
+    if (!oper_outranks(user, ni->owner))
+        return 0;
     reply("NSMSG_UNREGNICK_SUCCESS", ni->nick);
     delete_nick(ni);
     return 1;
