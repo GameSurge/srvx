@@ -1914,7 +1914,7 @@ opserv_join_check(struct modeNode *mNode)
         struct mod_chanmode change;
         mod_chanmode_init(&change);
         channel->join_flooded = 1;
-        if (opserv_conf.join_flood_moderate && (channel->members.used > opserv_conf.join_flood_moderate_threshold)) {
+	if (opserv && opserv_conf.join_flood_moderate && (channel->members.used > opserv_conf.join_flood_moderate_threshold)) {
             if (!GetUserMode(channel, opserv)) {
                 /* If we aren't in the channel, join it. */
                 change.args[0].mode = MODE_CHANOP;
