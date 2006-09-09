@@ -7210,17 +7210,19 @@ init_chanserv(const char *nick)
     CS_LOG = log_register_type("ChanServ", "file:chanserv.log");
     conf_register_reload(chanserv_conf_read);
 
-    reg_server_link_func(handle_server_link);
+    if(nick)
+    {
+        reg_server_link_func(handle_server_link);
+        reg_new_channel_func(handle_new_channel);
+        reg_join_func(handle_join);
+        reg_part_func(handle_part);
+        reg_kick_func(handle_kick);
+        reg_topic_func(handle_topic);
+        reg_mode_change_func(handle_mode);
+        reg_nick_change_func(handle_nick_change);
+        reg_auth_func(handle_auth);
+    }
 
-    reg_new_channel_func(handle_new_channel);
-    reg_join_func(handle_join);
-    reg_part_func(handle_part);
-    reg_kick_func(handle_kick);
-    reg_topic_func(handle_topic);
-    reg_mode_change_func(handle_mode);
-    reg_nick_change_func(handle_nick_change);
-
-    reg_auth_func(handle_auth);
     reg_handle_rename_func(handle_rename);
     reg_unreg_func(handle_unreg);
 
