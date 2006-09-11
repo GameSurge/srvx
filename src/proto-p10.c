@@ -636,8 +636,12 @@ irc_introduce(const char *passwd)
 void
 irc_gline(struct server *srv, struct gline *gline)
 {
-    putsock("%s " P10_GLINE " %s +%s %ld :%s",
-            self->numeric, (srv ? srv->numeric : "*"), gline->target, gline->expires-now, gline->reason);
+    if (gline->lastmod)
+        putsock("%s " P10_GLINE " %s +%s %ld %ld :%s",
+                self->numeric, (srv ? srv->numeric : "*"), gline->target, gline->expires-now, gline->lastmod, gline->reason);
+    else
+        putsock("%s " P10_GLINE " %s +%s %ld :%s",
+                self->numeric, (srv ? srv->numeric : "*"), gline->target, gline->expires-now, gline->reason);
 }
 
 void
@@ -1344,9 +1348,11 @@ static CMD_FUNC(cmd_num_topic)
 
 static CMD_FUNC(cmd_num_gline)
 {
+    time_t lastmod;
     if (argc < 6)
         return 0;
-    gline_add(origin, argv[3], atoi(argv[4])-now, argv[5], now, 0);
+    lastmod = (argc > 5) ? strtoul(argv[5], NULL, 0) : 0;
+    gline_add(origin, argv[3], atoi(argv[4])-now, argv[argc - 1], now, lastmod, 0);
     return 1;
 }
 
@@ -1461,12 +1467,15 @@ static CMD_FUNC(cmd_away)
 
 static CMD_FUNC(cmd_gline)
 {
+    time_t lastmod;
+
     if (argc < 3)
         return 0;
     if (argv[2][0] == '+') {
         if (argc < 5)
             return 0;
-        gline_add(origin, argv[2]+1, strtoul(argv[3], NULL, 0), argv[argc-1], now, 0);
+        lastmod = (argc > 5) ? strtoul(argv[5], NULL, 0) : 0;
+        gline_add(origin, argv[2]+1, strtoul(argv[3], NULL, 0), argv[argc-1], now, lastmod, 0);
         return 1;
     } else if (argv[2][0] == '-') {
         gline_remove(argv[2]+1, 0);

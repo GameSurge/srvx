@@ -265,6 +265,7 @@
         "$bLIMIT$b count            Limits the number of matching glines.",
         "$bREASON$b reason          Looks for glines with the given reason.",
         "$bISSUER$b account         Looks for glines issued by the given account.",
+        "$BLASTMOD$b interval       Looks for glines last modified in the specified time.",
         "$bAFTER$b interval         Looks for glines that expire more than $binterval$b in the future.");
 "GSYNC" ("/msg $O GSYNC [server]",
 	"Requests a list of GLINES from its uplink or the specified server.  This can be used in the event srvx is down for period and becomes desynced.",

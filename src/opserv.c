@@ -151,6 +151,7 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_BADWORD_LIST", "Bad words: %s" },
     { "OSMSG_EXEMPTED_LIST", "Exempted channels: %s" },
     { "OSMSG_GLINE_COUNT", "There are %d glines active on the network." },
+    { "OSMSG_NO_GLINE", "$b%s$b is not a known G-line." },
     { "OSMSG_LINKS_SERVER", "%s%s (%u clients; %s)" },
     { "OSMSG_MAX_CLIENTS", "Max clients: %d at %s" },
     { "OSMSG_NETWORK_INFO", "Total users: %d (%d invisible, %d opers)" },
@@ -195,7 +196,7 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_GLINE_SEARCH_RESULTS", "The following glines were found:" },
     { "OSMSG_LOG_SEARCH_RESULTS", "The following log entries were found:" },
     { "OSMSG_GSYNC_RUNNING", "Synchronizing glines from %s." },
-    { "OSMSG_GTRACE_FORMAT", "%s (issued %s by %s, expires %s): %s" },
+    { "OSMSG_GTRACE_FORMAT", "%s (issued %s by %s, lastmod %s, expires %s): %s" },
     { "OSMSG_GAG_APPLIED", "Gagged $b%s$b, affecting %d users." },
     { "OSMSG_GAG_ADDED", "Gagged $b%s$b." },
     { "OSMSG_REDUNDANT_GAG", "Gag $b%s$b is redundant." },
@@ -758,7 +759,7 @@ opserv_block(struct userNode *target, char *src_handle, char *reason, unsigned l
                  "G-line requested by %s.", src_handle);
     if (!duration)
         duration = opserv_conf.block_gline_duration;
-    return gline_add(src_handle, mask, duration, reason, now, 1);
+    return gline_add(src_handle, mask, duration, reason, now, now, 1);
 }
 
 static MODCMD_FUNC(cmd_block)
@@ -802,7 +803,7 @@ static MODCMD_FUNC(cmd_gline)
         reply("MSG_INVALID_DURATION", argv[2]);
         return 0;
     }
-    gline = gline_add(user->handle_info->handle, argv[1], duration, reason, now, 1);
+    gline = gline_add(user->handle_info->handle, argv[1], duration, reason, now, now, 1);
     reply("OSMSG_GLINE_ISSUED", gline->target);
     return 1;
 }
@@ -1303,11 +1304,6 @@ static MODCMD_FUNC(cmd_stats_bad) {
     return 1;
 }
 
-static MODCMD_FUNC(cmd_stats_glines) {
-    reply("OSMSG_GLINE_COUNT", gline_count());
-    return 1;
-}
-
 static void
 trace_links(struct userNode *bot, struct userNode *user, struct server *server, unsigned int depth) {
     unsigned int nn, pos;
@@ -1780,7 +1776,7 @@ opserv_new_user_check(struct userNode *user)
         } else if (ohi->clients.used > limit) {
             char target[IRC_NTOP_MAX_SIZE + 3] = { '*', '@', '\0' };
             strcpy(target + 2, addr);
-            gline_add(opserv->nick, target, opserv_conf.clone_gline_duration, "AUTO Excessive connections from a single host.", now, 1);
+            gline_add(opserv->nick, target, opserv_conf.clone_gline_duration, "AUTO Excessive connections from a single host.", now, now, 1);
         }
     }
 
@@ -3644,11 +3640,38 @@ static void
 gtrace_print_func(struct gline *gline, void *extra)
 {
     struct gline_extra *xtra = extra;
-    char *when_text, set_text[20];
-    strftime(set_text, sizeof(set_text), "%Y-%m-%d", localtime(&gline->issued));
-    when_text = asctime(localtime(&gline->expires));
-    when_text[strlen(when_text)-1] = 0; /* strip lame \n */
-    send_message(xtra->user, opserv, "OSMSG_GTRACE_FORMAT", gline->target, set_text, gline->issuer, when_text, gline->reason);
+    char issued[INTERVALLEN];
+    char lastmod[INTERVALLEN];
+    char expires[INTERVALLEN];
+
+    intervalString(issued, now - gline->issued, xtra->user->handle_info);
+    if (gline->lastmod)
+        intervalString(lastmod, now - gline->lastmod, xtra->user->handle_info);
+    else
+        strcpy(lastmod, "<unknown>");
+    if (gline->expires)
+        intervalString(expires, gline->expires - now, xtra->user->handle_info);
+    else
+        strcpy(expires, "never");
+    send_message(xtra->user, opserv, "OSMSG_GTRACE_FORMAT", gline->target, issued, gline->issuer, lastmod, expires, gline->reason);
+}
+
+static MODCMD_FUNC(cmd_stats_glines) {
+    if (argc < 2) {
+        reply("OSMSG_GLINE_COUNT", gline_count());
+        return 1;
+    } else if (argc < 3) {
+        struct gline_extra extra;
+        struct gline *gl;
+
+        extra.user = user;
+        gl = gline_find(argv[1]);
+        if (!gl)
+            reply("OSMSG_NO_GLINE", argv[1]);
+        else
+            gtrace_print_func(gl, &extra);
+        return 1;
+    } else return 0;
 }
 
 static void
