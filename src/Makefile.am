@@ -37,8 +37,10 @@ endif
 EXTRA_srvx_SOURCES = \
 	alloc-slab.c \
 	alloc-srvx.c \
+	config.h.win32 \
 	ioset-epoll.c \
 	ioset-select.c \
+	ioset-win32.c \
 	proto-bahamut.c \
 	proto-common.c \
 	proto-p10.c \
