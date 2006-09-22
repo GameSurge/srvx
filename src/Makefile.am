@@ -45,6 +45,7 @@ EXTRA_srvx_SOURCES = \
 	mod-snoop.c \
 	mod-memoserv.c \
 	mod-helpserv.c \
+	mod-qserver.c \
 	mod-sockcheck.c
 srvx_LDADD = @MODULE_OBJS@
 srvx_DEPENDENCIES = @MODULE_OBJS@

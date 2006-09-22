@@ -2,6 +2,26 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2006/srvx--devo--1.3
 #
 
+2006-09-22 02:51:50 GMT	Michael Poole <mdpoole@troilus.org>	patch-40
+
+    Summary:
+      Add direct query server module.
+    Revision:
+      srvx--devo--1.3--patch-40
+
+    srvx.conf.example: Document qserver configuration.
+    
+    src/Makefile.am (EXTRA_srvx_SOURCES): Add mod-qserver.c.
+    
+    src/mod-qserver.c: New file.
+
+    new files:
+     src/.arch-ids/mod-qserver.c.id src/mod-qserver.c
+
+    modified files:
+     ChangeLog src/Makefile.am src/ioset-epoll.c srvx.conf.example
+
+
 2006-09-22 02:45:20 GMT	Michael Poole <mdpoole@troilus.org>	patch-39
 
     Summary:

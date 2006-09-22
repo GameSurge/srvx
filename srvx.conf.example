@@ -292,6 +292,11 @@
         "message_expiry" "30d"; // age when messages are deleted; set
                                 // to 0 to disable message expiration
     };
+    "qserver" {
+        "address" "127.0.0.1";
+        "port" "7702";
+        "password" "hello";
+    };
 };
 
 "policers" {
