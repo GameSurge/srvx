@@ -1,5 +1,5 @@
 /* proto-common.c - common IRC protocol parsing/sending support
- * Copyright 2000-2004 srvx Development Team
+ * Copyright 2000-2006 srvx Development Team
  *
  * This file is part of srvx.
  *
@@ -92,7 +92,7 @@ uplink_readable(struct io_fd *fd) {
 void
 socket_destroyed(struct io_fd *fd)
 {
-    if (fd && fd->eof)
+    if (fd && fd->state != IO_CONNECTED)
         log_module(MAIN_LOG, LOG_ERROR, "Connection to server lost.");
     socket_io_fd = NULL;
     cManager.uplink->state = DISCONNECTED;
@@ -275,7 +275,8 @@ close_socket(void)
         replay_connected = 0;
         socket_destroyed(socket_io_fd);
     } else {
-        ioset_close(socket_io_fd->fd, 1);
+        ioset_close(socket_io_fd, 1);
+        socket_io_fd = NULL;
     }
 }
 

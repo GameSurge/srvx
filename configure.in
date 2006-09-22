@@ -241,6 +241,18 @@ else
   AC_MSG_ERROR([Unknown IRC dialect $withval])
 fi
 
+AC_MSG_CHECKING([I/O multiplexing backends])
+IOMUXES=""
+
+if test "x$ac_cv_func_select" = xyes ; then
+  AC_DEFINE(WITH_IOSET_SELECT, 1, [Define if using the select() I/O backend])
+  MODULE_OBJS="$MODULE_OBJS ioset-select.\$(OBJEXT)"
+  IOMUXES="$IOMUXES select"
+fi
+
+IOMUXES=`echo $IOMUXES | sed 's/^ +//'`
+AC_MSG_RESULT($IOMUXES)
+
 AC_ARG_WITH(getopt,
 [  --without-getopt        Disables building of the GNU getopt library],
 [if test "$withval" = no; then

@@ -1,5 +1,5 @@
 /* mod-sockcheck.c - insecure proxy checking
- * Copyright 2000-2004 srvx Development Team
+ * Copyright 2000-2006 srvx Development Team
  *
  * This file is part of srvx.
  *
@@ -230,8 +230,8 @@ sockcheck_free_client(struct sockcheck_client *client)
         log_module(PC_LOG, LOG_INFO, "Goodbye %s (%p)!  I set you free!", client->addr->hostname, client);
     }
     verify(client);
-    if (client->fd)
-        ioset_close(client->fd->fd, 1);
+    ioset_close(client->fd, 1);
+    client->fd = NULL;
     sockcheck_list_unref(client->tests);
     free(client->read);
     free(client->resp_state);
@@ -287,13 +287,9 @@ expand_var(const struct sockcheck_client *client, char var, char **p_expansion, 
     extern struct cManagerNode cManager;
     const char *expansion;
     unsigned int exp_length;
-#ifndef __SOLARIS__
-    u_int32_t exp4;
-    u_int16_t exp2;
-#else
     uint32_t exp4;
     uint16_t exp2;
-#endif
+
     /* expand variable */
     switch (var) {
     case 'c':
@@ -661,10 +657,8 @@ sockcheck_begin_test(struct sockcheck_client *client)
     struct io_fd *io_fd;
 
     verify(client);
-    if (client->fd) {
-        ioset_close(client->fd->fd, 1);
-        client->fd = NULL;
-    }
+    ioset_close(client->fd, 1);
+    client->fd = NULL;
     do {
         client->state = client->tests->list[client->test_index];
         client->read_pos = 0;
@@ -1161,7 +1155,8 @@ sockcheck_read_conf(void)
         } else {
             sockcheck_conf.local_addr_len = 0;
             sockcheck_conf.local_addr = NULL;
-            log_module(PC_LOG, LOG_ERROR, "Error: Unable to get host named `%s', not checking a specific address.", str);
+            if (str)
+                log_module(PC_LOG, LOG_ERROR, "Error: Unable to get host named `%s', not checking a specific address.", str);
 	}
     }
 }

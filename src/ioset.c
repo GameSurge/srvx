@@ -1,5 +1,5 @@
 /* ioset.h - srvx event loop
- * Copyright 2002-2004 srvx Development Team
+ * Copyright 2002-2004, 2006 srvx Development Team
  *
  * This file is part of srvx.
  *
@@ -18,7 +18,7 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#include "ioset.h"
+#include "ioset-impl.h"
 #include "log.h"
 #include "timeq.h"
 #include "saxdb.h"
@@ -27,27 +27,18 @@
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
-#ifdef HAVE_SYS_SELECT_H
-#include <sys/select.h>
-#endif
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#endif
-
-#ifndef IOSET_DEBUG
-#define IOSET_DEBUG 0
 #endif
 
 #define IS_EOL(CH) ((CH) == '\n')
 
 extern int uplink_connect(void);
-static int clock_skew;
+int clock_skew;
 int do_write_dbs;
 int do_reopen;
-
-static struct io_fd **fds;
-static unsigned int fds_size;
-static fd_set read_fds, write_fds;
+static struct io_engine *engine;
+static struct io_fd *active_fd;
 
 static void
 ioq_init(struct ioq *ioq, int size) {
@@ -94,9 +85,43 @@ ioq_grow(struct ioq *ioq) {
     return new_size - ioq->put;
 }
 
+extern struct io_engine io_engine_kqueue;
+extern struct io_engine io_engine_epoll;
+extern struct io_engine io_engine_win32;
+extern struct io_engine io_engine_select;
+
+void
+ioset_init(void)
+{
+    assert(engine == NULL);
+
+#if WITH_IOSET_KQUEUE
+    if (!engine && io_engine_kqueue.init())
+	engine = &io_engine_kqueue;
+#endif
+
+#if WITH_IOSET_EPOLL
+    if (!engine && io_engine_epoll.init())
+	engine = &io_engine_epoll;
+#endif
+
+#if WITH_IOSET_WIN32
+    if (!engine && io_engine_win32.init())
+        engine = &io_engine_win32;
+#endif
+
+    if (engine) {
+        /* we found one that works */
+    } else if (io_engine_select.init())
+	engine = &io_engine_select;
+    else
+	log_module(MAIN_LOG, LOG_FATAL, "No usable I/O engine found.");
+    log_module(MAIN_LOG, LOG_DEBUG, "Using %s I/O engine.", engine->name);
+}
+
 void
 ioset_cleanup(void) {
-    free(fds);
+    engine->cleanup();
 }
 
 struct io_fd *
@@ -114,16 +139,57 @@ ioset_add(int fd) {
     res->fd = fd;
     ioq_init(&res->send, 1024);
     ioq_init(&res->recv, 1024);
-    if ((unsigned)fd >= fds_size) {
-        unsigned int old_size = fds_size;
-        fds_size = fd + 8;
-        fds = realloc(fds, fds_size*sizeof(*fds));
-        memset(fds+old_size, 0, (fds_size-old_size)*sizeof(*fds));
-    }
-    fds[fd] = res;
+    engine->add(res);
     flags = fcntl(fd, F_GETFL);
     fcntl(fd, F_SETFL, flags|O_NONBLOCK);
     return res;
+}
+
+struct io_fd *ioset_listen(struct sockaddr *local, unsigned int sa_size, void *data, void (*accept_cb)(struct io_fd *listener, struct io_fd *new_connect))
+{
+    struct io_fd *io_fd;
+    unsigned int opt;
+    int res;
+    int fd;
+
+    fd = socket(local ? local->sa_family : PF_INET, SOCK_STREAM, 0);
+    if (fd < 0) {
+	log_module(MAIN_LOG, LOG_ERROR, "Unable to create listening socket: %s", strerror(errno));
+	return NULL;
+    }
+
+    if (local && sa_size) {
+	res = bind(fd, local, sa_size);
+	if (res < 0) {
+	    log_module(MAIN_LOG, LOG_ERROR, "Unable to bind listening socket %d: %s", fd, strerror(errno));
+	    close(fd);
+	    return NULL;
+	}
+
+        opt = 1;
+        res = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+        if (res < 0) {
+            log_module(MAIN_LOG, LOG_WARNING, "Unable to mark listener address as re-usable: %s", strerror(errno));
+        }
+    }
+
+    res = listen(fd, 1);
+    if (res < 0) {
+	log_module(MAIN_LOG, LOG_ERROR, "Unable to listen on socket %d: %s", fd, strerror(errno));
+	close(fd);
+	return NULL;
+    }
+
+    io_fd = ioset_add(fd);
+    if (!io_fd) {
+	close(fd);
+	return NULL;
+    }
+    io_fd->state = IO_LISTENING;
+    io_fd->data = data;
+    io_fd->accept_cb = accept_cb;
+    engine->update(io_fd);
+    return io_fd;
 }
 
 struct io_fd *
@@ -171,23 +237,28 @@ ioset_connect(struct sockaddr *local, unsigned int sa_size, const char *peer, un
         close(fd);
         return NULL;
     }
+    io_fd->state = IO_CONNECTING;
     io_fd->data = data;
     io_fd->connect_cb = connect_cb;
     if (res < 0) {
         switch (errno) {
         case EINPROGRESS: /* only if !blocking */
+            engine->update(io_fd);
             return io_fd;
         default:
             log_module(MAIN_LOG, LOG_ERROR, "connect(%s:%d) (fd %d) returned errno %d (%s).", peer, port, io_fd->fd, errno, strerror(errno));
             /* then fall through */
         case EHOSTUNREACH:
         case ECONNREFUSED:
-            ioset_close(io_fd->fd, 1);
+            ioset_close(io_fd, 1);
+            engine->update(io_fd);
             return NULL;
         }
     }
+    io_fd->state = IO_CONNECTED;
     if (connect_cb)
         connect_cb(io_fd, ((res < 0) ? errno : 0));
+    engine->update(io_fd);
     return io_fd;
 }
 
@@ -207,20 +278,23 @@ ioset_try_write(struct io_fd *fd) {
         fd->send.get += res;
         if (fd->send.get == fd->send.size)
             fd->send.get = 0;
+        engine->update(fd);
     }
 }
 
 void
-ioset_close(int fd, int os_close) {
-    struct io_fd *fdp;
-    if (!(fdp = fds[fd]))
-        return;
-    fds[fd] = NULL;
+ioset_close(struct io_fd *fdp, int os_close) {
+    if (!fdp)
+	return;
+    if (active_fd == fdp)
+        active_fd = NULL;
     if (fdp->destroy_cb)
         fdp->destroy_cb(fdp);
     if (fdp->send.get != fdp->send.put) {
-        int flags = fcntl(fd, F_GETFL);
-        fcntl(fd, F_SETFL, flags&~O_NONBLOCK);
+        int flags;
+
+	flags = fcntl(fdp->fd, F_GETFL);
+        fcntl(fdp->fd, F_SETFL, flags&~O_NONBLOCK);
         ioset_try_write(fdp);
         /* it may need to send the beginning of the buffer now.. */
         if (fdp->send.get != fdp->send.put)
@@ -229,10 +303,37 @@ ioset_close(int fd, int os_close) {
     free(fdp->send.buf);
     free(fdp->recv.buf);
     if (os_close)
-        close(fd);
+        close(fdp->fd);
+    engine->remove(fdp);
     free(fdp);
-    FD_CLR(fd, &read_fds);
-    FD_CLR(fd, &write_fds);
+}
+
+static void
+ioset_accept(struct io_fd *listener)
+{
+    struct io_fd *old_active_fd;
+    struct io_fd *new_fd;
+    int fd;
+
+    fd = accept(listener->fd, NULL, 0);
+    if (fd < 0) {
+	log_module(MAIN_LOG, LOG_ERROR, "Unable to accept new connection on listener %d: %s", listener->fd, strerror(errno));
+	return;
+    }
+
+    new_fd = ioset_add(fd);
+    new_fd->state = IO_CONNECTED;
+    old_active_fd = active_fd;
+    active_fd = new_fd;
+    listener->accept_cb(listener, new_fd);
+    assert(active_fd == NULL || active_fd == new_fd);
+    if (active_fd == new_fd) {
+        if (new_fd->send.get != new_fd->send.put)
+            ioset_try_write(new_fd);
+        else
+            engine->update(new_fd);
+    }
+    active_fd = old_active_fd;
 }
 
 static int
@@ -253,7 +354,7 @@ ioset_find_line_length(struct io_fd *fd) {
 static void
 ioset_buffered_read(struct io_fd *fd) {
     int put_avail, nbr, fdnum;
-    
+
     if (!(put_avail = ioq_put_avail(&fd->recv)))
         put_avail = ioq_grow(&fd->recv);
     nbr = read(fd->fd, fd->recv.buf + fd->recv.put, put_avail);
@@ -264,14 +365,16 @@ ioset_buffered_read(struct io_fd *fd) {
         default:
             log_module(MAIN_LOG, LOG_ERROR, "Unexpected read() error %d on fd %d: %s", errno, fd->fd, strerror(errno));
             /* Just flag it as EOF and call readable_cb() to notify the fd's owner. */
-            fd->eof = 1;
-            fd->wants_reads = 0;
+            fd->state = IO_CLOSED;
             fd->readable_cb(fd);
+            if (active_fd == fd)
+                engine->update(fd);
         }
     } else if (nbr == 0) {
-        fd->eof = 1;
-        fd->wants_reads = 0;
+        fd->state = IO_CLOSED;
         fd->readable_cb(fd);
+        if (active_fd == fd)
+            engine->update(fd);
     } else {
         if (fd->line_len == 0) {
             unsigned int pos;
@@ -290,10 +393,15 @@ ioset_buffered_read(struct io_fd *fd) {
             fd->recv.put = 0;
         fdnum = fd->fd;
         while (fd->wants_reads && (fd->line_len > 0)) {
+            struct io_fd *old_active;
+
+            old_active = active_fd;
+            active_fd = fd;
             fd->readable_cb(fd);
-            if (!fds[fdnum])
-                break; /* make sure they didn't close on us */
-            ioset_find_line_length(fd);
+            if (active_fd)
+                ioset_find_line_length(fd);
+            if (old_active != fd)
+                active_fd = old_active;
         }
     }
 }
@@ -301,7 +409,7 @@ ioset_buffered_read(struct io_fd *fd) {
 int
 ioset_line_read(struct io_fd *fd, char *dest, int max) {
     int avail, done;
-    if (fd->eof && (!ioq_get_avail(&fd->recv) ||  (fd->line_len < 0)))
+    if ((fd->state == IO_CLOSED) && (!ioq_get_avail(&fd->recv) ||  (fd->line_len < 0)))
         return 0;
     if (fd->line_len < 0)
         return -1;
@@ -326,41 +434,55 @@ ioset_line_read(struct io_fd *fd, char *dest, int max) {
     return max;
 }
 
-#if 1
-#define debug_fdsets(MSG, NFDS, READ_FDS, WRITE_FDS, EXCEPT_FDS, SELECT_TIMEOUT) (void)0
-#else
-static void
-debug_fdsets(const char *msg, int nfds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, struct timeval *select_timeout) {
-    static const char *flag_text[8] = { "---", "r", "w", "rw", "e", "er", "ew", "erw" };
-    char buf[MAXLEN];
-    int pos, ii, flags;
-    struct timeval now;
+void
+ioset_events(struct io_fd *fd, int readable, int writable)
+{
+    if (!fd || (!readable && !writable))
+	return;
+    active_fd = fd;
+    switch (fd->state) {
+    case IO_CLOSED:
+        break;
+    case IO_LISTENING:
+        if (active_fd && readable)
+            ioset_accept(fd);
+        break;
+    case IO_CONNECTING:
+        assert(active_fd == NULL || active_fd == fd);
+        if (active_fd && writable) {
+            socklen_t arglen;
+            int rc;
+            arglen = sizeof(rc);
+            if (getsockopt(fd->fd, SOL_SOCKET, SO_ERROR, &rc, &arglen) < 0)
+                rc = errno;
+            fd->state = IO_CONNECTED;
+            if (fd->connect_cb)
+                fd->connect_cb(fd, rc);
+            if (active_fd == fd)
+                engine->update(fd);
+        }
+        /* and fall through */
+    case IO_CONNECTED:
+        assert(active_fd == NULL || active_fd == fd);
+        if (active_fd && readable) {
+            if (fd->line_reads)
+                ioset_buffered_read(fd);
+            else
+                fd->readable_cb(fd);
+        }
 
-    for (pos=ii=0; ii<nfds; ++ii) {
-        flags  = (read_fds && FD_ISSET(ii, read_fds)) ? 1 : 0;
-        flags |= (write_fds && FD_ISSET(ii, write_fds)) ? 2 : 0;
-        flags |= (except_fds && FD_ISSET(ii, except_fds)) ? 4 : 0;
-        if (!flags)
-            continue;
-        pos += sprintf(buf+pos, " %d%s", ii, flag_text[flags]);
-    }
-    gettimeofday(&now, NULL);
-    if (select_timeout) {
-        log_module(MAIN_LOG, LOG_DEBUG, "%s, at "FMT_TIME_T".%06ld:%s (timeout "FMT_TIME_T".%06ld)", msg, now.tv_sec, now.tv_usec, buf, select_timeout->tv_sec, select_timeout->tv_usec);
-    } else {
-        log_module(MAIN_LOG, LOG_DEBUG, "%s, at "FMT_TIME_T".%06ld:%s (no timeout)", msg, now.tv_sec, now.tv_usec, buf);
+        assert(active_fd == NULL || active_fd == fd);
+        if (active_fd && writable)
+            ioset_try_write(fd);
+        break;
     }
 }
-#endif
 
 void
 ioset_run(void) {
     extern struct io_fd *socket_io_fd;
-    struct timeval select_timeout;
-    unsigned int nn;
-    int select_result, max_fd;
+    struct timeval timeout;
     time_t wakey;
-    struct io_fd *fd;
 
     while (!quit_services) {
         while (!socket_io_fd)
@@ -369,66 +491,13 @@ ioset_run(void) {
         /* How long to sleep? (fill in select_timeout) */
         wakey = timeq_next();
         if ((wakey - now) < 0)
-            select_timeout.tv_sec = 0;
+            timeout.tv_sec = 0;
         else
-            select_timeout.tv_sec = wakey - now;
-        select_timeout.tv_usec = 0;
+            timeout.tv_sec = wakey - now;
+        timeout.tv_usec = 0;
 
-        /* Set up read_fds and write_fds fdsets. */
-        FD_ZERO(&read_fds);
-        FD_ZERO(&write_fds);
-        max_fd = 0;
-        for (nn=0; nn<fds_size; nn++) {
-            if (!(fd = fds[nn]))
-                continue;
-            max_fd = nn;
-            if (fd->wants_reads)
-                FD_SET(nn, &read_fds);
-            if ((fd->send.get != fd->send.put) || !fd->connected)
-                FD_SET(nn, &write_fds);
-        }
-
-        /* Check for activity, update time. */
-        debug_fdsets("Entering select", max_fd+1, &read_fds, &write_fds, NULL, &select_timeout);
-        select_result = select(max_fd + 1, &read_fds, &write_fds, NULL, &select_timeout);
-        debug_fdsets("After select", max_fd+1, &read_fds, &write_fds, NULL, &select_timeout);
-        now = time(NULL) + clock_skew;
-        if (select_result < 0) {
-            if (errno != EINTR) {
-                log_module(MAIN_LOG, LOG_ERROR, "select() error %d: %s", errno, strerror(errno));
-                close_socket();
-            }
-            continue;
-        }
-
-        /* Call back anybody that has connect or read activity and wants to know. */
-        for (nn=0; nn<fds_size; nn++) {
-            if (!(fd = fds[nn]))
-                continue;
-            if (FD_ISSET(nn, &read_fds)) {
-                if (fd->line_reads)
-                    ioset_buffered_read(fd);
-                else
-                    fd->readable_cb(fd);
-            }
-            if (FD_ISSET(nn, &write_fds) && !fd->connected) {
-                socklen_t arglen;
-                int rc;
-
-                arglen = sizeof(rc);
-                if (getsockopt(fd->fd, SOL_SOCKET, SO_ERROR, &rc, &arglen) < 0)
-                    rc = errno;
-                fd->connected = 1;
-                if (fd->connect_cb)
-                    fd->connect_cb(fd, rc);
-            }
-            /* Note: check whether write FD is still set, since the
-             * connect_cb() might close the FD, making us dereference
-             * a free()'d pointer for the fd.
-             */
-            if (FD_ISSET(nn, &write_fds) && (fd->send.get != fd->send.put))
-                ioset_try_write(fd);
-        }
+	if (engine->loop(&timeout))
+	    continue;
 
         /* Call any timeq events we need to call. */
         timeq_run();
@@ -460,6 +529,21 @@ ioset_write(struct io_fd *fd, const char *buf, unsigned int nbw) {
     fd->send.put += nbw;
     if (fd->send.put == fd->send.size)
         fd->send.put = 0;
+    engine->update(fd);
+}
+
+int
+ioset_printf(struct io_fd *fd, const char *fmt, ...) {
+    char tmpbuf[MAXLEN];
+    va_list ap;
+    int res;
+
+    va_start(ap, fmt);
+    res = vsnprintf(tmpbuf, sizeof(tmpbuf), fmt, ap);
+    va_end(ap);
+    if (res > 0 && (size_t)res <= sizeof(tmpbuf))
+        ioset_write(fd, tmpbuf, res);
+    return res;
 }
 
 void

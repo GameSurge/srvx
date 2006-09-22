@@ -1,5 +1,5 @@
 /* main.c - srvx
- * Copyright 2000-2004 srvx Development Team
+ * Copyright 2000-2006 srvx Development Team
  *
  * This file is part of srvx.
  *
@@ -825,6 +825,7 @@ int main(int argc, char *argv[])
     if (debug)
         log_debug();
     timeq_init();
+    ioset_init();
     init_structs();
     init_parse();
     modcmd_init();

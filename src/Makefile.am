@@ -3,7 +3,17 @@ LIBS = @LIBS@ @RX_LIBS@
 
 noinst_PROGRAMS = srvx
 EXTRA_PROGRAMS = checkdb globtest
-noinst_DATA = chanserv.help global.help modcmd.help nickserv.help opserv.help saxdb.help sendmail.help mod-sockcheck.help mod-helpserv.help mod-memoserv.help
+noinst_DATA = \
+	chanserv.help \
+	global.help \
+	modcmd.help \
+	nickserv.help \
+	opserv.help \
+	saxdb.help \
+	sendmail.help \
+	mod-helpserv.help \
+	mod-memoserv.help \
+	mod-sockcheck.help
 EXTRA_DIST = $(noinst_DATA)
 BUILT_SOURCES = arch-version.h
 noinst_HEADERS = arch-version.h
@@ -12,7 +22,7 @@ if HAS_GNU_ARCH
 .PHONY: checkversion
 arch-version.h: checkversion
 checkversion:
-	@$(GNU_ARCH) logs -f >/dev/null || exit 0; \
+	@$(GNU_ARCH) logs -f >/dev/null 2>&1 || exit 0; \
 	TMPFILE=`mktemp arch-version.h.XXXXXX` || exit 1 ; \
 	echo "#define ARCH_VERSION \"`$(GNU_ARCH) logs -f | tail -n 1`\"" >> $$TMPFILE ; \
 	if diff -q arch-version.h $$TMPFILE >/dev/null 2>&1 ; then \
@@ -24,7 +34,17 @@ checkversion:
 	fi
 endif
 
-EXTRA_srvx_SOURCES = alloc-slab.c alloc-srvx.c proto-bahamut.c proto-common.c proto-p10.c mod-snoop.c mod-memoserv.c mod-helpserv.c mod-sockcheck.c
+EXTRA_srvx_SOURCES = \
+	alloc-slab.c \
+	alloc-srvx.c \
+	ioset-select.c \
+	proto-bahamut.c \
+	proto-common.c \
+	proto-p10.c \
+	mod-snoop.c \
+	mod-memoserv.c \
+	mod-helpserv.c \
+	mod-sockcheck.c
 srvx_LDADD = @MODULE_OBJS@
 srvx_DEPENDENCIES = @MODULE_OBJS@
 srvx_SOURCES = \
@@ -40,7 +60,7 @@ srvx_SOURCES = \
 	hash.c hash.h \
 	heap.c heap.h \
 	helpfile.c helpfile.h \
-	ioset.c ioset.h \
+	ioset.c ioset.h ioset-impl.h \
 	log.c log.h \
 	main.c common.h \
 	md5.c md5.h \

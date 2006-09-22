@@ -2,6 +2,73 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2006/srvx--devo--1.3
 #
 
+2006-09-22 02:38:21 GMT	Michael Poole <mdpoole@troilus.org>	patch-38
+
+    Summary:
+      Allow multiple ioset backends.
+    Revision:
+      srvx--devo--1.3--patch-38
+
+    configure.in: Add framework to check for ioset backends.
+    
+    src/Makefile.am (noinst_DATA): Reorganize for easier patching.
+      (checkversion): Avoid spurious error message if $(GNU_ARCH) is missing.
+      (EXTRA_srvx_SOURCES): Reorganize for easier patching; add ioset-select.c.
+      (srvx_SOURCES): Add ioset-impl.h.
+    
+    src/ioset.c (ioset.h): #include "ioset-impl.h" instead.
+      (clock_skew): Make non-static for backends.
+      (engine): New variable.
+      (active_fd): New variable (kind of kludgy).
+      (io_engine_*): New variables, only one exists so far.
+      (ioset_init): New function.
+      (ioset_cleanup): Call engine's cleanup function.
+      (ioset_add): Call engine's add function.
+      (ioset_listen): New function.
+      (ioset_connect): Call engine's update functions at appropriate points.
+      (ioset_try_write): Call engine's update function on success.
+      (ioset_close): Change signature; check against active_fd; call engine's
+        remove function.
+      (ioset_accept): New function.
+      (ioset_buffered_read): Update fd->state instead of fd->eof and call
+        engine's update function as appropriate.  Use active_fd.
+      (ioset_line_read): Check fd->state instead of fd->eof.
+      (debug_fdsets): Move to ioset-select.c.
+      (ioset_events): New function.
+      (ioset_run): Move most of the logic into ioset-select loop function;
+        call it.  Rename "select_timeout" to "timeout" to match.
+      (ioset_write): Call engine->update function.
+      (ioset_printf): New function.
+    
+    src/ioset.h (common.h): #include this header to get PRINTF_LIKE macro.
+      (struct io_fd): Replace 'connected' and 'eof' fields with 'state' field.
+      (ioset_init): Declare new function.
+      (ioset_listen): Declare new function.
+      (ioset_printf): Declare new function.
+      (ioset_close): Update signature.
+    
+    src/main.c (main): Call ioset_init().
+    
+    src/mod-sockcheck.c (sockcheck_free_client): Can unconditionally call
+        ioset_close() now.
+      (expand_var): Always use C99 type names.
+      (sockcheck_begin_test): Can unconditionally call ioset_close() now.
+      (sockcheck_read_conf): Only warn about unknown host if the user set
+        one; it is silly to arn about unknown host `(null)'.
+    
+    src/proto-common.c (socket_destroyed): Check fd->state rather than
+        fd->eof.
+      (close_socket): Update signature for ioset_close().
+
+    new files:
+     src/.arch-ids/ioset-impl.h.id src/.arch-ids/ioset-select.c.id
+     src/ioset-impl.h src/ioset-select.c
+
+    modified files:
+     ChangeLog configure.in src/Makefile.am src/ioset.c src/ioset.h
+     src/main.c src/mod-sockcheck.c src/proto-common.c
+
+
 2006-09-22 02:15:55 GMT	Michael Poole <mdpoole@troilus.org>	patch-37
 
     Summary:
