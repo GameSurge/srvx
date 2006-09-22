@@ -659,7 +659,7 @@ send_message(struct userNode *dest, struct userNode *src, const char *format, ..
     int res;
     va_list ap;
 
-    if (IsLocal(dest)) return 0;
+    if (IsLocal(dest) && !IsDummy(dest)) return 0;
     va_start(ap, format);
     res = vsend_message(dest->nick, src, dest->handle_info, 0, NULL, format, ap);
     va_end(ap);
@@ -671,7 +671,7 @@ send_message_type(int msg_type, struct userNode *dest, struct userNode *src, con
     int res;
     va_list ap;
 
-    if (IsLocal(dest)) return 0;
+    if (IsLocal(dest) && !IsDummy(dest)) return 0;
     va_start(ap, format);
     res = vsend_message(dest->nick, src, dest->handle_info, msg_type, NULL, format, ap);
     va_end(ap);

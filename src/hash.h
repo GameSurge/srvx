@@ -58,6 +58,7 @@
 #define FLAGS_HIDDEN_HOST       0x2000 /* user's host is masked by their account */
 #define FLAGS_REGNICK           0x4000 /* user owns their current nick */
 #define FLAGS_REGISTERING       0x8000 /* user has issued account register command, is waiting for email cookie */
+#define FLAGS_DUMMY             0x10000 /* user is not announced to other servers */
 
 #define IsOper(x)               ((x)->modes & FLAGS_OPER)
 #define IsService(x)            ((x)->modes & FLAGS_SERVICE)
@@ -72,6 +73,7 @@
 #define IsHiddenHost(x)         ((x)->modes & FLAGS_HIDDEN_HOST)
 #define IsReggedNick(x)         ((x)->modes & FLAGS_REGNICK)
 #define IsRegistering(x)	((x)->modes & FLAGS_REGISTERING)
+#define IsDummy(x)              ((x)->modes & FLAGS_DUMMY)
 #define IsFakeHost(x)           ((x)->fakehost[0] != '\0')
 #define IsLocal(x)              ((x)->uplink == self)
 

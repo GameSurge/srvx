@@ -114,14 +114,17 @@ is_valid_nick(const char *nick) {
 struct userNode *
 AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *userinfo, time_t timestamp, irc_in_addr_t realip, const char *stamp) {
     struct userNode *uNode, *oldUser;
-    unsigned int nn;
+    unsigned int nn, dummy;
 
     if (!uplink) {
         log_module(MAIN_LOG, LOG_WARNING, "AddUser(%p, %s, ...): server does not exist!", uplink, nick);
         return NULL;
     }
 
-    if (!is_valid_nick(nick)) {
+    dummy = modes && modes[0] == '*';
+    if (dummy) {
+        ++modes;
+    } else if (!is_valid_nick(nick)) {
         log_module(MAIN_LOG, LOG_WARNING, "AddUser(%p, %s, ...): invalid nickname detected.", uplink, nick);
         return NULL;
     }
@@ -162,6 +165,7 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
     }
 
     mod_usermode(uNode, modes);
+    if (dummy) uNode->modes |= FLAGS_DUMMY;
     if (stamp) call_account_func(uNode, stamp);
     if (IsLocal(uNode)) irc_user(uNode);
     for (nn=0; nn<nuf_used; nn++) {
@@ -216,6 +220,7 @@ DelUser(struct userNode* user, struct userNode *killer, int announce, const char
             irc_kill(killer, user, why);
         }
     }
+    dict_remove(service_msginfo_dict, user->nick);
     modeList_clean(&user->channels);
     user->dead = 1;
     if (dead_users.size) {
@@ -238,6 +243,7 @@ void
 irc_user(struct userNode *user) {
     char modes[32];
     int modelen = 0;
+    if (!user || user->nick[0] != ' ') return;
     if (IsOper(user)) modes[modelen++] = 'o';
     if (IsInvisible(user)) modes[modelen++] = 'i';
     if (IsWallOp(user)) modes[modelen++] = 'w';
@@ -352,19 +358,49 @@ irc_squit(struct server *srv, const char *message, const char *service_message) 
     }
 }
 
+static int
+deliver_to_dummy(struct userNode *source, struct userNode *dest, const char *message, int type)
+{
+    struct service_message_info *smi;
+
+    if (!dest || !IsDummy(dest) || !IsLocal(dest))
+        return 0;
+    smi = dict_find(service_msginfo_dict, dest->nick, NULL);
+    switch (type) {
+    default:
+        if (smi && smi->on_privmsg)
+        {
+            smi->on_privmsg(source, dest, message, 0);
+            return 1;
+        }
+        break;
+    case 1:
+        if (smi && smi->on_notice)
+        {
+            smi->on_notice(source, dest, message, 0);
+            return 1;
+        }
+        break;
+    }
+    return 0;
+}
+
 void
 irc_privmsg(struct userNode *from, const char *to, const char *message) {
-    putsock(":%s PRIVMSG %s :%s", from->nick, to, message);
+    if (!deliver_to_dummy(from, GetUserH(to), message, 1))
+        putsock(":%s PRIVMSG %s :%s", from->nick, to, message);
 }
 
 void
 irc_notice(struct userNode *from, const char *to, const char *message) {
-    putsock(":%s NOTICE %s :%s", from->nick, to, message);
+    if (!deliver_to_dummy(from, GetUserH(to), message, 0))
+        putsock(":%s NOTICE %s :%s", from->nick, to, message);
 }
 
 void
 irc_notice_user(struct userNode *from, struct userNode *to, const char *message) {
-    putsock(":%s NOTICE %s :%s", from->nick, to->nick, message);
+    if (!deliver_to_dummy(from, to, message, 0))
+        putsock(":%s NOTICE %s :%s", from->nick, to->nick, message);
 }
 
 void

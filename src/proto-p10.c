@@ -1,5 +1,5 @@
 /* proto-p10.c - IRC protocol output
- * Copyright 2000-2004 srvx Development Team
+ * Copyright 2000-2006 srvx Development Team
  *
  * This file is part of srvx.
  *
@@ -455,7 +455,7 @@ void
 irc_user(struct userNode *user)
 {
     char b64ip[25];
-    if (!user)
+    if (!user || IsDummy(user))
         return;
     irc_p10_ntop(b64ip, &user->ip);
     if (user->modes) {
@@ -554,22 +554,48 @@ irc_wallchops(struct userNode *from, const char *to, const char *message)
     putsock("%s " P10_WALLCHOPS " %s :%s", from->numeric, to, message);
 }
 
+static int
+deliver_to_dummy(struct userNode *source, struct userNode *dest, const char *message, int type)
+{
+    unsigned int num;
+
+    if (!dest || !IsDummy(dest) || !IsLocal(dest))
+        return 0;
+    num = dest->num_local;
+    switch (type) {
+    default:
+        if ((num < num_notice_funcs) && notice_funcs[num])
+            notice_funcs[num](source, dest, message, 0);
+        break;
+    case 1:
+        if ((num < num_privmsg_funcs) && privmsg_funcs[num])
+            privmsg_funcs[num](source, dest, message, 0);
+        break;
+    }
+    return 1;
+}
+
 void
 irc_notice(struct userNode *from, const char *to, const char *message)
 {
-    putsock("%s " P10_NOTICE " %s :%s", from->numeric, to, message);
+    if (to[0] != '#' && to[0] != '$'
+        && !deliver_to_dummy(from, GetUserN(to), message, 0))
+        putsock("%s " P10_NOTICE " %s :%s", from->numeric, to, message);
 }
 
 void
 irc_notice_user(struct userNode *from, struct userNode *to, const char *message)
 {
-    putsock("%s " P10_NOTICE " %s :%s", from->numeric, to->numeric, message);
+    if (!deliver_to_dummy(from, to, message, 0))
+        putsock("%s " P10_NOTICE " %s :%s", from->numeric, to->numeric, message);
 }
 
 void
 irc_privmsg(struct userNode *from, const char *to, const char *message)
 {
-    putsock("%s " P10_PRIVMSG " %s :%s", from->numeric, to, message);
+    if (to[0] != '#' && to[0] != '$'
+        && !deliver_to_dummy(from, GetUserN(to), message, 1))
+        putsock("%s " P10_PRIVMSG " %s :%s", from->numeric, to, message);
 }
 
 void
@@ -1964,7 +1990,7 @@ static struct userNode*
 AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *numeric, const char *userinfo, time_t timestamp, const char *realip)
 {
     struct userNode *oldUser, *uNode;
-    unsigned int n, ignore_user;
+    unsigned int n, ignore_user, dummy;
 
     if ((strlen(numeric) < 3) || (strlen(numeric) > 5)) {
         log_module(MAIN_LOG, LOG_WARNING, "AddUser(%p, %s, ...): numeric %s wrong length!", uplink, nick, numeric);
@@ -1981,7 +2007,10 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
         return NULL;
     }
 
-    if (!is_valid_nick(nick)) {
+    dummy = modes && modes[0] == '*';
+    if (dummy) {
+        ++modes;
+    } else if (!is_valid_nick(nick)) {
         log_module(MAIN_LOG, LOG_WARNING, "AddUser(%p, %s, ...): invalid nickname detected.", uplink, nick);
         return NULL;
     }
@@ -2021,6 +2050,8 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
     uNode->num_local = base64toint(numeric+strlen(uNode->uplink->numeric), 3) & uNode->uplink->num_mask;
     uNode->uplink->users[uNode->num_local] = uNode;
     mod_usermode(uNode, modes);
+    if (dummy)
+        uNode->modes |= FLAGS_DUMMY;
     if (ignore_user)
         return uNode;
 
@@ -2073,6 +2104,14 @@ DelUser(struct userNode* user, struct userNode *killer, int announce, const char
             irc_quit(user, why);
         else
             irc_kill(killer, user, why);
+    }
+
+    if (IsLocal(user)) {
+        unsigned int num = user->num_local;
+        if (num < num_privmsg_funcs)
+            privmsg_funcs[num] = NULL;
+        if (num < num_notice_funcs)
+            notice_funcs[num] = NULL;
     }
 
     modeList_clean(&user->channels);
