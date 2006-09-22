@@ -37,6 +37,7 @@ endif
 EXTRA_srvx_SOURCES = \
 	alloc-slab.c \
 	alloc-srvx.c \
+	ioset-epoll.c \
 	ioset-select.c \
 	proto-bahamut.c \
 	proto-common.c \
