@@ -1,5 +1,5 @@
 /* nickserv.c - Nick/authentication service
- * Copyright 2000-2004 srvx Development Team
+ * Copyright 2000-2006 srvx Development Team
  *
  * This file is part of srvx.
  *
@@ -28,7 +28,9 @@
 #include "timeq.h"
 
 #ifdef HAVE_REGEX_H
-#include <regex.h>
+# include <regex.h>
+#else
+# include "rx/rxposix.h"
 #endif
 
 #define NICKSERV_CONF_NAME "services/nickserv"
@@ -3840,7 +3842,7 @@ init_nickserv(const char *nick)
 
     if (nick) {
         const char *modes = conf_get_data("services/nickserv/modes", RECDB_QSTRING);
-        nickserv = AddService(nick, modes ? modes : NULL, "Nick Services", NULL);
+        nickserv = AddLocalUser(nick, nick, NULL, "Nick Services", modes);
         nickserv_service = service_register(nickserv);
     }
     saxdb_register("NickServ", nickserv_saxdb_read, nickserv_saxdb_write);

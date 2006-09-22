@@ -1733,7 +1733,7 @@ static MODCMD_FUNC(cmd_service_add) {
         reply("MCMSG_ALREADY_SERVICE", bot->nick);
         return 0;
     }
-    bot = AddService(nick, NULL, desc, hostname);
+    bot = AddLocalUser(nick, nick, hostname, desc, NULL);
     service_register(bot);
     reply("MCMSG_NEW_SERVICE", bot->nick);
     return 1;
@@ -2052,7 +2052,7 @@ modcmd_load_bots(struct dict *db, int default_nick) {
         hostname = database_get_data(rd->d.object, "hostname", RECDB_QSTRING);
         if (desc) {
             if (!svc)
-                svc = service_register(AddService(nick, NULL, desc, hostname));
+                svc = service_register(AddLocalUser(nick, nick, hostname, desc, NULL));
             else if (hostname)
                 strcpy(svc->bot->hostname, hostname);
             desc = database_get_data(rd->d.object, "trigger", RECDB_QSTRING);

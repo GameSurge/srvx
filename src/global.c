@@ -704,7 +704,7 @@ init_global(const char *nick)
     if(nick)
     {
         const char *modes = conf_get_data("services/global/modes", RECDB_QSTRING);
-        global = AddService(nick, modes ? modes : NULL, "Global Services", NULL);
+        global = AddLocalUser(nick, nick, NULL, "Global Services", modes);
         global_service = service_register(global);
     }
     saxdb_register("Global", global_saxdb_read, global_saxdb_write);

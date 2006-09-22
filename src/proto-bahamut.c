@@ -1,5 +1,5 @@
 /* proto-bahamut.c - IRC protocol output
- * Copyright 2000-2004 srvx Development Team
+ * Copyright 2000-2006 srvx Development Team
  *
  * This file is part of srvx.
  *
@@ -171,10 +171,14 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
 }
 
 struct userNode *
-AddService(const char *nick, const char *modes, const char *desc, const char *hostname) {
+AddLocalUser(const char *nick, const char *ident, const char *hostname, const char *desc, const char *modes)
+{
     time_t timestamp = now;
     struct userNode *old_user = GetUserH(nick);
     static const irc_in_addr_t ipaddr;
+
+    if (!modes)
+        modes = "+oikr";
     if (old_user) {
         if (IsLocal(old_user))
             return old_user;
@@ -182,20 +186,7 @@ AddService(const char *nick, const char *modes, const char *desc, const char *ho
     }
     if (!hostname)
         hostname = self->name;
-    return AddUser(self, nick, nick, hostname, modes ? modes : "+oikr", desc, timestamp, ipaddr, 0);
-}
-
-struct userNode *
-AddClone(const char *nick, const char *ident, const char *hostname, const char *desc) {
-    time_t timestamp = now;
-    struct userNode *old_user = GetUserH(nick);
-    static const irc_in_addr_t ipaddr;
-    if (old_user) {
-        if (IsLocal(old_user))
-            return old_user;
-        timestamp = old_user->timestamp - 1;
-    }
-    return AddUser(self, nick, ident, hostname, "+ir", desc, timestamp, ipaddr, 0);
+    return AddUser(self, nick, ident, hostname, modes, desc, timestamp, ipaddr, 0);
 }
 
 void

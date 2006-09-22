@@ -7373,7 +7373,7 @@ init_chanserv(const char *nick)
     if(nick)
     {
         const char *modes = conf_get_data("services/chanserv/modes", RECDB_QSTRING);
-        chanserv = AddService(nick, modes ? modes : NULL, "Channel Services", NULL);
+        chanserv = AddLocalUser(nick, nick, NULL, "Channel Services", modes);
         service_register(chanserv)->trigger = '!';
         reg_chanmsg_func('\001', chanserv, chanserv_ctcp_check);
     }

@@ -1646,7 +1646,7 @@ opserv_add_reserve(struct svccmd *cmd, struct userNode *user, const char *nick, 
 	    return NULL;
 	}
     }
-    if ((resv = AddClone(nick, ident, host, desc))) {
+    if ((resv = AddLocalUser(nick, ident, host, desc, "+i"))) {
         dict_insert(opserv_reserved_nick_dict, resv->nick, resv);
     }
     return resv;
@@ -2248,7 +2248,7 @@ static MODCMD_FUNC(cmd_clone)
 	    reply("OSMSG_NOT_A_HOSTMASK");
 	    return 0;
 	}
-	if (!(clone = AddClone(argv[2], ident, argv[3]+i, userinfo))) {
+	if (!(clone = AddLocalUser(argv[2], ident, argv[3]+i, userinfo, "+i"))) {
             reply("OSMSG_CLONE_FAILED", argv[2]);
             return 0;
         }
@@ -2429,7 +2429,7 @@ int add_reserved(const char *key, void *data, void *extra)
 	log_module(OS_LOG, LOG_ERROR, "Missing description for reserve of %s", key);
 	return 0;
     }
-    if ((reserve = AddClone(key, ident, hostname, desc))) {
+    if ((reserve = AddLocalUser(key, ident, hostname, desc, "+i"))) {
         reserve->modes |= FLAGS_PERSISTENT;
         dict_insert(extra, reserve->nick, reserve);
     }
@@ -4097,7 +4097,7 @@ init_opserv(const char *nick)
     OS_LOG = log_register_type("OpServ", "file:opserv.log");
     if (nick) {
         const char *modes = conf_get_data("services/opserv/modes", RECDB_QSTRING);
-        opserv = AddService(nick, modes ? modes : NULL, "Oper Services", NULL);
+        opserv = AddLocalUser(nick, nick, NULL, "Oper Services", modes);
     }
     conf_register_reload(opserv_conf_read);
 
