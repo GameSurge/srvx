@@ -1,5 +1,5 @@
 /* chanserv.c - Channel service bot
- * Copyright 2000-2004 srvx Development Team
+ * Copyright 2000-2006 srvx Development Team
  *
  * This file is part of srvx.
  *
@@ -788,7 +788,7 @@ scan_user_presence(struct userData *uData, struct userNode *user)
 }
 
 static void
-chanserv_ctcp_check(struct userNode *user, struct chanNode *channel, char *text, UNUSED_ARG(struct userNode *bot))
+chanserv_ctcp_check(struct userNode *user, struct chanNode *channel, const char *text, UNUSED_ARG(struct userNode *bot))
 {
     unsigned int eflags, argc;
     char *argv[4];
@@ -805,7 +805,7 @@ chanserv_ctcp_check(struct userNode *user, struct chanNode *channel, char *text,
         return;
     /* We need to enforce against them; do so. */
     eflags = 0;
-    argv[0] = text;
+    argv[0] = (char*)text;
     argv[1] = user->nick;
     argc = 2;
     if(GetUserMode(channel, user))

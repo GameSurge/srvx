@@ -1,5 +1,5 @@
 /* proto.h - IRC protocol output
- * Copyright 2000-2004 srvx Development Team
+ * Copyright 2000-2006 srvx Development Team
  *
  * This file is part of srvx.
  *
@@ -94,12 +94,12 @@ void init_parse(void);
 int parse_line(char *line, int recursive);
 
 /* Callback notifications for protocol support. */
-typedef void (*chanmsg_func_t) (struct userNode *user, struct chanNode *chan, char *text, struct userNode *bot);
+typedef void (*chanmsg_func_t) (struct userNode *user, struct chanNode *chan, const char *text, struct userNode *bot);
 void reg_chanmsg_func(unsigned char prefix, struct userNode *service, chanmsg_func_t handler);
 void reg_allchanmsg_func(struct userNode *service, chanmsg_func_t handler);
 struct userNode *get_chanmsg_bot(unsigned char prefix);
 
-typedef void (*privmsg_func_t) (struct userNode *user, struct userNode *target, char *text, int server_qualified);
+typedef void (*privmsg_func_t) (struct userNode *user, struct userNode *target, const char *text, int server_qualified);
 void reg_privmsg_func(struct userNode *user, privmsg_func_t handler);
 void reg_notice_func(struct userNode *user, privmsg_func_t handler);
 void unreg_privmsg_func(struct userNode *user, privmsg_func_t handler);

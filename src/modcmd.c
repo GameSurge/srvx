@@ -1,5 +1,5 @@
 /* modcmd.c - Generalized module command support
- * Copyright 2002-2004 srvx Development Team
+ * Copyright 2002-2006 srvx Development Team
  *
  * This file is part of srvx.
  *
@@ -795,9 +795,10 @@ svccmd_send_help_2(struct userNode *user, struct service *service, const char *t
 }
 
 static int
-svccmd_invoke(struct userNode *user, struct service *service, struct chanNode *channel, char *text, int server_qualified) {
+svccmd_invoke(struct userNode *user, struct service *service, struct chanNode *channel, const char *text, int server_qualified) {
     unsigned int argc;
     char *argv[MAXNUMPARAMS];
+    char tmpline[MAXLEN];
 
     if (!*text)
         return 0;
@@ -815,12 +816,13 @@ svccmd_invoke(struct userNode *user, struct service *service, struct chanNode *c
             return 0;
         }
     }
-    argc = split_line(text, false, ArrayLength(argv), argv);
+    safestrncpy(tmpline, text, sizeof(tmpline));
+    argc = split_line(tmpline, false, ArrayLength(argv), argv);
     return argc ? svccmd_invoke_argv(user, service, channel, argc, argv, server_qualified) : 0;
 }
 
 void
-modcmd_privmsg(struct userNode *user, struct userNode *bot, char *text, int server_qualified) {
+modcmd_privmsg(struct userNode *user, struct userNode *bot, const char *text, int server_qualified) {
     struct service *service;
 
     if (!(service = dict_find(services, bot->nick, NULL))) {
@@ -885,7 +887,7 @@ modcmd_privmsg(struct userNode *user, struct userNode *bot, char *text, int serv
 }
 
 void
-modcmd_chanmsg(struct userNode *user, struct chanNode *chan, char *text, struct userNode *bot) {
+modcmd_chanmsg(struct userNode *user, struct chanNode *chan, const char *text, struct userNode *bot) {
     struct service *service;
     if (!(service = dict_find(services, bot->nick, NULL))) return;
     svccmd_invoke(user, service, chan, text, 0);

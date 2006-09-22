@@ -1,5 +1,5 @@
 /* mod-helpserv.c - Support Helper assistant service
- * Copyright 2002-2003 srvx Development Team
+ * Copyright 2002-2003, 2006 srvx Development Team
  *
  * This file is part of srvx.
  *
@@ -967,7 +967,7 @@ static struct helpserv_request * create_request(struct userNode *user, struct he
 }
 
 /* Handle a message from a user to a HelpServ bot. */
-static void helpserv_usermsg(struct userNode *user, struct helpserv_bot *hs, char *text) {
+static void helpserv_usermsg(struct userNode *user, struct helpserv_bot *hs, const char *text) {
     const int from_opserv = 0; /* for helpserv_notice */
     struct helpserv_request *req=NULL, *newest=NULL;
     struct helpserv_reqlist *reqlist, *hand_reqlist;
@@ -1091,11 +1091,12 @@ static void helpserv_usermsg(struct userNode *user, struct helpserv_bot *hs, cha
 }
 
 /* Handle messages direct to a HelpServ bot. */
-static void helpserv_botmsg(struct userNode *user, struct userNode *target, char *text, UNUSED_ARG(int server_qualified)) {
+static void helpserv_botmsg(struct userNode *user, struct userNode *target, const char *text, UNUSED_ARG(int server_qualified)) {
     struct helpserv_bot *hs;
     struct helpserv_cmd *cmd;
     struct helpserv_user *hs_user;
     char *argv[MAXNUMPARAMS];
+    char tmpline[MAXLEN];
     int argc, argv_shift;
     const int from_opserv = 0; /* for helpserv_notice */
 
@@ -1113,7 +1114,8 @@ static void helpserv_botmsg(struct userNode *user, struct userNode *target, char
     }
 
     argv_shift = 1;
-    argc = split_line(text, false, ArrayLength(argv)-argv_shift, argv+argv_shift);
+    safestrncpy(tmpline, text, sizeof(tmpline));
+    argc = split_line(tmpline, false, ArrayLength(argv)-argv_shift, argv+argv_shift);
     if (!argc)
         return;
 
@@ -1133,8 +1135,8 @@ static void helpserv_botmsg(struct userNode *user, struct userNode *target, char
     if (!cmd->func) {
         helpserv_notice(user, "HSMSG_INTERNAL_COMMAND", argv[argv_shift]);
     } else if (cmd->func(user, hs, 0, argc, argv+argv_shift)) {
-        unsplit_string(argv+argv_shift, argc, text);
-        log_audit(HS_LOG, LOG_COMMAND, user, hs->helpserv, hs->helpchan->name, 0, text);
+        unsplit_string(argv+argv_shift, argc, tmpline);
+        log_audit(HS_LOG, LOG_COMMAND, user, hs->helpserv, hs->helpchan->name, 0, tmpline);
     }
 }
 

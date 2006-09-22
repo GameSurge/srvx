@@ -1,5 +1,5 @@
 /* modcmd.h - Generalized module command support
- * Copyright 2002-2004 srvx Development Team
+ * Copyright 2002-2006 srvx Development Team
  *
  * This file is part of srvx.
  *
@@ -32,7 +32,7 @@ struct modcmd;
 
 #define MODCMD_FUNC(NAME) int NAME(struct userNode *user, UNUSED_ARG(struct chanNode *channel), UNUSED_ARG(unsigned int argc), UNUSED_ARG(char **argv), UNUSED_ARG(struct svccmd *cmd))
 typedef MODCMD_FUNC(modcmd_func_t);
-#define SVCMSG_HOOK(NAME) int NAME(struct userNode *user, struct userNode *target, char *text, int server_qualified);
+#define SVCMSG_HOOK(NAME) int NAME(struct userNode *user, struct userNode *target, const char *text, int server_qualified);
 typedef SVCMSG_HOOK(svcmsg_hook_t);
 
 DECLARE_LIST(svccmd_list, struct svccmd*);

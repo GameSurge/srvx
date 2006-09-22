@@ -2,6 +2,32 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2006/srvx--devo--1.3
 #
 
+2006-09-22 01:35:03 GMT	Michael Poole <mdpoole@troilus.org>	patch-34
+
+    Summary:
+      Make IRC message handler 'text' const.
+    Revision:
+      srvx--devo--1.3--patch-34
+
+    src/chanserv.c (chanserv_ctcp_check): Make 'text' parameter const.
+    
+    src/mod-helpserv.c (helpserv_usermsg): Likewise.
+      (helpserv_botmsg): Likewise.
+    
+    src/modcmd.c (svccmd_invoke): Likewise.
+      (modcmd_privmsg): Likewise.
+      (modcmd_chanmsg): Likewise.
+    
+    src/modcmd.h (SVCMSG_HOOK): Likewise.
+    
+    src/proto.h (chanmsg_func_t): Likewise.
+      (privmsg_func_t): Likewise.
+
+    modified files:
+     ChangeLog src/chanserv.c src/mod-helpserv.c src/modcmd.c
+     src/modcmd.h src/proto.h
+
+
 2006-09-22 01:23:43 GMT	Michael Poole <mdpoole@troilus.org>	patch-33
 
     Summary:
