@@ -1,5 +1,5 @@
 /* hash.h - IRC network state database
- * Copyright 2000-2004 srvx Development Team
+ * Copyright 2000-2006 srvx Development Team
  *
  * This file is part of srvx.
  *
@@ -46,14 +46,11 @@
 #define MODE_REMOVE             0x80000000
 
 #define FLAGS_OPER		0x0001 /* Operator +O */
-#define FLAGS_LOCOP		0x0002 /* Local operator +o */
 #define FLAGS_INVISIBLE		0x0004 /* invisible +i */
 #define FLAGS_WALLOP		0x0008 /* receives wallops +w */
-#define FLAGS_SERVNOTICE	0x0010 /* receives server notices +s */
 #define FLAGS_DEAF		0x0020 /* deaf +d */
 #define FLAGS_SERVICE		0x0040 /* cannot be kicked, killed or deoped +k */
 #define FLAGS_GLOBAL		0x0080 /* receives global messages +g */
-#define FLAGS_HELPER		0x0100 /* (network?) helper +h */
 #define FLAGS_PERSISTENT	0x0200 /* for reserved nicks, this isn't just one-shot */
 #define FLAGS_GAGGED		0x0400 /* for gagged users */
 #define FLAGS_AWAY		0x0800 /* for away users */
@@ -68,8 +65,6 @@
 #define IsInvisible(x)          ((x)->modes & FLAGS_INVISIBLE)
 #define IsGlobal(x)             ((x)->modes & FLAGS_GLOBAL)
 #define IsWallOp(x)             ((x)->modes & FLAGS_WALLOP)
-#define IsServNotice(x)         ((x)->modes & FLAGS_SERVNOTICE)
-#define IsHelperIrcu(x)         ((x)->modes & FLAGS_HELPER)
 #define IsGagged(x)             ((x)->modes & FLAGS_GAGGED)
 #define IsPersistent(x)         ((x)->modes & FLAGS_PERSISTENT) 
 #define IsAway(x)               ((x)->modes & FLAGS_AWAY)

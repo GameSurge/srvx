@@ -242,7 +242,6 @@ irc_user(struct userNode *user) {
     if (IsInvisible(user)) modes[modelen++] = 'i';
     if (IsWallOp(user)) modes[modelen++] = 'w';
     if (IsService(user)) modes[modelen++] = 'k';
-    if (IsServNotice(user)) modes[modelen++] = 's';
     if (IsDeaf(user)) modes[modelen++] = 'd';
     if (IsReggedNick(user)) modes[modelen++] = 'r';
     if (IsGlobal(user)) modes[modelen++] = 'g';
@@ -1193,17 +1192,14 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
 		userList_remove(&curr_opers, user);
 	    }
 	    break;
-	case 'O': do_user_mode(FLAGS_LOCOP); break;
 	case 'i': do_user_mode(FLAGS_INVISIBLE);
 	    if (add) invis_clients++; else invis_clients--;
 	    break;
 	case 'w': do_user_mode(FLAGS_WALLOP); break;
-	case 's': do_user_mode(FLAGS_SERVNOTICE); break;
 	case 'd': do_user_mode(FLAGS_DEAF); break;
 	case 'r': do_user_mode(FLAGS_REGNICK); break;
 	case 'k': do_user_mode(FLAGS_SERVICE); break;
 	case 'g': do_user_mode(FLAGS_GLOBAL); break;
-	case 'h': do_user_mode(FLAGS_HELPER); break;
 	}
 #undef do_user_mode
     }
