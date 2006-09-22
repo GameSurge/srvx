@@ -1,4 +1,4 @@
-EXTRA_DIST = FAQ UPGRADE srvx.conf.example sockcheck.conf.example
+EXTRA_DIST = FAQ UPGRADE srvx.conf.example sockcheck.conf.example autogen.sh
 SUBDIRS = @MY_SUBDIRS@
 DIST_SUBDIRS = src rx
 
