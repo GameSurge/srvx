@@ -45,7 +45,7 @@
 #define MODE_UPASS		0x20000 /* +U userpass */
 #define MODE_REMOVE             0x80000000
 
-#define FLAGS_OPER		0x0001 /* Operator +O */
+#define FLAGS_OPER		0x0001 /* global operator +o */
 #define FLAGS_INVISIBLE		0x0004 /* invisible +i */
 #define FLAGS_WALLOP		0x0008 /* receives wallops +w */
 #define FLAGS_DEAF		0x0020 /* deaf +d */
