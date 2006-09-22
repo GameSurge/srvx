@@ -61,6 +61,16 @@ char *alloca();
 #include <netdb.h>
 #endif
 
+#ifdef HAVE_WINSOCK2_H
+/* Windows XP+ only -- older versions lack getaddrinfo() etc. */
+# define _WIN32_WINNT 0x0501
+# include <winsock2.h>
+#endif
+
+#ifdef HAVE_WS2TCPIP_H
+# include <ws2tcpip.h>
+#endif
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

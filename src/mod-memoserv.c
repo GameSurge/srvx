@@ -56,6 +56,7 @@
 #define KEY_RECIPIENT "to"
 #define KEY_FROM "from"
 #define KEY_MESSAGE "msg"
+#undef KEY_READ /* thanks microsoft! */
 #define KEY_READ "read"
 
 static const struct message_entry msgtab[] = {

@@ -1,0 +1,319 @@
+/* src/config.h.win32.  Generated manually from src/config.h.in.  */
+
+/* Win32-specific stuff here.. */
+#define HAVE_WINSOCK2_H 1
+#define HAVE_WS2TCPIP_H 1
+#define HAVE_IOCTLSOCKET 1
+#define HAVE_WSAEVENTSELECT 1
+#define _WIN32_WINNT 0x0501
+
+/* Define if the system regex library is unreliable. */
+#undef BROKEN_REGEX
+
+/* Code name for this release */
+#define CODENAME "surge"
+
+/* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
+   systems. This function is required for `alloca.c' support on those systems.
+   */
+#undef CRAY_STACKSEG_END
+
+/* Define to 1 if using `alloca.c'. */
+#undef C_ALLOCA
+
+/* Define if tokenized P10 desired */
+#define ENABLE_TOKENS 1
+
+/* Define to printf format for a time_t variable */
+#define FMT_TIME_T "%ld"
+
+/* Define to 1 if you have `alloca', as a function or macro. */
+#define HAVE_ALLOCA 1
+
+/* Define to 1 if you have <alloca.h> and it should be used (not on Ultrix).
+   */
+#undef HAVE_ALLOCA_H
+
+/* Define to 1 if you have the <arpa/inet.h> header file. */
+#undef HAVE_ARPA_INET_H
+
+/* Define to 1 if you have the <dirent.h> header file. */
+#define HAVE_DIRENT_H 1
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
+/* Define to 1 if you have the <dmalloc.h> header file. */
+#undef HAVE_DMALLOC_H
+
+/* Define to 1 if you have the <fcntl.h> header file. */
+#define HAVE_FCNTL_H 1
+
+/* Define to 1 if you have the `freeaddrinfo' function. */
+#define HAVE_FREEADDRINFO 1
+
+/* Define to 1 if you have the `ftime' function. */
+#define HAVE_FTIME 1
+
+/* Define to 1 if you have the <gc/gc.h> header file. */
+#undef HAVE_GC_GC_H
+
+/* Define to 1 if you have the `getaddrinfo' function. */
+#define HAVE_GETADDRINFO 1
+
+/* Define to 1 if you have the `getnameinfo' function. */
+#define HAVE_GETNAMEINFO 1
+
+/* Define to 1 if you have the `getopt' function. */
+#undef HAVE_GETOPT
+
+/* Define to 1 if you have the <getopt.h> header file. */
+#undef HAVE_GETOPT_H
+
+/* Define to 1 if you have the `getopt_long' function. */
+#undef HAVE_GETOPT_LONG
+
+/* Define to 1 if you have the `getpagesize' function. */
+#undef HAVE_GETPAGESIZE
+
+/* Define to 1 if you have the `gettimeofday' function. */
+#define HAVE_GETTIMEOFDAY 1
+
+/* Define to 1 if you have the `inet_aton' function. */
+#undef HAVE_INET_ATON
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#define HAVE_INTTYPES_H 1
+
+/* Define to 1 if you have the `dl' library (-ldl). */
+#undef HAVE_LIBDL
+
+/* Define to 1 if you have the `dmalloc' library (-ldmalloc). */
+#undef HAVE_LIBDMALLOC
+
+/* Define to 1 if you have the `elf' library (-lelf). */
+#undef HAVE_LIBELF
+
+/* Define to 1 if you have the `gc' library (-lgc). */
+#undef HAVE_LIBGC
+
+/* Define to 1 if you have the `mpatrol' library (-lmpatrol). */
+#undef HAVE_LIBMPATROL
+
+/* Define to 1 if you have the `nsl' library (-lnsl). */
+#undef HAVE_LIBNSL
+
+/* Define to 1 if you have the `socket' library (-lsocket). */
+#undef HAVE_LIBSOCKET
+
+/* Define to 1 if you have the `localtime_r' function. */
+#undef HAVE_LOCALTIME_R
+
+/* Define to 1 if you have the <malloc.h> header file. */
+#undef HAVE_MALLOC_H
+
+/* Define to 1 if you have the `memcpy' function. */
+#define HAVE_MEMCPY 1
+
+/* Define to 1 if you have the <memory.h> header file. */
+#define HAVE_MEMORY_H 1
+
+/* Define to 1 if you have the `memset' function. */
+#define HAVE_MEMSET 1
+
+/* Define to 1 if you have a working `mmap' system call. */
+#undef HAVE_MMAP
+
+/* Define to 1 if you have the <mpatrol.h> header file. */
+#undef HAVE_MPATROL_H
+
+/* Define to 1 if you have the <netdb.h> header file. */
+#undef HAVE_NETDB_H
+
+/* Define to 1 if you have the <netinet/in.h> header file. */
+#undef HAVE_NETINET_IN_H
+
+/* Define to 1 if you have the `regcomp' function. */
+#undef HAVE_REGCOMP
+
+/* Define to 1 if you have the `regexec' function. */
+#undef HAVE_REGEXEC
+
+/* Define to 1 if you have the <regex.h> header file. */
+#undef HAVE_REGEX_H
+
+/* Define to 1 if you have the `regfree' function. */
+#undef HAVE_REGFREE
+
+/* Define to 1 if you have the `select' function. */
+#undef HAVE_SELECT
+
+/* Define to 1 if you have the `setrlimit' function. */
+#undef HAVE_SETRLIMIT
+
+/* Define if struct sockaddr_in contains a sin_len field */
+#undef HAVE_SIN_LEN
+
+/* Define if struct sockaddr has sa_len field */
+#undef HAVE_SOCKADDR_SA_LEN
+
+/* Define to 1 if you have the `socket' function. */
+#define HAVE_SOCKET 1
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#define HAVE_STDINT_H 1
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#define HAVE_STDLIB_H 1
+
+/* Define to 1 if you have the `strcspn' function. */
+#define HAVE_STRCSPN 1
+
+/* Define to 1 if you have the `strdup' function. */
+#define HAVE_STRDUP 1
+
+/* Define to 1 if you have the `strerror' function. */
+#define HAVE_STRERROR 1
+
+/* Define to 1 if you have the <strings.h> header file. */
+#define HAVE_STRINGS_H 1
+
+/* Define to 1 if you have the <string.h> header file. */
+#define HAVE_STRING_H 1
+
+/* Define to 1 if you have the `strsignal' function. */
+#undef HAVE_STRSIGNAL
+
+/* Define to 1 if you have the `strspn' function. */
+#define HAVE_STRSPN 1
+
+/* Define to 1 if you have the `strtod' function. */
+#define HAVE_STRTOD 1
+
+/* Define to 1 if you have the `strtoul' function. */
+#define HAVE_STRTOUL 1
+
+/* Define if struct addrinfo declared */
+#define HAVE_STRUCT_ADDRINFO 1
+
+/* Define to 1 if you have the `sysconf' function. */
+#undef HAVE_SYSCONF
+
+/* Define to 1 if you have the <sys/mman.h> header file. */
+#undef HAVE_SYS_MMAN_H
+
+/* Define to 1 if you have the <sys/param.h> header file. */
+#define HAVE_SYS_PARAM_H 1
+
+/* Define to 1 if you have the <sys/resource.h> header file. */
+#undef HAVE_SYS_RESOURCE_H
+
+/* Define to 1 if you have the <sys/socket.h> header file. */
+#undef HAVE_SYS_SOCKET_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#define HAVE_SYS_STAT_H 1
+
+/* Define to 1 if you have the <sys/timeb.h> header file. */
+#define HAVE_SYS_TIMEB_H 1
+
+/* Define to 1 if you have the <sys/times.h> header file. */
+#undef HAVE_SYS_TIMES_H
+
+/* Define to 1 if you have the <sys/time.h> header file. */
+#define HAVE_SYS_TIME_H 1
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#define HAVE_SYS_TYPES_H 1
+
+/* Define to 1 if you have the <sys/wait.h> header file. */
+#undef HAVE_SYS_WAIT_H
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#define HAVE_UNISTD_H 1
+
+/* Define if we have va_copy */
+#define HAVE_VA_COPY 1
+
+/* Define if we have __va_copy */
+#undef HAVE___VA_COPY
+
+/* Define to disable built-in getopt library */
+#undef IGNORE_GETOPT
+
+/* Name of package */
+#define PACKAGE "srvx"
+
+/* Define to the address where bug reports for this package should be sent. */
+#define PACKAGE_BUGREPORT "srvx-bugs@lists.sourceforge.net"
+
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "srvx"
+
+/* Define to the full name and version of this package. */
+#define PACKAGE_STRING "srvx 1.31-win"
+
+/* Define to the one symbol short name of this package. */
+#define PACKAGE_TARNAME "srvx-1.3.1"
+
+/* Define to the version of this package. */
+#define PACKAGE_VERSION "1.3.1"
+
+/* Define as the return type of signal handlers (`int' or `void'). */
+#define RETSIGTYPE void
+
+/* If using the C implementation of alloca, define if you know the
+   direction of stack growth for your system; otherwise it will be
+   automatically deduced at run-time.
+	STACK_DIRECTION > 0 => grows toward higher addresses
+	STACK_DIRECTION < 0 => grows toward lower addresses
+	STACK_DIRECTION = 0 => direction of growth unknown */
+#define STACK_DIRECTION -1
+
+/* Define to 1 if you have the ANSI C header files. */
+#define STDC_HEADERS 1
+
+/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
+#define TIME_WITH_SYS_TIME 1
+
+/* Define to 1 if your <sys/time.h> declares `struct tm'. */
+#define TM_IN_SYS_TIME 1
+
+/* Version number of package */
+#define VERSION 1.3.1
+
+/* Define if using the Win32 I/O backend */
+#define WITH_IOSET_WIN32 1
+
+/* Define if using the epoll I/O backend */
+#undef WITH_IOSET_EPOLL
+
+/* Define if using the Boehm GC to garbage collect and check memory leaks */
+#undef WITH_MALLOC_BOEHM_GC
+
+/* Define if using the dmalloc debugging malloc package */
+#undef WITH_MALLOC_DMALLOC
+
+/* Define if using the mpatrol malloc debugging package */
+#undef WITH_MALLOC_MPATROL
+
+/* Define if using the slab internal debug allocator */
+#undef WITH_MALLOC_SLAB
+
+/* Define if using the srvx internal debug allocator */
+#undef WITH_MALLOC_SRVX
+
+/* Define if using the system's malloc */
+#undef WITH_MALLOC_SYSTEM
+
+/* Define to empty if `const' does not conform to ANSI C. */
+#undef const
+
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
+#undef inline
+#endif
+
+/* type to use in place of socklen_t if not defined */
+#undef socklen_t

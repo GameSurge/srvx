@@ -1,0 +1,72 @@
+# For an out-of-tree build, set VPATH appropriately:
+VPATH=.
+# (You will also have to manually create the 'rx' and 'src'
+# directories if they do not already exist.)
+# For a cross-compilation, set CC appropriately:
+# CC=i586-mingw32msvc-cc
+CPPFLAGS=-I$(VPATH) -Isrc
+CFLAGS=-mno-cygwin -W -Wall -O2
+
+#MODULES=
+MODULES=helpserv memoserv qserver snoop sockcheck
+PROTOCOL=p10
+ifeq ($(PROTOCOL),p10)
+  CFLAGS += -DWITH_PROTOCOL_P10
+else
+  CFLAGS += -DWITH_PROTOCOL_BAHAMUT
+endif
+
+RX_OBJS = \
+	rx/rx.o \
+	rx/rxanal.o \
+	rx/rxbasic.o \
+	rx/rxbitset.o \
+	rx/rxcset.o \
+	rx/rxgnucomp.o \
+	rx/rxhash.o \
+	rx/rxnfa.o \
+	rx/rxnode.o \
+	rx/rxposix.o \
+	rx/rxsimp.o \
+	rx/rxspencer.o \
+	rx/rxstr.o \
+	rx/rxsuper.o \
+	rx/rxunfa.o
+
+SRVX_OBJS = \
+	src/chanserv.o \
+	src/compat.o \
+	src/conf.o \
+	src/dict-splay.o \
+	src/gline.o \
+	src/hash.o \
+	src/heap.o \
+	src/helpfile.o \
+	src/ioset-win32.o \
+	src/ioset.o \
+	src/log.o \
+	src/main.o \
+	src/md5.o \
+	src/modcmd.o \
+	src/modules.o \
+	src/nickserv.o \
+	src/opserv.o \
+	src/policer.o \
+	src/proto-$(PROTOCOL).o \
+	src/recdb.o \
+	src/saxdb.o \
+	src/sendmail.o \
+	src/timeq.o \
+	src/tools.o \
+	$(addsuffix .o,$(addprefix src/mod-,$(MODULES)))
+
+srvx: src/config.h src/modules-list.h $(RX_OBJS) $(SRVX_OBJS)
+src/config.h: $(VPATH)/src/config.h.win32
+	cp $< $@
+src/modules-list.h:
+	rm -f $@; \
+	for module in $(MODULES) ; do \
+		echo "WITH_MODULE($$module)" >> $@ ; \
+	done
+clean:
+	rm -f src/config.h src/modules-list.h */*.o */*.exe
