@@ -1,16 +1,21 @@
 /* Direct Query Server module for srvx 1.x
  * Copyright 2006 Michael Poole <mdpoole@troilus.org>
  *
- * This is PROPRIETARY, UNPUBLISHED code.
+ * This file is part of srvx.
  *
- * This file is not part of srvx. The only logical reason for you to have
- * this file is to be working for GameSurge.
+ * srvx is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * If this is not the case, you should delete this copy and inform
- * Michael Poole <mdpoole@troilus.org> where you acquired it.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * The copyright notice above is not evidence that this code is, has been,
- * or ever will be publicly licensed.
+ * You should have received a copy of the GNU General Public License
+ * along with srvx; if not, write to the Free Software Foundation,
+ * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
 #include "conf.h"
