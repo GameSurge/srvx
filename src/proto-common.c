@@ -738,8 +738,8 @@ generate_hostmask(struct userNode *user, int options)
         for (ii=cnt=0; hostname[ii]; ii++)
             if (hostname[ii] == '.')
                 cnt++;
-        if (cnt == 1) {
-            /* only a two-level domain name; leave hostname */
+        if (cnt == 0 || cnt == 1) {
+            /* only a one- or two-level domain name; leave hostname */
         } else if (cnt == 2) {
             for (ii=0; user->hostname[ii] != '.'; ii++) ;
             /* Add 3 to account for the *. and \0. */
