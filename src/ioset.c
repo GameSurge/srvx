@@ -194,9 +194,12 @@ struct io_fd *ioset_listen(struct sockaddr *local, unsigned int sa_size, void *d
 
 struct io_fd *
 ioset_connect(struct sockaddr *local, unsigned int sa_size, const char *peer, unsigned int port, int blocking, void *data, void (*connect_cb)(struct io_fd *fd, int error)) {
-    int fd, res;
+    struct addrinfo hints;
+    struct addrinfo *ai;
     struct io_fd *io_fd;
-    struct addrinfo hints, *ai;
+    struct io_fd *old_active;
+    int res;
+    int fd;
     char portnum[10];
 
     memset(&hints, 0, sizeof(hints));
@@ -256,9 +259,13 @@ ioset_connect(struct sockaddr *local, unsigned int sa_size, const char *peer, un
         }
     }
     io_fd->state = IO_CONNECTED;
+    old_active = active_fd;
     if (connect_cb)
         connect_cb(io_fd, ((res < 0) ? errno : 0));
-    engine->update(io_fd);
+    if (active_fd)
+        engine->update(io_fd);
+    if (old_active != io_fd)
+        active_fd = old_active;
     return io_fd;
 }
 
@@ -311,7 +318,7 @@ ioset_close(struct io_fd *fdp, int os_close) {
 static void
 ioset_accept(struct io_fd *listener)
 {
-    struct io_fd *old_active_fd;
+    struct io_fd *old_active;
     struct io_fd *new_fd;
     int fd;
 
@@ -323,7 +330,7 @@ ioset_accept(struct io_fd *listener)
 
     new_fd = ioset_add(fd);
     new_fd->state = IO_CONNECTED;
-    old_active_fd = active_fd;
+    old_active = active_fd;
     active_fd = new_fd;
     listener->accept_cb(listener, new_fd);
     assert(active_fd == NULL || active_fd == new_fd);
@@ -333,7 +340,7 @@ ioset_accept(struct io_fd *listener)
         else
             engine->update(new_fd);
     }
-    active_fd = old_active_fd;
+    active_fd = old_active;
 }
 
 static int
@@ -394,14 +401,19 @@ ioset_buffered_read(struct io_fd *fd) {
         fdnum = fd->fd;
         while (fd->wants_reads && (fd->line_len > 0)) {
             struct io_fd *old_active;
+            int died = 0;
 
             old_active = active_fd;
             active_fd = fd;
             fd->readable_cb(fd);
             if (active_fd)
                 ioset_find_line_length(fd);
+            else
+                died = 1;
             if (old_active != fd)
                 active_fd = old_active;
+            if (died)
+                break;
         }
     }
 }
@@ -449,18 +461,23 @@ ioset_events(struct io_fd *fd, int readable, int writable)
         break;
     case IO_CONNECTING:
         assert(active_fd == NULL || active_fd == fd);
-        if (active_fd && writable) {
+        if (active_fd && readable) {
             socklen_t arglen;
             int rc;
             arglen = sizeof(rc);
             if (getsockopt(fd->fd, SOL_SOCKET, SO_ERROR, &rc, &arglen) < 0)
                 rc = errno;
-            fd->state = IO_CONNECTED;
+            fd->state = IO_CLOSED;
             if (fd->connect_cb)
                 fd->connect_cb(fd, rc);
-            if (active_fd == fd)
-                engine->update(fd);
+        } else if (active_fd && writable) {
+            fd->state = IO_CONNECTED;
+            if (fd->connect_cb)
+                fd->connect_cb(fd, 0);
         }
+        if (active_fd != fd)
+            break;
+        engine->update(fd);
         /* and fall through */
     case IO_CONNECTED:
         assert(active_fd == NULL || active_fd == fd);
