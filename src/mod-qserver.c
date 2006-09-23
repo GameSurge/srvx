@@ -161,7 +161,7 @@ qserver_accept(UNUSED_ARG(struct io_fd *listener), struct io_fd *fd)
         if (getnameinfo((struct sockaddr*)&ss, sa_len, host, sizeof(host), NULL, 0, 0) != 0)
             safestrncpy(host, ip, sizeof(host));
     }
-    client->user = AddLocalUser(nick, nick+1, host, "qserver dummy user", "*+i");
+    client->user = AddLocalUser(nick, nick+1, host, "qserver dummy user", "*+oi");
     irc_pton(&client->user->ip, NULL, ip);
     dict_insert(qserver_dict, client->user->nick, client);
 
