@@ -578,8 +578,8 @@ deliver_to_dummy(struct userNode *source, struct userNode *dest, const char *mes
 void
 irc_notice(struct userNode *from, const char *to, const char *message)
 {
-    if (to[0] != '#' && to[0] != '$'
-        && !deliver_to_dummy(from, GetUserN(to), message, 0))
+    if (to[0] == '#' || to[0] == '$'
+        || !deliver_to_dummy(from, GetUserN(to), message, 0))
         putsock("%s " P10_NOTICE " %s :%s", from->numeric, to, message);
 }
 
@@ -593,8 +593,8 @@ irc_notice_user(struct userNode *from, struct userNode *to, const char *message)
 void
 irc_privmsg(struct userNode *from, const char *to, const char *message)
 {
-    if (to[0] != '#' && to[0] != '$'
-        && !deliver_to_dummy(from, GetUserN(to), message, 1))
+    if (to[0] == '#' || to[0] == '$'
+        || !deliver_to_dummy(from, GetUserN(to), message, 1))
         putsock("%s " P10_PRIVMSG " %s :%s", from->numeric, to, message);
 }
 
@@ -1534,7 +1534,9 @@ parse_cleanup(void)
     unsigned int nn;
     free(of_list);
     free(privmsg_funcs);
+    num_privmsg_funcs = 0;
     free(notice_funcs);
+    num_notice_funcs = 0;
     free(mcf_list);
     dict_delete(irc_func_dict);
     for (nn=0; nn<dead_users.used; nn++)
