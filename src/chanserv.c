@@ -197,7 +197,7 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_MULTIPLE_OWNERS", "There is more than one owner in %s; please use $bCLVL$b, $bDELOWNER$b and/or $bADDOWNER$b instead." },
     { "CSMSG_TRANSFER_WAIT", "You must wait %s before you can give ownership of $b%s$b to someone else." },
     { "CSMSG_NO_TRANSFER_SELF", "You cannot give ownership to your own account." },
-    { "CSMSG_CONFIRM_GIVEOWNERSHIP", "To really give ownership to $b%1$s$b, you must use 'giveownership %1$s %2$s'." },
+    { "CSMSG_CONFIRM_GIVEOWNERSHIP", "To really give ownership to $b%1$s$b, you must use 'giveownership *%1$s %2$s'." },
     { "CSMSG_OWNERSHIP_GIVEN", "Ownership of $b%s$b has been transferred to account $b%s$b." },
 
 /* Ban management */
@@ -5497,7 +5497,9 @@ static CHANSERV_FUNC(cmd_uset)
 static CHANSERV_FUNC(cmd_giveownership)
 {
     struct handle_info *new_owner_hi;
-    struct userData *new_owner, *curr_user;
+    struct userData *new_owner;
+    struct userData *curr_user;
+    struct userData *invoker;
     struct chanData *cData = channel->channel_info;
     struct do_not_register *dnr;
     const char *confirm;
@@ -5565,10 +5567,11 @@ static CHANSERV_FUNC(cmd_giveownership)
             chanserv_show_dnrs(user, cmd, NULL, new_owner_hi->handle);
         return 0;
     }
-    if(curr_user && !force && curr_user->access <= UL_OWNER)
+    invoker = GetChannelUser(cData, user->handle_info);
+    if(invoker->access <= UL_OWNER)
     {
         confirm = make_confirmation_string(curr_user);
-        if(!force && ((argc < 3) || strcmp(argv[2], confirm)))
+        if((argc < 3) || strcmp(argv[2], confirm))
         {
             reply("CSMSG_CONFIRM_GIVEOWNERSHIP", new_owner_hi->handle, confirm);
             return 0;
