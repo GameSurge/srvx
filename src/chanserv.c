@@ -355,6 +355,9 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_HELPER_HAS_ACCESS", "%s has access $b%d$b in %s and has $bsecurity override$b enabled." },
     { "CSMSG_LAZY_SMURF_TARGET", "%s is %s ($bIRCOp$b; not logged in)." },
     { "CSMSG_SMURF_TARGET", "%s is %s ($b%s$b)." },
+    { "CSMSG_OPERATOR_TITLE", "IRC operator" },
+    { "CSMSG_UC_H_TITLE", "network helper" },
+    { "CSMSG_LC_H_TITLE", "support helper" },
     { "CSMSG_LAME_SMURF_TARGET", "%s is an IRC operator." },
 
 /* Seen information */
@@ -3339,17 +3342,17 @@ static CHANSERV_FUNC(cmd_access)
         if(IsOper(target))
         {
             epithet = chanserv_conf.irc_operator_epithet;
-            type = "IRCOp";
+            type = user_find_message(user, "CSMSG_OPERATOR_TITLE");
         }
         else if(IsNetworkHelper(target))
         {
             epithet = chanserv_conf.network_helper_epithet;
-            type = "network helper";
+            type = user_find_message(user, "CSMSG_UC_H_TITLE");
         }
         else if(IsSupportHelper(target))
         {
             epithet = chanserv_conf.support_helper_epithet;
-            type = "support helper";
+            type = user_find_message(user, "CSMSG_LC_H_TITLE");
         }
         if(epithet)
         {
