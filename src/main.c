@@ -824,7 +824,6 @@ int main(int argc, char *argv[])
     MAIN_LOG = log_register_type("srvx", "file:main.log");
     if (debug)
         log_debug();
-    timeq_init();
     ioset_init();
     init_structs();
     init_parse();
