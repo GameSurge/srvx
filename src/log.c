@@ -567,6 +567,8 @@ log_module(struct log_type *type, enum log_severity sev, const char *format, ...
     unsigned int ii;
     va_list args;
 
+    if (!type)
+        return;
     if (sev > LOG_FATAL) {
         log_module(MAIN_LOG, LOG_ERROR, "Illegal log_module severity %d", sev);
         return;
