@@ -102,6 +102,7 @@ ioset_epoll_loop(struct timeval *timeout)
     msec = timeout ? (timeout->tv_sec * 1000 + timeout->tv_usec / 1000) : -1;
 
     res = epoll_wait(epoll_fd, evts, ArrayLength(evts), msec);
+    now = time(NULL) + clock_skew;
     if (res < 0) {
         if (errno != EINTR) {
             log_module(MAIN_LOG, LOG_ERROR, "epoll_wait() error %d: %s", errno, strerror(errno));
