@@ -93,7 +93,8 @@ extern struct io_engine io_engine_select;
 void
 ioset_init(void)
 {
-    assert(engine == NULL);
+    if (engine) /* someone beat us to it */
+        return;
 
 #if WITH_IOSET_KQUEUE
     if (!engine && io_engine_kqueue.init())
@@ -133,6 +134,8 @@ ioset_add(int fd) {
         log_module(MAIN_LOG, LOG_ERROR, "Somebody called ioset_add(%d) on a negative fd!", fd);
         return 0;
     }
+    if (!engine)
+        ioset_init();
     res = calloc(1, sizeof(*res));
     if (!res)
         return 0;
@@ -267,6 +270,10 @@ ioset_connect(struct sockaddr *local, unsigned int sa_size, const char *peer, un
     if (old_active != io_fd)
         active_fd = old_active;
     return io_fd;
+}
+
+void ioset_update(struct io_fd *fd) {
+    engine->update(fd);
 }
 
 static void

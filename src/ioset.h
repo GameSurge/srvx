@@ -52,6 +52,7 @@ void ioset_init(void);
 struct io_fd *ioset_add(int fd);
 struct io_fd *ioset_listen(struct sockaddr *local, unsigned int sa_size, void *data, void (*accept_cb)(struct io_fd *listener, struct io_fd *new_connect));
 struct io_fd *ioset_connect(struct sockaddr *local, unsigned int sa_size, const char *hostname, unsigned int port, int blocking, void *data, void (*connect_cb)(struct io_fd *fd, int error));
+void ioset_update(struct io_fd *fd);
 void ioset_run(void);
 void ioset_write(struct io_fd *fd, const char *buf, unsigned int nbw);
 int ioset_printf(struct io_fd *fd, const char *fmt, ...) PRINTF_LIKE(2, 3);
