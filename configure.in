@@ -81,13 +81,14 @@ AC_CHECK_MEMBER([struct addrinfo.ai_flags],
                 [],[#include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>])
-AC_CHECK_FUNCS(gettimeofday)
+
+dnl We have fallbacks in case these are missing, so just check for them.
+AC_CHECK_FUNCS(freeaddrinfo getaddrinfo getnameinfo getpagesize memcpy memset strdup strerror strsignal localtime_r setrlimit getopt getopt_long regcomp regexec regfree sysconf inet_aton epoll_create select gettimeofday,,)
+
+dnl Check for the fallbacks for functions missing above.
 if test $ac_cv_func_gettimeofday = no; then
   AC_CHECK_FUNCS(ftime,,AC_MSG_ERROR([ftime or gettimeofday required.  srvx build will fail.]))
 fi
-
-dnl We have fallbacks in case these are missing, so just check for them.
-AC_CHECK_FUNCS(freeaddrinfo getaddrinfo getnameinfo getpagesize memcpy memset strdup strerror strsignal localtime_r setrlimit getopt getopt_long regcomp regexec regfree sysconf inet_aton epoll_create select,,)
 
 dnl Check for absolutely required library functions.
 AC_CHECK_FUNCS(socket strcspn strspn strtod strtoul,,AC_MSG_ERROR([a required function was not found.  srvx build will fail.]))
