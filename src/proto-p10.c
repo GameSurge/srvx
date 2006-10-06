@@ -689,13 +689,14 @@ irc_burst(struct chanNode *chan)
     struct modeNode *mn;
     struct banNode *bn;
     long last_mode=-1;
+    unsigned int first_ban;
     unsigned int n;
 
     base_len = sprintf(burst_line, "%s " P10_BURST " %s " FMT_TIME_T " ",
                        self->numeric, chan->name, chan->timestamp);
     len = irc_make_chanmode(chan, burst_line+base_len);
     pos = base_len + len;
-    if (len)
+    if (len > 0 && chan->members.used > 0)
         burst_line[pos++] = ' ';
 
     /* dump the users */
@@ -720,32 +721,36 @@ irc_burst(struct chanNode *chan)
         if ((n+1)<chan->members.used)
             burst_line[pos++] = ',';
     }
-    if (chan->banlist.used) {
-        /* dump the bans */
-        if (pos+2+strlen(chan->banlist.list[0]->ban) > 505) {
-            burst_line[pos-1] = 0;
-            putsock("%s", burst_line);
-            pos = base_len;
-        } else {
-            burst_line[pos++] = ' ';
-        }
 
-        burst_line[pos++] = ':';
-        burst_line[pos++] = '%';
-        base_len = pos;
-        for (n=0; n<chan->banlist.used; n++) {
+    /* dump the bans */
+    if (chan->banlist.used) {
+        first_ban = 1;
+
+        if (chan->members.used > 0)
+            burst_line[pos++] = ' ';
+
+        for (n=0; n<chan->banlist.used; ) {
+            if (first_ban && (pos < 500)) {
+                burst_line[pos++] = ':';
+                burst_line[pos++] = '%';
+            }
             bn = chan->banlist.list[n];
             len = strlen(bn->ban);
-            if (pos+len+1 > 510) {
-                burst_line[pos-1] = 0; /* -1 to back up over the space or comma */
+            if (pos + 2 + len < 505) {
+                memcpy(burst_line + pos, bn->ban, len);
+                pos += len;
+                burst_line[pos++] = ' ';
+                first_ban = 0;
+                n++;
+            } else {
+                burst_line[pos-1] = 0;
                 putsock("%s", burst_line);
                 pos = base_len;
+                first_ban = 1;
             }
-            memcpy(burst_line+pos, bn->ban, len);
-            pos += len;
-            burst_line[pos++] = ' ';
         }
     }
+
     /* print the last line */
     burst_line[pos] = 0;
     putsock("%s", burst_line);
