@@ -2,6 +2,41 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2006/srvx--devo--1.3
 #
 
+2006-10-06 23:16:58 GMT	Michael Poole <mdpoole@troilus.org>	patch-56
+
+    Summary:
+      Remove "wants_reads" field from struct io_fd.
+    Revision:
+      srvx--devo--1.3--patch-56
+
+    Everybody wants read information, so give it to them!
+    
+    src/ioset-epoll.c (ioset_epoll_events): Make EPOLLIN unconditional.
+    
+    src/ioset-impl.h (fd_wants_reads): Delete.
+    
+    src/ioset-select.c (ioset_select_loop): Unconditionally set read bit for fd.
+    
+    src/ioset.c (ioset_add): Add fd to engine after marking it non-blocking.
+      (ioset_buffered_reads): Remove check for fd->wants_reads.
+    
+    src/ioset.h (struct io_fd): Delete "wants_reads" field.
+    
+    src/mod-qserver.c (qserver_readable): Add missing newline.
+      (qserver_accept): Delete assignment to fd->wants_reads.
+    
+    src/mod-sockcheck.c (sockcheck_connected): Delete assignment to
+        fd->wants_reads.
+    
+    src/proto-common.c (create_socket_client): Delete assignment to
+        fd->wants_reads.
+
+    modified files:
+     ChangeLog src/ioset-epoll.c src/ioset-impl.h
+     src/ioset-select.c src/ioset.c src/ioset.h src/mod-qserver.c
+     src/mod-sockcheck.c src/proto-common.c
+
+
 2006-10-06 23:12:20 GMT	Michael Poole <mdpoole@troilus.org>	patch-55
 
     Summary:

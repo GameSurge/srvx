@@ -144,7 +144,6 @@ create_socket_client(struct uplinkNode *target)
     socket_io_fd->readable_cb = uplink_readable;
     socket_io_fd->destroy_cb = socket_destroyed;
     socket_io_fd->line_reads = 1;
-    socket_io_fd->wants_reads = 1;
     log_module(MAIN_LOG, LOG_INFO, "Connection to server established.");
     cManager.uplink = target;
     target->state = AUTHENTICATING;

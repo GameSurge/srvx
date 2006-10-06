@@ -46,7 +46,7 @@ static int
 ioset_epoll_events(struct io_fd *fd)
 {
     return EPOLLHUP
-        | (fd_wants_reads(fd) ? EPOLLIN : 0)
+        | EPOLLIN
         | (fd_wants_writes(fd) ? EPOLLOUT : 0)
         ;
 }

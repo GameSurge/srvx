@@ -25,7 +25,6 @@
 
 struct timeval;
 
-#define fd_wants_reads(FD) ((FD)->wants_reads || (FD)->state == IO_LISTENING)
 #define fd_wants_writes(FD) (((FD)->send.get != (FD)->send.put) || (FD)->state == IO_CONNECTING)
 
 struct io_engine {

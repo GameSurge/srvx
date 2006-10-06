@@ -118,8 +118,7 @@ ioset_select_loop(struct timeval *timeout)
         if (!(fd = fds[nn]))
             continue;
         max_fd = nn;
-        if (fd_wants_reads(fd))
-            FD_SET(nn, &read_fds);
+        FD_SET(nn, &read_fds);
         if (fd_wants_writes(fd))
             FD_SET(nn, &write_fds);
     }

@@ -89,7 +89,7 @@ qserver_readable(struct io_fd *fd)
         tmpline[--len] = '\0';
     argc = split_line(tmpline, false, ArrayLength(argv), argv);
     if (argc < 3) {
-        ioset_printf(fd, "MISSING_ARGS");
+        ioset_printf(fd, "MISSING_ARGS\n");
         return;
     }
     if (!strcmp(argv[1], "PASS")
@@ -134,7 +134,6 @@ qserver_accept(UNUSED_ARG(struct io_fd *listener), struct io_fd *fd)
 
     client = calloc(1, sizeof(*client));
     fd->data = client;
-    fd->wants_reads = 1;
     fd->line_reads = 1;
     fd->readable_cb = qserver_readable;
     fd->destroy_cb = qserver_destroy_fd;

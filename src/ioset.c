@@ -142,9 +142,9 @@ ioset_add(int fd) {
     res->fd = fd;
     ioq_init(&res->send, 1024);
     ioq_init(&res->recv, 1024);
-    engine->add(res);
     flags = fcntl(fd, F_GETFL);
     fcntl(fd, F_SETFL, flags|O_NONBLOCK);
+    engine->add(res);
     return res;
 }
 
@@ -406,7 +406,7 @@ ioset_buffered_read(struct io_fd *fd) {
         if (fd->recv.put == fd->recv.size)
             fd->recv.put = 0;
         fdnum = fd->fd;
-        while (fd->wants_reads && (fd->line_len > 0)) {
+        while (fd->line_len > 0) {
             struct io_fd *old_active;
             int died = 0;
 

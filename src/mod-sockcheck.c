@@ -644,7 +644,6 @@ sockcheck_connected(struct io_fd *fd, int rc)
         return;
     case 0: break;
     }
-    fd->wants_reads = 1;
     if (SOCKCHECK_DEBUG) {
         log_module(PC_LOG, LOG_INFO, "Connected: to %s port %d.", client->addr->hostname, client->state->port);
     }

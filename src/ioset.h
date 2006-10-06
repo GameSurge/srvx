@@ -35,7 +35,6 @@ struct io_fd {
     int fd;
     void *data;
     enum { IO_CLOSED, IO_LISTENING, IO_CONNECTING, IO_CONNECTED } state;
-    unsigned int wants_reads : 1;
     unsigned int line_reads : 1;
     int line_len;
     struct ioq send;
