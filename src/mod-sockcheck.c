@@ -662,7 +662,8 @@ sockcheck_begin_test(struct sockcheck_client *client)
         client->state = client->tests->list[client->test_index];
         client->read_pos = 0;
         client->read_used = 0;
-        client->fd = io_fd = ioset_connect(sockcheck_conf.local_addr, sockcheck_conf.local_addr_len, client->addr->hostname, client->state->port, 0, client, sockcheck_connected);
+        io_fd = ioset_connect(sockcheck_conf.local_addr, sockcheck_conf.local_addr_len, client->addr->hostname, client->state->port, 0, client, sockcheck_connected);
+        client->fd = io_fd;
         if (!io_fd) {
             client->test_index++;
             continue;
@@ -1151,6 +1152,7 @@ sockcheck_read_conf(void)
 	    sockcheck_conf.local_addr_len = ai->ai_addrlen;
             sockcheck_conf.local_addr = calloc(1, ai->ai_addrlen);
             memcpy(sockcheck_conf.local_addr, ai->ai_addr, ai->ai_addrlen);
+            freeaddrinfo(ai);
         } else {
             sockcheck_conf.local_addr_len = 0;
             sockcheck_conf.local_addr = NULL;
