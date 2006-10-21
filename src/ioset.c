@@ -144,6 +144,8 @@ ioset_add(int fd) {
     ioq_init(&res->recv, 1024);
     flags = fcntl(fd, F_GETFL);
     fcntl(fd, F_SETFL, flags|O_NONBLOCK);
+    flags = fcntl(fd, F_GETFD);
+    fcntl(fd, F_SETFD, flags|FD_CLOEXEC);
     engine->add(res);
     return res;
 }
@@ -279,7 +281,9 @@ void ioset_update(struct io_fd *fd) {
 static void
 ioset_try_write(struct io_fd *fd) {
     int res;
-    unsigned int req = ioq_get_avail(&fd->send);
+    unsigned int req;
+
+    req = ioq_get_avail(&fd->send);
     res = write(fd->fd, fd->send.buf+fd->send.get, req);
     if (res < 0) {
         switch (errno) {
@@ -304,7 +308,7 @@ ioset_close(struct io_fd *fdp, int os_close) {
         active_fd = NULL;
     if (fdp->destroy_cb)
         fdp->destroy_cb(fdp);
-    if (fdp->send.get != fdp->send.put) {
+    if (fdp->send.get != fdp->send.put && (os_close & 2)) {
         int flags;
 
 	flags = fcntl(fdp->fd, F_GETFL);
@@ -316,7 +320,7 @@ ioset_close(struct io_fd *fdp, int os_close) {
     }
     free(fdp->send.buf);
     free(fdp->recv.buf);
-    if (os_close)
+    if (os_close & 1)
         close(fdp->fd);
     engine->remove(fdp);
     free(fdp);

@@ -274,7 +274,7 @@ close_socket(void)
         replay_connected = 0;
         socket_destroyed(socket_io_fd);
     } else {
-        ioset_close(socket_io_fd, 1);
+        ioset_close(socket_io_fd, 3);
         socket_io_fd = NULL;
     }
 }
