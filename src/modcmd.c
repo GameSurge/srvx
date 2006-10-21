@@ -1853,12 +1853,27 @@ static MODCMD_FUNC(cmd_version) {
      * command or its accessibility to normal IRC users, except to add
      * copyright information pertaining to changes you make to srvx.
      */
-    send_message_type(4, user, cmd->parent->bot, "$b"PACKAGE_STRING"$b ("CODENAME"), Built: "__DATE__", "__TIME__".\nCopyright 2000-2004 srvx Development Team.\nThe srvx Development Team includes Paul Chang, Adrian Dewhurst, Miles Peterson, Michael Poole and others.\nThe srvx Development Team can be reached at http://sf.net/projects/srvx/ or in #srvx on irc.gamesurge.net.");
+    send_message_type(4, user, cmd->parent->bot, "$b"PACKAGE_STRING"$b ("CODENAME"), Built: "__DATE__", "__TIME__".  Copyright 2000-2006 srvx Development Team.");
     if ((argc > 1) && !irccasecmp(argv[1], "arch"))
         send_message_type(4, user, cmd->parent->bot, "%s", ARCH_VERSION);
+    else
+        send_message_type(12, user, cmd->parent->bot, "The srvx Development Team includes Paul Chang, Adrian Dewhurst, Miles Peterson, Michael Poole and others.\nThe srvx Development Team can be reached at http://sf.net/projects/srvx/ or in #srvx on irc.gamesurge.net.");
     return 1;
 }
 
+static MODCMD_FUNC(cmd_tell) {
+    struct userNode *target;
+    char *msg;
+
+    target = GetUserH(argv[1]);
+    msg = unsplit_string(argv + 2, argc - 2, NULL);
+    if (!target) {
+        reply("MSG_NOT_TARGET_NAME");
+        return 0;
+    }
+    send_message_type(MSG_TYPE_NOXLATE, target, cmd->parent->bot, "%s", msg);
+    return 1;
+}
 
 void
 modcmd_nick_change(struct userNode *user, const char *old_nick) {
@@ -2101,6 +2116,7 @@ modcmd_init(void) {
     modcmd_register(modcmd_module, "service privileged", cmd_service_privileged, 2, 0, "flags", "+oper", NULL);
     modcmd_register(modcmd_module, "service remove", cmd_service_remove, 2, 0, "flags", "+oper", NULL);
     modcmd_register(modcmd_module, "dumpmessages", cmd_dump_messages, 1, 0, "oper_level", "1000", NULL);
+    modcmd_register(modcmd_module, "tell", cmd_tell, 3, 0, "flags", "+oper", NULL);
     version_command = modcmd_register(modcmd_module, "version", cmd_version, 1, 0, NULL);
     message_register_table(msgtab);
 }

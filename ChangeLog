@@ -2,6 +2,22 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2006/srvx--devo--1.3
 #
 
+2006-10-21 16:04:19 GMT	Michael Poole <mdpoole@troilus.org>	patch-59
+
+    Summary:
+      Add 'tell' command; update copyright message.
+    Revision:
+      srvx--devo--1.3--patch-59
+
+    src/modcmd.c (cmd_version): Update copyright years.  Move the multi-line
+        credits to a separate message and make it actually send properly.
+      (cmd_tell): New command.
+      (modcmd_init): Register cmd_tell.
+
+    modified files:
+     ChangeLog src/modcmd.c
+
+
 2006-10-07 00:03:52 GMT	Michael Poole <mdpoole@troilus.org>	patch-58
 
     Summary:
