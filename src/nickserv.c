@@ -1305,7 +1305,7 @@ static NICKSERV_FUNC(cmd_handleinfo)
         struct do_not_register *dnr;
         if ((dnr = chanserv_is_dnr(NULL, hi)))
             reply("NSMSG_HANDLEINFO_DNR", dnr->setter, dnr->reason);
-        if (!oper_outranks(user, hi))
+        if ((user->handle_info->opserv_level < 900) && !oper_outranks(user, hi))
             return 1;
     } else if (hi != user->handle_info)
         return 1;
