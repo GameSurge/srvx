@@ -1028,7 +1028,7 @@ static MODCMD_FUNC(cmd_hostscan)
             }
         } else {
             char *scanhost = argv[n];
-            if (!irc_pton(&ipaddr, NULL, scanhost)) {
+            if (irc_pton(&ipaddr, NULL, scanhost)) {
                 sockcheck_queue_address(ipaddr);
                 reply("PCMSG_ADDRESS_QUEUED", scanhost);
             } else {
