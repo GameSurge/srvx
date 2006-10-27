@@ -246,7 +246,8 @@ static void language_read_list(void)
             log_module(MAIN_LOG, LOG_INFO, "Skipping language entry '%s' (not directory).", dirent->d_name);
             continue;
         }
-        language_alloc(dirent->d_name);
+        if (!dict_find(languages, dirent->d_name, NULL))
+            language_alloc(dirent->d_name);
     }
     closedir(dir);
 }
