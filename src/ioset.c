@@ -259,7 +259,6 @@ ioset_connect(struct sockaddr *local, unsigned int sa_size, const char *peer, un
         case EHOSTUNREACH:
         case ECONNREFUSED:
             ioset_close(io_fd, 1);
-            engine->update(io_fd);
             return NULL;
         }
     }
