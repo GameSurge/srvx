@@ -158,10 +158,14 @@ void irc_numeric(struct userNode *user, unsigned int num, const char *format, ..
 #define RPL_ENDOFSTATS          219
 #define RPL_STATSUPTIME         242
 #define RPL_MAXCONNECTIONS      250
+#define RPL_AWAY                301
 #define RPL_WHOISUSER           311
 #define RPL_WHOISSERVER         312
 #define RPL_WHOISOPERATOR       313
 #define RPL_ENDOFWHOIS          318
+#define RPL_WHOISCHANNELS       319
+#define RPL_WHOISACCOUNT        330
+#define RPL_WHOISACTUALLY       338
 #define ERR_NOSUCHNICK          401
 
 /* stuff originally from other headers that is really protocol-specific */

@@ -2213,9 +2213,9 @@ static CHANSERV_FUNC(cmd_opchan)
 static CHANSERV_FUNC(cmd_adduser)
 {
     struct userData *actee;
-    struct userData *actor;
+    struct userData *actor, *real_actor;
     struct handle_info *handle;
-    unsigned short access;
+    unsigned short access, override = 0;
 
     REQUIRE_PARAMS(3);
 
@@ -2233,16 +2233,22 @@ static CHANSERV_FUNC(cmd_adduser)
     }
 
     actor = GetChannelUser(channel->channel_info, user->handle_info);
+    real_actor = GetChannelAccess(channel->channel_info, user->handle_info);
+
     if(actor->access <= access)
     {
 	reply("CSMSG_NO_BUMP_ACCESS");
 	return 0;
     }
 
+    // Trying to add someone with equal/more access
+    if (!real_actor || real_actor->access <= access)
+        override = CMD_LOG_OVERRIDE;
+
     if(!(handle = modcmd_get_handle_info(user, argv[1])))
         return 0;
 
-    if((actee = GetTrueChannelAccess(channel->channel_info, handle)))
+    if((actee = GetChannelAccess(channel->channel_info, handle)))
     {
 	reply("CSMSG_USER_EXISTS", handle->handle, channel->name, actee->access);
 	return 0;
@@ -2251,20 +2257,21 @@ static CHANSERV_FUNC(cmd_adduser)
     actee = add_channel_user(channel->channel_info, handle, access, 0, NULL);
     scan_user_presence(actee, NULL);
     reply("CSMSG_ADDED_USER", handle->handle, channel->name, access);
-    return 1;
+    return 1 | override;
 }
 
 static CHANSERV_FUNC(cmd_clvl)
 {
     struct handle_info *handle;
     struct userData *victim;
-    struct userData *actor;
-    unsigned short new_access;
+    struct userData *actor, *real_actor;
+    unsigned short new_access, override = 0;
     int privileged = IsHelping(user) && ((user->handle_info->opserv_level >= chanserv_conf.nodelete_level) || !IsProtected(channel->channel_info));
 
     REQUIRE_PARAMS(3);
 
     actor = GetChannelUser(channel->channel_info, user->handle_info);
+    real_actor = GetChannelAccess(channel->channel_info, user->handle_info);
 
     if(!(handle = modcmd_get_handle_info(user, argv[1])))
         return 0;
@@ -2301,22 +2308,32 @@ static CHANSERV_FUNC(cmd_clvl)
 	return 0;
     }
 
+    // Trying to clvl a equal/higher user
+    if(!real_actor || (real_actor->access <= victim->access && handle != user->handle_info))
+        override = CMD_LOG_OVERRIDE;
+    // Trying to clvl someone to equal/higher access
+    if(!real_actor || new_access >= real_actor->access)
+        override = CMD_LOG_OVERRIDE;
+    // Helpers clvling themselves get caught by the "clvl someone to equal/higher access" check.
+    // If they lower their own access it's not a big problem.
+
     victim->access = new_access;
     reply("CSMSG_CHANGED_ACCESS", handle->handle, new_access, channel->name);
-    return 1;
+    return 1 | override;
 }
 
 static CHANSERV_FUNC(cmd_deluser)
 {
     struct handle_info *handle;
     struct userData *victim;
-    struct userData *actor;
-    unsigned short access;
+    struct userData *actor, *real_actor;
+    unsigned short access, override = 0;
     char *chan_name;
 
     REQUIRE_PARAMS(2);
 
     actor = GetChannelUser(channel->channel_info, user->handle_info);
+    real_actor = GetChannelAccess(channel->channel_info, user->handle_info);
 
     if(!(handle = modcmd_get_handle_info(user, argv[argc-1])))
         return 0;
@@ -2352,19 +2369,25 @@ static CHANSERV_FUNC(cmd_deluser)
 	return 0;
     }
 
+    // If people delete themselves it is an override, but they could've used deleteme so we don't log it as an override
+    if(!real_actor || (real_actor->access <= victim->access && real_actor != victim))
+        override = CMD_LOG_OVERRIDE;
+
     chan_name = strdup(channel->name);
     del_channel_user(victim, 1);
     reply("CSMSG_DELETED_USER", handle->handle, access, chan_name);
     free(chan_name);
-    return 1;
+    return 1 | override;
 }
 
 static int
 cmd_mdel_user(struct userNode *user, struct chanNode *channel, unsigned short min_access, unsigned short max_access, char *mask, struct svccmd *cmd)
 {
-    struct userData *actor, *uData, *next;
+    struct userData *actor, *real_actor, *uData, *next;
+    unsigned int override = 0;
 
     actor = GetChannelUser(channel->channel_info, user->handle_info);
+    real_actor = GetChannelAccess(channel->channel_info, user->handle_info);
 
     if(min_access > max_access)
     {
@@ -2378,6 +2401,9 @@ cmd_mdel_user(struct userNode *user, struct chanNode *channel, unsigned short mi
 	return 0;
     }
 
+    if(!real_actor || real_actor->access <= max_access)
+        override = CMD_LOG_OVERRIDE;
+
     for(uData = channel->channel_info->users; uData; uData = next)
     {
 	next = uData->next;
@@ -2389,7 +2415,7 @@ cmd_mdel_user(struct userNode *user, struct chanNode *channel, unsigned short mi
     }
 
     reply("CSMSG_DELETED_USERS", mask, min_access, max_access, channel->name);
-    return 1;
+    return 1 | override;
 }
 
 static CHANSERV_FUNC(cmd_mdelowner)
@@ -2451,14 +2477,14 @@ cmd_trim_users(struct userNode *user, struct chanNode *channel, unsigned short m
     unsigned int count;
     time_t limit;
 
-    actor = GetChannelUser(channel->channel_info, user->handle_info);
+    actor = GetChannelAccess(channel->channel_info, user->handle_info);
     if(min_access > max_access)
     {
         send_message(user, chanserv, "CSMSG_BAD_RANGE", min_access, max_access);
         return 0;
     }
 
-    if((actor->access <= max_access) && !IsHelping(user))
+    if(!actor || actor->access <= max_access)
     {
 	send_message(user, chanserv, "CSMSG_NO_ACCESS");
 	return 0;
@@ -4128,10 +4154,12 @@ static CHANSERV_FUNC(cmd_peek)
 static MODCMD_FUNC(cmd_wipeinfo)
 {
     struct handle_info *victim;
-    struct userData *ud, *actor;
+    struct userData *ud, *actor, *real_actor;
+    unsigned int override = 0;
 
     REQUIRE_PARAMS(2);
     actor = GetChannelUser(channel->channel_info, user->handle_info);
+    real_actor = GetChannelAccess(channel->channel_info, user->handle_info);
     if(!(victim = modcmd_get_handle_info(user, argv[1])))
         return 0;
     if(!(ud = GetTrueChannelAccess(channel->channel_info, victim)))
@@ -4144,11 +4172,13 @@ static MODCMD_FUNC(cmd_wipeinfo)
         reply("MSG_USER_OUTRANKED", victim->handle);
         return 0;
     }
+    if((ud->access >= real_actor->access) && (ud != real_actor))
+        override = CMD_LOG_OVERRIDE;
     if(ud->info)
         free(ud->info);
     ud->info = NULL;
     reply("CSMSG_WIPED_INFO_LINE", argv[1], channel->name);
-    return 1;
+    return 1 | override;
 }
 
 static CHANSERV_FUNC(cmd_resync)
@@ -5597,11 +5627,13 @@ static CHANSERV_FUNC(cmd_giveownership)
 static CHANSERV_FUNC(cmd_suspend)
 {
     struct handle_info *hi;
-    struct userData *self, *target;
+    struct userData *self, *real_self, *target;
+    unsigned int override = 0;
 
     REQUIRE_PARAMS(2);
     if(!(hi = modcmd_get_handle_info(user, argv[1]))) return 0;
     self = GetChannelUser(channel->channel_info, user->handle_info);
+    real_self = GetChannelAccess(channel->channel_info, user->handle_info);
     if(!(target = GetTrueChannelAccess(channel->channel_info, hi)))
     {
         reply("CSMSG_NO_CHAN_USER", hi->handle, channel->name);
@@ -5622,19 +5654,23 @@ static CHANSERV_FUNC(cmd_suspend)
         target->present = 0;
         target->seen = now;
     }
+    if(!real_self || target->access >= real_self->access)
+        override = CMD_LOG_OVERRIDE;
     target->flags |= USER_SUSPENDED;
     reply("CSMSG_USER_SUSPENDED", hi->handle, channel->name);
-    return 1;
+    return 1 | override;
 }
 
 static CHANSERV_FUNC(cmd_unsuspend)
 {
     struct handle_info *hi;
-    struct userData *self, *target;
+    struct userData *self, *real_self, *target;
+    unsigned int override = 0;
 
     REQUIRE_PARAMS(2);
     if(!(hi = modcmd_get_handle_info(user, argv[1]))) return 0;
     self = GetChannelUser(channel->channel_info, user->handle_info);
+    real_self = GetChannelAccess(channel->channel_info, user->handle_info);
     if(!(target = GetTrueChannelAccess(channel->channel_info, hi)))
     {
         reply("CSMSG_NO_CHAN_USER", hi->handle, channel->name);
@@ -5650,10 +5686,12 @@ static CHANSERV_FUNC(cmd_unsuspend)
         reply("CSMSG_NOT_SUSPENDED", hi->handle);
         return 0;
     }
+    if(!real_self || target->access >= real_self->access)
+        override = CMD_LOG_OVERRIDE;
     target->flags &= ~USER_SUSPENDED;
     scan_user_presence(target, NULL);
     reply("CSMSG_USER_UNSUSPENDED", hi->handle, channel->name);
-    return 1;
+    return 1 | override;
 }
 
 static MODCMD_FUNC(cmd_deleteme)

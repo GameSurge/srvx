@@ -475,6 +475,8 @@ irc_user(struct userNode *user)
             modes[modelen++] = 'd';
         if (IsGlobal(user))
             modes[modelen++] = 'g';
+        if (IsNoChan(user))
+            modes[modelen++] = 'n';
         if (IsHiddenHost(user))
             modes[modelen++] = 'x';
         modes[modelen] = 0;
@@ -888,6 +890,8 @@ static CMD_FUNC(cmd_whois)
 {
     struct userNode *from;
     struct userNode *who;
+    char buf[MAXLEN];
+    unsigned int i, mlen, len;
 
     if (argc < 3)
         return 0;
@@ -899,17 +903,67 @@ static CMD_FUNC(cmd_whois)
         irc_numeric(from, ERR_NOSUCHNICK, "%s@%s :No such nick", argv[2], self->name);
         return 1;
     }
-    if (IsHiddenHost(who) && !IsOper(from)) {
-        /* Just stay quiet. */
-        return 1;
+
+    if (IsFakeHost(who) && IsHiddenHost(who))
+        irc_numeric(from, RPL_WHOISUSER, "%s %s %s * :%s", who->nick, who->ident, who->fakehost, who->info);
+    else if (IsHiddenHost(who) && who->handle_info && hidden_host_suffix)
+        irc_numeric(from, RPL_WHOISUSER, "%s %s %s.%s * :%s", who->nick, who->ident, who->handle_info->handle, hidden_host_suffix, who->info);
+    else
+        irc_numeric(from, RPL_WHOISUSER, "%s %s %s * :%s", who->nick, who->ident, who->hostname, who->info);
+
+    if ((!IsService(who) && !IsNoChan(who)) || (from == who)) {
+        struct modeNode *mn;
+        mlen = strlen(self->name) + strlen(from->nick) + 12 + strlen(who->nick);
+        len = 0;
+        *buf = '\0';
+        for (i = 0; i < who->channels.used; i++)
+        {
+            mn = who->channels.list[i];
+
+            if (!IsOper(from) && (mn->channel->modes & (MODE_PRIVATE | MODE_SECRET)) && !GetUserMode(mn->channel, from))
+                continue;
+
+            if (len + strlen(mn->channel->name) + mlen > MAXLEN - 5)
+            {
+                irc_numeric(from, RPL_WHOISCHANNELS, "%s :%s", who->nick, buf);
+                *buf = '\0';
+                len = 0;
+            }
+
+            if (IsDeaf(who))
+                *(buf + len++) = '-';
+            if ((mn->channel->modes & (MODE_PRIVATE | MODE_SECRET)) && !GetUserMode(mn->channel, from))
+                *(buf + len++) = '*';
+            if (mn->modes & MODE_CHANOP)
+                *(buf + len++) = '@';
+            else if (mn->modes & MODE_VOICE)
+                *(buf + len++) = '+';
+
+            if (len)
+                *(buf + len) = '\0';
+            strcpy(buf + len, mn->channel->name);
+            len += strlen(mn->channel->name);
+            strcat(buf + len, " ");
+            len++;
+        }
+        if (buf[0] != '\0')
+            irc_numeric(from, RPL_WHOISCHANNELS, "%s :%s", who->nick, buf);
     }
-    irc_numeric(from, RPL_WHOISUSER, "%s %s %s * :%s", who->nick, who->ident, who->hostname, who->info);
-    if (his_servername && his_servercomment)
+
+    if (his_servername && his_servercomment && !IsOper(from) && from != who)
         irc_numeric(from, RPL_WHOISSERVER, "%s %s :%s", who->nick, his_servername, his_servercomment);
     else
         irc_numeric(from, RPL_WHOISSERVER, "%s %s :%s", who->nick, who->uplink->name, who->uplink->description);
+
+    if (IsAway(who))
+        irc_numeric(from, RPL_AWAY, "%s :Away", who->nick);
     if (IsOper(who))
-        irc_numeric(from, RPL_WHOISOPERATOR, "%s :is a megalomaniacal power hungry tyrant", who->nick);
+        irc_numeric(from, RPL_WHOISOPERATOR, "%s :%s", who->nick, IsLocal(who) ? "is a megalomaniacal power hungry tyrant" : "is an IRC Operator");
+    if (who->handle_info)
+        irc_numeric(from, RPL_WHOISACCOUNT, "%s %s :is logged in as", who->nick, who->handle_info->handle);
+    if (IsHiddenHost(who) && who->handle_info && (IsOper(from) || from == who))
+        irc_numeric(from, RPL_WHOISACTUALLY, "%s %s@%s %s :Actual user@host, Actual IP", who->nick, who->ident, who->hostname, irc_ntoa(&who->ip));
+
     irc_numeric(from, RPL_ENDOFWHOIS, "%s :End of /WHOIS list", who->nick);
     return 1;
 }
@@ -2167,6 +2221,7 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
 	case 'd': do_user_mode(FLAGS_DEAF); break;
 	case 'k': do_user_mode(FLAGS_SERVICE); break;
 	case 'g': do_user_mode(FLAGS_GLOBAL); break;
+	case 'n': do_user_mode(FLAGS_NOCHAN); break;
         case 'x': do_user_mode(FLAGS_HIDDEN_HOST); break;
         case 'r':
             if (*word) {
@@ -2709,10 +2764,10 @@ unreg_privmsg_func(struct userNode *user, privmsg_func_t handler)
 
     memset(privmsg_funcs+user->num_local, 0, sizeof(privmsg_func_t));
 
-    for (x = user->num_local+1; x < num_privmsg_funcs; x++) 
+    for (x = user->num_local+1; x < num_privmsg_funcs; x++)
        memmove(privmsg_funcs+x-1, privmsg_funcs+x, sizeof(privmsg_func_t));
-    
-    privmsg_funcs = realloc(privmsg_funcs, num_privmsg_funcs*sizeof(privmsg_func_t)); 
+
+    privmsg_funcs = realloc(privmsg_funcs, num_privmsg_funcs*sizeof(privmsg_func_t));
     num_privmsg_funcs--;
 }
 

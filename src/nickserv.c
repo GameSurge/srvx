@@ -1217,7 +1217,7 @@ static NICKSERV_FUNC(cmd_register)
         nickserv_make_cookie(user, hi, ACTIVATION, hi->passwd);
 
     /* Set registering flag.. */
-    user->modes |= FLAGS_REGISTERING; 
+    user->modes |= FLAGS_REGISTERING;
 
     return 1;
 }
@@ -2593,10 +2593,13 @@ static NICKSERV_FUNC(cmd_unregister)
 static NICKSERV_FUNC(cmd_ounregister)
 {
     struct handle_info *hi;
+    char reason[MAXLEN];
 
     NICKSERV_MIN_PARMS(2);
     if (!(hi = get_victim_oper(user, argv[1])))
         return 0;
+    snprintf(reason, sizeof(reason), "%s unregistered account %s.", user->handle_info->handle, hi->handle);
+    global_message(MESSAGE_RECIPIENT_STAFF, reason);
     nickserv_unregister_handle(hi, user);
     return 1;
 }

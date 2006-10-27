@@ -51,6 +51,7 @@
 #define FLAGS_DEAF		0x0020 /* deaf +d */
 #define FLAGS_SERVICE		0x0040 /* cannot be kicked, killed or deoped +k */
 #define FLAGS_GLOBAL		0x0080 /* receives global messages +g */
+#define FLAGS_NOCHAN		0x0100 /* hide channels in whois +n */
 #define FLAGS_PERSISTENT	0x0200 /* for reserved nicks, this isn't just one-shot */
 #define FLAGS_GAGGED		0x0400 /* for gagged users */
 #define FLAGS_AWAY		0x0800 /* for away users */
@@ -65,9 +66,10 @@
 #define IsDeaf(x)               ((x)->modes & FLAGS_DEAF)
 #define IsInvisible(x)          ((x)->modes & FLAGS_INVISIBLE)
 #define IsGlobal(x)             ((x)->modes & FLAGS_GLOBAL)
+#define IsNoChan(x)             ((x)->modes & FLAGS_NOCHAN)
 #define IsWallOp(x)             ((x)->modes & FLAGS_WALLOP)
 #define IsGagged(x)             ((x)->modes & FLAGS_GAGGED)
-#define IsPersistent(x)         ((x)->modes & FLAGS_PERSISTENT) 
+#define IsPersistent(x)         ((x)->modes & FLAGS_PERSISTENT)
 #define IsAway(x)               ((x)->modes & FLAGS_AWAY)
 #define IsStamped(x)            ((x)->modes & FLAGS_STAMPED)
 #define IsHiddenHost(x)         ((x)->modes & FLAGS_HIDDEN_HOST)

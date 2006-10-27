@@ -626,7 +626,7 @@ int
 svccmd_invoke_argv(struct userNode *user, struct service *service, struct chanNode *channel, unsigned int argc, char *argv[], unsigned int server_qualified) {
     extern struct userNode *chanserv;
     struct svccmd *cmd;
-    unsigned int cmd_arg, perms, flags, options;
+    unsigned int cmd_arg, perms, flags, options, result;
     char channel_name[CHANNELLEN+1];
 
     /* First check pubcmd for the channel. */
@@ -737,11 +737,13 @@ svccmd_invoke_argv(struct userNode *user, struct service *service, struct chanNo
         safestrncpy(channel_name, channel->name, sizeof(channel_name));
     else
         channel_name[0] = 0;
-    if (!cmd->command->func(user, channel, argc, argv, cmd))
+    if (!(result = cmd->command->func(user, channel, argc, argv, cmd)))
         return 0;
     if (!(flags & MODCMD_NO_LOG)) {
         enum log_severity slvl;
-        if (perms & ACTION_STAFF)
+        if (result & CMD_LOG_OVERRIDE)
+            slvl = LOG_OVERRIDE;
+        else if ((perms & ACTION_STAFF) || (result & CMD_LOG_STAFF))
             slvl = LOG_STAFF;
         else if (perms & ACTION_OVERRIDE)
             slvl = LOG_OVERRIDE;

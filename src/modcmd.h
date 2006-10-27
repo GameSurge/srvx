@@ -75,6 +75,12 @@ DECLARE_LIST(module_list, struct module*);
 #define SVCCMD_DEBIT                  0x000002
 #define SVCCMD_NOISY                  0x000004
 
+/* We do not use constants for 0 (no logging) and 1 (regular logging) as those
+ * are used very often and are intuitive enough.
+ */
+#define CMD_LOG_STAFF       0x02
+#define CMD_LOG_OVERRIDE    0x04
+
 /* Modularized commands work like this:
  *
  * Modules define commands.  Services contain "bindings" of those

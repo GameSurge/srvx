@@ -1187,6 +1187,7 @@ static MODCMD_FUNC(cmd_whois)
 	if (IsGlobal(target)) buffer[bpos++] = 'g';
 	if (IsService(target)) buffer[bpos++] = 'k';
 	if (IsDeaf(target)) buffer[bpos++] = 'd';
+	if (IsNoChan(target)) buffer[bpos++] = 'n';
         if (IsHiddenHost(target)) buffer[bpos++] = 'x';
         if (IsGagged(target)) buffer_cat(" (gagged)");
 	if (IsRegistering(target)) buffer_cat(" (registered account)");
