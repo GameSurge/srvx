@@ -60,6 +60,7 @@
 #define FLAGS_REGNICK           0x4000 /* user owns their current nick */
 #define FLAGS_REGISTERING       0x8000 /* user has issued account register command, is waiting for email cookie */
 #define FLAGS_DUMMY             0x10000 /* user is not announced to other servers */
+#define FLAGS_NOIDLE            0x20000 /* hide idle time in whois +I */
 
 #define IsOper(x)               ((x)->modes & FLAGS_OPER)
 #define IsService(x)            ((x)->modes & FLAGS_SERVICE)
@@ -76,6 +77,7 @@
 #define IsReggedNick(x)         ((x)->modes & FLAGS_REGNICK)
 #define IsRegistering(x)	((x)->modes & FLAGS_REGISTERING)
 #define IsDummy(x)              ((x)->modes & FLAGS_DUMMY)
+#define IsNoIdle(x)             ((x)->modes & FLAGS_NOIDLE)
 #define IsFakeHost(x)           ((x)->fakehost[0] != '\0')
 #define IsLocal(x)              ((x)->uplink == self)
 
