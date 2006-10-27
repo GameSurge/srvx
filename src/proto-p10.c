@@ -479,6 +479,8 @@ irc_user(struct userNode *user)
             modes[modelen++] = 'n';
         if (IsHiddenHost(user))
             modes[modelen++] = 'x';
+        if (IsNoIdle(user))
+            modes[modelen++] = 'I';
         modes[modelen] = 0;
 
         /* we don't need to put the + in modes because it's in the format string. */
@@ -2222,6 +2224,7 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
 	case 'k': do_user_mode(FLAGS_SERVICE); break;
 	case 'g': do_user_mode(FLAGS_GLOBAL); break;
 	case 'n': do_user_mode(FLAGS_NOCHAN); break;
+        case 'I': do_user_mode(FLAGS_NOIDLE); break;
         case 'x': do_user_mode(FLAGS_HIDDEN_HOST); break;
         case 'r':
             if (*word) {
