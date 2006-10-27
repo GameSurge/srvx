@@ -14,7 +14,7 @@ AM_MAINTAINER_MODE
 dnl Compiler/runtime feature checks.
 AC_TYPE_SIGNAL
 AC_C_CONST
-AC_C_INLINE
+dnl "const" *should* be in the -Werror section, but that breaks Linux. gg gcc.
 
 dnl Checks for programs.
 AC_PROG_AWK
@@ -134,6 +134,12 @@ int getpeername (int $arg2 *, $t *);]], [[$t len;
 dnl Can only check with -Werror, but the rest of configure doesn't like -Werror
 OLD_CFLAGS=$CFLAGS
 CFLAGS="$CFLAGS -W -Wall -Werror"
+if test "z$USE_MAINTAINER_MODE" = zyes ; then
+  CFLAGS="$CFLAGS -ansi"
+fi
+
+dnl Check for post-C89 keywords
+AC_C_INLINE
 
 dnl Now figure out how to printf() a time_t
 AC_MSG_CHECKING(for time_t format)
@@ -342,7 +348,7 @@ fi
 MY_SUBDIRS="$MY_SUBDIRS src"
 CFLAGS="$CFLAGS $ANSI_SRC -W -Wall"
 if test "z$USE_MAINTAINER_MODE" = zyes ; then
-  CFLAGS="$CFLAGS -Werror"
+  CFLAGS="$CFLAGS -Werror -ansi"
 fi
 
 AC_DEFINE_UNQUOTED(CODENAME, "${CODENAME}", [Code name for this release])

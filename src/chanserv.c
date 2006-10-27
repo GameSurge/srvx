@@ -2241,7 +2241,7 @@ static CHANSERV_FUNC(cmd_adduser)
 	return 0;
     }
 
-    // Trying to add someone with equal/more access
+    /* Trying to add someone with equal/more access? */
     if (!real_actor || real_actor->access <= access)
         override = CMD_LOG_OVERRIDE;
 
@@ -2308,14 +2308,15 @@ static CHANSERV_FUNC(cmd_clvl)
 	return 0;
     }
 
-    // Trying to clvl a equal/higher user
+    /* Trying to clvl a equal/higher user? */
     if(!real_actor || (real_actor->access <= victim->access && handle != user->handle_info))
         override = CMD_LOG_OVERRIDE;
-    // Trying to clvl someone to equal/higher access
+    /* Trying to clvl someone to equal/higher access? */
     if(!real_actor || new_access >= real_actor->access)
         override = CMD_LOG_OVERRIDE;
-    // Helpers clvling themselves get caught by the "clvl someone to equal/higher access" check.
-    // If they lower their own access it's not a big problem.
+    /* Helpers clvling themselves get caught by the "clvl someone to equal/higher access" check.
+     * If they lower their own access it's not a big problem.
+     */
 
     victim->access = new_access;
     reply("CSMSG_CHANGED_ACCESS", handle->handle, new_access, channel->name);
@@ -2369,7 +2370,9 @@ static CHANSERV_FUNC(cmd_deluser)
 	return 0;
     }
 
-    // If people delete themselves it is an override, but they could've used deleteme so we don't log it as an override
+    /* If people delete themselves it is an override, but they
+     * could've used deleteme so we don't log it as an override
+     */
     if(!real_actor || (real_actor->access <= victim->access && real_actor != victim))
         override = CMD_LOG_OVERRIDE;
 
