@@ -314,6 +314,7 @@ enum reclaim_action {
 };
 static void nickserv_reclaim(struct userNode *user, struct nick_info *ni, enum reclaim_action action);
 static void nickserv_reclaim_p(void *data);
+static int nickserv_addmask(struct userNode *user, struct handle_info *hi, const char *mask);
 
 static struct {
     unsigned int disable_nicks : 1;
@@ -1228,14 +1229,17 @@ static NICKSERV_FUNC(cmd_oregister)
     struct userNode *settee;
     struct handle_info *hi;
 
-    NICKSERV_MIN_PARMS(4);
+    NICKSERV_MIN_PARMS(3);
 
     if (!is_valid_handle(argv[1])) {
         reply("NSMSG_BAD_HANDLE", argv[1]);
         return 0;
     }
 
-    if (strchr(argv[3], '@')) {
+    if (argc < 4) {
+        mask = NULL;
+        settee = NULL;
+    } else if (strchr(argv[3], '@')) {
 	mask = canonicalize_hostmask(strdup(argv[3]));
 	if (argc > 4) {
 	    settee = GetUserH(argv[4]);
@@ -1262,7 +1266,8 @@ static NICKSERV_FUNC(cmd_oregister)
         free(mask);
         return 0;
     }
-    string_list_append(hi->masks, mask);
+    if (mask)
+        string_list_append(hi->masks, mask);
     return 1;
 }
 
@@ -1628,8 +1633,14 @@ static NICKSERV_FUNC(cmd_auth)
         reply("NSMSG_WEAK_PASSWORD");
     if (hi->passwd[0] != '$')
         cryptpass(passwd, hi->passwd);
-    reply("NSMSG_AUTH_SUCCESS");
+    if (!hi->masks->used) {
+        irc_in_addr_t ip;
+        string_list_append(hi->masks, generate_hostmask(user, GENMASK_OMITNICK|GENMASK_NO_HIDING|GENMASK_ANY_IDENT));
+        if (irc_in_addr_is_valid(user->ip) && irc_pton(&ip, NULL, user->hostname))
+            string_list_append(hi->masks, generate_hostmask(user, GENMASK_OMITNICK|GENMASK_BYIP|GENMASK_NO_HIDING|GENMASK_ANY_IDENT));
+    }
     argv[pw_arg] = "****";
+    reply("NSMSG_AUTH_SUCCESS");
     return 1;
 }
 
@@ -1842,10 +1853,14 @@ static NICKSERV_FUNC(cmd_cookie)
         nickserv_set_email_addr(hi, hi->cookie->data);
         reply("NSMSG_EMAIL_CHANGED");
         break;
-    case ALLOWAUTH:
+    case ALLOWAUTH: {
+        char *mask = generate_hostmask(user, GENMASK_OMITNICK|GENMASK_NO_HIDING|GENMASK_ANY_IDENT);
         set_user_handle_info(user, hi, 1);
+        nickserv_addmask(user, hi, mask);
         reply("NSMSG_AUTH_SUCCESS");
+        free(mask);
         break;
+    }
     default:
         reply("NSMSG_BAD_COOKIE_TYPE", hi->cookie->type);
         log_module(NS_LOG, LOG_ERROR, "Bad cookie type %d for account %s.", hi->cookie->type, hi->handle);
@@ -3784,7 +3799,7 @@ init_nickserv(const char *nick)
     nickserv_define_func("USERINFO", cmd_userinfo, -1, 1, 0);
     nickserv_define_func("RENAME", cmd_rename_handle, -1, 1, 0);
     nickserv_define_func("VACATION", cmd_vacation, -1, 1, 0);
-    nickserv_define_func("MERGE", cmd_merge, 0, 1, 0);
+    nickserv_define_func("MERGE", cmd_merge, 750, 1, 0);
     if (!nickserv_conf.disable_nicks) {
 	/* nick management commands */
 	nickserv_define_func("REGNICK", cmd_regnick, -1, 1, 0);

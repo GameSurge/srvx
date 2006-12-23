@@ -2,6 +2,25 @@
 # arch-tag: automatic-ChangeLog--srvx@srvx.net--2006/srvx--devo--1.3
 #
 
+2006-12-23 05:31:56 GMT	Michael Poole <mdpoole@troilus.org>	patch-72
+
+    Summary:
+      Allow NickServ to learn hostmasks automatically.
+    Revision:
+      srvx--devo--1.3--patch-72
+
+    src/nickserv.c (nickserv_addmask): Declare early.
+      (cmd_oregister): Allow oper to omit fourth parameter, to set no
+        hostmask.
+      (cmd_auth): On success, add user's hostmask if the account's hostmask
+        list is empty.
+      (cmd_cookie): Append hostmask to account on successful allowauth.
+      (init_nickserv): Update merge command access.
+
+    modified files:
+     ChangeLog src/nickserv.c
+
+
 2006-12-23 05:27:23 GMT	Michael Poole <mdpoole@troilus.org>	patch-71
 
     Summary:
