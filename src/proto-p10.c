@@ -2502,7 +2502,7 @@ mod_chanmode_announce(struct userNode *who, struct chanNode *channel, struct mod
             mod_chanmode_append(&chbuf, 'k', channel->key);
         if (change->modes_clear & channel->modes & MODE_UPASS)
             mod_chanmode_append(&chbuf, 'U', channel->upass);
-        if (change->modes_clear * channel->modes & MODE_APASS)
+        if (change->modes_clear & channel->modes & MODE_APASS)
             mod_chanmode_append(&chbuf, 'A', channel->apass);
     }
     for (arg = 0; arg < change->argc; ++arg) {
