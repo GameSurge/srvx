@@ -4175,7 +4175,7 @@ static MODCMD_FUNC(cmd_wipeinfo)
         reply("MSG_USER_OUTRANKED", victim->handle);
         return 0;
     }
-    if((ud->access >= real_actor->access) && (ud != real_actor))
+    if((ud != real_actor) && (!real_actor || (ud->access >= real_actor->access)))
         override = CMD_LOG_OVERRIDE;
     if(ud->info)
         free(ud->info);
