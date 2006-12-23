@@ -1985,13 +1985,13 @@ static NICKSERV_FUNC(cmd_oaddmask)
 }
 
 static int
-nickserv_delmask(struct userNode *user, struct handle_info *hi, const char *del_mask)
+nickserv_delmask(struct userNode *user, struct handle_info *hi, const char *del_mask, int force)
 {
     unsigned int i;
     for (i=0; i<hi->masks->used; i++) {
 	if (!strcmp(del_mask, hi->masks->list[i])) {
 	    char *old_mask = hi->masks->list[i];
-	    if (hi->masks->used == 1) {
+	    if (hi->masks->used == 1 && !force) {
 		send_message(user, nickserv, "NSMSG_DELMASK_NOTLAST");
 		return 0;
 	    }
@@ -2008,7 +2008,7 @@ nickserv_delmask(struct userNode *user, struct handle_info *hi, const char *del_
 static NICKSERV_FUNC(cmd_delmask)
 {
     NICKSERV_MIN_PARMS(2);
-    return nickserv_delmask(user, user->handle_info, argv[1]);
+    return nickserv_delmask(user, user->handle_info, argv[1], 0);
 }
 
 static NICKSERV_FUNC(cmd_odelmask)
@@ -2017,7 +2017,7 @@ static NICKSERV_FUNC(cmd_odelmask)
     NICKSERV_MIN_PARMS(3);
     if (!(hi = get_victim_oper(user, argv[1])))
         return 0;
-    return nickserv_delmask(user, hi, argv[2]);
+    return nickserv_delmask(user, hi, argv[2], 1);
 }
 
 int
