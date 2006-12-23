@@ -439,9 +439,8 @@ privmsg_chan_helper(struct chanNode *cn, void *data)
     if ((mn = GetUserMode(cn, pd->user)))
         mn->idle_since = now;
 
-    /* Never send a NOTICE to a channel to one of the services */
-    if (!pd->is_notice && cf->func
-        && ((cn->modes & MODE_REGISTERED) || GetUserMode(cn, cf->service)))
+    if (cf->func && !pd->is_notice
+        && (GetUserMode(cn, cf->service) && !IsDeaf(cf->service)))
         cf->func(pd->user, cn, pd->text+1, cf->service);
 
     /* This catches *all* text sent to the channel that the services server sees */
