@@ -41,6 +41,29 @@ CREATE TABLE srvx_log (
   t_when TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   c_message VARCHAR(1024) NOT NULL);
 
+CREATE TABLE srvx_helpserv_reqs (
+  c_bot VARCHAR(30) NOT NULL,
+  t_opened TIMESTAMP NOT NULL,
+  t_assigned TIMESTAMP NOT NULL,
+  t_closed TIMESTAMP NOT NULL,
+  i_id INTEGER NOT NULL PRIMARY KEY,
+  c_helper VARCHAR(30) NOT NULL,
+  c_user_account VARCHAR(30) NOT NULL,
+  c_user_nick VARCHAR(30) NOT NULL,
+  c_user_host VARCHAR(80) NOT NULL,
+  c_close_reason VARCHAR(512) NOT NULL,
+  c_text TEXT NOT NULL);
+
+CREATE TABLE srvx_helpserv_stats (
+  c_bot VARCHAR(30) NOT NULL,
+  t_weekstart TIMESTAMP NOT NULL,
+  c_helper VARCHAR(30) NOT NULL,
+  i_time INTEGER NOT NULL,
+  i_picked_up INTEGER NOT NULL,
+  i_closed INTEGER NOT NULL,
+  i_reassigned_from INTEGER NOT NULL,
+  i_reassigned_to INTEGER NOT NULL);
+
 CREATE SEQUENCE srvx_modules_id_seq MINVALUE 0 MAXVALUE 32767;
 CREATE FUNCTION srvx_module_id (VARCHAR(32)) RETURNS SMALLINT
   LANGUAGE 'plpgsql' STABLE STRICT AS '
