@@ -1509,13 +1509,13 @@ static CMD_FUNC(cmd_squit)
 static CMD_FUNC(cmd_privmsg)
 {
     struct privmsg_desc pd;
-    if (argc != 3)
+    if (argc < 3)
         return 0;
     pd.user = GetUserH(origin);
     if (!pd.user || (IsGagged(pd.user) && !IsOper(pd.user)))
         return 1;
     pd.is_notice = 0;
-    pd.text = argv[2];
+    pd.text = argv[argc - 1];
     parse_foreach(argv[1], privmsg_chan_helper, NULL, privmsg_user_helper, privmsg_invalid, &pd);
     return 1;
 }
@@ -1523,13 +1523,13 @@ static CMD_FUNC(cmd_privmsg)
 static CMD_FUNC(cmd_notice)
 {
     struct privmsg_desc pd;
-    if (argc != 3)
+    if (argc < 3)
         return 0;
     pd.user = GetUserH(origin);
     if (!pd.user || (IsGagged(pd.user) && !IsOper(pd.user)))
         return 1;
     pd.is_notice = 1;
-    pd.text = argv[2];
+    pd.text = argv[argc - 1];
     parse_foreach(argv[1], privmsg_chan_helper, NULL, privmsg_user_helper, privmsg_invalid, &pd);
     return 1;
 }
