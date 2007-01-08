@@ -2248,7 +2248,7 @@ static CHANSERV_FUNC(cmd_adduser)
     if(!(handle = modcmd_get_handle_info(user, argv[1])))
         return 0;
 
-    if((actee = GetChannelAccess(channel->channel_info, handle)))
+    if((actee = GetTrueChannelAccess(channel->channel_info, handle)))
     {
 	reply("CSMSG_USER_EXISTS", handle->handle, channel->name, actee->access);
 	return 0;
