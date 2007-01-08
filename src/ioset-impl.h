@@ -31,7 +31,7 @@ struct io_engine {
     const char *name;
     int (*init)(void);
     void (*add)(struct io_fd *fd);
-    void (*remove)(struct io_fd *fd);
+    void (*remove)(struct io_fd *fd, int os_closed);
     void (*update)(struct io_fd *fd);
     int (*loop)(struct timeval *timeout);
     void (*cleanup)(void);

@@ -321,7 +321,7 @@ ioset_close(struct io_fd *fdp, int os_close) {
     free(fdp->recv.buf);
     if (os_close & 1)
         close(fdp->fd);
-    engine->remove(fdp);
+    engine->remove(fdp, os_close & 1);
     free(fdp);
 }
 

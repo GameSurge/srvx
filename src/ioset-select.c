@@ -57,10 +57,11 @@ ioset_select_add(struct io_fd *fd)
 }
 
 static void
-ioset_select_remove(struct io_fd *fd)
+ioset_select_remove(struct io_fd *fd, int closed)
 {
     FD_CLR(fd->fd, &read_fds);
     FD_CLR(fd->fd, &write_fds);
+    (void)closed;
 }
 
 static void

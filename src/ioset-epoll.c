@@ -65,10 +65,11 @@ ioset_epoll_add(struct io_fd *fd)
 }
 
 static void
-ioset_epoll_remove(struct io_fd *fd)
+ioset_epoll_remove(struct io_fd *fd, int closed)
 {
     static struct epoll_event evt;
-    (void)epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd->fd, &evt);
+    if (!closed)
+        (void)epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd->fd, &evt);
 }
 
 static void
