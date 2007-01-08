@@ -418,6 +418,10 @@ static MODCMD_FUNC(cmd_stats_databases) {
     tbl.contents[0][4] = "Last Duration";
     for (ii=1, it=dict_first(saxdbs); it; it=iter_next(it), ++ii) {
         struct saxdb *db = iter_data(it);
+        if (db->mondo_section) {
+            --ii;
+            continue;
+        }
         char *buf = malloc(INTERVALLEN*3);
         tbl.contents[ii] = calloc(tbl.width, sizeof(tbl.contents[ii][0]));
         tbl.contents[ii][0] = db->name;
@@ -438,6 +442,7 @@ static MODCMD_FUNC(cmd_stats_databases) {
         tbl.contents[ii][3] = buf+INTERVALLEN;
         tbl.contents[ii][4] = buf+INTERVALLEN*2;
     }
+    tbl.length = ii;
     table_send(cmd->parent->bot, user->nick, 0, 0, tbl);
     free(tbl.contents[0]);
     for (ii=1; ii<tbl.length; ++ii) {
