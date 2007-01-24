@@ -25,9 +25,9 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_GCC_TRADITIONAL
 
-dnl Look for a GNU Arch program
-AC_CHECK_PROGS(GNU_ARCH, [baz tla])
-AM_CONDITIONAL(HAS_GNU_ARCH, test z$GNU_ARCH != z)
+dnl Look for a git client
+AC_CHECK_PROGS(GIT, [git])
+AM_CONDITIONAL(HAS_GIT, test z$GIT != z)
 
 dnl nice that unixes can all follow a standard.
 case $target in

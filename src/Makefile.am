@@ -15,22 +15,29 @@ noinst_DATA = \
 	mod-memoserv.help \
 	mod-sockcheck.help
 EXTRA_DIST = $(noinst_DATA)
-BUILT_SOURCES = arch-version.h
-noinst_HEADERS = arch-version.h
+BUILT_SOURCES = git-version.h
+noinst_HEADERS = git-version.h
 
-if HAS_GNU_ARCH
+if HAS_GIT
 .PHONY: checkversion
-arch-version.h: checkversion
+git-version.h: checkversion
 checkversion:
-	@$(GNU_ARCH) logs -f >/dev/null 2>&1 || exit 0; \
-	TMPFILE=`mktemp arch-version.h.XXXXXX` || exit 1 ; \
-	echo "#define ARCH_VERSION \"`$(GNU_ARCH) logs -f | tail -n 1`\"" >> $$TMPFILE ; \
-	if diff -q arch-version.h $$TMPFILE >/dev/null 2>&1 ; then \
+	@( cd $(top_srcdir) && $(GIT) symbolic-ref HEAD ) >/dev/null 2>&1 || exit 0; \
+	TMPFILE=`mktemp git-version.h.XXXXXX` || exit 1 ; \
+	( \
+	  cd $(top_srcdir) ; \
+	  GIT_DIR=$${GIT_DIR:-.git} ; \
+	  HEAD_NAME=`$(GIT) symbolic-ref HEAD` ; \
+	  HEAD_SHA1=`cat $${GIT_DIR}/$${HEAD_NAME}` ; \
+	  echo "/* Full revision $${HEAD_SHA1} */" ; \
+	  echo "#define GIT_VERSION \"$${HEAD_SHA1%????????????????????????????????}\"" ; \
+	) >> $$TMPFILE ; \
+	if diff -q git-version.h $$TMPFILE >/dev/null 2>&1 ; then \
 	    rm $$TMPFILE ; \
         else \
-	    echo "Putting new arch version into arch-version.h" ; \
-	    rm -f arch-version.h ; \
-	    mv $$TMPFILE arch-version.h ; \
+	    echo "Putting new git version into git-version.h" ; \
+	    rm -f git-version.h ; \
+	    mv $$TMPFILE git-version.h ; \
 	fi
 endif
 
@@ -52,7 +59,7 @@ EXTRA_srvx_SOURCES = \
 srvx_LDADD = @MODULE_OBJS@
 srvx_DEPENDENCIES = @MODULE_OBJS@
 srvx_SOURCES = \
-	arch-version.h \
+	git-version.h \
 	chanserv.c chanserv.h \
 	compat.c compat.h \
 	conf.c conf.h \
