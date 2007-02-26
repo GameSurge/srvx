@@ -252,9 +252,10 @@
 "NETINFO" ("/msg $C NETINFO",
         "Displays some assorted pieces of information about network-wide $b$C$b statistics.",
         "$uSee Also:$u info, staff");
-"NOREGISTER" ("/msg $C NOREGISTER <#channel|*Account> <reason>",
+"NOREGISTER" ("/msg $C NOREGISTER <#channel|*Account> <duration> <reason>",
         "With no arguments, lists the current do-not-register channels.",
         "With arguments, adds a do-not-register channel (or account) with the specified reason.  In this case, the channel name may include * or ? wildcards.",
+        "The duration may be \"0\" to make it never expire; otherwise, the do-not-register entry will be automatically removed after $uduration$u.",
         "$uSee Also:$u allowregister, register, unregister");
 "NOTE" ("/msg $C NOTE <#channel> [<type> [new-note-text]]",
         "With no arguments, lists all visible notes on the specified channel.",

@@ -163,7 +163,7 @@ struct do_not_register
 {
     char   chan_name[CHANNELLEN+1];
     char   setter[NICKSERV_HANDLE_LEN+1];
-    time_t set;
+    time_t set, expires;
     char   reason[1];
 };
 

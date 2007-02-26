@@ -38,6 +38,7 @@
 #define KEY_ADJUST_DELAY   	"adjust_delay"
 #define KEY_CHAN_EXPIRE_FREQ	"chan_expire_freq"
 #define KEY_CHAN_EXPIRE_DELAY	"chan_expire_delay"
+#define KEY_DNR_EXPIRE_FREQ	"dnr_expire_freq"
 #define KEY_MAX_CHAN_USERS     	"max_chan_users"
 #define KEY_MAX_CHAN_BANS	"max_chan_bans"
 #define KEY_NICK		"nick"
@@ -132,8 +133,8 @@ static const struct message_entry msgtab[] = {
 /* Do-not-register channels */
     { "CSMSG_NOT_DNR", "$b%s$b is not a valid channel name or *account." },
     { "CSMSG_DNR_SEARCH_RESULTS", "The following do-not-registers were found:" },
-    { "CSMSG_DNR_INFO", "$b%s$b is do-not-register (by $b%s$b): %s" },
-    { "CSMSG_DNR_INFO_SET", "$b%s$b is do-not-register (set %s by $b%s$b): %s" },
+    { "CSMSG_DNR_INFO", "$b%s$b is do-not-register (by $b%s$b; expires %s): %s" },
+    { "CSMSG_DNR_INFO_SET", "$b%s$b is do-not-register (set %s by $b%s$b; expires %s): %s" },
     { "CSMSG_MORE_DNRS", "%d more do-not-register entries skipped." },
     { "CSMSG_DNR_CHANNEL", "Only network staff may register $b%s$b." },
     { "CSMSG_DNR_CHANNEL_MOVE", "Only network staff may move $b%s$b." },
@@ -489,6 +490,7 @@ static struct
 
     unsigned long 	db_backup_frequency;
     unsigned long 	channel_expire_frequency;
+    unsigned long 	dnr_expire_frequency;
 
     long 		info_delay;
     unsigned int 	adjust_delay;
@@ -1387,6 +1389,38 @@ expire_channels(UNUSED_ARG(void *data))
 	timeq_add(now + chanserv_conf.channel_expire_frequency, expire_channels, NULL);
 }
 
+static void
+expire_dnrs(UNUSED_ARG(void *data))
+{
+    dict_iterator_t it;
+    struct do_not_register *dnr;
+
+    for(it = dict_first(handle_dnrs); it; it = iter_next(it))
+    {
+        dnr = iter_data(it);
+        if(!dnr->expires || dnr->expires > now)
+            continue;
+        dict_remove(handle_dnrs, dnr->chan_name + 1);
+    }
+    for(it = dict_first(plain_dnrs); it; it = iter_next(it))
+    {
+        dnr = iter_data(it);
+        if(!dnr->expires || dnr->expires > now)
+            continue;
+        dict_remove(plain_dnrs, dnr->chan_name);
+    }
+    for(it = dict_first(mask_dnrs); it; it = iter_next(it))
+    {
+        dnr = iter_data(it);
+        if(!dnr->expires || dnr->expires > now)
+            continue;
+        dict_remove(mask_dnrs, dnr->chan_name);
+    }
+
+    if(chanserv_conf.dnr_expire_frequency)
+        timeq_add(now + chanserv_conf.dnr_expire_frequency, expire_dnrs, NULL);
+}
+
 static int
 protect_user(const struct userNode *victim, const struct userNode *aggressor, struct chanData *channel)
 {
@@ -1467,13 +1501,14 @@ validate_deop(struct userNode *user, struct chanNode *channel, struct userNode *
 }
 
 static struct do_not_register *
-chanserv_add_dnr(const char *chan_name, const char *setter, const char *reason)
+chanserv_add_dnr(const char *chan_name, const char *setter, time_t expires, const char *reason)
 {
     struct do_not_register *dnr = calloc(1, sizeof(*dnr)+strlen(reason));
     safestrncpy(dnr->chan_name, chan_name, sizeof(dnr->chan_name));
     safestrncpy(dnr->setter, setter, sizeof(dnr->setter));
     strcpy(dnr->reason, reason);
     dnr->set = now;
+    dnr->expires = expires;
     if(dnr->chan_name[0] == '*')
         dict_insert(handle_dnrs, dnr->chan_name+1, dnr);
     else if(strpbrk(dnr->chan_name, "*?"))
@@ -1491,13 +1526,13 @@ chanserv_find_dnrs(const char *chan_name, const char *handle)
     struct do_not_register *dnr;
 
     dnrList_init(&list);
-    if(handle && (dnr = dict_find(handle_dnrs, handle, NULL)))
+    if(handle && (dnr = dict_find(handle_dnrs, handle, NULL)) && (!dnr->expires || dnr->expires > now))
         dnrList_append(&list, dnr);
-    if(chan_name && (dnr = dict_find(plain_dnrs, chan_name, NULL)))
+    if(chan_name && (dnr = dict_find(plain_dnrs, chan_name, NULL)) && (!dnr->expires || dnr->expires > now))
         dnrList_append(&list, dnr);
     if(chan_name)
         for(it = dict_first(mask_dnrs); it; it = iter_next(it))
-            if(match_ircglob(chan_name, iter_key(it)))
+            if(match_ircglob(chan_name, iter_key(it)) && (!dnr->expires || dnr->expires > now))
                 dnrList_append(&list, iter_data(it));
     return list;
 }
@@ -1508,19 +1543,24 @@ chanserv_show_dnrs(struct userNode *user, struct svccmd *cmd, const char *chan_n
     struct dnrList list;
     struct do_not_register *dnr;
     unsigned int ii;
-    char buf[INTERVALLEN];
+    char buf[INTERVALLEN], buf2[INTERVALLEN];
 
     list = chanserv_find_dnrs(chan_name, handle);
     for(ii = 0; (ii < list.used) && (ii < 10); ++ii)
     {
         dnr = list.list[ii];
+        if(dnr->expires && dnr->expires <= now)
+            continue;
+        else if(dnr->expires)
+            intervalString(buf2, dnr->expires - now, user->handle_info);
+
         if(dnr->set)
         {
             strftime(buf, sizeof(buf), "%Y %b %d", localtime(&dnr->set));
-            reply("CSMSG_DNR_INFO_SET", dnr->chan_name, buf, dnr->setter, dnr->reason);
+            reply("CSMSG_DNR_INFO_SET", dnr->chan_name, buf, dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
         }
         else
-            reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, dnr->reason);
+            reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
     }
     if(ii < list.used)
         reply("CSMSG_MORE_DNRS", list.used - ii);
@@ -1534,14 +1574,14 @@ chanserv_is_dnr(const char *chan_name, struct handle_info *handle)
     struct do_not_register *dnr;
     dict_iterator_t it;
 
-    if(handle && (dnr = dict_find(handle_dnrs, handle->handle, NULL)))
+    if(handle && (dnr = dict_find(handle_dnrs, handle->handle, NULL)) && (!dnr->expires || dnr->expires > now))
         return dnr;
     if(chan_name)
     {
-        if((dnr = dict_find(plain_dnrs, chan_name, NULL)))
+        if((dnr = dict_find(plain_dnrs, chan_name, NULL)) && (!dnr->expires || dnr->expires > now))
             return dnr;
         for(it = dict_first(mask_dnrs); it; it = iter_next(it))
-            if(match_ircglob(chan_name, iter_key(it)))
+            if(match_ircglob(chan_name, iter_key(it)) && (!dnr->expires || dnr->expires > now))
                 return iter_data(it);
     }
     return NULL;
@@ -1550,8 +1590,9 @@ chanserv_is_dnr(const char *chan_name, struct handle_info *handle)
 static CHANSERV_FUNC(cmd_noregister)
 {
     const char *target;
+    time_t expiry, duration;
     struct do_not_register *dnr;
-    char buf[INTERVALLEN];
+    char buf[INTERVALLEN], buf2[INTERVALLEN];
     unsigned int matches;
 
     if(argc < 2)
@@ -1563,28 +1604,43 @@ static CHANSERV_FUNC(cmd_noregister)
         for(it = dict_first(handle_dnrs); it; it = iter_next(it))
         {
             dnr = iter_data(it);
+            if(dnr->expires && dnr->expires <= now)
+                continue;
+            else if(dnr->expires)
+                intervalString(buf2, dnr->expires - now, user->handle_info);
+
             if(dnr->set)
-                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set, user->handle_info), dnr->setter, dnr->reason);
+                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set, user->handle_info), dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
             else
-                reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, dnr->reason);
+                reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
             matches++;
         }
         for(it = dict_first(plain_dnrs); it; it = iter_next(it))
         {
             dnr = iter_data(it);
+            if(dnr->expires && dnr->expires <= now)
+                continue;
+            else if(dnr->expires)
+                intervalString(buf2, dnr->expires - now, user->handle_info);
+
             if(dnr->set)
-                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set, user->handle_info), dnr->setter, dnr->reason);
+                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set, user->handle_info), dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
             else
-                reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, dnr->reason);
+                reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
             matches++;
         }
         for(it = dict_first(mask_dnrs); it; it = iter_next(it))
         {
             dnr = iter_data(it);
+            if(dnr->expires && dnr->expires <= now)
+                continue;
+            else if(dnr->expires)
+                intervalString(buf2, dnr->expires - now, user->handle_info);
+
             if(dnr->set)
-                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set, user->handle_info), dnr->setter, dnr->reason);
+                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set, user->handle_info), dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
             else
-                reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, dnr->reason);
+                reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
             matches++;
         }
 
@@ -1605,13 +1661,29 @@ static CHANSERV_FUNC(cmd_noregister)
 
     if(argc > 2)
     {
-        const char *reason = unsplit_string(argv + 2, argc - 2, NULL);
+        if(argc == 3)
+        {
+            reply("MSG_INVALID_DURATION", argv[2]);
+            return 0;
+        }
+
+        if(!strcmp(argv[2], "0"))
+            expiry = 0;
+        else if((duration = ParseInterval(argv[2])))
+            expiry = now + duration;
+        else
+        {
+            reply("MSG_INVALID_DURATION", argv[2]);
+            return 0;
+        }
+
+        const char *reason = unsplit_string(argv + 3, argc - 3, NULL);
         if((*target == '*') && !get_handle_info(target + 1))
         {
             reply("MSG_HANDLE_UNKNOWN", target + 1);
             return 0;
         }
-        chanserv_add_dnr(target, user->handle_info->handle, reason);
+        chanserv_add_dnr(target, user->handle_info->handle, expiry, reason);
         reply("CSMSG_NOREGISTER_CHANNEL", target);
         return 1;
     }
@@ -6512,6 +6584,8 @@ chanserv_conf_read(void)
     chanserv_conf.channel_expire_frequency = str ? ParseInterval(str) : 86400;
     str = database_get_data(conf_node, KEY_CHAN_EXPIRE_DELAY, RECDB_QSTRING);
     chanserv_conf.channel_expire_delay = str ? ParseInterval(str) : 86400*30;
+    str = database_get_data(conf_node, KEY_DNR_EXPIRE_FREQ, RECDB_QSTRING);
+    chanserv_conf.dnr_expire_frequency = str ? ParseInterval(str) : 3600;
     str = database_get_data(conf_node, KEY_NODELETE_LEVEL, RECDB_QSTRING);
     chanserv_conf.nodelete_level = str ? atoi(str) : 1;
     str = database_get_data(conf_node, KEY_MAX_CHAN_USERS, RECDB_QSTRING);
@@ -6972,6 +7046,7 @@ chanserv_dnr_read(const char *key, struct record_data *hir)
 {
     const char *setter, *reason, *str;
     struct do_not_register *dnr;
+    time_t expiry;
 
     setter = database_get_data(hir->d.object, KEY_DNR_SETTER, RECDB_QSTRING);
     if(!setter)
@@ -6985,7 +7060,11 @@ chanserv_dnr_read(const char *key, struct record_data *hir)
         log_module(CS_LOG, LOG_ERROR, "Missing reason for DNR %s.", key);
         return;
     }
-    dnr = chanserv_add_dnr(key, setter, reason);
+    str = database_get_data(hir->d.object, KEY_EXPIRES, RECDB_QSTRING);
+    expiry = str ? (time_t)strtoul(str, NULL, 0) : 0;
+    if(expiry && expiry <= now)
+        return;
+    dnr = chanserv_add_dnr(key, setter, expiry, reason);
     if(!dnr)
         return;
     str = database_get_data(hir->d.object, KEY_DNR_SET, RECDB_QSTRING);
@@ -7184,9 +7263,13 @@ write_dnrs_helper(struct saxdb_context *ctx, struct dict *dnrs)
     for(it = dict_first(dnrs); it; it = iter_next(it))
     {
         dnr = iter_data(it);
+        if(dnr->expires && dnr->expires <= now)
+            continue;
         saxdb_start_record(ctx, dnr->chan_name, 0);
         if(dnr->set)
             saxdb_write_int(ctx, KEY_DNR_SET, dnr->set);
+        if(dnr->expires)
+            saxdb_write_int(ctx, KEY_EXPIRES, dnr->expires);
         saxdb_write_string(ctx, KEY_DNR_SETTER, dnr->setter);
         saxdb_write_string(ctx, KEY_DNR_REASON, dnr->reason);
         saxdb_end_record(ctx);
@@ -7428,6 +7511,9 @@ init_chanserv(const char *nick)
 
     if(chanserv_conf.channel_expire_frequency)
 	timeq_add(now + chanserv_conf.channel_expire_frequency, expire_channels, NULL);
+
+    if(chanserv_conf.dnr_expire_frequency)
+        timeq_add(now + chanserv_conf.dnr_expire_frequency, expire_dnrs, NULL);
 
     if(chanserv_conf.refresh_period)
     {
