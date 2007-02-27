@@ -134,7 +134,7 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_NOT_DNR", "$b%s$b is not a valid channel name or *account." },
     { "CSMSG_DNR_SEARCH_RESULTS", "The following do-not-registers were found:" },
     { "CSMSG_DNR_INFO", "$b%s$b is do-not-register (by $b%s$b; expires %s): %s" },
-    { "CSMSG_DNR_INFO_SET", "$b%s$b is do-not-register (set %s by $b%s$b; expires %s): %s" },
+    { "CSMSG_DNR_INFO_SET", "$b%s$b is do-not-register (set %s ago by $b%s$b; expires %s): %s" },
     { "CSMSG_MORE_DNRS", "%d more do-not-register entries skipped." },
     { "CSMSG_DNR_CHANNEL", "Only network staff may register $b%s$b." },
     { "CSMSG_DNR_CHANNEL_MOVE", "Only network staff may move $b%s$b." },
@@ -1519,21 +1519,45 @@ chanserv_add_dnr(const char *chan_name, const char *setter, time_t expires, cons
 }
 
 static struct dnrList
-chanserv_find_dnrs(const char *chan_name, const char *handle)
+chanserv_find_dnrs(const char *chan_name, const char *handle, unsigned int max)
 {
     struct dnrList list;
-    dict_iterator_t it;
+    dict_iterator_t it, next;
     struct do_not_register *dnr;
 
     dnrList_init(&list);
-    if(handle && (dnr = dict_find(handle_dnrs, handle, NULL)) && (!dnr->expires || dnr->expires > now))
-        dnrList_append(&list, dnr);
-    if(chan_name && (dnr = dict_find(plain_dnrs, chan_name, NULL)) && (!dnr->expires || dnr->expires > now))
-        dnrList_append(&list, dnr);
+
+    if(handle && (dnr = dict_find(handle_dnrs, handle, NULL)))
+    {
+        if(dnr->expires && dnr->expires <= now)
+            dict_remove(handle_dnrs, handle);
+        else if (list.used < max)
+            dnrList_append(&list, dnr);
+    }
+
+    if(chan_name && (dnr = dict_find(plain_dnrs, chan_name, NULL)))
+    {
+        if(dnr->expires && dnr->expires <= now)
+            dict_remove(plain_dnrs, chan_name);
+        else if (list.used < max)
+            dnrList_append(&list, dnr);
+    }
+
     if(chan_name)
-        for(it = dict_first(mask_dnrs); it; it = iter_next(it))
-            if(match_ircglob(chan_name, iter_key(it)) && (!dnr->expires || dnr->expires > now))
-                dnrList_append(&list, iter_data(it));
+    {
+        for(it = dict_first(mask_dnrs); it && list.used < max; it = next)
+        {
+            next = iter_next(it);
+            if(!match_ircglob(chan_name, iter_key(it)))
+                continue;
+            dnr = iter_data(it);
+            if(dnr->expires && dnr->expires <= now)
+                dict_remove(mask_dnrs, iter_key(it));
+            else
+                dnrList_append(&list, dnr);
+        }
+    }
+
     return list;
 }
 
@@ -1545,13 +1569,11 @@ chanserv_show_dnrs(struct userNode *user, struct svccmd *cmd, const char *chan_n
     unsigned int ii;
     char buf[INTERVALLEN], buf2[INTERVALLEN];
 
-    list = chanserv_find_dnrs(chan_name, handle);
+    list = chanserv_find_dnrs(chan_name, handle, UINT_MAX);
     for(ii = 0; (ii < list.used) && (ii < 10); ++ii)
     {
         dnr = list.list[ii];
-        if(dnr->expires && dnr->expires <= now)
-            continue;
-        else if(dnr->expires)
+        if(dnr->expires)
             intervalString(buf2, dnr->expires - now, user->handle_info);
 
         if(dnr->set)
@@ -1571,79 +1593,59 @@ chanserv_show_dnrs(struct userNode *user, struct svccmd *cmd, const char *chan_n
 struct do_not_register *
 chanserv_is_dnr(const char *chan_name, struct handle_info *handle)
 {
+    struct dnrList list;
     struct do_not_register *dnr;
-    dict_iterator_t it;
 
-    if(handle && (dnr = dict_find(handle_dnrs, handle->handle, NULL)) && (!dnr->expires || dnr->expires > now))
-        return dnr;
-    if(chan_name)
+    list = chanserv_find_dnrs(chan_name, handle->handle, 1);
+    dnr = list.used ? list.list[0] : NULL;
+    free(list.list);
+    return dnr;
+}
+
+static unsigned int send_dnrs(struct userNode *user, struct svccmd *cmd, dict_t dict)
+{
+    struct do_not_register *dnr;
+    dict_iterator_t it, next;
+    unsigned int matches = 0;
+    char buf[INTERVALLEN];
+    char buf2[INTERVALLEN];
+
+    for(it = dict_first(dict); it; it = next)
     {
-        if((dnr = dict_find(plain_dnrs, chan_name, NULL)) && (!dnr->expires || dnr->expires > now))
-            return dnr;
-        for(it = dict_first(mask_dnrs); it; it = iter_next(it))
-            if(match_ircglob(chan_name, iter_key(it)) && (!dnr->expires || dnr->expires > now))
-                return iter_data(it);
+        dnr = iter_data(it);
+        next = iter_next(it);
+        if(dnr->expires && dnr->expires <= now)
+        {
+            dict_remove(dict, iter_key(it));
+            continue;
+        }
+        if(dnr->expires)
+            intervalString(buf2, dnr->expires - now, user->handle_info);
+        else
+            strcpy(buf2, "never");
+
+        if(dnr->set)
+            reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set, user->handle_info), dnr->setter, buf2, dnr->reason);
+        else
+            reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, buf2, dnr->reason);
+        matches++;
     }
-    return NULL;
+
+    return matches;
 }
 
 static CHANSERV_FUNC(cmd_noregister)
 {
     const char *target;
     time_t expiry, duration;
-    struct do_not_register *dnr;
-    char buf[INTERVALLEN], buf2[INTERVALLEN];
     unsigned int matches;
 
     if(argc < 2)
     {
-        dict_iterator_t it;
-
         reply("CSMSG_DNR_SEARCH_RESULTS");
-        matches = 0;
-        for(it = dict_first(handle_dnrs); it; it = iter_next(it))
-        {
-            dnr = iter_data(it);
-            if(dnr->expires && dnr->expires <= now)
-                continue;
-            else if(dnr->expires)
-                intervalString(buf2, dnr->expires - now, user->handle_info);
-
-            if(dnr->set)
-                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set, user->handle_info), dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
-            else
-                reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
-            matches++;
-        }
-        for(it = dict_first(plain_dnrs); it; it = iter_next(it))
-        {
-            dnr = iter_data(it);
-            if(dnr->expires && dnr->expires <= now)
-                continue;
-            else if(dnr->expires)
-                intervalString(buf2, dnr->expires - now, user->handle_info);
-
-            if(dnr->set)
-                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set, user->handle_info), dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
-            else
-                reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
-            matches++;
-        }
-        for(it = dict_first(mask_dnrs); it; it = iter_next(it))
-        {
-            dnr = iter_data(it);
-            if(dnr->expires && dnr->expires <= now)
-                continue;
-            else if(dnr->expires)
-                intervalString(buf2, dnr->expires - now, user->handle_info);
-
-            if(dnr->set)
-                reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set, user->handle_info), dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
-            else
-                reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
-            matches++;
-        }
-
+        matches = send_dnrs(user, cmd, handle_dnrs);
+        matches += send_dnrs(user, cmd, plain_dnrs);
+        matches += send_dnrs(user, cmd, mask_dnrs);
         if(matches)
             reply("MSG_MATCH_COUNT", matches);
         else
@@ -7258,13 +7260,17 @@ static void
 write_dnrs_helper(struct saxdb_context *ctx, struct dict *dnrs)
 {
     struct do_not_register *dnr;
-    dict_iterator_t it;
+    dict_iterator_t it, next;
 
-    for(it = dict_first(dnrs); it; it = iter_next(it))
+    for(it = dict_first(dnrs); it; it = next)
     {
+        next = iter_next(it);
         dnr = iter_data(it);
         if(dnr->expires && dnr->expires <= now)
+        {
+            dict_remove(dnrs, iter_key(it));
             continue;
+        }
         saxdb_start_record(ctx, dnr->chan_name, 0);
         if(dnr->set)
             saxdb_write_int(ctx, KEY_DNR_SET, dnr->set);
