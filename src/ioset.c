@@ -142,10 +142,17 @@ ioset_add(int fd) {
     res->fd = fd;
     ioq_init(&res->send, 1024);
     ioq_init(&res->recv, 1024);
+#if defined(F_GETFL)
     flags = fcntl(fd, F_GETFL);
     fcntl(fd, F_SETFL, flags|O_NONBLOCK);
     flags = fcntl(fd, F_GETFD);
     fcntl(fd, F_SETFD, flags|FD_CLOEXEC);
+#else
+    /* I hope you're using the Win32 backend or something else that
+     * automatically marks the file descriptor non-blocking...
+     */
+    (void)flags;
+#endif
     engine->add(res);
     return res;
 }
@@ -307,6 +314,20 @@ ioset_close(struct io_fd *fdp, int os_close) {
         active_fd = NULL;
     if (fdp->destroy_cb)
         fdp->destroy_cb(fdp);
+#if defined(HAVE_WSAEVENTSELECT)
+    /* This is one huge kludge.  Sorry! */
+    if (fdp->send.get != fdp->send.put && (os_close & 2)) {
+        engine->remove(fdp, 0);
+        ioset_try_write(fdp);
+        /* it may need to send the beginning of the buffer now.. */
+        if (fdp->send.get != fdp->send.put)
+            ioset_try_write(fdp);
+    }
+    free(fdp->send.buf);
+    free(fdp->recv.buf);
+    if (os_close & 1)
+        closesocket(fdp->fd);
+#else
     if (fdp->send.get != fdp->send.put && (os_close & 2)) {
         int flags;
 
@@ -322,6 +343,7 @@ ioset_close(struct io_fd *fdp, int os_close) {
     if (os_close & 1)
         close(fdp->fd);
     engine->remove(fdp, os_close & 1);
+#endif
     free(fdp);
 }
 

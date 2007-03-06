@@ -132,4 +132,14 @@ void freeaddrinfo(struct addrinfo *res);
 
 #endif
 
+#ifndef EINPROGRESS
+# ifdef WSAEINPROGRESS
+#  define EINPROGRESS WSAEINPROGRESS
+#  define EHOSTUNREACH WSAEHOSTUNREACH
+#  define ECONNREFUSED WSAECONNREFUSED
+#  define ECONNRESET WSAECONNRESET
+#  define ETIMEDOUT WSAETIMEDOUT
+# endif
+#endif
+
 #endif /* COMPAT_H */
