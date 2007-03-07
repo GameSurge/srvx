@@ -6,6 +6,8 @@ VPATH=.
 # CC=i586-mingw32msvc-cc
 CPPFLAGS=-I$(VPATH) -Isrc
 CFLAGS=-mno-cygwin -W -Wall -O2
+EXE_EXT=.exe
+LIBS=-lws2_32
 
 #MODULES=
 MODULES=helpserv memoserv qserver snoop sockcheck
@@ -39,13 +41,14 @@ SRVX_OBJS = \
 	src/conf.o \
 	src/dict-splay.o \
 	src/gline.o \
+        src/global.o \
 	src/hash.o \
 	src/heap.o \
 	src/helpfile.o \
 	src/ioset-win32.o \
 	src/ioset.o \
 	src/log.o \
-	src/main.o \
+	src/main-win32.o \
 	src/md5.o \
 	src/modcmd.o \
 	src/modules.o \
@@ -60,7 +63,8 @@ SRVX_OBJS = \
 	src/tools.o \
 	$(addsuffix .o,$(addprefix src/mod-,$(MODULES)))
 
-srvx: src/config.h src/modules-list.h $(RX_OBJS) $(SRVX_OBJS)
+srvx$(EXE_EXT): src/config.h src/modules-list.h $(RX_OBJS) $(SRVX_OBJS)
+	$(CC) -o $< $(RX_OBJS) $(SRVX_OBJS) $(LIBS)
 src/config.h: $(VPATH)/src/config.h.win32
 	cp $< $@
 src/modules-list.h:

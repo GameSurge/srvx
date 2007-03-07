@@ -48,6 +48,8 @@ EXTRA_srvx_SOURCES = \
 	ioset-epoll.c \
 	ioset-select.c \
 	ioset-win32.c \
+	main-common.c \
+	main-win32.c \
 	proto-bahamut.c \
 	proto-common.c \
 	proto-p10.c \
