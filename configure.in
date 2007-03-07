@@ -83,7 +83,7 @@ AC_CHECK_MEMBER([struct addrinfo.ai_flags],
 #include <netdb.h>])
 
 dnl We have fallbacks in case these are missing, so just check for them.
-AC_CHECK_FUNCS(freeaddrinfo getaddrinfo getnameinfo getpagesize memcpy memset strdup strerror strsignal localtime_r setrlimit getopt getopt_long regcomp regexec regfree sysconf inet_aton epoll_create select gettimeofday,,)
+AC_CHECK_FUNCS(freeaddrinfo getaddrinfo gai_strerror getnameinfo getpagesize memcpy memset strdup strerror strsignal localtime_r setrlimit getopt getopt_long regcomp regexec regfree sysconf inet_aton epoll_create select gettimeofday times GetProcessTimes,,)
 
 dnl Check for the fallbacks for functions missing above.
 if test $ac_cv_func_gettimeofday = no; then

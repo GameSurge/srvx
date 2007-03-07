@@ -84,7 +84,12 @@ char *alloca();
 #endif
 
 #ifndef HAVE_GETTIMEOFDAY
+struct timezone;
 extern int gettimeofday(struct timeval * tv, struct timezone * tz);
+#endif
+
+#ifndef HAVE_GETLOCALTIME_R
+extern struct tm *localtime_r(const time_t *timep, struct tm *result);
 #endif
 
 #ifndef HAVE_MEMCPY
@@ -130,6 +135,10 @@ int getaddrinfo(const char *node, const char *service, const struct addrinfo *hi
 int getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags);
 void freeaddrinfo(struct addrinfo *res);
 
+#endif
+
+#ifndef HAVE_GAI_STRERROR
+const char *gai_strerror(int errcode);
 #endif
 
 #ifndef EINPROGRESS

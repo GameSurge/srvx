@@ -1480,11 +1480,15 @@ static MODCMD_FUNC(cmd_stats_uplink) {
 }
 
 static MODCMD_FUNC(cmd_stats_uptime) {
-    char uptime[INTERVALLEN];
-    struct tms buf;
-    extern time_t boot_time;
     extern int lines_processed;
-    static long clocks_per_sec;
+    extern time_t boot_time;
+    double kernel_time;
+    double user_time;
+    char uptime[INTERVALLEN];
+
+#if defined(HAVE_TIMES)
+    static double clocks_per_sec;
+    struct tms buf;
 
     if (!clocks_per_sec) {
 #if defined(HAVE_SYSCONF) && defined(_SC_CLK_TCK)
@@ -1496,12 +1500,27 @@ static MODCMD_FUNC(cmd_stats_uptime) {
             clocks_per_sec = CLOCKS_PER_SEC;
         }
     }
-    intervalString(uptime, time(NULL)-boot_time, user->handle_info);
     times(&buf);
-    reply("OSMSG_UPTIME_STATS",
-          uptime, lines_processed,
-          buf.tms_utime/(double)clocks_per_sec,
-          buf.tms_stime/(double)clocks_per_sec);
+    user_time = buf.tms_utime / clocks_per_sec;
+    kernel_time = buf.tms_stime / clocks_per_sec;
+#elif defined(HAVE_GETPROCESSTIMES)
+    FILETIME times[4];
+    LARGE_INTEGER li[2];
+
+    GetProcessTimes(GetCurrentProcess(), &times[0], &times[1], &times[2], &times[3]);
+    li[0].LowPart = times[2].dwLowDateTime;
+    li[0].HighPart = times[2].dwHighDateTime;
+    kernel_time = li[0].QuadPart * 1e-7;
+    li[1].LowPart = times[3].dwLowDateTime;
+    li[1].HighPart = times[3].dwHighDateTime;
+    user_time = li[1].QuadPart * 1e-7;
+#else
+    user_time = NAN;
+    system_time = NAN;
+#endif
+
+    intervalString(uptime, time(NULL)-boot_time, user->handle_info);
+    reply("OSMSG_UPTIME_STATS", uptime, lines_processed, user_time, kernel_time);
     return 1;
 }
 

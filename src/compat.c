@@ -16,7 +16,7 @@
 #endif
 
 #if !defined(HAVE_GETTIMEOFDAY) && defined(HAVE_FTIME)
-extern gettimeofday(struct timeval * tv, struct timezone * tz);
+extern int gettimeofday(struct timeval * tv, struct timezone * tz)
 {
     if (!tv)
     {
@@ -30,13 +30,16 @@ extern gettimeofday(struct timeval * tv, struct timezone * tz);
 
     tv->tv_sec  = tb.time;
     tv->tv_usec = ((long)tb.millitm)*1000;
-    if (tz)
-    {
-        tz->tz_minuteswest = 0;
-        tz->tz_dsttime     = 0;
-    }
 
-    return 0;
+    return 0; (void)tz;
+}
+#endif
+
+#ifndef HAVE_GETLOCALTIME_R
+extern struct tm *localtime_r(const time_t *timep, struct tm *result)
+{
+    memcpy(result, localtime(timep), sizeof(*result));
+    return result;
 }
 #endif
 
@@ -415,4 +418,49 @@ void freeaddrinfo(struct addrinfo *res)
     }
 }
 
+#endif
+
+#ifndef HAVE_GAI_STRERROR
+const char *gai_strerror(int errcode)
+{
+    switch (errcode) {
+#if defined(EAI_ADDRFAMILY)
+    case EAI_ADDRFAMILY: return "Address family not supported.";
+#endif
+#if defined(EAI_AGAIN)
+    case EAI_AGAIN: return "A temporary failure occurred during name resolution.";
+#endif
+#if defined(EAI_BADFLAGS)
+    case EAI_BADFLAGS: return "Invalid flags hint.";
+#endif
+#if defined(EAI_FAIL)
+    case EAI_FAIL: return "An unrecoverable failure occurred during name resolution.";
+#endif
+#if defined(EAI_FAMILY)
+    case EAI_FAMILY: return "Address family not supported.";
+#endif
+#if defined(EAI_MEMORY)
+    case EAI_MEMORY: return "Not enough memory.";
+#endif
+#if defined(EAI_NODATA)
+    case EAI_NODATA: return "The name resolves to an empty record.";
+#endif
+#if defined(EAI_NONAME)
+    case EAI_NONAME: return "The name does not resolve.";
+#endif
+#if defined(EAI_OVERFLOW)
+    case EAI_OVERFLOW: return "Resolved name was too large for buffer.";
+#endif
+#if defined(EAI_SERVICE)
+    case EAI_SERVICE: return "The socket type does not support the requested service.";
+#endif
+#if defined(EAI_SOCKTYPE)
+    case EAI_SOCKTYPE: return "Unknown socket type.";
+#endif
+#if defined(EAI_SYSTEM)
+    case EAI_SYSTEM: return "A system error occurred during name resolution.";
+#endif
+    }
+    return "Unknown GAI_* error";
+}
 #endif
