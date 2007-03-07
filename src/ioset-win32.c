@@ -82,6 +82,10 @@ ioset_win32_wndproc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         events = WSAGETSELECTEVENT(lParam);
         err = WSAGETSELECTERROR(lParam);
         ioset_events(fd, (events & (FD_READ | FD_ACCEPT | FD_CLOSE)) != 0, (events & (FD_WRITE | FD_CONNECT)) != 0);
+        return 0;
+    case WM_QUIT:
+        quit_services = wParam;
+        return 0;
     }
     return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
