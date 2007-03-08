@@ -24,7 +24,7 @@
 #include "modcmd.h"
 #include "opserv.h" /* for gag_create(), opserv_bad_channel() */
 #include "saxdb.h"
-#include "sendmail.h"
+#include "mail.h"
 #include "timeq.h"
 
 #ifdef HAVE_REGEX_H
@@ -1044,7 +1044,7 @@ nickserv_make_cookie(struct userNode *user, struct handle_info *hi, enum cookie_
             snprintf(subject, sizeof(subject), fmt, netname);
             fmt = handle_find_message(hi, "NSEMAIL_EMAIL_CHANGE_BODY_NEW");
             snprintf(body, sizeof(body), fmt, netname, cookie->cookie+COOKIELEN/2, nickserv->nick, self->name, hi->handle, COOKIELEN/2);
-            sendmail(nickserv, hi, subject, body, 1);
+            mail_send(nickserv, hi, subject, body, 1);
             fmt = handle_find_message(hi, "NSEMAIL_EMAIL_CHANGE_BODY_OLD");
             snprintf(body, sizeof(body), fmt, netname, cookie->cookie, nickserv->nick, self->name, hi->handle, COOKIELEN/2, hi->email_addr);
         } else {
@@ -1053,7 +1053,7 @@ nickserv_make_cookie(struct userNode *user, struct handle_info *hi, enum cookie_
             snprintf(subject, sizeof(subject), fmt, netname);
             fmt = handle_find_message(hi, "NSEMAIL_EMAIL_VERIFY_BODY");
             snprintf(body, sizeof(body), fmt, netname, cookie->cookie, nickserv->nick, self->name, hi->handle);
-            sendmail(nickserv, hi, subject, body, 1);
+            mail_send(nickserv, hi, subject, body, 1);
             subject[0] = 0;
         }
         hi->email_addr = misc;
@@ -1070,7 +1070,7 @@ nickserv_make_cookie(struct userNode *user, struct handle_info *hi, enum cookie_
         break;
     }
     if (subject[0])
-        sendmail(nickserv, hi, subject, body, first_time);
+        mail_send(nickserv, hi, subject, body, first_time);
     nickserv_bake_cookie(cookie);
 }
 
@@ -1164,7 +1164,7 @@ static NICKSERV_FUNC(cmd_register)
         }
 
         /* .. and that we are allowed to send to it. */
-        if ((str = sendmail_prohibited_address(email_addr))) {
+        if ((str = mail_prohibited_address(email_addr))) {
             reply("NSMSG_EMAIL_PROHIBITED", email_addr, str);
             return 0;
         }
@@ -2328,7 +2328,7 @@ static OPTION_FUNC(opt_email)
             send_message(user, nickserv, "NSMSG_BAD_EMAIL_ADDR");
             return 0;
         }
-        if ((str = sendmail_prohibited_address(argv[1]))) {
+        if ((str = mail_prohibited_address(argv[1]))) {
             send_message(user, nickserv, "NSMSG_EMAIL_PROHIBITED", argv[1], str);
             return 0;
         }

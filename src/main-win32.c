@@ -4,7 +4,7 @@
 #include "ioset.h"
 #include "modcmd.h"
 #include "saxdb.h"
-#include "sendmail.h"
+#include "mail.h"
 #include "timeq.h"
 
 #include "chanserv.h"
@@ -41,7 +41,7 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int 
     modcmd_init();
     saxdb_init();
     gline_init();
-    sendmail_init();
+    mail_init();
     helpfile_init();
     conf_globals();
     conf_rlimits();

@@ -239,13 +239,25 @@ if test "x$withval" = "xp10" ; then
   AC_MSG_RESULT(P10)
   AC_DEFINE(WITH_PROTOCOL_P10, 1, [Define if using the P10 dialect of IRC])
   MODULE_OBJS="$MODULE_OBJS proto-p10.\$(OBJEXT)"
-  PROTO_FILES=proto-p10.c
 elif test "x$withval" = "xbahamut" ; then
   AC_MSG_RESULT(Bahamut)
   AC_DEFINE(WITH_PROTOCOL_BAHAMUT, 1, [Define if using the Bahamut dialect of IRC])
   MODULE_OBJS="$MODULE_OBJS proto-bahamut.\$(OBJEXT)"
 else
   AC_MSG_ERROR([Unknown IRC dialect $withval])
+fi
+
+AC_MSG_CHECKING(how to send mail)
+AC_ARG_WITH(mail,
+[  --with-mail=name        How to send mail; one of:
+                          sendmail (the default)],
+[],
+[withval="sendmail"])
+if test "x$withval" = "xsendmail" ; then
+  AC_MSG_RESULT(sendmail)
+  MODULE_OBJS="$MODULE_OBJS mail-sendmail.\$(OBJEXT)"
+else
+  AC_MSG_ERROR([Unknown mail method $withval])
 fi
 
 AC_MSG_CHECKING([I/O multiplexing backends])

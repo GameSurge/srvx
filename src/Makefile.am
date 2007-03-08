@@ -10,7 +10,7 @@ noinst_DATA = \
 	nickserv.help \
 	opserv.help \
 	saxdb.help \
-	sendmail.help \
+	mail.help \
 	mod-helpserv.help \
 	mod-memoserv.help \
 	mod-sockcheck.help
@@ -48,6 +48,8 @@ EXTRA_srvx_SOURCES = \
 	ioset-epoll.c \
 	ioset-select.c \
 	ioset-win32.c \
+	mail-common.c \
+	mail-sendmail.c \
 	main-common.c \
 	main-win32.c \
 	proto-bahamut.c \
@@ -75,6 +77,7 @@ srvx_SOURCES = \
 	helpfile.c helpfile.h \
 	ioset.c ioset.h ioset-impl.h \
 	log.c log.h \
+	mail.h \
 	main.c common.h \
 	md5.c md5.h \
 	modcmd.c modcmd.h \
@@ -85,7 +88,6 @@ srvx_SOURCES = \
 	proto.h \
 	recdb.c recdb.h \
 	saxdb.c saxdb.h \
-	sendmail.c sendmail.h \
 	timeq.c timeq.h \
 	tools.c
 

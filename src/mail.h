@@ -1,4 +1,4 @@
-/* sendmail.h - mail sending utilities
+/* mail.h - mail sending utilities
  * Copyright 2002 srvx Development Team
  *
  * This file is part of srvx.
@@ -18,11 +18,11 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#if !defined(SENDMAIL_H)
-#define SENDMAIL_H
+#if !defined(MAIL_H)
+#define MAIL_H
 
-void sendmail_init(void);
-void sendmail(struct userNode *from, struct handle_info *to, const char *subject, const char *body, int first_time);
-const char *sendmail_prohibited_address(const char *addr);
+void mail_init(void);
+void mail_send(struct userNode *from, struct handle_info *to, const char *subject, const char *body, int first_time);
+const char *mail_prohibited_address(const char *addr);
 
 #endif

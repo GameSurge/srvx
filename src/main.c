@@ -25,7 +25,7 @@
 #include "ioset.h"
 #include "modcmd.h"
 #include "saxdb.h"
-#include "sendmail.h"
+#include "mail.h"
 #include "timeq.h"
 
 #include "chanserv.h"
@@ -283,7 +283,7 @@ int main(int argc, char *argv[])
     modcmd_init();
     saxdb_init();
     gline_init();
-    sendmail_init();
+    mail_init();
     helpfile_init();
     conf_globals(); /* initializes the core services */
     conf_rlimits();
