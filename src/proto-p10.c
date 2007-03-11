@@ -1603,6 +1603,8 @@ parse_cleanup(void)
     for (nn=0; nn<dead_users.used; nn++)
         free_user(dead_users.list[nn]);
     userList_clean(&dead_users);
+    free(his_servername);
+    free(his_servercomment);
 }
 
 static void
