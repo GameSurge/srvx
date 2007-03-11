@@ -235,10 +235,10 @@ int main(int argc, char *argv[])
         boot_time = time(&now);
     }
 
-    log_module(MAIN_LOG, LOG_INFO, "Initializing daemon...");
+    fprintf(stdout, "Initializing daemon...\n");
     if (!conf_read(services_config)) {
-	log_module(MAIN_LOG, LOG_FATAL, "Unable to read %s.", services_config);
-	exit(0);
+	fprintf(stderr, "Unable to read %s.\n", services_config);
+	exit(1);
     }
 
     conf_register_reload(uplink_compile);
@@ -247,24 +247,28 @@ int main(int argc, char *argv[])
 	/* Attempt to fork into the background if daemon mode is on. */
 	pid = fork();
 	if (pid < 0) {
-	    log_module(MAIN_LOG, LOG_FATAL, "Unable to fork: %s", strerror(errno));
+	    fprintf(stderr, "Unable to fork: %s\n", strerror(errno));
         } else if (pid > 0) {
-	    log_module(MAIN_LOG, LOG_INFO, "Forking into the background (pid: %i)...", pid);
+	    fprintf(stdout, "Forking into the background (pid: %d)...", pid);
 	    exit(0);
 	}
 	setsid();
+    }
+
+    file_out = fopen(PID_FILE, "w");
+    if (file_out == NULL) {
+	/* Create the main process' pid file */
+	fprintf(stderr, "Unable to create PID file: %s", strerror(errno));
+    } else {
+	fprintf(file_out, "%i\n", (int)getpid());
+	fclose(file_out);
+    }
+
+    if (daemon) {
         /* Close these since we should not use them from now on. */
         fclose(stdin);
         fclose(stdout);
         fclose(stderr);
-    }
-
-    if ((file_out = fopen(PID_FILE, "w")) == NULL) {
-	/* Create the main process' pid file */
-	log_module(MAIN_LOG, LOG_ERROR, "Unable to create PID file: %s", strerror(errno));
-    } else {
-	fprintf(file_out, "%i\n", (int)getpid());
-	fclose(file_out);
     }
 
     services_argc = argc;
