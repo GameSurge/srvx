@@ -152,7 +152,7 @@ static const struct message_entry msgtab[] = {
     { "PCMSG_DISABLED", "Proxy scanning is $bdisabled$b." },
     { "PCMSG_NOT_CACHED", "No proxycheck records exist for IP %s." },
     { "PCMSG_STATUS_CHECKING", "IP %s proxycheck state: last touched %s ago, still checking" },
-    { "PCMSG_STATUS_ACCEPTED", "IP %s proxycheck state: last touched %s ago, acepted" },
+    { "PCMSG_STATUS_ACCEPTED", "IP %s proxycheck state: last touched %s ago, accepted" },
     { "PCMSG_STATUS_REJECTED", "IP %s proxycheck state: last touched %s ago, rejected: %s" },
     { "PCMSG_STATUS_UNKNOWN", "IP %s proxycheck state: last touched %s ago, invalid status" },
     { "PCMSG_STATISTICS", "Since booting, I have checked %d clients for illicit proxies, and detected %d proxy hosts.\nI am currently checking %d clients (out of %d max) and have a backlog of %d more to start on.\nI currently have %d hosts cached.\nI know how to detect %d kinds of proxies." },
