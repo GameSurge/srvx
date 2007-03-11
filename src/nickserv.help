@@ -510,3 +510,11 @@
         "Merge contents of $bdbfilename$b into in-memory database.  Any accounts in both will be $bOVERWRITTEN$b with the information from $bdbfilename$b, although authed users will be authed to the new account.",
         "This command is only accessible to IRC operators.",
         "$uSee Also:$u write");
+"ADDNOTE" ("/msg $N ADDNOTE <nick|*account> <duration> <text>",
+	"Add a note to an account.",
+        "This command is only accessible to helpers and IRC operators.",
+        "$uSee Also:$u delnote");
+"DELNOTE" ("/msg $N DELNOTE <nick|*account> <noteid>",
+	"Removes a note from an account.",
+        "This command is only accessible to helpers and IRC operators.",
+        "$uSee Also:$u delnote");

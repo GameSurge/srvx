@@ -99,6 +99,11 @@
 #define KEY_ANNOUNCEMENTS "announcements"
 #define KEY_MAXLOGINS "maxlogins"
 #define KEY_FAKEHOST "fakehost"
+#define KEY_NOTES "notes"
+#define KEY_NOTE_EXPIRES "expires"
+#define KEY_NOTE_SET "set"
+#define KEY_NOTE_SETTER "setter"
+#define KEY_NOTE_NOTE "note"
 
 #define NICKSERV_VALID_CHARS	"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
 
@@ -200,6 +205,9 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_HANDLEINFO_EPITHET", "  Epithet: %s" },
     { "NSMSG_HANDLEINFO_FAKEHOST", "  Fake host: %s" },
     { "NSMSG_HANDLEINFO_LAST_HOST", "  Last quit hostmask: %s" },
+    { "NSMSG_HANDLEINFO_NO_NOTES", "  Notes: None" },
+    { "NSMSG_HANDLEINFO_NOTE_EXPIRES", "  Note %d (%s ago by %s, expires %s): %s" },
+    { "NSMSG_HANDLEINFO_NOTE", "  Note %d (%s ago by %s): %s" },
     { "NSMSG_HANDLEINFO_LAST_HOST_UNKNOWN", "  Last quit hostmask: Unknown" },
     { "NSMSG_HANDLEINFO_NICKS", "  Nickname(s): %s" },
     { "NSMSG_HANDLEINFO_MASKS", "  Hostmask(s): %s" },
@@ -248,6 +256,10 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_CANNOT_GHOST_USER", "$b%s$b is not authed to your account; you may not ghost-kill them." },
     { "NSMSG_GHOST_KILLED", "$b%s$b has been killed as a ghost." },
     { "NSMSG_ON_VACATION", "You are now on vacation.  Your account will be preserved until you authenticate again." },
+    { "NSMSG_EXCESSIVE_DURATION", "$b%s$b is too long for this command." },
+    { "NSMSG_NOTE_ADDED", "Note $b%d$b added to $b%s$b." },
+    { "NSMSG_NOTE_REMOVED", "Note $b%d$b removed from $b%s$b." },
+    { "NSMSG_NO_SUCH_NOTE", "Account $b%s$b does not have a note with ID $b%d$b." },
     { "NSMSG_NO_ACCESS", "Access denied." },
     { "NSMSG_INVALID_FLAG", "$b%c$b is not a valid $N account flag." },
     { "NSMSG_SET_FLAG", "Applied flags $b%s$b to %s's $N account." },
@@ -360,6 +372,14 @@ static struct {
 /* We have 2^32 unique account IDs to use. */
 unsigned long int highest_id = 0;
 
+#define WALK_NOTES(HANDLE, PREV, NOTE) \
+    for (PREV = NULL, NOTE = (HANDLE)->notes; NOTE != NULL; PREV = NOTE, NOTE = NOTE->next) \
+        if (NOTE->expires && NOTE->expires < now) { \
+            if (PREV) PREV->next = NOTE->next; else (HANDLE)->notes = NOTE->next; \
+            free(NOTE); \
+            if (!(NOTE = PREV ? PREV : (HANDLE)->notes)) break; \
+        } else
+
 static char *
 canonicalize_hostmask(char *mask)
 {
@@ -387,7 +407,7 @@ register_handle(const char *handle, const char *passwd, UNUSED_ARG(unsigned long
             id = 1 + highest_id++;
         } else {
             /* Note: highest_id is and must always be the highest ID. */
-            if(id > highest_id) {
+            if (id > highest_id) {
                 highest_id = id;
             }
         }
@@ -506,6 +526,11 @@ free_handle_info(void *vhi)
     if (hi->cookie) {
         timeq_del(hi->cookie->expires, nickserv_free_cookie, hi->cookie, 0);
         nickserv_free_cookie(hi->cookie);
+    }
+    while (hi->notes) {
+        struct handle_note *note = hi->notes;
+        hi->notes = note->next;
+        free(note);
     }
     if (hi->email_addr) {
         struct handle_info_list *hil = dict_find(nickserv_email_dict, hi->email_addr, NULL);
@@ -1328,6 +1353,24 @@ static NICKSERV_FUNC(cmd_handleinfo)
         default: type = "NSMSG_HANDLEINFO_COOKIE_UNKNOWN"; break;
         }
         reply(type);
+    }
+
+    if (!hi->notes) {
+        reply("NSMSG_HANDLEINFO_NO_NOTES");
+    } else {
+        struct handle_note *prev, *note;
+
+        WALK_NOTES(hi, prev, note) {
+            char set_time[INTERVALLEN];
+            intervalString(set_time, now - note->set, user->handle_info);
+            if (note->expires) {
+                char exp_time[INTERVALLEN];
+                intervalString(exp_time, note->expires - now, user->handle_info);
+                reply("NSMSG_HANDLEINFO_NOTE_EXPIRES", note->id, set_time, note->setter, exp_time, note->note);
+            } else {
+                reply("NSMSG_HANDLEINFO_NOTE", note->id, set_time, note->setter, note->note);
+            }
+        }
     }
 
     if (hi->flags) {
@@ -2671,6 +2714,72 @@ static NICKSERV_FUNC(cmd_vacation)
     return 1;
 }
 
+static NICKSERV_FUNC(cmd_addnote)
+{
+    struct handle_info *hi;
+    unsigned long duration;
+    char text[MAXLEN];
+    unsigned int id;
+    struct handle_note *prev;
+    struct handle_note *note;
+
+    /* Parse parameters and figure out values for note's fields. */
+    NICKSERV_MIN_PARMS(4);
+    hi = get_victim_oper(user, argv[1]);
+    if (!hi)
+        return 0;
+    duration = ParseInterval(argv[2]);
+    if (duration > 2*365*86400) {
+        reply("NSMSG_EXCESSIVE_DURATION", argv[2]);
+        return 0;
+    }
+    unsplit_string(argv + 3, argc - 3, text);
+    WALK_NOTES(hi, prev, note) {}
+    id = prev ? (prev->id + 1) : 1;
+
+    /* Create the new note structure. */
+    note = calloc(1, sizeof(*note) + strlen(text));
+    note->next = NULL;
+    note->expires = duration ? (now + duration) : 0;
+    note->set = now;
+    note->id = id;
+    safestrncpy(note->setter, user->handle_info->handle, sizeof(note->setter));
+    strcpy(note->note, text);
+    if (prev)
+        prev->next = note;
+    else
+        hi->notes = note;
+    reply("NSMSG_NOTE_ADDED", id, hi->handle);
+    return 1;
+}
+
+static NICKSERV_FUNC(cmd_delnote)
+{
+    struct handle_info *hi;
+    struct handle_note *prev;
+    struct handle_note *note;
+    int id;
+
+    NICKSERV_MIN_PARMS(3);
+    hi = get_victim_oper(user, argv[1]);
+    if (!hi)
+        return 0;
+    id = strtoul(argv[2], NULL, 10);
+    WALK_NOTES(hi, prev, note) {
+        if (id == note->id) {
+            if (prev)
+                prev->next = note->next;
+            else
+                hi->notes = note->next;
+            free(note);
+            reply("NSMSG_NOTE_REMOVED", id, hi->handle);
+            return 1;
+        }
+    }
+    reply("NSMSG_NO_SUCH_NOTE", hi->handle, id);
+    return 0;
+}
+
 static int
 nickserv_saxdb_write(struct saxdb_context *ctx) {
     dict_iterator_t it;
@@ -2708,6 +2817,21 @@ nickserv_saxdb_write(struct saxdb_context *ctx) {
                 saxdb_write_string(ctx, KEY_COOKIE, cookie->cookie);
                 saxdb_end_record(ctx);
             }
+        }
+        if (hi->notes) {
+            struct handle_note *prev, *note;
+            saxdb_start_record(ctx, KEY_NOTES, 0);
+            WALK_NOTES(hi, prev, note) {
+                snprintf(flags, sizeof(flags), "%d", note->id);
+                saxdb_start_record(ctx, flags, 0);
+                if (note->expires)
+                    saxdb_write_int(ctx, KEY_NOTE_EXPIRES, note->expires);
+                saxdb_write_int(ctx, KEY_NOTE_SET, note->set);
+                saxdb_write_string(ctx, KEY_NOTE_SETTER, note->setter);
+                saxdb_write_string(ctx, KEY_NOTE_NOTE, note->note);
+                saxdb_end_record(ctx);
+            }
+            saxdb_end_record(ctx);
         }
         if (hi->email_addr)
             saxdb_write_string(ctx, KEY_EMAIL_ADDR, hi->email_addr);
@@ -3316,6 +3440,7 @@ nickserv_db_read_handle(const char *handle, dict_t obj)
     str = database_get_data(obj, KEY_FAKEHOST, RECDB_QSTRING);
     if (str)
         hi->fakehost = strdup(str);
+    /* Read the "cookie" sub-database (if it exists). */
     subdb = database_get_data(obj, KEY_COOKIE, RECDB_OBJECT);
     if (subdb) {
         const char *data, *type, *expires, *cookie_str;
@@ -3354,6 +3479,50 @@ nickserv_db_read_handle(const char *handle, dict_t obj)
             nickserv_bake_cookie(cookie);
         else
             nickserv_free_cookie(cookie);
+    }
+    /* Read the "notes" sub-database (if it exists). */
+    subdb = database_get_data(obj, KEY_NOTES, RECDB_OBJECT);
+    if (subdb) {
+        dict_iterator_t it;
+        struct handle_note *last_note;
+        struct handle_note *note;
+
+        last_note = NULL;
+        for (it = dict_first(subdb); it; it = iter_next(it)) {
+            const char *expires;
+            const char *setter;
+            const char *text;
+            const char *set;
+            const char *id;
+            dict_t notedb;
+
+            id = iter_key(it);
+            notedb = GET_RECORD_OBJECT((struct record_data*)iter_data(it));
+            if (!notedb) {
+                log_module(NS_LOG, LOG_ERROR, "Malformed note %s for account %s; ignoring note.", id, hi->handle);
+                continue;
+            }
+            expires = database_get_data(notedb, KEY_NOTE_EXPIRES, RECDB_QSTRING);
+            setter = database_get_data(notedb, KEY_NOTE_SETTER, RECDB_QSTRING);
+            text = database_get_data(notedb, KEY_NOTE_NOTE, RECDB_QSTRING);
+            set = database_get_data(notedb, KEY_NOTE_SET, RECDB_QSTRING);
+            if (!setter || !text || !set) {
+                log_module(NS_LOG, LOG_ERROR, "Missing field(s) from note %s for account %s; ignoring note.", id, hi->handle);
+                continue;
+            }
+            note = calloc(1, sizeof(*note) + strlen(text));
+            note->next = NULL;
+            note->expires = expires ? strtoul(expires, NULL, 10) : 0;
+            note->set = strtoul(set, NULL, 10);
+            note->id = strtoul(id, NULL, 10);
+            safestrncpy(note->setter, setter, sizeof(note->setter));
+            strcpy(note->note, text);
+            if (last_note)
+                last_note->next = note;
+            else
+                hi->notes = note;
+            last_note = note;
+        }
     }
 }
 
@@ -3800,6 +3969,8 @@ init_nickserv(const char *nick)
     nickserv_define_func("RENAME", cmd_rename_handle, -1, 1, 0);
     nickserv_define_func("VACATION", cmd_vacation, -1, 1, 0);
     nickserv_define_func("MERGE", cmd_merge, 750, 1, 0);
+    nickserv_define_func("ADDNOTE", cmd_addnote, 0, 1, 0);
+    nickserv_define_func("DELNOTE", cmd_delnote, 0, 1, 0);
     if (!nickserv_conf.disable_nicks) {
 	/* nick management commands */
 	nickserv_define_func("REGNICK", cmd_regnick, -1, 1, 0);

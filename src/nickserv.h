@@ -75,12 +75,22 @@ struct handle_cookie {
     char cookie[COOKIELEN+1];
 };
 
+struct handle_note {
+    struct handle_note *next;
+    time_t expires;
+    time_t set;
+    int id;
+    char setter[NICKSERV_HANDLE_LEN+1];
+    char note[1];
+};
+
 struct handle_info {
     struct nick_info *nicks;
     struct string_list *masks;
     struct userNode *users;
     struct userData *channels;
     struct handle_cookie *cookie;
+    struct handle_note *notes;
     struct language *language;
     char *email_addr;
     char *epithet;
