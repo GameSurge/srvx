@@ -452,18 +452,21 @@ ioset_buffered_read(struct io_fd *fd) {
 
 int
 ioset_line_read(struct io_fd *fd, char *dest, int max) {
-    int avail, done;
-    if ((fd->state == IO_CLOSED) && (!ioq_get_avail(&fd->recv) ||  (fd->line_len < 0)))
+    int line_len;
+    int avail;
+    int done;
+
+    line_len = fd->line_len;
+    if ((fd->state == IO_CLOSED) && (!ioq_get_avail(&fd->recv) ||  (line_len < 0)))
         return 0;
-    if (fd->line_len < 0)
+    if (line_len < 0)
         return -1;
-    if (fd->line_len < max)
-        max = fd->line_len;
+    if (line_len < max)
+        max = line_len;
     avail = ioq_get_avail(&fd->recv);
     if (max > avail) {
         memcpy(dest, fd->recv.buf + fd->recv.get, avail);
-        fd->recv.get += avail;
-        assert(fd->recv.get == fd->recv.size);
+        assert(fd->recv.get + avail == fd->recv.size);
         fd->recv.get = 0;
         done = avail;
     } else {
@@ -473,9 +476,9 @@ ioset_line_read(struct io_fd *fd, char *dest, int max) {
     fd->recv.get += max - done;
     if (fd->recv.get == fd->recv.size)
         fd->recv.get = 0;
-    dest[max] = 0;
+    dest[max - 1] = 0;
     ioset_find_line_length(fd);
-    return max;
+    return line_len;
 }
 
 void
