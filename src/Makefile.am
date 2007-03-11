@@ -22,16 +22,10 @@ if HAS_GIT
 .PHONY: checkversion
 git-version.h: checkversion
 checkversion:
-	@( cd $(top_srcdir) && $(GIT) symbolic-ref HEAD ) >/dev/null 2>&1 || exit 0; \
+	@GIT_VERSION=`$(GIT) describe`; \
+	[ "z$$GIT_VERSION" != "z" ] || exit 0; \
 	TMPFILE=`mktemp git-version.h.XXXXXX` || exit 1 ; \
-	( \
-	  cd $(top_srcdir) ; \
-	  GIT_DIR=$${GIT_DIR:-.git} ; \
-	  HEAD_NAME=`$(GIT) symbolic-ref HEAD` ; \
-	  HEAD_SHA1=`cat $${GIT_DIR}/$${HEAD_NAME}` ; \
-	  echo "/* Full revision $${HEAD_SHA1} */" ; \
-	  echo "#define GIT_VERSION \"$${HEAD_SHA1%????????????????????????????????}\"" ; \
-	) >> $$TMPFILE ; \
+	echo "#define GIT_VERSION \"$${GIT_VERSION}\"" >> $$TMPFILE ; \
 	if diff -q git-version.h $$TMPFILE >/dev/null 2>&1 ; then \
 	    rm $$TMPFILE ; \
         else \
