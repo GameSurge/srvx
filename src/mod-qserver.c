@@ -205,6 +205,7 @@ qserver_cleanup(void)
 {
     unsigned int ii;
 
+    ioset_close(qserver_listener, 1);
     for (ii = 0; ii < qserver_nbots; ++ii)
         if (qserver_clients[ii])
             DelUser(qserver_clients[ii]->user, NULL, 0, "module finalizing");
