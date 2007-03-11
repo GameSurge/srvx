@@ -18,11 +18,11 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
+#include "mail-common.c"
+
 #ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
 #endif
-
-#include "mail-common.c"
 
 /* This function sends the given "paragraph" as flowed text, as
  * defined in RFC 2646.  It lets us only worry about line wrapping
