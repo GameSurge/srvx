@@ -302,6 +302,14 @@ saxdb_write_int(struct saxdb_context *dest, const char *name, unsigned long valu
     saxdb_write_string(dest, name, buf);
 }
 
+void
+saxdb_write_sint(struct saxdb_context *dest, const char *name, long value) {
+    char buf[16];
+    /* we could optimize this to take advantage of the fact that buf will never need escapes */
+    snprintf(buf, sizeof(buf), "%ld", value);
+    saxdb_write_string(dest, name, buf);
+}
+
 static void
 saxdb_free(void *data) {
     struct saxdb *db = data;

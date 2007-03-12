@@ -55,6 +55,7 @@ void saxdb_end_record(struct saxdb_context *dest);
 void saxdb_write_string_list(struct saxdb_context *dest, const char *name, struct string_list *list);
 void saxdb_write_string(struct saxdb_context *dest, const char *name, const char *value);
 void saxdb_write_int(struct saxdb_context *dest, const char *name, unsigned long value);
+void saxdb_write_sint(struct saxdb_context *dest, const char *name, long value);
 
 /* For doing db writing by hand */
 struct saxdb_context *saxdb_open_context(FILE *f);
