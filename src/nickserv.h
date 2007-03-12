@@ -102,6 +102,7 @@ struct handle_info {
 #endif
     time_t registered;
     time_t lastseen;
+    int karma;
     unsigned short flags;
     unsigned short opserv_level;
     unsigned short screen_width;

@@ -104,6 +104,7 @@
 #define KEY_NOTE_SET "set"
 #define KEY_NOTE_SETTER "setter"
 #define KEY_NOTE_NOTE "note"
+#define KEY_KARMA "karma"
 
 #define NICKSERV_VALID_CHARS	"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
 
@@ -193,6 +194,7 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_HANDLEINFO_REGGED", "  Registered on: %s" },
     { "NSMSG_HANDLEINFO_LASTSEEN", "  Last seen: %s" },
     { "NSMSG_HANDLEINFO_LASTSEEN_NOW", "  Last seen: Right now!" },
+    { "NSMSG_HANDLEINFO_KARMA", "  Karma: %d" },
     { "NSMSG_HANDLEINFO_VACATION", "  On vacation." },
     { "NSMSG_HANDLEINFO_EMAIL_ADDR", "  Email address: %s" },
     { "NSMSG_HANDLEINFO_COOKIE_ACTIVATION", "  Cookie: There is currently an activation cookie issued for this account" },
@@ -302,6 +304,8 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_SET_EPITHET", "$bEPITHET:      $b%s" },
     { "NSMSG_SET_TITLE", "$bTITLE:        $b%s" },
     { "NSMSG_SET_FAKEHOST", "$bFAKEHOST:    $b%s" },
+    { "NSMSG_INVALID_KARMA", "$b%s$b is not a valid karma modifier." },
+    { "NSMSG_SET_KARMA", "$bKARMA:       $b%d$b" },
     { "NSEMAIL_ACTIVATION_SUBJECT", "Account verification for %s" },
     { "NSEMAIL_ACTIVATION_BODY", "This email has been sent to verify that this email address belongs to the person who tried to register an account on %1$s.  Your cookie is:\n    %2$s\nTo verify your email address and complete the account registration, log on to %1$s and type the following command:\n    /msg %3$s@%4$s COOKIE %5$s %2$s\nThis command is only used once to complete your account registration, and never again. Once you have run this command, you will need to authenticate everytime you reconnect to the network. To do this, you will have to type this command every time you reconnect:\n    /msg %3$s@%4$s AUTH %5$s your-password\n Please remember to fill in 'your-password' with the actual password you gave to us when you registered.\n\nIf you did NOT request this account, you do not need to do anything.  Please contact the %1$s staff if you have questions, and be sure to check our website." },
     { "NSEMAIL_PASSWORD_CHANGE_SUBJECT", "Password change verification on %s" },
@@ -1339,6 +1343,9 @@ static NICKSERV_FUNC(cmd_handleinfo)
             return 1;
     } else if (hi != user->handle_info)
         return 1;
+
+    if (IsOper(user))
+        reply("NSMSG_HANDLEINFO_KARMA", hi->karma);
 
     if (nickserv_conf.email_enabled)
         reply("NSMSG_HANDLEINFO_EMAIL_ADDR", visible_email_addr(user, hi));
@@ -2419,6 +2426,27 @@ static OPTION_FUNC(opt_language)
     return 1;
 }
 
+static OPTION_FUNC(opt_karma)
+{
+    if (!override) {
+        send_message(user, nickserv, "MSG_SETTING_PRIVILEGED", argv[0]);
+        return 0;
+    }
+
+    if (argc > 1) {
+        if (argv[1][0] == '+' && isdigit(argv[1][1])) {
+            hi->karma += strtoul(argv[1] + 1, NULL, 10);
+        } else if (argv[1][0] == '-' && isdigit(argv[1][1])) {
+            hi->karma -= strtoul(argv[1] + 1, NULL, 10);
+        } else {
+            send_message(user, nickserv, "NSMSG_INVALID_KARMA", argv[1]);
+        }
+    }
+
+    send_message(user, nickserv, "NSMSG_SET_KARMA", hi->karma);
+    return 1;
+}
+
 int
 oper_try_set_access(struct userNode *user, struct userNode *bot, struct handle_info *target, unsigned int new_level) {
     if (!oper_has_access(user, bot, nickserv_conf.modoper_level, 0))
@@ -2856,6 +2884,8 @@ nickserv_saxdb_write(struct saxdb_context *ctx) {
         if (hi->last_quit_host[0])
             saxdb_write_string(ctx, KEY_LAST_QUIT_HOST, hi->last_quit_host);
         saxdb_write_int(ctx, KEY_LAST_SEEN, hi->lastseen);
+        if (hi->karma != 0)
+            saxdb_write_sint(ctx, KEY_KARMA, hi->karma);
         if (hi->masks->used)
             saxdb_write_string_list(ctx, KEY_MASKS, hi->masks);
         if (hi->maxlogins)
@@ -3005,6 +3035,9 @@ static NICKSERV_FUNC(cmd_merge)
     if (hi_from->lastseen > hi_to->lastseen)
         hi_to->lastseen = hi_from->lastseen;
 
+    /* New karma is the sum of the two original karmas. */
+    hi_to->karma += hi_from->karma;
+
     /* Does a fakehost carry over?  (This intentionally doesn't set it
      * for users previously attached to hi_to.  They'll just have to
      * reconnect.)
@@ -3024,10 +3057,12 @@ static NICKSERV_FUNC(cmd_merge)
 }
 
 struct nickserv_discrim {
-    unsigned int limit, min_level, max_level;
     unsigned long flags_on, flags_off;
     time_t min_registered, max_registered;
     time_t lastseen;
+    unsigned int limit;
+    int min_level, max_level;
+    int min_karma, max_karma;
     enum { SUBSET, EXACT, SUPERSET, LASTQUIT } hostmask_type;
     const char *nickmask;
     const char *hostmask;
@@ -3058,6 +3093,8 @@ nickserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[])
     discrim->min_registered = 0;
     discrim->max_registered = INT_MAX;
     discrim->lastseen = now;
+    discrim->min_karma = INT_MIN;
+    discrim->max_karma = INT_MAX;
 
     for (i=0; i<argc; i++) {
         if (i == argc - 1) {
@@ -3157,6 +3194,25 @@ nickserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[])
             } else {
                 send_message(user, nickserv, "MSG_INVALID_CRITERIA", cmp);
             }
+        } else if (!irccasecmp(argv[i], "karma")) {
+            const char *cmp = argv[++i];
+            if (cmp[0] == '<') {
+                if (cmp[1] == '=') {
+                    discrim->max_karma = strtoul(cmp+2, NULL, 0);
+                } else {
+                    discrim->max_karma = strtoul(cmp+1, NULL, 0) - 1;
+                }
+            } else if (cmp[0] == '=') {
+                discrim->min_karma = discrim->max_karma = strtoul(cmp+1, NULL, 0);
+            } else if (cmp[0] == '>') {
+                if (cmp[1] == '=') {
+                    discrim->min_karma = strtoul(cmp+2, NULL, 0);
+                } else {
+                    discrim->min_karma = strtoul(cmp+1, NULL, 0) + 1;
+                }
+            } else {
+                send_message(user, nickserv, "MSG_INVALID_CRITERIA", cmp);
+            }
         } else {
             send_message(user, nickserv, "MSG_INVALID_CRITERIA", argv[i]);
             goto fail;
@@ -3179,7 +3235,10 @@ nickserv_discrim_match(struct nickserv_discrim *discrim, struct handle_info *hi)
         || (discrim->handlemask && !match_ircglob(hi->handle, discrim->handlemask))
         || (discrim->emailmask && (!hi->email_addr || !match_ircglob(hi->email_addr, discrim->emailmask)))
         || (discrim->min_level > hi->opserv_level)
-        || (discrim->max_level < hi->opserv_level)) {
+        || (discrim->max_level < hi->opserv_level)
+        || (discrim->min_karma > hi->karma)
+        || (discrim->max_karma < hi->karma)
+        ) {
         return 0;
     }
     if (discrim->hostmask) {
@@ -3406,6 +3465,8 @@ nickserv_db_read_handle(const char *handle, dict_t obj)
     hi->registered = str ? (time_t)strtoul(str, NULL, 0) : now;
     str = database_get_data(obj, KEY_LAST_SEEN, RECDB_QSTRING);
     hi->lastseen = str ? (time_t)strtoul(str, NULL, 0) : hi->registered;
+    str = database_get_data(obj, KEY_KARMA, RECDB_QSTRING);
+    hi->karma = str ? strtoul(str, NULL, 0) : 0;
     /* We want to read the nicks even if disable_nicks is set.  This is so
      * that we don't lose the nick data entirely. */
     slist = database_get_data(obj, KEY_NICKS, RECDB_STRING_LIST);
@@ -4014,6 +4075,7 @@ init_nickserv(const char *nick)
     dict_insert(nickserv_opt_dict, "ANNOUNCEMENTS", opt_announcements);
     dict_insert(nickserv_opt_dict, "MAXLOGINS", opt_maxlogins);
     dict_insert(nickserv_opt_dict, "LANGUAGE", opt_language);
+    dict_insert(nickserv_opt_dict, "KARMA", opt_karma);
 
     nickserv_handle_dict = dict_new();
     dict_set_free_keys(nickserv_handle_dict, free);
