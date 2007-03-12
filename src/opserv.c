@@ -3056,7 +3056,7 @@ opserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[], in
                     discrim->max_ts = now - (ParseInterval(cmp+1) - 1);
                 }
             } else {
-                discrim->min_ts = now - ParseInterval(cmp+2);
+                discrim->min_ts = now - ParseInterval(cmp);
             }
         } else if (irccasecmp(argv[i], "access") == 0) {
             const char *cmp = argv[++i];
@@ -3076,7 +3076,7 @@ opserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[], in
                     discrim->min_level = strtoul(cmp+1, NULL, 0) + 1;
                 }
             } else {
-                discrim->min_level = strtoul(cmp+2, NULL, 0);
+                discrim->min_level = strtoul(cmp, NULL, 0);
             }
         } else if ((irccasecmp(argv[i], "abuse") == 0)
                    && (irccasecmp(argv[++i], "opers") == 0)) {
@@ -3507,7 +3507,7 @@ opserv_cdiscrim_create(struct userNode *user, unsigned int argc, char *argv[])
                 else
                     discrim->min_users = strtoul(cmp+1, NULL, 0) + 1;
             } else {
-                discrim->min_users = strtoul(cmp+2, NULL, 0);
+                discrim->min_users = strtoul(cmp, NULL, 0);
             }
 	} else if (!irccasecmp(argv[i], "timestamp")) {
 	    const char *cmp = argv[++i];

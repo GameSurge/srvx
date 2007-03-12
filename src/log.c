@@ -650,7 +650,7 @@ log_discrim_create(struct userNode *service, struct userNode *user, unsigned int
                 else
                     discrim->max_time = now - (ParseInterval(cmp+1) - 1);
             } else {
-                discrim->min_time = now - ParseInterval(cmp+2);
+                discrim->min_time = now - ParseInterval(cmp);
             }
         } else if (!irccasecmp(argv[ii], "limit")) {
             discrim->limit = strtoul(argv[++ii], NULL, 10);
