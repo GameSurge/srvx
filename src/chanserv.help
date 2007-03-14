@@ -92,6 +92,7 @@
         "  REGISTER    Register a new channel with $C.",
         "  NOREGISTER  Add a channel to the do-not-register list.",
         "  ALLOWREGISTER Remove a channel from the do-not-register list.",
+        "  DNRSEARCH   Search the do-not-register list.",
         "  UNREGISTER  Remove $C from a registered channel.",
         "  SEARCH      Find registered channel matching criteria.",
         "  ADDOWNER    Add a new owner to a channel.",
@@ -124,7 +125,7 @@
         "$uSee Also:$u addban, bans, delban, durations");
 "ALLOWREGISTER" ("/msg $C ALLOWREGISTER <#channel|*Account>",
         "Removes the named channel (or channel mask) from the do-not-register list.",
-        "$uSee Also:$u register, noregister, unregister");
+        "$uSee Also:$u register, noregister, dnrsearch, unregister");
 "BAN" ("/msg $C BAN <#channel> <mask|nick>",
         "This command will temporarily add a ban for the user specified as the parameter. Masks are to be supplied in the format <Nick>!<Ident>@<Host> and usually contain wildcards. If a nick is specified, a mask is automatically generated (though not completely foolproof). This ban is removed either by removing it from the channel ban list using any irc client, or sending the UNBAN or UNBANALL commands. If you are banned with this method, the UNBANME command can be used.",
         "$uFor assistance, please join to #support$u",
@@ -184,6 +185,24 @@
 "DEVOICE" ("/msg $C DEVOICE <#channel> <nick> [nick]...",
         "This command will make $C devoice the selected user[s].",
         "$uSee Also:$u addpeon, delpeon, deop, voice");
+"DNRSEARCH" ("/msg $C DNRSEARCH <action> <criteria> <value> [<criteria> <value> ...]",
+        "Searches through the current do-not-register list for those matching the specified criteria, and applies the specified action to them.  A list of actions can be found in $bhelp dnrsearch action$b and a list of criteria in $bhelp dnrsearch criteria$b.",
+        "$uSee Also:$u allowregister, dnrsearch action, dnrsearch criteria, noregister");
+"DNRSEARCH ACTION" ("$bDNRSEARCH ACTION$b",
+	"Options for the action in $bdnrsearch$b are:",
+        "$bPRINT: $b      Display the do-not-register entry.",
+        "$bREMOVE:$b      Remove the do-not-register entry.",
+        "$uSee Also:$u dnrsearch, dnrsearch criteria");
+"DNRSEARCH CRITERIA" ("$bDNRSEARCH CRITERIA$b",
+        "Options for the criteria in $bdnrsearch$b are:",
+        "$bCHANNEL:$b     Channel name, channel mask, or \*account (note the backslash).",
+        "$bSETTER: $b     Staff member who issued the do-not-register.",
+        "$bREASON: $b     Mask for the do-not-register reason or note.",
+        "$bLIMIT:  $b     Maximum entries to operate upon (default 50).",
+        "$bSET:    $b     Age limit for entry (defaults to minimum age).",
+        "$bEXPIRES:$b     Expiration limit for entry (defaults to minimum time).",
+        "Note: If you use the $blimit$b criteria, the full count of matching do-not-register entries will be shown at the end of the $bdnrsearch$b output, but only the first $blimit$b entries will be affected by the action.",
+        "$uSee Also:$u dnrsearch, dnrsearch action");
 "DOWN" ("/msg $C DOWN <#channel>",
         "This command will devoice/deop you in the selected channel.",
         "$uSee Also:$u downall, up, upall");
@@ -256,7 +275,7 @@
         "With no arguments, lists the current do-not-register channels.",
         "With arguments, adds a do-not-register channel (or account) with the specified reason.  In this case, the channel name may include * or ? wildcards.",
         "The duration may be \"0\" to make it never expire; otherwise, the do-not-register entry will be automatically removed after $uduration$u.",
-        "$uSee Also:$u allowregister, register, unregister");
+        "$uSee Also:$u allowregister, dnrsearch, register, unregister");
 "NOTE" ("/msg $C NOTE <#channel> [<type> [new-note-text]]",
         "With no arguments, lists all visible notes on the specified channel.",
         "With one argument, lists the note type you name (if it is visible to you).",

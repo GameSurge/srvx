@@ -133,8 +133,9 @@ static const struct message_entry msgtab[] = {
 /* Do-not-register channels */
     { "CSMSG_NOT_DNR", "$b%s$b is not a valid channel name or *account." },
     { "CSMSG_DNR_SEARCH_RESULTS", "The following do-not-registers were found:" },
-    { "CSMSG_DNR_INFO", "$b%s$b is do-not-register (by $b%s$b; expires %s): %s" },
-    { "CSMSG_DNR_INFO_SET", "$b%s$b is do-not-register (set %s ago by $b%s$b; expires %s): %s" },
+    { "CSMSG_DNR_INFO", "$b%s$b is do-not-register (by $b%s$b): %s" },
+    { "CSMSG_DNR_INFO_SET", "$b%s$b is do-not-register (set %s by $b%s$b): %s" },
+    { "CSMSG_DNR_INFO_SET_EXPIRES", "$b%s$b is do-not-register (set %s by $b%s$b; expires %s): %s" },
     { "CSMSG_MORE_DNRS", "%d more do-not-register entries skipped." },
     { "CSMSG_DNR_CHANNEL", "Only network staff may register $b%s$b." },
     { "CSMSG_DNR_CHANNEL_MOVE", "Only network staff may move $b%s$b." },
@@ -142,6 +143,8 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_NOREGISTER_CHANNEL", "$b%s$b has been added to the do-not-register list." },
     { "CSMSG_NO_SUCH_DNR", "$b%s$b is not in the do-not-register list." },
     { "CSMSG_DNR_REMOVED", "$b%s$b has been removed from the do-not-register list." },
+    { "CSMSG_DNR_BAD_ACTION", "$b%s$b is not a recognized do-not-register action." },
+    { "CSMSG_DNR_SEARCH_RESULTS", "The following do-not-registers were found:" },
 
 /* Channel unregistration */
     { "CSMSG_UNREG_SUCCESS", "$b%s$b has been unregistered." },
@@ -1531,7 +1534,7 @@ chanserv_find_dnrs(const char *chan_name, const char *handle, unsigned int max)
     {
         if(dnr->expires && dnr->expires <= now)
             dict_remove(handle_dnrs, handle);
-        else if (list.used < max)
+        else if(list.used < max)
             dnrList_append(&list, dnr);
     }
 
@@ -1539,7 +1542,7 @@ chanserv_find_dnrs(const char *chan_name, const char *handle, unsigned int max)
     {
         if(dnr->expires && dnr->expires <= now)
             dict_remove(plain_dnrs, chan_name);
-        else if (list.used < max)
+        else if(list.used < max)
             dnrList_append(&list, dnr);
     }
 
@@ -1561,29 +1564,38 @@ chanserv_find_dnrs(const char *chan_name, const char *handle, unsigned int max)
     return list;
 }
 
+static int dnr_print_func(struct do_not_register *dnr, void *extra)
+{
+    struct userNode *user;
+    char buf1[INTERVALLEN];
+    char buf2[INTERVALLEN];
+
+    user = extra;
+    if(dnr->set)
+        strftime(buf1, sizeof(buf1), "%d %b %Y", localtime(&dnr->set));
+    if(dnr->expires)
+    {
+        strftime(buf2, sizeof(buf2), "%d %b %Y", localtime(&dnr->expires));
+        send_message(user, chanserv, "CSMSG_DNR_INFO_SET_EXPIRES", dnr->chan_name, buf1, dnr->setter, buf2, dnr->reason);
+    }
+    else if(dnr->set)
+    {
+        send_message(user, chanserv, "CSMSG_DNR_INFO_SET", dnr->chan_name, buf1, dnr->setter, dnr->reason);
+    }
+    else
+        send_message(user, chanserv, "CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, dnr->reason);
+    return 0;
+}
+
 static unsigned int
 chanserv_show_dnrs(struct userNode *user, struct svccmd *cmd, const char *chan_name, const char *handle)
 {
     struct dnrList list;
-    struct do_not_register *dnr;
     unsigned int ii;
-    char buf[INTERVALLEN], buf2[INTERVALLEN];
 
     list = chanserv_find_dnrs(chan_name, handle, UINT_MAX);
     for(ii = 0; (ii < list.used) && (ii < 10); ++ii)
-    {
-        dnr = list.list[ii];
-        if(dnr->expires)
-            intervalString(buf2, dnr->expires - now, user->handle_info);
-
-        if(dnr->set)
-        {
-            strftime(buf, sizeof(buf), "%Y %b %d", localtime(&dnr->set));
-            reply("CSMSG_DNR_INFO_SET", dnr->chan_name, buf, dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
-        }
-        else
-            reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, (dnr->expires ? buf2 : "never"), dnr->reason);
-    }
+        dnr_print_func(list.list[ii], user);
     if(ii < list.used)
         reply("CSMSG_MORE_DNRS", list.used - ii);
     free(list.list);
@@ -1602,13 +1614,11 @@ chanserv_is_dnr(const char *chan_name, struct handle_info *handle)
     return dnr;
 }
 
-static unsigned int send_dnrs(struct userNode *user, struct svccmd *cmd, dict_t dict)
+static unsigned int send_dnrs(struct userNode *user, dict_t dict)
 {
     struct do_not_register *dnr;
     dict_iterator_t it, next;
     unsigned int matches = 0;
-    char buf[INTERVALLEN];
-    char buf2[INTERVALLEN];
 
     for(it = dict_first(dict); it; it = next)
     {
@@ -1619,15 +1629,7 @@ static unsigned int send_dnrs(struct userNode *user, struct svccmd *cmd, dict_t 
             dict_remove(dict, iter_key(it));
             continue;
         }
-        if(dnr->expires)
-            intervalString(buf2, dnr->expires - now, user->handle_info);
-        else
-            strcpy(buf2, "never");
-
-        if(dnr->set)
-            reply("CSMSG_DNR_INFO_SET", dnr->chan_name, intervalString(buf, now - dnr->set, user->handle_info), dnr->setter, buf2, dnr->reason);
-        else
-            reply("CSMSG_DNR_INFO", dnr->chan_name, dnr->setter, buf2, dnr->reason);
+        dnr_print_func(dnr, user);
         matches++;
     }
 
@@ -1643,9 +1645,9 @@ static CHANSERV_FUNC(cmd_noregister)
     if(argc < 2)
     {
         reply("CSMSG_DNR_SEARCH_RESULTS");
-        matches = send_dnrs(user, cmd, handle_dnrs);
-        matches += send_dnrs(user, cmd, plain_dnrs);
-        matches += send_dnrs(user, cmd, mask_dnrs);
+        matches = send_dnrs(user, handle_dnrs);
+        matches += send_dnrs(user, plain_dnrs);
+        matches += send_dnrs(user, mask_dnrs);
         if(matches)
             reply("MSG_MATCH_COUNT", matches);
         else
@@ -1704,26 +1706,255 @@ static CHANSERV_FUNC(cmd_allowregister)
 {
     const char *chan_name = argv[1];
 
-    if((chan_name[0] == '*') && dict_find(handle_dnrs, chan_name+1, NULL))
+    if(((chan_name[0] == '*') && dict_remove(handle_dnrs, chan_name+1))
+       || dict_remove(plain_dnrs, chan_name)
+       || dict_remove(mask_dnrs, chan_name))
     {
-        dict_remove(handle_dnrs, chan_name+1);
         reply("CSMSG_DNR_REMOVED", chan_name);
+        return 1;
     }
-    else if(dict_find(plain_dnrs, chan_name, NULL))
+    reply("CSMSG_NO_SUCH_DNR", chan_name);
+    return 0;
+}
+
+struct dnr_search {
+    struct userNode *source;
+    char *chan_mask;
+    char *setter_mask;
+    char *reason_mask;
+    time_t min_set, max_set;
+    time_t min_expires, max_expires;
+    unsigned int limit;
+};
+
+static int
+dnr_search_matches(const struct do_not_register *dnr, const struct dnr_search *search)
+{
+    return !((dnr->set < search->min_set)
+             || (dnr->set > search->max_set)
+             || (dnr->expires && ((dnr->expires < search->min_expires)
+                                  || (dnr->expires > search->max_expires)))
+             || (search->chan_mask
+                 && !match_ircglob(search->chan_mask, dnr->chan_name))
+             || (search->setter_mask
+                 && !match_ircglob(search->setter_mask, dnr->setter))
+             || (search->reason_mask
+                 && !match_ircglob(search->reason_mask, dnr->reason)));
+}
+
+static struct dnr_search *
+dnr_search_create(struct userNode *user, struct svccmd *cmd, unsigned int argc, char *argv[])
+{
+    struct dnr_search *discrim;
+    unsigned int ii;
+
+    discrim = calloc(1, sizeof(*discrim));
+    discrim->source = user;
+    discrim->chan_mask = NULL;
+    discrim->setter_mask = NULL;
+    discrim->reason_mask = NULL;
+    discrim->max_set = INT_MAX;
+    discrim->max_expires = INT_MAX;
+    discrim->limit = 50;
+
+    for(ii=0; ii<argc; ++ii)
     {
-        dict_remove(plain_dnrs, chan_name);
-        reply("CSMSG_DNR_REMOVED", chan_name);
+        if(ii == argc - 1)
+        {
+            reply("MSG_MISSING_PARAMS", argv[ii]);
+            goto fail;
+        }
+        else if(0 == irccasecmp(argv[ii], "channel"))
+        {
+            discrim->chan_mask = argv[++ii];
+        }
+        else if(0 == irccasecmp(argv[ii], "setter"))
+        {
+            discrim->setter_mask = argv[++ii];
+        }
+        else if(0 == irccasecmp(argv[ii], "reason"))
+        {
+            discrim->reason_mask = argv[++ii];
+        }
+        else if(0 == irccasecmp(argv[ii], "limit"))
+        {
+            discrim->limit = strtoul(argv[++ii], NULL, 0);
+        }
+        else if(0 == irccasecmp(argv[ii], "set"))
+        {
+            const char *cmp = argv[++ii];
+            if(cmp[0] == '<') {
+                if(cmp[1] == '=')
+                    discrim->min_set = now - ParseInterval(cmp + 2);
+                else
+                    discrim->min_set = now - (ParseInterval(cmp + 1) - 1);
+            } else if(cmp[0] == '=') {
+                discrim->min_set = discrim->max_set = now - ParseInterval(cmp + 1);
+            } else if(cmp[0] == '>') {
+                if(cmp[1] == '=')
+                    discrim->max_set = now - ParseInterval(cmp + 2);
+                else
+                    discrim->max_set = now - (ParseInterval(cmp + 1) - 1);
+            } else {
+                discrim->max_set = now - (ParseInterval(cmp) - 1);
+            }
+        }
+        else if(0 == irccasecmp(argv[ii], "expires"))
+        {
+            const char *cmp = argv[++ii];
+            if(cmp[0] == '<') {
+                if(cmp[1] == '=')
+                    discrim->max_expires = now + ParseInterval(cmp + 2);
+                else
+                    discrim->max_expires = now + (ParseInterval(cmp + 1) - 1);
+            } else if(cmp[0] == '=') {
+                discrim->min_expires = discrim->max_expires = now + ParseInterval(cmp + 1);
+            } else if(cmp[0] == '>') {
+                if(cmp[1] == '=')
+                    discrim->min_expires = now + ParseInterval(cmp + 2);
+                else
+                    discrim->min_expires = now + (ParseInterval(cmp + 1) - 1);
+            } else {
+                discrim->min_expires = now + (ParseInterval(cmp) - 1);
+            }
+        }
+        else
+        {
+            reply("MSG_INVALID_CRITERIA", argv[ii]);
+            goto fail;
+        }
     }
-    else if(dict_find(mask_dnrs, chan_name, NULL))
+    return discrim;
+
+  fail:
+    free(discrim);
+    return NULL;
+}
+
+typedef int (*dnr_search_func)(struct do_not_register *match, void *extra);
+
+static unsigned int
+dnr_search(struct dnr_search *discrim, dnr_search_func dsf, void *data)
+{
+    struct do_not_register *dnr;
+    dict_iterator_t next;
+    dict_iterator_t it;
+    unsigned int count;
+    int target_fixed;
+
+    /* Initialize local variables. */
+    count = 0;
+    target_fixed = 0;
+    if(discrim->chan_mask)
     {
-        dict_remove(mask_dnrs, chan_name);
-        reply("CSMSG_DNR_REMOVED", chan_name);
+        int shift = (discrim->chan_mask[0] == '\\' && discrim->chan_mask[1] == '*') ? 2 : 0;
+        if('\0' == discrim->chan_mask[shift + strcspn(discrim->chan_mask+shift, "*?")])
+            target_fixed = 1;
+    }
+
+    if(target_fixed && discrim->chan_mask[0] == '\\' && discrim->chan_mask[1] == '*')
+    {
+        /* Check against account-based DNRs. */
+        dnr = dict_find(handle_dnrs, discrim->chan_mask + 2, NULL);
+        if(dnr && dnr_search_matches(dnr, discrim) && (count++ < discrim->limit))
+            dsf(dnr, data);
+    }
+    else if(target_fixed)
+    {
+        /* Check against channel-based DNRs. */
+        dnr = dict_find(plain_dnrs, discrim->chan_mask, NULL);
+        if(dnr && dnr_search_matches(dnr, discrim) && (count++ < discrim->limit))
+            dsf(dnr, data);
     }
     else
     {
-        reply("CSMSG_NO_SUCH_DNR", chan_name);
+        /* Exhaustively search account DNRs. */
+        for(it = dict_first(handle_dnrs); it; it = next)
+        {
+            next = iter_next(it);
+            dnr = iter_data(it);
+            if(dnr_search_matches(dnr, discrim) && (count++ < discrim->limit) && dsf(dnr, data))
+                break;
+        }
+
+        /* Do the same for channel DNRs. */
+        for(it = dict_first(plain_dnrs); it; it = next)
+        {
+            next = iter_next(it);
+            dnr = iter_data(it);
+            if(dnr_search_matches(dnr, discrim) && (count++ < discrim->limit) && dsf(dnr, data))
+                break;
+        }
+
+        /* Do the same for wildcarded channel DNRs. */
+        for(it = dict_first(mask_dnrs); it; it = next)
+        {
+            next = iter_next(it);
+            dnr = iter_data(it);
+            if(dnr_search_matches(dnr, discrim) && (count++ < discrim->limit) && dsf(dnr, data))
+                break;
+        }
+    }
+    return count;
+}
+
+static int
+dnr_remove_func(struct do_not_register *match, void *extra)
+{
+    struct userNode *user;
+    char *chan_name;
+
+    chan_name = alloca(strlen(match->chan_name) + 1);
+    strcpy(chan_name, match->chan_name);
+    user = extra;
+    if(((chan_name[0] == '*') && dict_remove(handle_dnrs, chan_name+1))
+       || dict_remove(plain_dnrs, chan_name)
+       || dict_remove(mask_dnrs, chan_name))
+    {
+        send_message(user, chanserv, "CSMSG_DNR_REMOVED", chan_name);
+    }
+    return 0;
+}
+
+static MODCMD_FUNC(cmd_dnrsearch)
+{
+    struct dnr_search *discrim;
+    dnr_search_func action;
+    struct svccmd *subcmd;
+    unsigned int matches;
+    char buf[MAXLEN];
+
+    sprintf(buf, "dnrsearch %s", argv[1]);
+    subcmd = dict_find(cmd->parent->commands, buf, NULL);
+    if(!subcmd)
+    {
+        reply("CSMSG_DNR_BAD_ACTION", argv[1]);
         return 0;
     }
+    if(!svccmd_can_invoke(user, cmd->parent->bot, subcmd, channel, SVCCMD_NOISY))
+        return 0;
+    if(!irccasecmp(argv[1], "print"))
+        action = dnr_print_func;
+    else if(!irccasecmp(argv[1], "remove"))
+        action = dnr_remove_func;
+    else
+    {
+        reply("CSMSG_DNR_BAD_ACTION", argv[1]);
+        return 0;
+    }
+
+    discrim = dnr_search_create(user, cmd, argc-2, argv+2);
+    if(!discrim)
+        return 0;
+
+    if(action == dnr_print_func)
+        reply("CSMSG_DNR_SEARCH_RESULTS");
+    matches = dnr_search(discrim, action, user);
+    if(matches)
+        reply("MSG_MATCH_COUNT", matches);
+    else
+        reply("MSG_NO_MATCHES");
+    free(discrim);
     return 1;
 }
 
@@ -7374,6 +7605,9 @@ init_chanserv(const char *nick)
     DEFINE_COMMAND(register, 1, MODCMD_REQUIRE_AUTHED, "flags", "+acceptchan,+helping", NULL);
     DEFINE_COMMAND(noregister, 1, MODCMD_REQUIRE_AUTHED, "flags", "+helping", NULL);
     DEFINE_COMMAND(allowregister, 2, 0, "template", "noregister", NULL);
+    DEFINE_COMMAND(dnrsearch, 3, 0, "template", "noregister", NULL);
+    modcmd_register(chanserv_module, "dnrsearch print", NULL, 0, 0, NULL);
+    modcmd_register(chanserv_module, "dnrsearch remove", NULL, 0, 0, NULL);
     DEFINE_COMMAND(move, 1, MODCMD_REQUIRE_AUTHED|MODCMD_REQUIRE_REGCHAN, "template", "register", NULL);
     DEFINE_COMMAND(csuspend, 2, MODCMD_REQUIRE_AUTHED|MODCMD_REQUIRE_REGCHAN, "flags", "+helping", NULL);
     DEFINE_COMMAND(cunsuspend, 1, MODCMD_REQUIRE_AUTHED|MODCMD_REQUIRE_REGCHAN, "flags", "+helping", NULL);
