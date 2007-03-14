@@ -115,7 +115,8 @@
 #define KEY_EXPIRES             "expires"
 #define KEY_TRIGGERED		"triggered"
 
-#define CHANNEL_DEFAULT_FLAGS   (CHANNEL_OFFCHANNEL)
+#define CHANNEL_DEFAULT_FLAGS   (CHANNEL_OFFCHANNEL | CHANNEL_UNREVIEWED)
+#define CHANNEL_PRESERVED_FLAGS (CHANNEL_UNREVIEWED)
 #define CHANNEL_DEFAULT_OPTIONS "lmoooanpcnat"
 
 /* Administrative messages */
@@ -274,6 +275,7 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_SET_TOYS",          "$bToys        $b %d - %s" },
     { "CSMSG_SET_CTCPREACTION",  "$bCTCPReaction$b %d - %s" },
     { "CSMSG_SET_TOPICREFRESH",  "$bTopicRefresh$b %d - %s" },
+    { "CSMSG_SET_UNREVIEWED",    "$bUnreviewed  $b %s" },
     { "CSMSG_USET_NOAUTOOP",     "$bNoAutoOp    $b %s" },
     { "CSMSG_USET_NOAUTOVOICE",  "$bNoAutoVoice $b %s" },
     { "CSMSG_USET_AUTOINVITE",   "$bAutoInvite  $b %s" },
@@ -5008,6 +5010,8 @@ chanserv_search_create(struct userNode *user, unsigned int argc, char *argv[])
 		search->flags |= CHANNEL_NODELETE;
 	    else if(!irccasecmp(argv[i], "suspended"))
 		search->flags |= CHANNEL_SUSPENDED;
+            else if(!irccasecmp(argv[i], "unreviewed"))
+                search->flags |= CHANNEL_UNREVIEWED;
 	    else
 	    {
 		send_message(user, chanserv, "CSMSG_INVALID_CFLAG", argv[i]);
@@ -5407,6 +5411,60 @@ static MODCMD_FUNC(chan_opt_offchannel)
     return 1;
 }
 
+static MODCMD_FUNC(chan_opt_unreviewed)
+{
+    struct chanData *cData = channel->channel_info;
+    int value = (cData->flags & CHANNEL_UNREVIEWED) ? 1 : 0;
+
+    if(argc > 1)
+    {
+        int new_value;
+
+        /* The two directions can have different ACLs. */
+        if(enabled_string(argv[1]))
+            new_value = 1;
+        else if(disabled_string(argv[1]))
+            new_value = 0;
+        else
+	{
+	    reply("MSG_INVALID_BINARY", argv[1]);
+	    return 0;
+	}
+
+        if (new_value != value)
+        {
+            struct svccmd *subcmd;
+            char subcmd_name[32];
+
+            snprintf(subcmd_name, sizeof(subcmd_name), "%s %s", argv[0], (new_value ? "on" : "off"));
+            subcmd = dict_find(cmd->parent->commands, subcmd_name, NULL);
+            if(!subcmd)
+            {
+                reply("MSG_COMMAND_DISABLED", subcmd_name);
+                return 0;
+            }
+            else if(!svccmd_can_invoke(user, cmd->parent->bot, subcmd, channel, SVCCMD_NOISY))
+                return 0;
+
+            if (new_value)
+                cData->flags |= CHANNEL_UNREVIEWED;
+            else
+            {
+                free(cData->registrar);
+                cData->registrar = strdup(user->handle_info->handle);
+                cData->flags &= ~CHANNEL_UNREVIEWED;
+            }
+            value = new_value;
+        }
+    }
+
+    if(value)
+        reply("CSMSG_SET_UNREVIEWED", user_find_message(user, "MSG_ON"));
+    else
+        reply("CSMSG_SET_UNREVIEWED", user_find_message(user, "MSG_OFF"));
+    return 1;
+}
+
 static MODCMD_FUNC(chan_opt_defaults)
 {
     struct userData *uData;
@@ -5428,7 +5486,8 @@ static MODCMD_FUNC(chan_opt_defaults)
         reply("CSMSG_CONFIRM_DEFAULTS", channel->name, confirm);
         return 0;
     }
-    cData->flags = CHANNEL_DEFAULT_FLAGS;
+    cData->flags = (CHANNEL_DEFAULT_FLAGS & ~CHANNEL_PRESERVED_FLAGS)
+        | (cData->flags & CHANNEL_PRESERVED_FLAGS);
     cData->modes = chanserv_conf.default_modes;
     for(lvlOpt = 0; lvlOpt < NUM_LEVEL_OPTIONS; ++lvlOpt)
         cData->lvlOpts[lvlOpt] = levelOptions[lvlOpt].default_value;
@@ -5677,6 +5736,8 @@ static CHANSERV_FUNC(cmd_set)
         return 0;
     }
 
+    argv[0] = "";
+    argv[1] = buf;
     return subcmd->command->func(user, channel, argc - 1, argv + 1, subcmd);
 }
 
@@ -7723,6 +7784,9 @@ init_chanserv(const char *nick)
     DEFINE_CHANNEL_OPTION(ctcpusers);
     DEFINE_CHANNEL_OPTION(ctcpreaction);
     DEFINE_CHANNEL_OPTION(inviteme);
+    DEFINE_CHANNEL_OPTION(unreviewed);
+    modcmd_register(chanserv_module, "set unreviewed on", NULL, 0, 0, NULL);
+    modcmd_register(chanserv_module, "set unreviewed off", NULL, 0, 0, NULL);
     if(off_channel > 1)
         DEFINE_CHANNEL_OPTION(offchannel);
     modcmd_register(chanserv_module, "set defaults", chan_opt_defaults, 1, 0, "access", "owner", NULL);

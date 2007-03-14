@@ -322,7 +322,7 @@
         "  REGISTERED  Channels that have been registered for less than the given duration",
         "  FLAGS       Matches channels with the specified flag set",
         "  LIMIT       Limit the number of channels returned by the search",
-        "Flags that can be matched against are: nodelete and suspended.",
+        "Flags that can be matched against are: nodelete, suspended and unreviewed.",
         "$uSee Also:$u search, search actions");
 "SEARCH ACTIONS" ("$bSEARCH ACTIONS$b",
 	"The following are valid $bsearch$b actions:",
@@ -359,7 +359,8 @@
         "TOPICREFRESH: Controls if (and how often) $b$C$b will reset the topic.",
         "DYNLIMIT:     Adjusts user limit (+l channel mode) to prevent join floods.",
         "$bIRCOP ONLY$b:",
-        "NODELETE:  Prevents channel deletion.",
+        "NODELETE:     Prevents channel deletion.",
+        "UNREVIEWED:   Indicates channels that have not been manually reviewed.",
         "If you wish to reset your channel to the default settings, you can use the $bSET DEFAULTS$b command.",
         "$uSee Also:$u set pubcmd, set giveops, set enfops, set enfmodes, set enftopic, set protect, set toys, set setters, set topicrefresh, set ctcpusers, set ctcpreaction, set defaults");
 "SET DEFAULTTOPIC" ("/msg $C SET <#channel> DEFAULTTOPIC <New default topic>",
