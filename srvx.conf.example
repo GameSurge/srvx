@@ -299,6 +299,16 @@
         "port" "7702";
         "password" "hello";
     };
+    "blacklist" {
+        // File containing blacklisted client addresses.
+        // "file" "blacklist.txt";
+        // Each line in the file should start with an IP or hostname.
+        // If there is whitespace and a message after that, the
+        // message will override this one:
+        "file_reason" "client is blacklisted";
+        // How long should a blacklist G-line last?
+        "gline_duration" "1h";
+    };
 };
 
 "policers" {
