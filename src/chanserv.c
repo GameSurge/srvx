@@ -7785,8 +7785,8 @@ init_chanserv(const char *nick)
     DEFINE_CHANNEL_OPTION(ctcpreaction);
     DEFINE_CHANNEL_OPTION(inviteme);
     DEFINE_CHANNEL_OPTION(unreviewed);
-    modcmd_register(chanserv_module, "set unreviewed on", NULL, 0, 0, NULL);
-    modcmd_register(chanserv_module, "set unreviewed off", NULL, 0, 0, NULL);
+    modcmd_register(chanserv_module, "set unreviewed on", NULL, 0, 0, "flags", "+helping", NULL);
+    modcmd_register(chanserv_module, "set unreviewed off", NULL, 0, 0, "flags", "+oper", NULL);
     if(off_channel > 1)
         DEFINE_CHANNEL_OPTION(offchannel);
     modcmd_register(chanserv_module, "set defaults", chan_opt_defaults, 1, 0, "access", "owner", NULL);
