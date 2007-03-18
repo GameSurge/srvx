@@ -32,7 +32,6 @@
 
 /* Global options */
 #define KEY_DB_BACKUP_FREQ	"db_backup_freq"
-#define KEY_ANNOUNCEMENTS_DEFAULT "announcements_default"
 #define KEY_NICK		"nick"
 
 /* Message data */
@@ -93,7 +92,6 @@ static struct log_type *G_LOG;
 static struct
 {
     unsigned long db_backup_frequency;
-    unsigned int announcements_default : 1;
 } global_conf;
 
 #define global_notice(target, format...) send_message(target , global , ## format)
@@ -210,8 +208,6 @@ message_create(struct userNode *user, unsigned int argc, char *argv[])
 		flags |= MESSAGE_RECIPIENT_STAFF;
 	    } else if(!irccasecmp(argv[i], "channels")) {
 		flags |= MESSAGE_RECIPIENT_CHANNELS;
-            } else if(!irccasecmp(argv[i], "announcement") || !irccasecmp(argv[i], "announce")) {
-                flags |= MESSAGE_RECIPIENT_ANNOUNCE;
 	    } else {
 		global_notice(user, "GMSG_INVALID_TARGET", argv[i]);
 		return NULL;
@@ -249,10 +245,6 @@ messageType(const struct globalMessage *message)
     if((message->flags & MESSAGE_RECIPIENT_STAFF) == MESSAGE_RECIPIENT_STAFF)
     {
 	return "staff";
-    }
-    else if(message->flags & MESSAGE_RECIPIENT_ANNOUNCE)
-    {
-        return "announcement";
     }
     else if(message->flags & MESSAGE_RECIPIENT_OPERS)
     {
@@ -305,7 +297,6 @@ message_send(struct globalMessage *message)
 {
     struct userNode *user;
     unsigned long n;
-    dict_iterator_t it;
 
     if(message->flags & MESSAGE_RECIPIENT_CHANNELS)
     {
@@ -316,20 +307,6 @@ message_send(struct globalMessage *message)
     {
 	notice_target("$*", message);
 	return;
-    }
-
-    if(message->flags & MESSAGE_RECIPIENT_ANNOUNCE)
-    {
-        char announce;
-
-        for (it = dict_first(clients); it; it = iter_next(it)) {
-            user = iter_data(it);
-            if (user->uplink == self) continue;
-            announce = user->handle_info ? user->handle_info->announcements : '?';
-            if (announce == 'n') continue;
-            if ((announce == '?') && !global_conf.announcements_default) continue;
-            notice_target(user->nick, message);
-        }
     }
 
     if(message->flags & MESSAGE_RECIPIENT_OPERS)
@@ -392,8 +369,6 @@ static GLOBAL_FUNC(cmd_notice)
 	target = MESSAGE_RECIPIENT_OPERS;
     } else if(!irccasecmp(argv[1], "staff") || !irccasecmp(argv[1], "privileged")) {
 	target |= MESSAGE_RECIPIENT_HELPERS | MESSAGE_RECIPIENT_OPERS;
-    } else if(!irccasecmp(argv[1], "announcement") || !irccasecmp(argv[1], "announce")) {
-        target |= MESSAGE_RECIPIENT_ANNOUNCE;
     } else if(!irccasecmp(argv[1], "channels")) {
 	target = MESSAGE_RECIPIENT_CHANNELS;
     } else {
@@ -614,8 +589,6 @@ global_conf_read(void)
 
     str = database_get_data(conf_node, KEY_DB_BACKUP_FREQ, RECDB_QSTRING);
     global_conf.db_backup_frequency = str ? ParseInterval(str) : 7200;
-    str = database_get_data(conf_node, KEY_ANNOUNCEMENTS_DEFAULT, RECDB_QSTRING);
-    global_conf.announcements_default = str ? enabled_string(str) : 1;
 
     str = database_get_data(conf_node, KEY_NICK, RECDB_QSTRING);
     if(global && str)

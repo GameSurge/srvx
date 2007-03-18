@@ -360,7 +360,6 @@
         "/services/nickserv/email_enabled && /services/nickserv/disable_nicks" (
         "/msg $N SET [<setting> [value]]",
         "Changes your account settings for srvx. Settings are:",
-        "$bANNOUNCEMENTS$b: Indicates whether you wish to receive community announcements via the $G service.",
         "$bCOLOR$b: If set, $b$N$b and $b$C$b will use $bbold$b and $uunderlines$u in text they send you.",
         "$bEMAIL$b: Sets (or changes) your email address.",
         "$bINFO$b:  Your infoline for $b$N$b (which can be viewed with the $baccountinfo$b command).",
@@ -376,7 +375,6 @@
         "/services/nickserv/email_enabled && !/services/nickserv/disable_nicks" (
         "/msg $N SET [<setting> [value]]",
         "Changes your account settings for srvx. Settings are:",
-        "$bANNOUNCEMENTS$b: Indicates whether you wish to receive community announcements via the $G service.",
         "$bCOLOR$b: If set, $b$N$b and $b$C$b will use $bbold$b and $uunderlines$u in text they send you.",
         "$bEMAIL$b: Sets (or changes) your email address.",
         "$bINFO$b:  Your infoline for $b$N$b (which can be viewed with the $baccountinfo$b command).",
@@ -392,7 +390,6 @@
         "!/services/nickserv/email_enabled && /services/nickserv/disable_nicks" (
         "/msg $N SET [<setting> [value]]",
         "Changes your account settings for srvx. Settings are:",
-        "$bANNOUNCEMENTS$b: Indicates whether you wish to receive community announcements via the $G service.",
         "$bCOLOR$b: If set, $b$N$b and $b$C$b will use $bbold$b and $uunderlines$u in text they send you.",
         "$bINFO$b:  Your infoline for $b$N$b (which can be viewed with the $baccountinfo$b command).",
         "$bLANGUAGE$b: Your preferred language for private messages from the services.",
@@ -407,7 +404,6 @@
         "!/services/nickserv/email_enabled && !/services/nickserv/disable_nicks" (
         "/msg $N SET [<setting> [value]]",
         "Changes your account settings for srvx. Settings are:",
-        "$bANNOUNCEMENTS$b: Indicates whether you wish to receive community announcements via the $G service.",
         "$bCOLOR$b: If set, $b$N$b and $b$C$b will use $bbold$b and $uunderlines$u in text they send you.",
         "$bINFO$b:  Your infoline for $b$N$b (which can be viewed with the $baccountinfo$b command).",
         "$bLANGUAGE$b: Your preferred language for private messages from the services.",

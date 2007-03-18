@@ -96,7 +96,6 @@
 #define KEY_ALLOWAUTH "allowauth"
 #define KEY_EPITHET "epithet"
 #define KEY_TABLE_WIDTH "table_width"
-#define KEY_ANNOUNCEMENTS "announcements"
 #define KEY_MAXLOGINS "maxlogins"
 #define KEY_FAKEHOST "fakehost"
 #define KEY_NOTES "notes"
@@ -287,14 +286,12 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_CLONE_AUTH", "Warning: %s (%s@%s) authed to your account." },
     { "NSMSG_SETTING_LIST", "$b$N account settings:$b" },
     { "NSMSG_INVALID_OPTION", "$b%s$b is an invalid account setting." },
-    { "NSMSG_INVALID_ANNOUNCE", "$b%s$b is an invalid announcements value." },
     { "NSMSG_SET_INFO", "$bINFO:         $b%s" },
     { "NSMSG_SET_WIDTH", "$bWIDTH:        $b%d" },
     { "NSMSG_SET_TABLEWIDTH", "$bTABLEWIDTH:   $b%d" },
     { "NSMSG_SET_COLOR", "$bCOLOR:        $b%s" },
     { "NSMSG_SET_PRIVMSG", "$bPRIVMSG:      $b%s" },
     { "NSMSG_SET_STYLE", "$bSTYLE:        $b%s" },
-    { "NSMSG_SET_ANNOUNCEMENTS", "$bANNOUNCEMENTS: $b%s" },
     { "NSMSG_SET_PASSWORD", "$bPASSWORD:     $b%s" },
     { "NSMSG_SET_FLAGS", "$bFLAGS:        $b%s" },
     { "NSMSG_SET_EMAIL", "$bEMAIL:        $b%s" },
@@ -429,7 +426,6 @@ register_handle(const char *handle, const char *passwd, UNUSED_ARG(unsigned long
 
     hi = calloc(1, sizeof(*hi));
     hi->userlist_style = HI_DEFAULT_STYLE;
-    hi->announcements = '?';
     hi->handle = strdup(handle);
     safestrncpy(hi->passwd, passwd, sizeof(hi->passwd));
     hi->infoline = NULL;
@@ -2151,7 +2147,7 @@ set_list(struct userNode *user, struct handle_info *hi, int override)
     unsigned int i;
     char *set_display[] = {
         "INFO", "WIDTH", "TABLEWIDTH", "COLOR", "PRIVMSG", "STYLE",
-        "EMAIL", "ANNOUNCEMENTS", "MAXLOGINS", "LANGUAGE"
+        "EMAIL", "MAXLOGINS", "LANGUAGE"
     };
 
     send_message(user, nickserv, "NSMSG_SETTING_LIST");
@@ -2302,33 +2298,6 @@ static OPTION_FUNC(opt_style)
     }
 
     send_message(user, nickserv, "NSMSG_SET_STYLE", style);
-    return 1;
-}
-
-static OPTION_FUNC(opt_announcements)
-{
-    const char *choice;
-
-    if (argc > 1) {
-        if (enabled_string(argv[1]))
-            hi->announcements = 'y';
-        else if (disabled_string(argv[1]))
-            hi->announcements = 'n';
-        else if (!strcmp(argv[1], "?") || !irccasecmp(argv[1], "default"))
-            hi->announcements = '?';
-        else {
-            send_message(user, nickserv, "NSMSG_INVALID_ANNOUNCE", argv[1]);
-            return 0;
-        }
-    }
-
-    switch (hi->announcements) {
-    case 'y': choice = user_find_message(user, "MSG_ON"); break;
-    case 'n': choice = user_find_message(user, "MSG_OFF"); break;
-    case '?': choice = "default"; break;
-    default: choice = "unknown"; break;
-    }
-    send_message(user, nickserv, "NSMSG_SET_ANNOUNCEMENTS", choice);
     return 1;
 }
 
@@ -2820,11 +2789,6 @@ nickserv_saxdb_write(struct saxdb_context *ctx) {
         assert(hi->id);
 #endif
         saxdb_start_record(ctx, iter_key(it), 0);
-        if (hi->announcements != '?') {
-            flags[0] = hi->announcements;
-            flags[1] = 0;
-            saxdb_write_string(ctx, KEY_ANNOUNCEMENTS, flags);
-        }
         if (hi->cookie) {
             struct handle_cookie *cookie = hi->cookie;
             char *type;
@@ -3481,8 +3445,6 @@ nickserv_db_read_handle(const char *handle, dict_t obj)
     }
     str = database_get_data(obj, KEY_USERLIST_STYLE, RECDB_QSTRING);
     hi->userlist_style = str ? str[0] : HI_STYLE_ZOOT;
-    str = database_get_data(obj, KEY_ANNOUNCEMENTS, RECDB_QSTRING);
-    hi->announcements = str ? str[0] : '?';
     str = database_get_data(obj, KEY_SCREEN_WIDTH, RECDB_QSTRING);
     hi->screen_width = str ? strtoul(str, NULL, 0) : 0;
     str = database_get_data(obj, KEY_TABLE_WIDTH, RECDB_QSTRING);
@@ -4072,7 +4034,6 @@ init_nickserv(const char *nick)
         dict_insert(nickserv_opt_dict, "TITLE", opt_title);
         dict_insert(nickserv_opt_dict, "FAKEHOST", opt_fakehost);
     }
-    dict_insert(nickserv_opt_dict, "ANNOUNCEMENTS", opt_announcements);
     dict_insert(nickserv_opt_dict, "MAXLOGINS", opt_maxlogins);
     dict_insert(nickserv_opt_dict, "LANGUAGE", opt_language);
     dict_insert(nickserv_opt_dict, "KARMA", opt_karma);

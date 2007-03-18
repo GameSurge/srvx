@@ -108,7 +108,6 @@ struct handle_info {
     unsigned short screen_width;
     unsigned short table_width;
     unsigned char userlist_style;
-    unsigned char announcements;
     unsigned char maxlogins;
     char passwd[MD5_CRYPT_LENGTH+1];
     char last_quit_host[USERLEN+HOSTLEN+2];

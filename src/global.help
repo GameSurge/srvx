@@ -28,7 +28,6 @@
 "TARGET" ("$bTARGET$b",
         "$bTarget$b is used as a sub-command in many commands. It's values are:",
         "$bUSERS$b:      The message will be sent to all users on the network including opers and helpers, but not channels.",
-        "$bANNOUNCEMENT$b: The message will be sent to all users who are configured to receive community announcements.",
         "$bHELPERS$b:    The message will be sent to helpers only.",
         "$bOPERS$b:      The message will be sent to opers only.",
         "$bSTAFF$b:      The message will be sent to helpers and opers.",
