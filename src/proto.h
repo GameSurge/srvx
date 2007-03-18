@@ -32,10 +32,6 @@
 #define MAXNUMPARAMS    200
 #define ALLCHANMSG_FUNCS_MAX  4 /* +1 == 5 potential 'allchanmsg' funcs */
 
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-
 struct gline;
 struct server;
 struct userNode;
