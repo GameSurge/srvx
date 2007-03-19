@@ -308,6 +308,34 @@
         "file_reason" "client is blacklisted";
         // How long should a blacklist G-line last?
         "gline_duration" "1h";
+        // If you want to use DNS blacklists, add them here:
+        "dnsbl" {
+            // This DNSBL zone does not exist - you'll have to pick your own.
+            "dnsbl.example.org" {
+                "description" "Example DNSBL entry";
+                "reason" "busted by a dns blacklist";
+                "duration" "1h";
+                // You can stick the client's IP in the G-line message.
+                "reason_2" "Example DNSBL reported %ip%'s address as 127.0.0.2";
+                // .. or the contents of a DNS TXT.
+                "reason_3" "%txt%";
+            };
+        };
+    };
+    "sar" {
+        // You generally will not want to override these defaults.
+        // "resolv_conf" "/etc/resolv.conf";
+        // "services" "/etc/services";
+        // "bind_address" "0.0.0.0";
+        // "bind_port" "0";
+        // The defaults for these are derived from the system config files (above).
+        // "domain" "example.org";
+        // "timeout" "3"; // base timeout for a DNS reply
+        // "retries" "3"; // number of times to retry on different servers or longer timeouts
+        // "ndots" "1";   // number of dots needed in a hostname to bypass search path
+        // "edns0" "0";   // if set, enable EDNS0 extended message sizes
+        // "search" ("example.org", "example.net");
+        // "nameservers" ("127.0.0.1");
     };
 };
 

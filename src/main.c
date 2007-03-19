@@ -27,6 +27,7 @@
 #include "saxdb.h"
 #include "mail.h"
 #include "timeq.h"
+#include "sar.h"
 
 #include "chanserv.h"
 #include "global.h"
@@ -286,6 +287,7 @@ int main(int argc, char *argv[])
     init_parse();
     modcmd_init();
     saxdb_init();
+    sar_init();
     gline_init();
     mail_init();
     helpfile_init();

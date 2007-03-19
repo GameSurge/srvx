@@ -81,6 +81,7 @@ srvx_SOURCES = \
 	policer.c policer.h \
 	proto.h \
 	recdb.c recdb.h \
+	sar.c sar.h \
 	saxdb.c saxdb.h \
 	timeq.c timeq.h \
 	tools.c
