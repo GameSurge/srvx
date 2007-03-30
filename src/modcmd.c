@@ -1856,7 +1856,7 @@ static MODCMD_FUNC(cmd_version) {
      * copyright information pertaining to changes you make to srvx.
      */
     send_message_type(4, user, cmd->parent->bot, "$b"PACKAGE_STRING"$b ("CODENAME"), Built: "__DATE__", "__TIME__".  Copyright 2000-2006 srvx Development Team.");
-    if ((argc > 1) && !irccasecmp(argv[1], "arch"))
+    if (argc > 1)
         send_message_type(4, user, cmd->parent->bot, "%s", GIT_VERSION);
     else
         send_message_type(12, user, cmd->parent->bot, "The srvx Development Team includes Paul Chang, Adrian Dewhurst, Miles Peterson, Michael Poole and others.\nThe srvx Development Team can be reached at http://sf.net/projects/srvx/ or in #srvx on irc.gamesurge.net.");
