@@ -467,6 +467,8 @@
         "  HOSTMASK SUBSET - Account matches if this mask \"covers\" one in their userlist",
 	"  HOSTMASK LASTQUIT - Account matches if this mask \"covers\" user was last seen using",
         "  HOSTMASK   - A glob that must match a hostmask for the account (equivalent to HOSTMASK SUPERSET)",
+        "  FAKEHOST   - A glob that must match the account's fakehost",
+        "  KARMA      - Only match accounts with karma like this (<nnn, <=nnn, =nnn, >=nnn or >nnn)",
         "  ACCESS     - An $O access constraint (<nnn, <=nnn, =nnn, >=nnn or >nnn)",
         "$uSee Also:$u search, search action"
         );

@@ -218,6 +218,9 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_USERINFO_AUTHED_AS", "$b%s$b is authenticated to account $b%s$b." },
     { "NSMSG_USERINFO_NOT_AUTHED", "$b%s$b is not authenticated to any account." },
     { "NSMSG_NICKINFO_OWNER", "Nick $b%s$b is owned by account $b%s$b." },
+    { "NSMSG_NOTE_EXPIRES", "Note %d (%s ago by %s, expires %s): %s" },
+    { "NSMSG_NOTE", "Note %d (%s ago by %s): %s" },
+    { "NSMSG_NOTE_COUNT", "%u note(s) for %s." },
     { "NSMSG_PASSWORD_INVALID", "Incorrect password; please try again." },
     { "NSMSG_PLEASE_SET_EMAIL", "We now require email addresses for users.  Please use the $bset email$b command to set your email address!" },
     { "NSMSG_WEAK_PASSWORD", "WARNING: You are using a password that is considered weak (easy to guess).  It is STRONGLY recommended you change it (now, if not sooner) by typing \"/msg $S@$s PASS oldpass newpass\" (with your current password and a new password)." },
@@ -1524,6 +1527,32 @@ static NICKSERV_FUNC(cmd_nickinfo)
     return 1;
 }
 
+static NICKSERV_FUNC(cmd_notes)
+{
+    struct handle_info *hi;
+    struct handle_note *prev, *note;
+    unsigned int hits;
+
+    NICKSERV_MIN_PARMS(2);
+    if (!(hi = get_victim_oper(user, argv[1])))
+        return 0;
+    hits = 0;
+    WALK_NOTES(hi, prev, note) {
+        char set_time[INTERVALLEN];
+        intervalString(set_time, now - note->set, user->handle_info);
+        if (note->expires) {
+            char exp_time[INTERVALLEN];
+            intervalString(exp_time, note->expires - now, user->handle_info);
+            reply("NSMSG_NOTE_EXPIRES", note->id, set_time, note->setter, exp_time, note->note);
+        } else {
+            reply("NSMSG_NOTE", note->id, set_time, note->setter, note->note);
+        }
+        ++hits;
+    }
+    reply("NSMSG_NOTE_COUNT", hits, argv[1]);
+    return 1;
+}
+
 static NICKSERV_FUNC(cmd_rename_handle)
 {
     struct handle_info *hi;
@@ -2178,7 +2207,9 @@ static NICKSERV_FUNC(cmd_set)
 static NICKSERV_FUNC(cmd_oset)
 {
     struct handle_info *hi;
+    struct svccmd *subcmd;
     option_func_t *opt;
+    char cmdname[MAXLEN];
 
     NICKSERV_MIN_PARMS(2);
 
@@ -2194,6 +2225,11 @@ static NICKSERV_FUNC(cmd_oset)
 	reply("NSMSG_INVALID_OPTION", argv[2]);
         return 0;
     }
+
+    sprintf(cmdname, "%s %s", cmd->name, argv[2]);
+    subcmd = dict_find(cmd->parent->commands, cmdname, NULL);
+    if (subcmd && !svccmd_can_invoke(user, cmd->parent->bot, subcmd, NULL, SVCCMD_NOISY))
+        return 0;
 
     return opt(user, hi, 1, argc-2, argv+2);
 }
@@ -3030,6 +3066,7 @@ struct nickserv_discrim {
     enum { SUBSET, EXACT, SUPERSET, LASTQUIT } hostmask_type;
     const char *nickmask;
     const char *hostmask;
+    const char *fakehostmask;
     const char *handlemask;
     const char *emailmask;
 };
@@ -3123,6 +3160,12 @@ nickserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[])
                 discrim->hostmask_type = SUPERSET;
             }
             discrim->hostmask = argv[++i];
+        } else if (!irccasecmp(argv[i], "fakehost")) {
+            if (!irccasecmp(argv[++i], "*")) {
+                discrim->fakehostmask = 0;
+            } else {
+                discrim->fakehostmask = argv[i];
+            }
         } else if (!irccasecmp(argv[i], "handlemask") || !irccasecmp(argv[i], "accountmask")) {
             if (!irccasecmp(argv[++i], "*")) {
                 discrim->handlemask = 0;
@@ -3197,6 +3240,7 @@ nickserv_discrim_match(struct nickserv_discrim *discrim, struct handle_info *hi)
         || (discrim->max_registered < hi->registered)
         || (discrim->lastseen < (hi->users?now:hi->lastseen))
         || (discrim->handlemask && !match_ircglob(hi->handle, discrim->handlemask))
+        || (discrim->fakehostmask && (!hi->fakehost || !match_ircglob(hi->fakehost, discrim->fakehostmask)))
         || (discrim->emailmask && (!hi->email_addr || !match_ircglob(hi->email_addr, discrim->emailmask)))
         || (discrim->min_level > hi->opserv_level)
         || (discrim->max_level < hi->opserv_level)
@@ -3994,6 +4038,7 @@ init_nickserv(const char *nick)
     nickserv_define_func("MERGE", cmd_merge, 750, 1, 0);
     nickserv_define_func("ADDNOTE", cmd_addnote, 0, 1, 0);
     nickserv_define_func("DELNOTE", cmd_delnote, 0, 1, 0);
+    nickserv_define_func("NOTES", cmd_notes, 0, 1, 0);
     if (!nickserv_conf.disable_nicks) {
 	/* nick management commands */
 	nickserv_define_func("REGNICK", cmd_regnick, -1, 1, 0);
@@ -4037,6 +4082,7 @@ init_nickserv(const char *nick)
     dict_insert(nickserv_opt_dict, "MAXLOGINS", opt_maxlogins);
     dict_insert(nickserv_opt_dict, "LANGUAGE", opt_language);
     dict_insert(nickserv_opt_dict, "KARMA", opt_karma);
+    nickserv_define_func("OSET KARMA", NULL, 0, 1, 0);
 
     nickserv_handle_dict = dict_new();
     dict_set_free_keys(nickserv_handle_dict, free);
