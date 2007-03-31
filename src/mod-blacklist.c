@@ -278,7 +278,7 @@ blacklist_conf_read(void)
 
     dict_delete(blacklist_zones);
     blacklist_zones = dict_new();
-    dict_set_free_data(blacklist_zones, free);
+    dict_set_free_data(blacklist_zones, dnsbl_zone_free);
 
     dict_delete(blacklist_hosts);
     blacklist_hosts = dict_new();
@@ -286,7 +286,7 @@ blacklist_conf_read(void)
 
     dict_delete(blacklist_reasons);
     blacklist_reasons = dict_new();
-    dict_set_free_keys(blacklist_reasons, dnsbl_zone_free);
+    dict_set_free_keys(blacklist_reasons, free);
 
     node = conf_get_data("modules/blacklist", RECDB_OBJECT);
     if (node == NULL)
