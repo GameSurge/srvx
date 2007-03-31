@@ -5949,7 +5949,7 @@ static CHANSERV_FUNC(cmd_giveownership)
     {
         if(force)
         {
-            new_owner = add_channel_user(cData, new_owner_hi, UL_COOWNER, 0, NULL);
+            new_owner = add_channel_user(cData, new_owner_hi, UL_OWNER - 1, 0, NULL);
         }
         else
         {
