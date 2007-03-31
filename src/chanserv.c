@@ -1737,11 +1737,11 @@ dnr_search_matches(const struct do_not_register *dnr, const struct dnr_search *s
              || (dnr->expires && ((dnr->expires < search->min_expires)
                                   || (dnr->expires > search->max_expires)))
              || (search->chan_mask
-                 && !match_ircglob(search->chan_mask, dnr->chan_name))
+                 && !match_ircglob(dnr->chan_name, search->chan_mask))
              || (search->setter_mask
-                 && !match_ircglob(search->setter_mask, dnr->setter))
+                 && !match_ircglob(dnr->setter, search->setter_mask))
              || (search->reason_mask
-                 && !match_ircglob(search->reason_mask, dnr->reason)));
+                 && !match_ircglob(dnr->reason, search->reason_mask)));
 }
 
 static struct dnr_search *
