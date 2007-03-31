@@ -68,7 +68,7 @@ do_expandos(char *output, unsigned int out_len, const char *input, ...)
         dlen = strlen(datum);
         for (found = output; (found = strstr(output, key)) != NULL; found += dlen) {
             rlen = strlen(found + klen);
-            if ((dlen > klen) && (found + dlen + rlen - output > out_len))
+            if ((dlen > klen) && ((unsigned)(found + dlen + rlen - output) > out_len))
                 rlen = output + out_len - found - dlen;
             memmove(found + dlen, found + klen, rlen);
             memcpy(found, datum, dlen + 1);
