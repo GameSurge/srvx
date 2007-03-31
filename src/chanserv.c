@@ -1610,7 +1610,7 @@ chanserv_is_dnr(const char *chan_name, struct handle_info *handle)
     struct dnrList list;
     struct do_not_register *dnr;
 
-    list = chanserv_find_dnrs(chan_name, handle->handle, 1);
+    list = chanserv_find_dnrs(chan_name, handle ? handle->handle : NULL, 1);
     dnr = list.used ? list.list[0] : NULL;
     free(list.list);
     return dnr;
