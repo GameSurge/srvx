@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
 	if (pid < 0) {
 	    fprintf(stderr, "Unable to fork: %s\n", strerror(errno));
         } else if (pid > 0) {
-	    fprintf(stdout, "Forking into the background (pid: %d)...", pid);
+	    fprintf(stdout, "Forking into the background (pid: %d)...\n", pid);
 	    exit(0);
 	}
 	setsid();
