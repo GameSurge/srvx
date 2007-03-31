@@ -1918,6 +1918,12 @@ dnr_remove_func(struct do_not_register *match, void *extra)
     return 0;
 }
 
+static int
+dnr_count_func(struct do_not_register *match, void *extra)
+{
+    return 0; (void)match; (void)extra;
+}
+
 static MODCMD_FUNC(cmd_dnrsearch)
 {
     struct dnr_search *discrim;
@@ -1939,6 +1945,8 @@ static MODCMD_FUNC(cmd_dnrsearch)
         action = dnr_print_func;
     else if(!irccasecmp(argv[1], "remove"))
         action = dnr_remove_func;
+    else if(!irccasecmp(argv[1], "count"))
+        action = dnr_count_func;
     else
     {
         reply("CSMSG_DNR_BAD_ACTION", argv[1]);
@@ -7669,6 +7677,7 @@ init_chanserv(const char *nick)
     DEFINE_COMMAND(dnrsearch, 3, 0, "template", "noregister", NULL);
     modcmd_register(chanserv_module, "dnrsearch print", NULL, 0, 0, NULL);
     modcmd_register(chanserv_module, "dnrsearch remove", NULL, 0, 0, NULL);
+    modcmd_register(chanserv_module, "dnrsearch count", NULL, 0, 0, NULL);
     DEFINE_COMMAND(move, 1, MODCMD_REQUIRE_AUTHED|MODCMD_REQUIRE_REGCHAN, "template", "register", NULL);
     DEFINE_COMMAND(csuspend, 2, MODCMD_REQUIRE_AUTHED|MODCMD_REQUIRE_REGCHAN, "flags", "+helping", NULL);
     DEFINE_COMMAND(cunsuspend, 1, MODCMD_REQUIRE_AUTHED|MODCMD_REQUIRE_REGCHAN, "flags", "+helping", NULL);

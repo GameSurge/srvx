@@ -192,6 +192,7 @@
 	"Options for the action in $bdnrsearch$b are:",
         "$bPRINT: $b      Display the do-not-register entry.",
         "$bREMOVE:$b      Remove the do-not-register entry.",
+        "$bCOUNT: $b      Count the number of matching do-not-register entries.",
         "$uSee Also:$u dnrsearch, dnrsearch criteria");
 "DNRSEARCH CRITERIA" ("$bDNRSEARCH CRITERIA$b",
         "Options for the criteria in $bdnrsearch$b are:",
