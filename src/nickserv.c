@@ -3089,11 +3089,11 @@ nickserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[])
     discrim = malloc(sizeof(*discrim));
     memset(discrim, 0, sizeof(*discrim));
     discrim->min_level = 0;
-    discrim->max_level = ~0;
+    discrim->max_level = INT_MAX;
     discrim->limit = 50;
     discrim->min_registered = 0;
     discrim->max_registered = INT_MAX;
-    discrim->lastseen = now;
+    discrim->lastseen = LONG_MAX;
     discrim->min_karma = INT_MIN;
     discrim->max_karma = INT_MAX;
 
