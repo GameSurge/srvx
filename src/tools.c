@@ -794,12 +794,14 @@ ParseInterval(const char *interval)
 
     /* process the string, resetting the count if we find a unit character */
     while ((c = *interval++)) {
-	if (isdigit((int)c)) {
-	    partial = partial*10 + c - '0';
-	} else {
-	    seconds += TypeLength(c) * partial;
-	    partial = 0;
-	}
+        if (isdigit((int)c)) {
+            partial = partial*10 + c - '0';
+        } else if (strchr("yMwdhms", c)) {
+            seconds += TypeLength(c) * partial;
+            partial = 0;
+        } else {
+            return 0;
+        }
     }
     /* assume the last chunk is seconds (the normal case) */
     return seconds + partial;

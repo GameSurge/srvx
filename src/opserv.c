@@ -767,18 +767,23 @@ static MODCMD_FUNC(cmd_block)
     struct userNode *target;
     struct gline *gline;
     char *reason;
+    unsigned long duration = 0;
+    unsigned int offset = 2;
 
     target = GetUserH(argv[1]);
     if (!target) {
-	reply("MSG_NICK_UNKNOWN", argv[1]);
-	return 0;
+        reply("MSG_NICK_UNKNOWN", argv[1]);
+        return 0;
     }
     if (IsService(target)) {
-	reply("MSG_SERVICE_IMMUNE", target->nick);
-	return 0;
+        reply("MSG_SERVICE_IMMUNE", target->nick);
+        return 0;
     }
-    reason = (argc > 2) ? unsplit_string(argv+2, argc-2, NULL) : NULL;
-    gline = opserv_block(target, user->handle_info->handle, reason, 0);
+    if(argc > 2 && (duration = ParseInterval(argv[2]))) {
+        offset = 3;
+    }
+    reason = (argc > offset) ? unsplit_string(argv+offset, argc-offset, NULL) : NULL;
+    gline = opserv_block(target, user->handle_info->handle, reason, duration);
     reply("OSMSG_GLINE_ISSUED", gline->target);
     return 1;
 }

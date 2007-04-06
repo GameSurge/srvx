@@ -242,8 +242,8 @@
         "  GSYNC    [${level/gsync}]",
         "  REFRESHG [${level/refreshg}]",
         "  UNGLINE  [${level/ungline}]");
-"BLOCK" ("/msg $O BLOCK <nick> [reason]",
-        "GLINES the host of the specified nick for one hour  If no reason is given, use a default reason.",
+"BLOCK" ("/msg $O BLOCK <nick> [duration] [reason]",
+        "GLINES the host of the specified nick for one hour if no duration is given.  If no reason is given, use a default reason.",
         "$uSee Also:$u gline, ungline");
 "GLINE" ("/msg $O GLINE <user@host> <duration> <reason>",
         "Issues a GLINE (network ban) on the network for the speicified user@host for the specified duration (making the expiration time: net time + duration).",
