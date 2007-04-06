@@ -1361,20 +1361,22 @@ static NICKSERV_FUNC(cmd_handleinfo)
         reply(type);
     }
 
-    if (!hi->notes) {
-        reply("NSMSG_HANDLEINFO_NO_NOTES");
-    } else {
-        struct handle_note *prev, *note;
+    if (oper_has_access(user, cmd->parent->bot, 0, 1) || IsSupport(user)) {
+        if (!hi->notes) {
+            reply("NSMSG_HANDLEINFO_NO_NOTES");
+        } else {
+            struct handle_note *prev, *note;
 
-        WALK_NOTES(hi, prev, note) {
-            char set_time[INTERVALLEN];
-            intervalString(set_time, now - note->set, user->handle_info);
-            if (note->expires) {
-                char exp_time[INTERVALLEN];
-                intervalString(exp_time, note->expires - now, user->handle_info);
-                reply("NSMSG_HANDLEINFO_NOTE_EXPIRES", note->id, set_time, note->setter, exp_time, note->note);
-            } else {
-                reply("NSMSG_HANDLEINFO_NOTE", note->id, set_time, note->setter, note->note);
+            WALK_NOTES(hi, prev, note) {
+                char set_time[INTERVALLEN];
+                intervalString(set_time, now - note->set, user->handle_info);
+                if (note->expires) {
+                    char exp_time[INTERVALLEN];
+                    intervalString(exp_time, note->expires - now, user->handle_info);
+                    reply("NSMSG_HANDLEINFO_NOTE_EXPIRES", note->id, set_time, note->setter, exp_time, note->note);
+                } else {
+                    reply("NSMSG_HANDLEINFO_NOTE", note->id, set_time, note->setter, note->note);
+                }
             }
         }
     }
