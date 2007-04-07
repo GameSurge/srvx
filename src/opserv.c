@@ -266,6 +266,7 @@ static dict_t opserv_hostinfo_dict; /* data is struct opserv_hostinfo* */
 static dict_t opserv_user_alerts; /* data is struct opserv_user_alert* */
 static dict_t opserv_nick_based_alerts; /* data is struct opserv_user_alert* */
 static dict_t opserv_channel_alerts; /* data is struct opserv_user_alert* */
+static dict_t opserv_account_alerts; /* data is struct opserv_user_alert* */
 static struct module *opserv_module;
 static struct log_type *OS_LOG;
 static unsigned int new_user_flood;
@@ -2595,6 +2596,8 @@ opserv_add_user_alert(struct userNode *req, const char *name, opserv_alert_react
         dict_insert(opserv_channel_alerts, name_dup, alert);
     if (alert->discrim->mask_nick)
         dict_insert(opserv_nick_based_alerts, name_dup, alert);
+    if (alert->discrim->accountmask || alert->discrim->authed != -1)
+        dict_insert(opserv_account_alerts, name_dup, alert);
     return alert;
 }
 
@@ -3837,6 +3840,8 @@ opserv_staff_alert(struct userNode *user, UNUSED_ARG(struct handle_info *old_han
         send_channel_notice(opserv_conf.staff_auth_channel, opserv, IDENT_FORMAT" authed to %s account %s", IDENT_DATA(user), type, user->handle_info->handle);
     else
         send_channel_notice(opserv_conf.staff_auth_channel, opserv, "%s [%s@%s] authed to %s account %s", user->nick, user->ident, user->hostname, type, user->handle_info->handle);
+
+    dict_foreach(opserv_account_alerts, alert_check_user, user);
 }
 
 static MODCMD_FUNC(cmd_log)
@@ -3972,10 +3977,11 @@ static MODCMD_FUNC(cmd_delalert)
     for (i=1; i<argc; i++) {
         dict_remove(opserv_nick_based_alerts, argv[i]);
         dict_remove(opserv_channel_alerts, argv[i]);
-	if (dict_remove(opserv_user_alerts, argv[i]))
-	    reply("OSMSG_REMOVED_ALERT", argv[i]);
+        dict_remove(opserv_account_alerts, argv[i]);
+        if (dict_remove(opserv_user_alerts, argv[i]))
+            reply("OSMSG_REMOVED_ALERT", argv[i]);
         else
-	    reply("OSMSG_NO_SUCH_ALERT", argv[i]);
+            reply("OSMSG_NO_SUCH_ALERT", argv[i]);
     }
     return 1;
 }
@@ -4075,6 +4081,8 @@ opserv_db_init(void) {
     dict_set_free_keys(opserv_chan_warn, free);
     dict_set_free_data(opserv_chan_warn, free);
     /* set up opserv_user_alerts */
+    dict_delete(opserv_account_alerts);
+    opserv_account_alerts = dict_new();
     dict_delete(opserv_channel_alerts);
     opserv_channel_alerts = dict_new();
     dict_delete(opserv_nick_based_alerts);
@@ -4105,6 +4113,7 @@ opserv_db_cleanup(void)
     unreg_del_user_func(opserv_user_cleanup);
     dict_delete(opserv_hostinfo_dict);
     dict_delete(opserv_nick_based_alerts);
+    dict_delete(opserv_account_alerts);
     dict_delete(opserv_channel_alerts);
     dict_delete(opserv_user_alerts);
     for (nn=0; nn<ArrayLength(level_strings); ++nn)
