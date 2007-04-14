@@ -91,6 +91,7 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_NEED_CHANNEL", "You must specify a channel for $b%s$b." },
     { "OSMSG_INVALID_IRCMASK", "$b%s$b is an invalid IRC hostmask." },
     { "OSMSG_ADDED_BAN", "I have banned $b%s$b from $b%s$b." },
+    { "OSMSG_NO_GLINE_CMD", "The GLINE command is not bound so you can only block with the default duration." },
     { "OSMSG_GLINE_ISSUED", "G-line issued for $b%s$b." },
     { "OSMSG_GLINE_REMOVED", "G-line removed for $b%s$b." },
     { "OSMSG_GLINE_FORCE_REMOVED", "Unknown/expired G-line removed for $b%s$b." },
@@ -770,6 +771,7 @@ static MODCMD_FUNC(cmd_block)
     char *reason;
     unsigned long duration = 0;
     unsigned int offset = 2;
+    struct svccmd *gline_cmd;
 
     target = GetUserH(argv[1]);
     if (!target) {
@@ -782,6 +784,17 @@ static MODCMD_FUNC(cmd_block)
     }
     if(argc > 2 && (duration = ParseInterval(argv[2]))) {
         offset = 3;
+    }
+    if(duration && duration != opserv_conf.block_gline_duration) {
+        // We require more access when the duration is not the default block duration.
+        gline_cmd = dict_find(cmd->parent->commands, "gline", NULL);
+        if(!gline_cmd)
+        {
+            reply("OSMSG_NO_GLINE_CMD");
+            return 0;
+        }
+        if(!svccmd_can_invoke(user, cmd->parent->bot, gline_cmd, channel, SVCCMD_NOISY))
+            return 0;
     }
     reason = (argc > offset) ? unsplit_string(argv+offset, argc-offset, NULL) : NULL;
     gline = opserv_block(target, user->handle_info->handle, reason, duration);
