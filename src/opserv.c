@@ -92,6 +92,7 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_INVALID_IRCMASK", "$b%s$b is an invalid IRC hostmask." },
     { "OSMSG_ADDED_BAN", "I have banned $b%s$b from $b%s$b." },
     { "OSMSG_NO_GLINE_CMD", "The GLINE command is not bound so you can only block with the default duration." },
+    { "OSMSG_BLOCK_TRUSTED", "$b%s$b is on a trusted ip. If you really want to G-line him, use the GLINE command." },
     { "OSMSG_GLINE_ISSUED", "G-line issued for $b%s$b." },
     { "OSMSG_GLINE_REMOVED", "G-line removed for $b%s$b." },
     { "OSMSG_GLINE_FORCE_REMOVED", "Unknown/expired G-line removed for $b%s$b." },
@@ -327,7 +328,7 @@ typedef struct opservDiscrim {
     time_t min_ts, max_ts;
     unsigned int min_level, max_level, domain_depth, duration, min_clones, min_channels, max_channels;
     unsigned char ip_mask_bits;
-    unsigned int match_opers : 1, option_log : 1;
+    unsigned int match_opers : 1, match_trusted : 1, option_log : 1;
     unsigned int chan_req_modes : 2, chan_no_modes : 2;
     int authed : 2, info_space : 2;
 } *discrim_t;
@@ -780,6 +781,10 @@ static MODCMD_FUNC(cmd_block)
     }
     if (IsService(target)) {
         reply("MSG_SERVICE_IMMUNE", target->nick);
+        return 0;
+    }
+    if (dict_find(opserv_trusted_hosts, irc_ntoa(&target->ip), NULL)) {
+        reply("OSMSG_BLOCK_TRUSTED", target->nick);
         return 0;
     }
     if(argc > 2 && (duration = ParseInterval(argv[2]))) {
@@ -3099,9 +3104,13 @@ opserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[], in
             } else {
                 discrim->min_level = strtoul(cmp, NULL, 0);
             }
-        } else if ((irccasecmp(argv[i], "abuse") == 0)
-                   && (irccasecmp(argv[++i], "opers") == 0)) {
-            discrim->match_opers = 1;
+        } else if (irccasecmp(argv[i], "abuse") == 0) {
+            const char *abuse_what = argv[++i];
+            if (irccasecmp(abuse_what, "opers") == 0) {
+                discrim->match_opers = 1;
+            } else if (irccasecmp(abuse_what, "trusted") == 0) {
+                discrim->match_trusted = 1;
+            }
         } else if (irccasecmp(argv[i], "depth") == 0) {
             discrim->domain_depth = strtoul(argv[++i], NULL, 0);
         } else if (irccasecmp(argv[i], "clones") == 0) {
@@ -3264,11 +3273,17 @@ is_oper_victim(struct userNode *user, struct userNode *target, int match_opers)
 }
 
 static int
+is_trust_victim(struct userNode *target, int match_trusted)
+{
+    return (match_trusted || !dict_find(opserv_trusted_hosts, irc_ntoa(&target->ip), NULL));
+}
+
+static int
 trace_gline_func(struct userNode *match, void *extra)
 {
     struct discrim_and_source *das = extra;
 
-    if (is_oper_victim(das->source, match, das->discrim->match_opers)) {
+    if (is_oper_victim(das->source, match, das->discrim->match_opers) && is_trust_victim(match, das->discrim->match_trusted)) {
         opserv_block(match, das->source->handle_info->handle, das->discrim->reason, das->discrim->duration);
     }
 
@@ -3280,7 +3295,7 @@ trace_kill_func(struct userNode *match, void *extra)
 {
     struct discrim_and_source *das = extra;
 
-    if (is_oper_victim(das->source, match, das->discrim->match_opers)) {
+    if (is_oper_victim(das->source, match, das->discrim->match_opers) && is_trust_victim(match, das->discrim->match_trusted)) {
 	char *reason;
         if (das->discrim->reason) {
             reason = das->discrim->reason;
@@ -3310,7 +3325,7 @@ trace_gag_func(struct userNode *match, void *extra)
 {
     struct discrim_and_source *das = extra;
 
-    if (is_oper_victim(das->source, match, das->discrim->match_opers)) {
+    if (is_oper_victim(das->source, match, das->discrim->match_opers) && is_trust_victim(match, das->discrim->match_trusted)) {
         char *reason, *mask;
         int masksize;
         if (das->discrim->reason) {
@@ -3790,6 +3805,11 @@ alert_check_user(const char *key, void *data, void *extra)
     if ((alert->reaction != REACT_NOTICE)
         && IsOper(user)
         && !alert->discrim->match_opers) {
+        return 0;
+    }
+
+    if ((alert->reaction != REACT_NOTICE)
+        && !is_trust_victim(user, alert->discrim->match_trusted)) {
         return 0;
     }
 
