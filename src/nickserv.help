@@ -86,15 +86,17 @@
 
 "OUNREGISTER" {
         "/services/nickserv/disable_nicks" (
-        "/msg $N OUNREGISTER <nick|*account>",
+        "/msg $N OUNREGISTER <nick|*account> [FORCE]",
         "Un-registers the specified account.",
         "You may use *Account instead of Nick as the name argument; the * makes $N use the name of an account directly (useful if the user is not online).",
+        "Without FORCE only accounts that are inactive and have no special flags can be unregistered.",
         "$uSee Also:$u oregister"
         );
         "!/services/nickserv/disable_nicks" (
-        "/msg $N OUNREGISTER <nick|*account>",
+        "/msg $N OUNREGISTER <nick|*account> [FORCE]",
         "Un-registers the specified account, and any nicks that have been registered to that account.",
         "You may use *Account instead of Nick as the name argument; the * makes $N use the name of an account directly (useful if the user is not online).",
+        "Without FORCE only accounts that are inactive and have no special flags can be unregistered.",
         "$uSee Also:$u oregister, oregnick, ounregnick"
         );
 };

@@ -113,6 +113,10 @@
         "account_expire_delay" "35d";
         // how long until an account with no access to any channels expires?
         "nochan_account_expire_delay" "14d";
+        // how long must an account be inactive so it can be ounregistered without force?
+        "ounregister_inactive" "1M";
+        // which flags on an account require the ounregister to be used with force?
+        "ounregister_flags" "ShgsfnHbu";
         /* "require_qualified" has been removed. It is now
          * integrated into the modcmd command authorization
          * and dispatch mechanism.  "/msg OpServ help modcmd"

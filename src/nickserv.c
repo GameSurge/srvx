@@ -71,6 +71,8 @@
 #define KEY_COOKIE_TIMEOUT "cookie_timeout"
 #define KEY_ACCOUNTS_PER_EMAIL "accounts_per_email"
 #define KEY_EMAIL_SEARCH_LEVEL "email_search_level"
+#define KEY_OUNREGISTER_INACTIVE "ounregister_inactive"
+#define KEY_OUNREGISTER_FLAGS "ounregister_flags"
 
 #define KEY_ID "id"
 #define KEY_PASSWD "passwd"
@@ -252,6 +254,9 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_UNREGNICK_SUCCESS", "Nick $b%s$b has been unregistered." },
     { "NSMSG_UNREGISTER_SUCCESS", "Account $b%s$b has been unregistered." },
     { "NSMSG_UNREGISTER_NICKS_SUCCESS", "Account $b%s$b and all its nicks have been unregistered." },
+    { "NSMSG_UNREGISTER_MUST_FORCE", "Account $b%s$b is not inactive or has special flags set; use FORCE to unregister it." },
+    { "NSMSG_UNREGISTER_CANNOT_FORCE", "Account $b%s$b is not inactive or has special flags set; have an IRCOp use FORCE to unregister it." },
+    { "NSMSG_UNREGISTER_NODELETE", "Account $b%s$b is protected from unregistration." },
     { "NSMSG_HANDLE_STATS", "There are %d nicks registered to your account." },
     { "NSMSG_HANDLE_NONE", "You are not authenticated against any account." },
     { "NSMSG_GLOBAL_STATS", "There are %d accounts and %d nicks registered globally." },
@@ -371,6 +376,8 @@ static struct {
     unsigned long auto_reclaim_delay;
     unsigned char default_maxlogins;
     unsigned char hard_maxlogins;
+    unsigned long ounregister_inactive;
+    unsigned long ounregister_flags;
 } nickserv_conf;
 
 /* We have 2^32 unique account IDs to use. */
@@ -2687,10 +2694,26 @@ static NICKSERV_FUNC(cmd_ounregister)
 {
     struct handle_info *hi;
     char reason[MAXLEN];
+    int force;
 
     NICKSERV_MIN_PARMS(2);
     if (!(hi = get_victim_oper(user, argv[1])))
         return 0;
+
+    if (HANDLE_FLAGGED(hi, NODELETE)) {
+        reply("NSMSG_UNREGISTER_NODELETE", hi->handle);
+        return 0;
+    }
+
+    force = IsOper(user) && (argc > 2) && !irccasecmp(argv[2], "force");
+    if (!force &&
+        ((hi->flags & nickserv_conf.ounregister_flags)
+         || hi->users
+         || (hi->last_quit_host[0] && ((unsigned)(now - hi->lastseen) < nickserv_conf.ounregister_inactive)))) {
+        reply((IsOper(user) ? "NSMSG_UNREGISTER_MUST_FORCE" : "NSMSG_UNREGISTER_CANNOT_FORCE"), hi->handle);
+        return 0;
+    }
+
     snprintf(reason, sizeof(reason), "%s unregistered account %s.", user->handle_info->handle, hi->handle);
     global_message(MESSAGE_RECIPIENT_STAFF, reason);
     nickserv_unregister_handle(hi, user);
@@ -3770,6 +3793,18 @@ nickserv_conf_read(void)
     nickserv_conf.default_maxlogins = str ? strtoul(str, NULL, 0) : 2;
     str = database_get_data(conf_node, "hard_maxlogins", RECDB_QSTRING);
     nickserv_conf.hard_maxlogins = str ? strtoul(str, NULL, 0) : 10;
+    str = database_get_data(conf_node, KEY_OUNREGISTER_INACTIVE, RECDB_QSTRING);
+    nickserv_conf.ounregister_inactive = str ? ParseInterval(str) : 86400*28;
+    str = database_get_data(conf_node, KEY_OUNREGISTER_FLAGS, RECDB_QSTRING);
+    if (!str)
+        str = "ShgsfnHbu";
+    nickserv_conf.ounregister_flags = 0;
+    while(*str) {
+        unsigned int pos = handle_inverse_flags[(unsigned char)*str];
+        str++;
+        if(pos)
+            nickserv_conf.ounregister_flags |= 1 << (pos - 1);
+    }
     if (!nickserv_conf.disable_nicks) {
         str = database_get_data(conf_node, "reclaim_action", RECDB_QSTRING);
         nickserv_conf.reclaim_action = str ? reclaim_action_from_string(str) : RECLAIM_NONE;
