@@ -965,6 +965,8 @@ static CMD_FUNC(cmd_whois)
         irc_numeric(from, RPL_WHOISACCOUNT, "%s %s :is logged in as", who->nick, who->handle_info->handle);
     if (IsHiddenHost(who) && who->handle_info && (IsOper(from) || from == who))
         irc_numeric(from, RPL_WHOISACTUALLY, "%s %s@%s %s :Actual user@host, Actual IP", who->nick, who->ident, who->hostname, irc_ntoa(&who->ip));
+    if (IsLocal(who) && !IsService(who) && (!IsNoIdle(who) || IsOper(from) || from == who))
+        irc_numeric(from, RPL_WHOISIDLE, "%s %ld %ld :seconds idle, signon time", who->nick, now - who->idle_since, who->timestamp);
 
     irc_numeric(from, RPL_ENDOFWHOIS, "%s :End of /WHOIS list", who->nick);
     return 1;
@@ -2107,6 +2109,7 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
     safestrncpy(uNode->numeric, numeric, sizeof(uNode->numeric));
     irc_p10_pton(&uNode->ip, realip);
     uNode->timestamp = timestamp;
+    uNode->idle_since = timestamp;
     modeList_init(&uNode->channels);
     uNode->uplink = uplink;
     if (++uNode->uplink->clients > uNode->uplink->max_clients) {

@@ -116,6 +116,7 @@ struct userNode {
     long modes;                   /* user flags +isw etc... */
 
     time_t timestamp;             /* Time of last nick change */
+    time_t idle_since;
     struct server *uplink;        /* Server that user is connected to */
     struct modeList channels;     /* Vector of channels user is in */
 
