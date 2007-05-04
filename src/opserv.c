@@ -93,6 +93,7 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_ADDED_BAN", "I have banned $b%s$b from $b%s$b." },
     { "OSMSG_NO_GLINE_CMD", "The GLINE command is not bound so you can only block with the default duration." },
     { "OSMSG_BLOCK_TRUSTED", "$b%s$b is on a trusted ip. If you really want to G-line him, use the GLINE command." },
+    { "OSMSG_BLOCK_OPER" , "G-lining $b%s$b (*@%s) would also hit the IRC operator $b%s$b." },
     { "OSMSG_GLINE_ISSUED", "G-line issued for $b%s$b." },
     { "OSMSG_GLINE_REMOVED", "G-line removed for $b%s$b." },
     { "OSMSG_GLINE_FORCE_REMOVED", "Unknown/expired G-line removed for $b%s$b." },
@@ -772,6 +773,7 @@ static MODCMD_FUNC(cmd_block)
     char *reason;
     unsigned long duration = 0;
     unsigned int offset = 2;
+    unsigned int nn;
     struct svccmd *gline_cmd;
 
     target = GetUserH(argv[1]);
@@ -787,6 +789,14 @@ static MODCMD_FUNC(cmd_block)
         reply("OSMSG_BLOCK_TRUSTED", target->nick);
         return 0;
     }
+
+    for(nn = 0; nn < curr_opers.used; nn++) {
+        if(memcmp(&curr_opers.list[nn]->ip, &target->ip, sizeof(irc_in_addr_t)) == 0) {
+            reply("OSMSG_BLOCK_OPER", target->nick, irc_ntoa(&target->ip), curr_opers.list[nn]->nick);
+            return 0;
+        }
+    }
+
     if(argc > 2 && (duration = ParseInterval(argv[2]))) {
         offset = 3;
     }
@@ -3264,12 +3274,26 @@ trace_count_func(UNUSED_ARG(struct userNode *match), UNUSED_ARG(void *extra))
 }
 
 static int
-is_oper_victim(struct userNode *user, struct userNode *target, int match_opers)
+is_oper_victim(struct userNode *user, struct userNode *target, int match_opers, int check_ip)
 {
-    return !(IsService(target)
-             || (!match_opers && IsOper(target))
-             || (target->handle_info
-                 && target->handle_info->opserv_level > user->handle_info->opserv_level));
+    unsigned char is_victim;
+    unsigned int nn;
+
+    is_victim = !(IsService(target)
+                  || (!match_opers && IsOper(target))
+                  || (target->handle_info
+                      && target->handle_info->opserv_level > user->handle_info->opserv_level));
+
+    // If we don't need an ip check or want to hit opers or the the "cheap" check already disqualified the target, we are done.
+    if (!check_ip || match_opers || !is_victim)
+        return is_victim;
+
+    for(nn = 0; nn < curr_opers.used; nn++) {
+        if(memcmp(&curr_opers.list[nn]->ip, &target->ip, sizeof(irc_in_addr_t)) == 0)
+            return 0;
+    }
+
+    return 1;
 }
 
 static int
@@ -3283,7 +3307,7 @@ trace_gline_func(struct userNode *match, void *extra)
 {
     struct discrim_and_source *das = extra;
 
-    if (is_oper_victim(das->source, match, das->discrim->match_opers) && is_trust_victim(match, das->discrim->match_trusted)) {
+    if (is_oper_victim(das->source, match, das->discrim->match_opers, 1) && is_trust_victim(match, das->discrim->match_trusted)) {
         opserv_block(match, das->source->handle_info->handle, das->discrim->reason, das->discrim->duration);
     }
 
@@ -3295,7 +3319,7 @@ trace_kill_func(struct userNode *match, void *extra)
 {
     struct discrim_and_source *das = extra;
 
-    if (is_oper_victim(das->source, match, das->discrim->match_opers) && is_trust_victim(match, das->discrim->match_trusted)) {
+    if (is_oper_victim(das->source, match, das->discrim->match_opers, 0) && is_trust_victim(match, das->discrim->match_trusted)) {
 	char *reason;
         if (das->discrim->reason) {
             reason = das->discrim->reason;
@@ -3325,7 +3349,7 @@ trace_gag_func(struct userNode *match, void *extra)
 {
     struct discrim_and_source *das = extra;
 
-    if (is_oper_victim(das->source, match, das->discrim->match_opers) && is_trust_victim(match, das->discrim->match_trusted)) {
+    if (is_oper_victim(das->source, match, das->discrim->match_opers, 1) && is_trust_victim(match, das->discrim->match_trusted)) {
         char *reason, *mask;
         int masksize;
         if (das->discrim->reason) {
