@@ -251,6 +251,7 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_CHANINFO_MANY_USERS", "%d users (\"/msg $S %s %s users\" for the list)" },
     { "OSMSG_CHANINFO_USER_COUNT", "Users (%d):" },
     { "OSMSG_CSEARCH_CHANNEL_INFO", "%s [%d users] %s %s" },
+    { "OSMSG_TRACE_MAX_CHANNELS", "You may not use the 'channel' criterion more than %d times." },
     { NULL, NULL }
 };
 
@@ -321,8 +322,11 @@ opserv_free_hostinfo(void *data)
     free(ohi);
 }
 
+#define DISCRIM_MAX_CHANS 20
+
 typedef struct opservDiscrim {
-    struct chanNode *channel;
+    struct chanNode *channels[DISCRIM_MAX_CHANS];
+    unsigned int channel_count;
     char *mask_nick, *mask_ident, *mask_host, *mask_info, *server, *reason, *accountmask;
     irc_in_addr_t ip_mask;
     unsigned long limit;
@@ -330,7 +334,7 @@ typedef struct opservDiscrim {
     unsigned int min_level, max_level, domain_depth, duration, min_clones, min_channels, max_channels;
     unsigned char ip_mask_bits;
     unsigned int match_opers : 1, match_trusted : 1, option_log : 1;
-    unsigned int chan_req_modes : 2, chan_no_modes : 2;
+    unsigned int chan_req_modes[DISCRIM_MAX_CHANS], chan_no_modes[DISCRIM_MAX_CHANS];
     int authed : 2, info_space : 2;
 } *discrim_t;
 
@@ -364,8 +368,9 @@ static void
 opserv_free_user_alert(void *data)
 {
     struct opserv_user_alert *alert = data;
-    if (alert->discrim->channel)
-        UnlockChannel(alert->discrim->channel);
+	unsigned int i;
+	for(i = 0; i < alert->discrim->channel_count; i++)
+        UnlockChannel(alert->discrim->channels[i]);
     free(alert->owner);
     free(alert->text_discrim);
     free(alert->split_discrim);
@@ -2618,7 +2623,7 @@ opserv_add_user_alert(struct userNode *req, const char *name, opserv_alert_react
      * max_channels would have to be checked on /part, which we do not
      * yet do, and which seems of questionable value.
      */
-    if (alert->discrim->channel || alert->discrim->min_channels)
+    if (alert->discrim->channel_count || alert->discrim->min_channels)
         dict_insert(opserv_channel_alerts, name_dup, alert);
     if (alert->discrim->mask_nick)
         dict_insert(opserv_nick_based_alerts, name_dup, alert);
@@ -3032,43 +3037,50 @@ opserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[], in
         }
     } else if (irccasecmp(argv[i], "duration") == 0) {
         discrim->duration = ParseInterval(argv[++i]);
-	} else if (irccasecmp(argv[i], "channel") == 0) {
-            for (j=0, i++; ; j++) {
-                switch (argv[i][j]) {
-                case '#':
-                    goto find_channel;
-                case '-':
-                    discrim->chan_no_modes  |= MODE_CHANOP | MODE_VOICE;
-                    break;
-                case '+':
-                    discrim->chan_req_modes |= MODE_VOICE;
-                    discrim->chan_no_modes  |= MODE_CHANOP;
-                    break;
-                case '@':
-                    discrim->chan_req_modes |= MODE_CHANOP;
-                    break;
-                case '\0':
-                    send_message(user, opserv, "MSG_NOT_CHANNEL_NAME");
-                    goto fail;
-                }
+    } else if (irccasecmp(argv[i], "channel") == 0) {
+        if(discrim->channel_count == DISCRIM_MAX_CHANS)
+        {
+            send_message(user, opserv, "OSMSG_TRACE_MAX_CHANNELS", DISCRIM_MAX_CHANS);
+            goto fail;
+        }
+
+        for (j=0, i++; ; j++) {
+            switch (argv[i][j]) {
+            case '#':
+                goto find_channel;
+            case '-':
+                discrim->chan_no_modes[discrim->channel_count]  |= MODE_CHANOP | MODE_VOICE;
+                break;
+            case '+':
+                discrim->chan_req_modes[discrim->channel_count] |= MODE_VOICE;
+                discrim->chan_no_modes[discrim->channel_count]  |= MODE_CHANOP;
+                break;
+            case '@':
+                discrim->chan_req_modes[discrim->channel_count] |= MODE_CHANOP;
+                break;
+            case '\0':
+                send_message(user, opserv, "MSG_NOT_CHANNEL_NAME");
+                goto fail;
             }
-          find_channel:
-            discrim->chan_no_modes &= ~discrim->chan_req_modes;
-	    if (!(discrim->channel = GetChannel(argv[i]+j))) {
-                /* secretly "allow_channel" now means "if a channel name is
-                 * specified, require that it currently exist" */
-                if (allow_channel) {
-                    send_message(user, opserv, "MSG_CHANNEL_UNKNOWN", argv[i]);
-                    goto fail;
-                } else {
-                    discrim->channel = AddChannel(argv[i]+j, now, NULL, NULL);
-                }
-	    }
-            LockChannel(discrim->channel);
-        } else if (irccasecmp(argv[i], "numchannels") == 0) {
-            discrim->min_channels = discrim->max_channels = strtoul(argv[++i], NULL, 10);
-	} else if (irccasecmp(argv[i], "limit") == 0) {
-	    discrim->limit = strtoul(argv[++i], NULL, 10);
+        }
+        find_channel:
+        discrim->chan_no_modes[discrim->channel_count] &= ~discrim->chan_req_modes[discrim->channel_count];
+        if (!(discrim->channels[discrim->channel_count] = GetChannel(argv[i]+j))) {
+            /* secretly "allow_channel" now means "if a channel name is
+             * specified, require that it currently exist" */
+            if (allow_channel) {
+                send_message(user, opserv, "MSG_CHANNEL_UNKNOWN", argv[i]);
+                goto fail;
+            } else {
+                discrim->channels[discrim->channel_count] = AddChannel(argv[i]+j, now, NULL, NULL);
+            }
+        }
+        LockChannel(discrim->channels[discrim->channel_count]);
+        discrim->channel_count++;
+    } else if (irccasecmp(argv[i], "numchannels") == 0) {
+        discrim->min_channels = discrim->max_channels = strtoul(argv[++i], NULL, 10);
+    } else if (irccasecmp(argv[i], "limit") == 0) {
+        discrim->limit = strtoul(argv[++i], NULL, 10);
         } else if (irccasecmp(argv[i], "reason") == 0) {
             discrim->reason = strdup(unsplit_string(argv+i+1, argc-i-1, NULL));
             i = argc;
@@ -3150,7 +3162,7 @@ opserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[], in
 static int
 discrim_match(discrim_t discrim, struct userNode *user)
 {
-    unsigned int access;
+    unsigned int access, i;
 
     if ((user->timestamp < discrim->min_ts)
         || (user->timestamp > discrim->max_ts)
@@ -3169,8 +3181,9 @@ discrim_match(discrim_t discrim, struct userNode *user)
         || (discrim->ip_mask_bits && !irc_check_mask(&user->ip, &discrim->ip_mask, discrim->ip_mask_bits))
         )
         return 0;
-    if (discrim->channel && !GetUserMode(discrim->channel, user))
-        return 0;
+	for(i = 0; i < discrim->channel_count; i++)
+		if (!GetUserMode(discrim->channels[i], user))
+			return 0;
     access = user->handle_info ? user->handle_info->opserv_level : 0;
     if ((access < discrim->min_level)
         || (access > discrim->max_level)) {
@@ -3187,23 +3200,39 @@ discrim_match(discrim_t discrim, struct userNode *user)
 static unsigned int
 opserv_discrim_search(discrim_t discrim, discrim_search_func dsf, void *data)
 {
-    unsigned int nn, count;
+    unsigned int nn, count, match;
     struct userList matched;
 
     userList_init(&matched);
     /* Try most optimized search methods first */
-    if (discrim->channel) {
-        for (nn=0;
-                (nn < discrim->channel->members.used)
-                && (matched.used < discrim->limit);
-                nn++) {
-            struct modeNode *mn = discrim->channel->members.list[nn];
-            if (((mn->modes & discrim->chan_req_modes) != discrim->chan_req_modes)
-                    || ((mn->modes & discrim->chan_no_modes) != 0)) {
+    if (discrim->channel_count)
+    {
+        for (nn=0; (nn < discrim->channels[0]->members.used)
+             && (matched.used < discrim->limit);
+             nn++) {
+            struct modeNode *mn = discrim->channels[0]->members.list[nn];
+
+            if (((mn->modes & discrim->chan_req_modes[0]) != discrim->chan_req_modes[0])
+               || ((mn->modes & discrim->chan_no_modes[0]) != 0)) {
                 continue;
             }
-            if (discrim_match(discrim, mn->user)) {
-                userList_append(&matched, mn->user);
+
+            if ((match = discrim_match(discrim, mn->user)))
+            {
+                unsigned int i;
+
+                for (i = 1; i < discrim->channel_count; i++) {
+                    struct modeNode *mn2 = GetUserMode(discrim->channels[i], mn->user);
+
+                    if (((mn2->modes & discrim->chan_req_modes[i]) != discrim->chan_req_modes[i])
+                        || ((mn2->modes & discrim->chan_no_modes[i]) != 0)) {
+                        match = 0;
+                        break;
+                    }
+                }
+
+                if (match)
+                    userList_append(&matched, mn->user);
             }
         }
     } else if (discrim->ip_mask_bits == 128) {
@@ -3437,7 +3466,7 @@ static MODCMD_FUNC(cmd_trace)
 {
     struct discrim_and_source das;
     discrim_search_func action;
-    unsigned int matches;
+    unsigned int matches, i;
     struct svccmd *subcmd;
     char buf[MAXLEN];
 
@@ -3499,8 +3528,8 @@ static MODCMD_FUNC(cmd_trace)
     else
 	reply("MSG_NO_MATCHES");
 
-    if (das.discrim->channel)
-        UnlockChannel(das.discrim->channel);
+	for (i = 0; i < das.discrim->channel_count; i++)
+        UnlockChannel(das.discrim->channels[i]);
     free(das.discrim->reason);
     free(das.discrim);
     dict_delete(das.dict);
