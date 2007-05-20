@@ -950,10 +950,13 @@ static MODCMD_FUNC(cmd_join)
 {
     struct userNode *bot = cmd->parent->bot;
 
-    if (!IsChannelName(argv[1])) {
-        reply("MSG_NOT_CHANNEL_NAME");
-        return 0;
-    } else if (!(channel = GetChannel(argv[1]))) {
+    if (!channel) {
+        if((argc < 2) || !IsChannelName(argv[1]))
+        {
+            reply("MSG_NOT_CHANNEL_NAME");
+            return 0;
+        }
+
         channel = AddChannel(argv[1], now, NULL, NULL);
         AddChannelUser(bot, channel)->modes |= MODE_CHANOP;
     } else if (GetUserMode(channel, bot)) {
@@ -967,6 +970,7 @@ static MODCMD_FUNC(cmd_join)
         change.args[0].u.member = AddChannelUser(bot, channel);
         modcmd_chanmode_announce(&change);
     }
+
     irc_fetchtopic(bot, channel->name);
     reply("OSMSG_JOIN_DONE", channel->name);
     return 1;
@@ -1116,19 +1120,13 @@ static MODCMD_FUNC(cmd_part)
 {
     char *reason;
 
-    if (!IsChannelName(argv[1])) {
-        reply("MSG_NOT_CHANNEL_NAME");
+    if (!GetUserMode(channel, cmd->parent->bot)) {
+        reply("OSMSG_NOT_ON_CHANNEL", cmd->parent->bot->nick, channel->name);
         return 0;
     }
-    if ((channel = GetChannel(argv[1]))) {
-        if (!GetUserMode(channel, cmd->parent->bot)) {
-            reply("OSMSG_NOT_ON_CHANNEL", cmd->parent->bot->nick, channel->name);
-            return 0;
-        }
-        reason = (argc < 3) ? "Leaving." : unsplit_string(argv+2, argc-2, NULL);
-        reply("OSMSG_LEAVING", channel->name);
-        DelChannelUser(cmd->parent->bot, channel, reason, 0);
-    }
+    reason = (argc < 3) ? "Leaving." : unsplit_string(argv+2, argc-2, NULL);
+    reply("OSMSG_LEAVING", channel->name);
+    DelChannelUser(cmd->parent->bot, channel, reason, 0);
     return 1;
 }
 
@@ -4229,7 +4227,7 @@ init_opserv(const char *nick)
     opserv_define_func("GTRACE PRINT", NULL, 0, 0, 0);
     opserv_define_func("INVITE", cmd_invite, 100, 2, 0);
     opserv_define_func("INVITEME", cmd_inviteme, 100, 0, 0);
-    opserv_define_func("JOIN", cmd_join, 601, 0, 2);
+    opserv_define_func("JOIN", cmd_join, 601, 1, 0);
     opserv_define_func("JUMP", cmd_jump, 900, 0, 2);
     opserv_define_func("JUPE", cmd_jupe, 900, 0, 4);
     opserv_define_func("KICK", cmd_kick, 100, 2, 2);
@@ -4240,7 +4238,7 @@ init_opserv(const char *nick)
     opserv_define_func("MODE", cmd_mode, 100, 2, 2);
     opserv_define_func("OP", cmd_op, 100, 2, 2);
     opserv_define_func("OPALL", cmd_opall, 400, 2, 0);
-    opserv_define_func("PART", cmd_part, 601, 0, 2);
+    opserv_define_func("PART", cmd_part, 601, 2, 0);
     opserv_define_func("QUERY", cmd_query, 0, 0, 0);
     opserv_define_func("RAW", cmd_raw, 999, 0, 2);
     opserv_define_func("RECONNECT", cmd_reconnect, 900, 0, 0);
