@@ -2786,7 +2786,13 @@ static NICKSERV_FUNC(cmd_addnote)
     hi = get_victim_oper(user, argv[1]);
     if (!hi)
         return 0;
-    duration = ParseInterval(argv[2]);
+    if(!strcmp(argv[2], "0"))
+        duration = 0;
+    else if(!(duration = ParseInterval(argv[2])))
+    {
+        reply("MSG_INVALID_DURATION", argv[2]);
+        return 0;
+    }
     if (duration > 2*365*86400) {
         reply("NSMSG_EXCESSIVE_DURATION", argv[2]);
         return 0;
