@@ -98,12 +98,12 @@ ioset_init(void)
 
 #if WITH_IOSET_KQUEUE
     if (!engine && io_engine_kqueue.init())
-	engine = &io_engine_kqueue;
+        engine = &io_engine_kqueue;
 #endif
 
 #if WITH_IOSET_EPOLL
     if (!engine && io_engine_epoll.init())
-	engine = &io_engine_epoll;
+        engine = &io_engine_epoll;
 #endif
 
 #if WITH_IOSET_WIN32
@@ -114,9 +114,9 @@ ioset_init(void)
     if (engine) {
         /* we found one that works */
     } else if (io_engine_select.init())
-	engine = &io_engine_select;
+        engine = &io_engine_select;
     else
-	log_module(MAIN_LOG, LOG_FATAL, "No usable I/O engine found.");
+        log_module(MAIN_LOG, LOG_FATAL, "No usable I/O engine found.");
     log_module(MAIN_LOG, LOG_DEBUG, "Using %s I/O engine.", engine->name);
 }
 
@@ -166,17 +166,17 @@ struct io_fd *ioset_listen(struct sockaddr *local, unsigned int sa_size, void *d
 
     fd = socket(local ? local->sa_family : PF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
-	log_module(MAIN_LOG, LOG_ERROR, "Unable to create listening socket: %s", strerror(errno));
-	return NULL;
+        log_module(MAIN_LOG, LOG_ERROR, "Unable to create listening socket: %s", strerror(errno));
+        return NULL;
     }
 
     if (local && sa_size) {
-	res = bind(fd, local, sa_size);
-	if (res < 0) {
-	    log_module(MAIN_LOG, LOG_ERROR, "Unable to bind listening socket %d: %s", fd, strerror(errno));
-	    close(fd);
-	    return NULL;
-	}
+        res = bind(fd, local, sa_size);
+        if (res < 0) {
+            log_module(MAIN_LOG, LOG_ERROR, "Unable to bind listening socket %d: %s", fd, strerror(errno));
+            close(fd);
+            return NULL;
+        }
 
         opt = 1;
         res = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
@@ -187,15 +187,15 @@ struct io_fd *ioset_listen(struct sockaddr *local, unsigned int sa_size, void *d
 
     res = listen(fd, 1);
     if (res < 0) {
-	log_module(MAIN_LOG, LOG_ERROR, "Unable to listen on socket %d: %s", fd, strerror(errno));
-	close(fd);
-	return NULL;
+        log_module(MAIN_LOG, LOG_ERROR, "Unable to listen on socket %d: %s", fd, strerror(errno));
+        close(fd);
+        return NULL;
     }
 
     io_fd = ioset_add(fd);
     if (!io_fd) {
-	close(fd);
-	return NULL;
+        close(fd);
+        return NULL;
     }
     io_fd->state = IO_LISTENING;
     io_fd->data = data;
@@ -309,7 +309,7 @@ ioset_try_write(struct io_fd *fd) {
 void
 ioset_close(struct io_fd *fdp, int os_close) {
     if (!fdp)
-	return;
+        return;
     if (active_fd == fdp)
         active_fd = NULL;
     if (fdp->destroy_cb)
@@ -331,7 +331,7 @@ ioset_close(struct io_fd *fdp, int os_close) {
     if (fdp->send.get != fdp->send.put && (os_close & 2)) {
         int flags;
 
-	flags = fcntl(fdp->fd, F_GETFL);
+        flags = fcntl(fdp->fd, F_GETFL);
         fcntl(fdp->fd, F_SETFL, flags&~O_NONBLOCK);
         ioset_try_write(fdp);
         /* it may need to send the beginning of the buffer now.. */
@@ -356,8 +356,8 @@ ioset_accept(struct io_fd *listener)
 
     fd = accept(listener->fd, NULL, 0);
     if (fd < 0) {
-	log_module(MAIN_LOG, LOG_ERROR, "Unable to accept new connection on listener %d: %s", listener->fd, strerror(errno));
-	return;
+        log_module(MAIN_LOG, LOG_ERROR, "Unable to accept new connection on listener %d: %s", listener->fd, strerror(errno));
+        return;
     }
 
     new_fd = ioset_add(fd);
@@ -485,7 +485,7 @@ void
 ioset_events(struct io_fd *fd, int readable, int writable)
 {
     if (!fd || (!readable && !writable))
-	return;
+        return;
     active_fd = fd;
     switch (fd->state) {
     case IO_CLOSED:
@@ -548,8 +548,8 @@ ioset_run(void) {
             timeout.tv_sec = wakey - now;
         timeout.tv_usec = 0;
 
-	if (engine->loop(&timeout))
-	    continue;
+        if (engine->loop(&timeout))
+            continue;
 
         /* Call any timeq events we need to call. */
         timeq_run();

@@ -172,32 +172,32 @@ int main(int argc, char *argv[])
     sigaction(SIGCHLD, &sv, NULL);
 
     if (argc > 1) { /* parse command line, if any */
-	int c;
-	struct option options[] =
-	{
-	    {"config", 1, 0, 'c'},
+        int c;
+        struct option options[] =
+        {
+            {"config", 1, 0, 'c'},
             {"debug", 0, 0, 'd'},
-	    {"foreground", 0, 0, 'f'},
-	    {"help", 0, 0, 'h'},
-	    {"check", 0, 0, 'k'},
+            {"foreground", 0, 0, 'f'},
+            {"help", 0, 0, 'h'},
+            {"check", 0, 0, 'k'},
             {"replay", 1, 0, 'r'},
-	    {"version", 0, 0, 'v'},
-	    {"verbose", 0, 0, 'V'},
-	    {0, 0, 0, 0}
-	};
+            {"version", 0, 0, 'v'},
+            {"verbose", 0, 0, 'V'},
+            {0, 0, 0, 0}
+        };
 
-	while ((c = getopt_long(argc, argv, "c:kr:dfvVh", options, NULL)) != -1) {
-	    switch(c) {
-	    case 'c':
-		services_config = optarg;
-		break;
-	    case 'k':
-		if (conf_read(services_config)) {
-		    printf("%s appears to be a valid configuration file.\n", services_config);
-		} else {
-		    printf("%s is an invalid configuration file.\n", services_config);
-		}
-		exit(0);
+        while ((c = getopt_long(argc, argv, "c:kr:dfvVh", options, NULL)) != -1) {
+            switch(c) {
+            case 'c':
+                services_config = optarg;
+                break;
+            case 'k':
+                if (conf_read(services_config)) {
+                    printf("%s appears to be a valid configuration file.\n", services_config);
+                } else {
+                    printf("%s is an invalid configuration file.\n", services_config);
+                }
+                exit(0);
             case 'r':
                 replay_file = fopen(optarg, "r");
                 if (!replay_file) {
@@ -209,19 +209,19 @@ int main(int argc, char *argv[])
             case 'd':
                 debug = 1;
                 break;
-	    case 'f':
-		daemon = 0;
-		break;
-	    case 'v':
-		version();
-		license();
-		exit(0);
-	    case 'h':
-	    default:
-		usage(argv[0]);
-		exit(0);
-	    }
-	}
+            case 'f':
+                daemon = 0;
+                break;
+            case 'v':
+                version();
+                license();
+                exit(0);
+            case 'h':
+            default:
+                usage(argv[0]);
+                exit(0);
+            }
+        }
     }
 
     version();
@@ -238,31 +238,31 @@ int main(int argc, char *argv[])
 
     fprintf(stdout, "Initializing daemon...\n");
     if (!conf_read(services_config)) {
-	fprintf(stderr, "Unable to read %s.\n", services_config);
-	exit(1);
+        fprintf(stderr, "Unable to read %s.\n", services_config);
+        exit(1);
     }
 
     conf_register_reload(uplink_compile);
 
     if (daemon) {
-	/* Attempt to fork into the background if daemon mode is on. */
-	pid = fork();
-	if (pid < 0) {
-	    fprintf(stderr, "Unable to fork: %s\n", strerror(errno));
+        /* Attempt to fork into the background if daemon mode is on. */
+        pid = fork();
+        if (pid < 0) {
+            fprintf(stderr, "Unable to fork: %s\n", strerror(errno));
         } else if (pid > 0) {
-	    fprintf(stdout, "Forking into the background (pid: %d)...\n", pid);
-	    exit(0);
-	}
-	setsid();
+            fprintf(stdout, "Forking into the background (pid: %d)...\n", pid);
+            exit(0);
+        }
+        setsid();
     }
 
     file_out = fopen(PID_FILE, "w");
     if (file_out == NULL) {
-	/* Create the main process' pid file */
-	fprintf(stderr, "Unable to create PID file: %s", strerror(errno));
+        /* Create the main process' pid file */
+        fprintf(stderr, "Unable to create PID file: %s", strerror(errno));
     } else {
-	fprintf(file_out, "%i\n", (int)getpid());
-	fclose(file_out);
+        fprintf(file_out, "%i\n", (int)getpid());
+        fclose(file_out);
     }
 
     if (daemon) {

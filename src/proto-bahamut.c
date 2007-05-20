@@ -430,9 +430,9 @@ void
 irc_svsmode(struct userNode *target, char *modes, unsigned long stamp) {
     extern struct userNode *nickserv;
     if (stamp) {
-	putsock(":%s SVSMODE %s "FMT_TIME_T" %s %lu", nickserv->nick, target->nick, target->timestamp, modes, stamp);
+        putsock(":%s SVSMODE %s "FMT_TIME_T" %s %lu", nickserv->nick, target->nick, target->timestamp, modes, stamp);
     } else {
-	putsock(":%s SVSMODE %s "FMT_TIME_T" %s", nickserv->nick, target->nick, target->timestamp, modes);
+        putsock(":%s SVSMODE %s "FMT_TIME_T" %s", nickserv->nick, target->nick, target->timestamp, modes);
     }
 }
 
@@ -550,47 +550,47 @@ static void
 parse_foreach(char *target_list, foreach_chanfunc cf, foreach_nonchan nc, foreach_userfunc uf, foreach_nonuser nu, void *data) {
     char *j, old;
     do {
-	j = target_list;
-	while (*j != 0 && *j != ',') j++;
-	old = *j;
+        j = target_list;
+        while (*j != 0 && *j != ',') j++;
+        old = *j;
         *j = 0;
-	if (IsChannelName(target_list)) {
-	    struct chanNode *chan = GetChannel(target_list);
+        if (IsChannelName(target_list)) {
+            struct chanNode *chan = GetChannel(target_list);
             if (chan) {
                 if (cf) cf(chan, data);
             } else {
                 if (nc) nc(target_list, data);
             }
-	} else {
-	    struct userNode *user;
+        } else {
+            struct userNode *user;
             struct privmsg_desc *pd = data;
 
             pd->is_qualified = 0;
             if (*target_list == '@') {
                 user = NULL;
             } else if (strchr(target_list, '@')) {
-		struct server *server;
+                struct server *server;
 
                 pd->is_qualified = 1;
-		user = GetUserH(strtok(target_list, "@"));
-		server = GetServerH(strtok(NULL, "@"));
+                user = GetUserH(strtok(target_list, "@"));
+                server = GetServerH(strtok(NULL, "@"));
 
-		if (user && (user->uplink != server)) {
-		    /* Don't attempt to index into any arrays
-		       using a user's numeric on another server. */
-		    user = NULL;
-		}
-	    } else {
-		user = GetUserH(target_list);
-	    }
+                if (user && (user->uplink != server)) {
+                    /* Don't attempt to index into any arrays
+                       using a user's numeric on another server. */
+                    user = NULL;
+                }
+            } else {
+                user = GetUserH(target_list);
+            }
 
             if (user) {
                 if (uf) uf(user, data);
             } else {
                 if (nu) nu(target_list, data);
             }
-	}
-	target_list = j+1;
+        }
+        target_list = j+1;
     } while (old == ',');
 }
 
@@ -958,10 +958,10 @@ static CMD_FUNC(cmd_pong)
 {
     if (argc < 3) return 0;
     if (!strcmp(argv[2], self->name)) {
-	timeq_del(0, timed_send_ping, 0, TIMEQ_IGNORE_WHEN|TIMEQ_IGNORE_DATA);
-	timeq_del(0, timed_ping_timeout, 0, TIMEQ_IGNORE_WHEN|TIMEQ_IGNORE_DATA);
-	timeq_add(now + ping_freq, timed_send_ping, 0);
-	received_ping();
+        timeq_del(0, timed_send_ping, 0, TIMEQ_IGNORE_WHEN|TIMEQ_IGNORE_DATA);
+        timeq_del(0, timed_ping_timeout, 0, TIMEQ_IGNORE_WHEN|TIMEQ_IGNORE_DATA);
+        timeq_add(now + ping_freq, timed_send_ping, 0);
+        received_ping();
     }
     return 1;
 }
@@ -1138,7 +1138,7 @@ int parse_line(char *line, int recursive) {
         res = 0;
     }
     if (!res) {
-	log_module(MAIN_LOG, LOG_ERROR, "PARSE ERROR on line: %s", unsplit_string(argv, argc, NULL));
+        log_module(MAIN_LOG, LOG_ERROR, "PARSE ERROR on line: %s", unsplit_string(argv, argc, NULL));
     } else if (!recursive) {
         unsigned int i;
         for (i=0; i<dead_users.used; i++) {
@@ -1211,13 +1211,13 @@ void
 reg_oper_func(oper_func_t handler)
 {
     if (of_used == of_size) {
-	if (of_size) {
-	    of_size <<= 1;
-	    of_list = realloc(of_list, of_size*sizeof(oper_func_t));
-	} else {
-	    of_size = 8;
-	    of_list = malloc(of_size*sizeof(oper_func_t));
-	}
+        if (of_size) {
+            of_size <<= 1;
+            of_list = realloc(of_list, of_size*sizeof(oper_func_t));
+        } else {
+            of_size = 8;
+            of_list = malloc(of_size*sizeof(oper_func_t));
+        }
     }
     of_list[of_used++] = handler;
 }
@@ -1229,7 +1229,7 @@ call_oper_funcs(struct userNode *user)
     if (IsLocal(user)) return;
     for (n=0; n<of_used; n++)
     {
-	of_list[n](user);
+        of_list[n](user);
     }
 }
 
@@ -1239,28 +1239,28 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
     if (!user || !mode_change) return;
     while (1) {
 #define do_user_mode(FLAG) do { if (add) user->modes |= FLAG; else user->modes &= ~FLAG; } while (0)
-	switch (*mode_change++) {
-	case 0: return;
-	case '+': add = 1; break;
-	case '-': add = 0; break;
-	case 'o':
-	    do_user_mode(FLAGS_OPER);
-	    if (add) {
-		userList_append(&curr_opers, user);
-		call_oper_funcs(user);
-	    } else {
-		userList_remove(&curr_opers, user);
-	    }
-	    break;
-	case 'i': do_user_mode(FLAGS_INVISIBLE);
-	    if (add) invis_clients++; else invis_clients--;
-	    break;
-	case 'w': do_user_mode(FLAGS_WALLOP); break;
-	case 'd': do_user_mode(FLAGS_DEAF); break;
-	case 'r': do_user_mode(FLAGS_REGNICK); break;
-	case 'k': do_user_mode(FLAGS_SERVICE); break;
-	case 'g': do_user_mode(FLAGS_GLOBAL); break;
-	}
+        switch (*mode_change++) {
+        case 0: return;
+        case '+': add = 1; break;
+        case '-': add = 0; break;
+        case 'o':
+            do_user_mode(FLAGS_OPER);
+            if (add) {
+                userList_append(&curr_opers, user);
+                call_oper_funcs(user);
+            } else {
+                userList_remove(&curr_opers, user);
+            }
+            break;
+        case 'i': do_user_mode(FLAGS_INVISIBLE);
+            if (add) invis_clients++; else invis_clients--;
+            break;
+        case 'w': do_user_mode(FLAGS_WALLOP); break;
+        case 'd': do_user_mode(FLAGS_DEAF); break;
+        case 'r': do_user_mode(FLAGS_REGNICK); break;
+        case 'k': do_user_mode(FLAGS_SERVICE); break;
+        case 'g': do_user_mode(FLAGS_GLOBAL); break;
+        }
 #undef do_user_mode
     }
 }
@@ -1296,14 +1296,14 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
         case 'p': do_chan_mode(MODE_PRIVATE); break;
         case 's': do_chan_mode(MODE_SECRET); break;
         case 't': do_chan_mode(MODE_TOPICLIMIT); break;
-	case 'r':
-	    if (!(flags & MCP_REGISTERED)) {
-	     do_chan_mode(MODE_REGISTERED);
-	    } else {
-	     mod_chanmode_free(change);
-	     return NULL;
-	    }
-	    break;
+        case 'r':
+            if (!(flags & MCP_REGISTERED)) {
+             do_chan_mode(MODE_REGISTERED);
+            } else {
+             mod_chanmode_free(change);
+             return NULL;
+            }
+            break;
 #undef do_chan_mode
         case 'l':
             if (add) {

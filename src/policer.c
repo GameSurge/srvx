@@ -21,7 +21,7 @@
 #include "common.h"
 #include "policer.h"
 
-/* This policer uses the "leaky bucket" (GCRA) algorithm. */ 
+/* This policer uses the "leaky bucket" (GCRA) algorithm. */
 
 struct policer_params {
     double bucket_size;
@@ -41,11 +41,11 @@ int
 policer_params_set(struct policer_params *params, const char *param, const char *value)
 {
     if (!irccasecmp(param, "size")) {
-	params->bucket_size = strtod(value, NULL);
+        params->bucket_size = strtod(value, NULL);
     } else if (!irccasecmp(param, "drain-rate")) {
-	params->drain_rate = strtod(value, NULL);
+        params->drain_rate = strtod(value, NULL);
     } else {
-	return 0;
+        return 0;
     }
     return 1;
 }

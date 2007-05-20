@@ -38,7 +38,7 @@ extern struct tm *localtime_r(const time_t *clock, struct tm *res);
 #define false 0
 #endif
 
-#define ArrayLength(x)		(sizeof(x)/sizeof(x[0]))
+#define ArrayLength(x)      (sizeof(x)/sizeof(x[0]))
 #define safestrncpy(dest, src, len) do { char *d = (dest); const char *s = (src); size_t l = strlen(s)+1;  if ((len) < l) l = (len); memmove(d, s, l); d[l-1] = 0; } while (0)
 
 #ifdef __GNUC__
@@ -217,11 +217,11 @@ int STRUCTNAME##_remove(struct STRUCTNAME *list, ITEMTYPE new_item) {\
     unsigned int n, found;\
     verify(list->list);\
     for (found=n=0; n<list->used; n++) {\
-	if (list->list[n] == new_item) {\
-	    memmove(list->list+n, list->list+n+1, (list->used-n-1)*sizeof(list->list[n]));\
-	    found = 1;\
-	    list->used--;\
-	}\
+        if (list->list[n] == new_item) {\
+            memmove(list->list+n, list->list+n+1, (list->used-n-1)*sizeof(list->list[n]));\
+            found = 1;\
+            list->used--;\
+        }\
     }\
     return found;\
 }\
@@ -235,7 +235,7 @@ void STRUCTNAME##_clean(struct STRUCTNAME *list) {\
  * minutes, and 10 seconds" (27 characters).  Other languages will
  * vary, so there's plenty of leeway.
  */
-#define INTERVALLEN	50
+#define INTERVALLEN 50
 
 struct handle_info;
 char *intervalString(char *output, time_t interval, struct handle_info *hi);

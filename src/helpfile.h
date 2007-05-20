@@ -29,8 +29,8 @@ struct string_list;
 
 extern struct userNode *message_dest; /* message destination; useful in expansion callbacks */
 
-#define MIN_LINE_SIZE		40
-#define MAX_LINE_SIZE		450
+#define MIN_LINE_SIZE       40
+#define MAX_LINE_SIZE       450
 
 #define TABLE_REPEAT_HEADERS 0x0001 /* repeat the headers for each columnset? */
 #define TABLE_PAD_LEFT       0x0002 /* pad cells on the left? */

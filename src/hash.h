@@ -25,42 +25,42 @@
 #include "dict.h"
 #include "policer.h"
 
-#define MODE_CHANOP		0x0001 /* +o USER */
-#define MODE_VOICE		0x0002 /* +v USER */
-#define MODE_PRIVATE		0x0004 /* +p */
-#define MODE_SECRET		0x0008 /* +s */
-#define MODE_MODERATED		0x0010 /* +m */
-#define MODE_TOPICLIMIT		0x0020 /* +t */
-#define MODE_INVITEONLY		0x0040 /* +i */
-#define MODE_NOPRIVMSGS		0x0080 /* +n */
-#define MODE_KEY		0x0100 /* +k KEY */
-#define MODE_BAN		0x0200 /* +b BAN */
-#define MODE_LIMIT		0x0400 /* +l LIMIT */
-#define MODE_DELAYJOINS         0x0800 /* +D */
-#define MODE_REGONLY            0x1000 /* ircu +r, Bahamut +R */
-#define MODE_NOCOLORS           0x2000 /* +c */
-#define MODE_NOCTCPS            0x4000 /* +C */
-#define MODE_REGISTERED         0x8000 /* Bahamut +r */
-#define MODE_APASS		0x10000 /* +A adminpass */
-#define MODE_UPASS		0x20000 /* +U userpass */
-#define MODE_REMOVE             0x80000000
+#define MODE_CHANOP         0x0001 /* +o USER */
+#define MODE_VOICE          0x0002 /* +v USER */
+#define MODE_PRIVATE        0x0004 /* +p */
+#define MODE_SECRET         0x0008 /* +s */
+#define MODE_MODERATED      0x0010 /* +m */
+#define MODE_TOPICLIMIT     0x0020 /* +t */
+#define MODE_INVITEONLY     0x0040 /* +i */
+#define MODE_NOPRIVMSGS     0x0080 /* +n */
+#define MODE_KEY            0x0100 /* +k KEY */
+#define MODE_BAN            0x0200 /* +b BAN */
+#define MODE_LIMIT          0x0400 /* +l LIMIT */
+#define MODE_DELAYJOINS     0x0800 /* +D */
+#define MODE_REGONLY        0x1000 /* ircu +r, Bahamut +R */
+#define MODE_NOCOLORS       0x2000 /* +c */
+#define MODE_NOCTCPS        0x4000 /* +C */
+#define MODE_REGISTERED     0x8000 /* Bahamut +r */
+#define MODE_APASS          0x10000 /* +A adminpass */
+#define MODE_UPASS          0x20000 /* +U userpass */
+#define MODE_REMOVE         0x80000000
 
-#define FLAGS_OPER		0x0001 /* global operator +o */
-#define FLAGS_INVISIBLE		0x0004 /* invisible +i */
-#define FLAGS_WALLOP		0x0008 /* receives wallops +w */
-#define FLAGS_DEAF		0x0020 /* deaf +d */
-#define FLAGS_SERVICE		0x0040 /* cannot be kicked, killed or deoped +k */
-#define FLAGS_GLOBAL		0x0080 /* receives global messages +g */
-#define FLAGS_NOCHAN		0x0100 /* hide channels in whois +n */
-#define FLAGS_PERSISTENT	0x0200 /* for reserved nicks, this isn't just one-shot */
-#define FLAGS_GAGGED		0x0400 /* for gagged users */
-#define FLAGS_AWAY		0x0800 /* for away users */
-#define FLAGS_STAMPED           0x1000 /* for users who have been stamped */
-#define FLAGS_HIDDEN_HOST       0x2000 /* user's host is masked by their account */
-#define FLAGS_REGNICK           0x4000 /* user owns their current nick */
-#define FLAGS_REGISTERING       0x8000 /* user has issued account register command, is waiting for email cookie */
-#define FLAGS_DUMMY             0x10000 /* user is not announced to other servers */
-#define FLAGS_NOIDLE            0x20000 /* hide idle time in whois +I */
+#define FLAGS_OPER          0x0001 /* global operator +o */
+#define FLAGS_INVISIBLE     0x0004 /* invisible +i */
+#define FLAGS_WALLOP        0x0008 /* receives wallops +w */
+#define FLAGS_DEAF          0x0020 /* deaf +d */
+#define FLAGS_SERVICE       0x0040 /* cannot be kicked, killed or deoped +k */
+#define FLAGS_GLOBAL        0x0080 /* receives global messages +g */
+#define FLAGS_NOCHAN        0x0100 /* hide channels in whois +n */
+#define FLAGS_PERSISTENT    0x0200 /* for reserved nicks, this isn't just one-shot */
+#define FLAGS_GAGGED        0x0400 /* for gagged users */
+#define FLAGS_AWAY          0x0800 /* for away users */
+#define FLAGS_STAMPED       0x1000 /* for users who have been stamped */
+#define FLAGS_HIDDEN_HOST   0x2000 /* user's host is masked by their account */
+#define FLAGS_REGNICK       0x4000 /* user owns their current nick */
+#define FLAGS_REGISTERING   0x8000 /* user has issued account register command, is waiting for email cookie */
+#define FLAGS_DUMMY         0x10000 /* user is not announced to other servers */
+#define FLAGS_NOIDLE        0x20000 /* hide idle time in whois +I */
 
 #define IsOper(x)               ((x)->modes & FLAGS_OPER)
 #define IsService(x)            ((x)->modes & FLAGS_SERVICE)
@@ -75,7 +75,7 @@
 #define IsStamped(x)            ((x)->modes & FLAGS_STAMPED)
 #define IsHiddenHost(x)         ((x)->modes & FLAGS_HIDDEN_HOST)
 #define IsReggedNick(x)         ((x)->modes & FLAGS_REGNICK)
-#define IsRegistering(x)	((x)->modes & FLAGS_REGISTERING)
+#define IsRegistering(x)        ((x)->modes & FLAGS_REGISTERING)
 #define IsDummy(x)              ((x)->modes & FLAGS_DUMMY)
 #define IsNoIdle(x)             ((x)->modes & FLAGS_NOIDLE)
 #define IsFakeHost(x)           ((x)->fakehost[0] != '\0')
@@ -89,8 +89,8 @@
 #define CHANNELLEN      200
 #define MAXOPLEVEL      999
 
-#define MAXMODEPARAMS	6
-#define MAXBANS		45
+#define MAXMODEPARAMS   6
+#define MAXBANS         45
 
 /* IDLEN is 6 because it takes 5.33 Base64 digits to store 32 bytes. */
 #define IDLEN           6

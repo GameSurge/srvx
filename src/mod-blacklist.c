@@ -203,7 +203,7 @@ blacklist_check_user(struct userNode *user)
         if (req) {
             data = (struct dnsbl_data*)(req + 1);
             strcpy(data->client_ip, ip);
-            strcpy(data->zone_name, zone);            
+            strcpy(data->zone_name, zone);
         }
     }
     return 0;

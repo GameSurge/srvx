@@ -1236,7 +1236,7 @@ static HELPSERV_USERCMD(usercmd_wait) {
         return;
     }
 
-    for (other = req->hs->unhandled, pos = -1, count = 0; 
+    for (other = req->hs->unhandled, pos = -1, count = 0;
          other;
          other = other->next_unhandled, ++count) {
         if (other == req)
@@ -2298,7 +2298,7 @@ static HELPSERV_FUNC(cmd_bots) {
         struct helpserv_user *owner=NULL;
 
         bot = iter_data(it);
-        
+
         for (it2=dict_first(bot->users); it2; it2=iter_next(it2)) {
             if (((struct helpserv_user *)iter_data(it2))->level == HlOwner) {
                 owner = iter_data(it2);
@@ -3721,7 +3721,7 @@ static void handle_part(struct modeNode *mn, UNUSED_ARG(const char *reason)) {
             }
         }
     }
-    
+
     if (mn->user->handle_info && (userlist = dict_find(helpserv_users_byhand_dict, mn->user->handle_info->handle, NULL))) {
         for (i=0; i < userlist->used; i++) {
             struct helpserv_user *hs_user = userlist->list[i];
@@ -3848,7 +3848,7 @@ static void associate_requests_bybot(struct helpserv_bot *hs, struct userNode *u
     struct helpserv_request *newest=NULL, *nicknewest=NULL;
     unsigned int i;
     const int from_opserv = 0; /* For helpserv_notice */
-    
+
     if (!(user->handle_info && (hand_reqlist = dict_find(helpserv_reqs_byhand_dict, user->handle_info->handle, NULL))) && !force_greet) {
         return;
     }
@@ -3940,7 +3940,7 @@ static int handle_join(struct modeNode *mNode) {
 
     if (IsLocal(user))
         return 0;
-    
+
     if (!(botlist = dict_find(helpserv_bots_bychan_dict, chan->name, NULL)))
         return 0;
 
@@ -4033,7 +4033,7 @@ static void handle_nickserv_rename(struct handle_info *handle, const char *old_h
         for (i=0; i < userlist->used; i++)
             dict_insert(userlist->list[i]->hs->users, handle->handle, userlist->list[i]);
     }
-    
+
     if (reqlist) {
         for (i=0; i < reqlist->used; i++) {
             struct helpserv_request *req=reqlist->list[i];
@@ -4531,7 +4531,7 @@ int helpserv_init() {
 
     helpserv_bots_dict = dict_new();
     dict_set_free_data(helpserv_bots_dict, helpserv_free_bot);
-    
+
     helpserv_bots_bychan_dict = dict_new();
     dict_set_free_data(helpserv_bots_bychan_dict, helpserv_botlist_free);
 

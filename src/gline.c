@@ -162,8 +162,8 @@ gline_add(const char *issuer, const char *target, unsigned long duration, const 
     }
     heap_insert(gline_heap, ent, ent);
     if (!prev_first || (ent->expires < prev_first->expires)) {
-	timeq_del(0, gline_expire, 0, TIMEQ_IGNORE_WHEN|TIMEQ_IGNORE_DATA);
-	timeq_add(ent->expires, gline_expire, 0);
+        timeq_del(0, gline_expire, 0, TIMEQ_IGNORE_WHEN|TIMEQ_IGNORE_DATA);
+        timeq_add(ent->expires, gline_expire, 0);
     }
     if (announce)
         irc_gline(NULL, ent);
@@ -258,12 +258,12 @@ gline_add_record(const char *key, void *data, UNUSED_ARG(void *extra))
     time_t issued, expiration, lastmod;
 
     if (!(reason = database_get_data(rd->d.object, KEY_REASON, RECDB_QSTRING))) {
-	log_module(MAIN_LOG, LOG_ERROR, "Missing reason for gline %s", key);
-	return 0;
+        log_module(MAIN_LOG, LOG_ERROR, "Missing reason for gline %s", key);
+        return 0;
     }
     if (!(dstr = database_get_data(rd->d.object, KEY_EXPIRES, RECDB_QSTRING))) {
-	log_module(MAIN_LOG, LOG_ERROR, "Missing expiration for gline %s", key);
-	return 0;
+        log_module(MAIN_LOG, LOG_ERROR, "Missing expiration for gline %s", key);
+        return 0;
     }
     expiration = strtoul(dstr, NULL, 0);
     dstr = database_get_data(rd->d.object, KEY_LASTMOD, RECDB_QSTRING);

@@ -9,12 +9,12 @@ struct glob_test {
 
 struct glob_test glob_yes[] = {
     { "*Zoot*!*@*.org", { "Zoot!Zoot@services.org",
-			  "zoot!bleh@j00.are.r00t3d.org",
+                          "zoot!bleh@j00.are.r00t3d.org",
                           0 } },
     { "*!*@*", { "DK-Entrope!entrope@clan-dk.dyndns.org",
                  0 } },
     { "*", { "anything at all!",
-	     0 } },
+             0 } },
     { 0, { 0 } }
 };
 
@@ -22,7 +22,7 @@ struct glob_test glob_no[] = {
     { "*Zoot*!*@*.org", { "Zoot!Zoot@services.net",
                           0 } },
     { "*!*@*", { "luser@host.com",
-		 0 } },
+                 0 } },
     { 0, { 0 } }
 };
 
@@ -44,21 +44,21 @@ main(UNUSED_ARG(int argc), UNUSED_ARG(char *argv[]))
 
     tools_init();
     for (i = 0; glob_yes[i].glob; i++) {
-	for (j=0; glob_yes[i].texts[j]; j++) {
-	    if (!match_ircglob(glob_yes[i].texts[j], glob_yes[i].glob)) {
-		fprintf(stderr, "%s did not match glob %s!\n",
-			glob_yes[i].texts[j], glob_yes[i].glob);
-	    }
-	}
+        for (j=0; glob_yes[i].texts[j]; j++) {
+            if (!match_ircglob(glob_yes[i].texts[j], glob_yes[i].glob)) {
+                fprintf(stderr, "%s did not match glob %s!\n",
+                        glob_yes[i].texts[j], glob_yes[i].glob);
+            }
+        }
     }
 
     for (i = 0; glob_no[i].glob; i++) {
-	for (j=0; glob_no[i].texts[j]; j++) {
-	    if (match_ircglob(glob_no[i].texts[j], glob_no[i].glob)) {
-		fprintf(stderr, "%s matched glob %s!\n",
-			glob_no[i].texts[j], glob_no[i].glob);
-	    }
-	}
+        for (j=0; glob_no[i].texts[j]; j++) {
+            if (match_ircglob(glob_no[i].texts[j], glob_no[i].glob)) {
+                fprintf(stderr, "%s matched glob %s!\n",
+                        glob_no[i].texts[j], glob_no[i].glob);
+            }
+        }
     }
 
     for (i=0; glob_globs[i].glob; i++) {

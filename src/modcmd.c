@@ -1213,8 +1213,8 @@ static MODCMD_FUNC(cmd_readhelp) {
     stop.tv_sec -= start.tv_sec;
     stop.tv_usec -= start.tv_usec;
     if (stop.tv_usec < 0) {
-	stop.tv_sec -= 1;
-	stop.tv_usec += 1000000;
+        stop.tv_sec -= 1;
+        stop.tv_usec += 1000000;
     }
     reply("MCMSG_HELPFILE_READ", module->name, stop.tv_sec, stop.tv_usec/1000);
     return 1;
@@ -1238,8 +1238,8 @@ static MODCMD_FUNC(cmd_timecmd) {
     stop.tv_sec -= start.tv_sec;
     stop.tv_usec -= start.tv_usec;
     if (stop.tv_usec < 0) {
-	stop.tv_sec -= 1;
-	stop.tv_usec += 1000000;
+        stop.tv_sec -= 1;
+        stop.tv_usec += 1000000;
     }
     reply("MCMSG_COMMAND_TIME", cmd_text, stop.tv_sec, stop.tv_usec);
     return 1;

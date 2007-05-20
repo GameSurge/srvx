@@ -21,9 +21,9 @@
 #include "proto-common.c"
 
 /* Full commands. */
-#define CMD_ACCOUNT		"ACCOUNT"
+#define CMD_ACCOUNT             "ACCOUNT"
 #define CMD_ADMIN               "ADMIN"
-#define CMD_ASLL		"ASLL"
+#define CMD_ASLL                "ASLL"
 #define CMD_AWAY                "AWAY"
 #define CMD_BURST               "BURST"
 #define CMD_CLEARMODE           "CLEARMODE"
@@ -40,7 +40,7 @@
 #define CMD_EOB_ACK             "EOB_ACK"
 #define CMD_ERROR               "ERROR"
 #define CMD_FAKEHOST            "FAKE"
-#define CMD_GET			"GET"
+#define CMD_GET                 "GET"
 #define CMD_GLINE               "GLINE"
 #define CMD_HASH                "HASH"
 #define CMD_HELP                "HELP"
@@ -68,18 +68,18 @@
 #define CMD_PONG                "PONG"
 #define CMD_POST                "POST"
 #define CMD_PRIVMSG             "PRIVMSG"
-#define CMD_PRIVS		"PRIVS"
+#define CMD_PRIVS               "PRIVS"
 #define CMD_PROTO               "PROTO"
 #define CMD_QUIT                "QUIT"
 #define CMD_REHASH              "REHASH"
-#define CMD_RESET		"RESET"
+#define CMD_RESET               "RESET"
 #define CMD_RESTART             "RESTART"
 #define CMD_RPING               "RPING"
 #define CMD_RPONG               "RPONG"
 #define CMD_SERVER              "SERVER"
 #define CMD_SERVLIST            "SERVLIST"
 #define CMD_SERVSET             "SERVSET"
-#define CMD_SET			"SET"
+#define CMD_SET                 "SET"
 #define CMD_SETTIME             "SETTIME"
 #define CMD_SILENCE             "SILENCE"
 #define CMD_SQUERY              "SQUERY"
@@ -103,9 +103,9 @@
 #define CMD_WHOWAS              "WHOWAS"
 
 /* Tokenized commands. */
-#define TOK_ACCOUNT		"AC"
+#define TOK_ACCOUNT             "AC"
 #define TOK_ADMIN               "AD"
-#define TOK_ASLL		"LL"
+#define TOK_ASLL                "LL"
 #define TOK_AWAY                "A"
 #define TOK_BURST               "B"
 #define TOK_CLEARMODE           "CM"
@@ -122,7 +122,7 @@
 #define TOK_EOB_ACK             "EA"
 #define TOK_ERROR               "Y"
 #define TOK_FAKEHOST            "FA"
-#define TOK_GET			"GET"
+#define TOK_GET                 "GET"
 #define TOK_GLINE               "GL"
 #define TOK_HASH                "HASH"
 #define TOK_HELP                "HELP"
@@ -150,18 +150,18 @@
 #define TOK_PONG                "Z"
 #define TOK_POST                "POST"
 #define TOK_PRIVMSG             "P"
-#define TOK_PRIVS		"PRIVS"
+#define TOK_PRIVS               "PRIVS"
 #define TOK_PROTO               "PROTO"
 #define TOK_QUIT                "Q"
 #define TOK_REHASH              "REHASH"
-#define TOK_RESET		"RESET"
+#define TOK_RESET               "RESET"
 #define TOK_RESTART             "RESTART"
 #define TOK_RPING               "RI"
 #define TOK_RPONG               "RO"
 #define TOK_SERVER              "S"
 #define TOK_SERVLIST            "SERVSET"
 #define TOK_SERVSET             "SERVSET"
-#define TOK_SET			"SET"
+#define TOK_SET                 "SET"
 #define TOK_SETTIME             "SE"
 #define TOK_SILENCE             "U"
 #define TOK_SQUERY              "SQUERY"
@@ -196,9 +196,9 @@
 #define TYPE(NAME)              CMD_ ## NAME
 #endif /* ENABLE_TOKENS */
 
-#define P10_ACCOUNT		TYPE(ACCOUNT)
+#define P10_ACCOUNT             TYPE(ACCOUNT)
 #define P10_ADMIN               TYPE(ADMIN)
-#define P10_ASLL		TYPE(ASLL)
+#define P10_ASLL                TYPE(ASLL)
 #define P10_AWAY                TYPE(AWAY)
 #define P10_BURST               TYPE(BURST)
 #define P10_CLEARMODE           TYPE(CLEARMODE)
@@ -215,7 +215,7 @@
 #define P10_EOB_ACK             TYPE(EOB_ACK)
 #define P10_ERROR               TYPE(ERROR)
 #define P10_FAKEHOST            TYPE(FAKEHOST)
-#define P10_GET			TYPE(GET)
+#define P10_GET                 TYPE(GET)
 #define P10_GLINE               TYPE(GLINE)
 #define P10_HASH                TYPE(HASH)
 #define P10_HELP                TYPE(HELP)
@@ -243,18 +243,18 @@
 #define P10_PONG                TYPE(PONG)
 #define P10_POST                TYPE(POST)
 #define P10_PRIVMSG             TYPE(PRIVMSG)
-#define P10_PRIVS		TYPE(PRIVS)
+#define P10_PRIVS               TYPE(PRIVS)
 #define P10_PROTO               TYPE(PROTO)
 #define P10_QUIT                TYPE(QUIT)
 #define P10_REHASH              TYPE(REHASH)
-#define P10_RESET		TYPE(RESET)
+#define P10_RESET               TYPE(RESET)
 #define P10_RESTART             TYPE(RESTART)
 #define P10_RPING               TYPE(RPING)
 #define P10_RPONG               TYPE(RPONG)
 #define P10_SERVER              CMD_SERVER
 #define P10_SERVLIST            TYPE(SERVLIST)
 #define P10_SERVSET             TYPE(SERVSET)
-#define P10_SET			TYPE(SET)
+#define P10_SET                 TYPE(SET)
 #define P10_SETTIME             TYPE(SETTIME)
 #define P10_SILENCE             TYPE(SILENCE)
 #define P10_SQUERY              TYPE(SQUERY)
@@ -2207,30 +2207,30 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
     while (*word == ' ') word++;
     while (1) {
 #define do_user_mode(FLAG) do { if (add) user->modes |= FLAG; else user->modes &= ~FLAG; } while (0)
-	switch (*mode_change++) {
-	case 0: case ' ': return;
-	case '+': add = 1; break;
-	case '-': add = 0; break;
-	case 'o':
-	    do_user_mode(FLAGS_OPER);
-	    if (add) {
-		userList_append(&curr_opers, user);
-		call_oper_funcs(user);
-	    } else {
-		userList_remove(&curr_opers, user);
-	    }
-	    break;
-	case 'i': do_user_mode(FLAGS_INVISIBLE);
-	    if (add)
+        switch (*mode_change++) {
+        case 0: case ' ': return;
+        case '+': add = 1; break;
+        case '-': add = 0; break;
+        case 'o':
+            do_user_mode(FLAGS_OPER);
+            if (add) {
+                userList_append(&curr_opers, user);
+                call_oper_funcs(user);
+            } else {
+                userList_remove(&curr_opers, user);
+            }
+            break;
+        case 'i': do_user_mode(FLAGS_INVISIBLE);
+            if (add)
                 invis_clients++;
             else
                 invis_clients--;
-	    break;
-	case 'w': do_user_mode(FLAGS_WALLOP); break;
-	case 'd': do_user_mode(FLAGS_DEAF); break;
-	case 'k': do_user_mode(FLAGS_SERVICE); break;
-	case 'g': do_user_mode(FLAGS_GLOBAL); break;
-	case 'n': do_user_mode(FLAGS_NOCHAN); break;
+            break;
+        case 'w': do_user_mode(FLAGS_WALLOP); break;
+        case 'd': do_user_mode(FLAGS_DEAF); break;
+        case 'k': do_user_mode(FLAGS_SERVICE); break;
+        case 'g': do_user_mode(FLAGS_GLOBAL); break;
+        case 'n': do_user_mode(FLAGS_NOCHAN); break;
         case 'I': do_user_mode(FLAGS_NOIDLE); break;
         case 'x': do_user_mode(FLAGS_HIDDEN_HOST); break;
         case 'r':
@@ -2257,7 +2257,7 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
                 assign_fakehost(user, host, 0);
             }
             break;
-	}
+        }
 #undef do_user_mode
     }
 }
@@ -2294,14 +2294,14 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
         case 'r': do_chan_mode(MODE_REGONLY); break;
         case 's': do_chan_mode(MODE_SECRET); break;
         case 't': do_chan_mode(MODE_TOPICLIMIT); break;
-	case 'z':
-	  if (!(flags & MCP_REGISTERED)) {
-	   do_chan_mode(MODE_REGISTERED);
-	  } else {
-	   mod_chanmode_free(change);
-	   return NULL;
-	  }
-	  break;
+        case 'z':
+          if (!(flags & MCP_REGISTERED)) {
+           do_chan_mode(MODE_REGISTERED);
+          } else {
+           mod_chanmode_free(change);
+           return NULL;
+          }
+          break;
 #undef do_chan_mode
         case 'l':
             if (add) {
@@ -2804,13 +2804,13 @@ void
 reg_oper_func(oper_func_t handler)
 {
     if (of_used == of_size) {
-	if (of_size) {
-	    of_size <<= 1;
-	    of_list = realloc(of_list, of_size*sizeof(oper_func_t));
-	} else {
-	    of_size = 8;
-	    of_list = malloc(of_size*sizeof(oper_func_t));
-	}
+        if (of_size) {
+            of_size <<= 1;
+            of_list = realloc(of_list, of_size*sizeof(oper_func_t));
+        } else {
+            of_size = 8;
+            of_list = malloc(of_size*sizeof(oper_func_t));
+        }
     }
     of_list[of_used++] = handler;
 }
@@ -2822,7 +2822,7 @@ call_oper_funcs(struct userNode *user)
     if (IsLocal(user))
         return;
     for (n=0; n<of_used; n++)
-	of_list[n](user);
+        of_list[n](user);
 }
 
 static void

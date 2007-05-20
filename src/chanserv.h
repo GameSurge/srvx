@@ -56,13 +56,13 @@ enum charOption {
     NUM_CHAR_OPTIONS
 };
 
-#define CHANNEL_NODELETE	0x00000001 /* (1 << 0) */
-#define CHANNEL_SUSPENDED	0x00000002 /* (1 << 1) */
-#define CHANNEL_INFO_LINES	0x00000004 /* (1 << 2) - DEPRECATED */
-#define CHANNEL_VOICE_ALL    	0x00000008 /* (1 << 3) - DEPRECATED */
+#define CHANNEL_NODELETE    0x00000001 /* (1 << 0) */
+#define CHANNEL_SUSPENDED   0x00000002 /* (1 << 1) */
+#define CHANNEL_INFO_LINES  0x00000004 /* (1 << 2) - DEPRECATED */
+#define CHANNEL_VOICE_ALL   0x00000008 /* (1 << 3) - DEPRECATED */
 /* No longer used. */                      /* (1 << 4) */
-#define CHANNEL_DYNAMIC_LIMIT	0x00000020 /* (1 << 5) */
-#define CHANNEL_TOPIC_SNARF	0x00000040 /* (1 << 6) - DEPRECATED */
+#define CHANNEL_DYNAMIC_LIMIT   0x00000020 /* (1 << 5) */
+#define CHANNEL_TOPIC_SNARF     0x00000040 /* (1 << 6) - DEPRECATED */
 #define CHANNEL_PEON_INVITE     0x00000080 /* (1 << 7) - DEPRECATED */
 #define CHANNEL_OFFCHANNEL      0x00000100 /* (1 << 8) */
 #define CHANNEL_UNREVIEWED      0x00000200 /* (1 << 9) */
@@ -70,27 +70,27 @@ enum charOption {
  * because chanData.flags is a 30-bit field.
  */
 
-#define IsProtected(x)		((x)->flags & CHANNEL_NODELETE)
-#define IsSuspended(x)		((x)->flags & CHANNEL_SUSPENDED)
-#define IsOffChannel(x)         (((x)->flags & CHANNEL_OFFCHANNEL) && (off_channel > 1))
+#define IsProtected(x)  ((x)->flags & CHANNEL_NODELETE)
+#define IsSuspended(x)  ((x)->flags & CHANNEL_SUSPENDED)
+#define IsOffChannel(x) (((x)->flags & CHANNEL_OFFCHANNEL) && (off_channel > 1))
 
 struct chanData
 {
-    struct chanNode	*channel;
+    struct chanNode     *channel;
     struct mod_chanmode modes;
 
-    time_t		registered;
-    time_t		visited;
-    time_t 		limitAdjusted;
-    time_t              ownerTransfer;
+    time_t  registered;
+    time_t  visited;
+    time_t  limitAdjusted;
+    time_t  ownerTransfer;
 
-    char		*topic;
-    char		*greeting;
-    char		*user_greeting;
-    char		*registrar;
-    char                *topic_mask;
+    char    *topic;
+    char    *greeting;
+    char    *user_greeting;
+    char    *registrar;
+    char    *topic_mask;
 
-    unsigned int	flags : 30;
+    unsigned int        flags : 30;
     unsigned int        may_opchan : 1;
     unsigned int        max;
     unsigned int        last_refresh;
@@ -99,12 +99,12 @@ struct chanData
     unsigned short      lvlOpts[NUM_LEVEL_OPTIONS];
     unsigned char       chOpts[NUM_CHAR_OPTIONS];
 
-    struct userData	*users;
-    struct banData	*bans;
+    struct userData     *users;
+    struct banData      *bans;
     struct dict         *notes;
-    struct suspended	*suspended;
-    struct chanData	*prev;
-    struct chanData	*next;
+    struct suspended    *suspended;
+    struct chanData     *prev;
+    struct chanData     *next;
 };
 
 #define USER_AUTO_OP            0x00000001
@@ -118,18 +118,18 @@ struct chanData
 
 struct userData
 {
-    struct handle_info	*handle;
-    struct chanData	*channel;
+    struct handle_info  *handle;
+    struct chanData     *channel;
 
-    char		*info;
-    time_t 		seen;
+    char                *info;
+    time_t              seen;
     unsigned short      access;
-    unsigned int	present : 1;
+    unsigned int        present : 1;
     unsigned int        flags : USER_FLAGS_SIZE;
 
     /* linked list of userDatas for a chanData */
-    struct userData	*prev;
-    struct userData	*next;
+    struct userData     *prev;
+    struct userData     *next;
     /* linked list of userDatas for a handle_info */
     struct userData     *u_prev;
     struct userData     *u_next;
@@ -137,24 +137,24 @@ struct userData
 
 struct banData
 {
-    char		mask[NICKLEN + USERLEN + HOSTLEN + 3];
-    char		owner[NICKLEN+1];
-    struct chanData     *channel;
+    char            mask[NICKLEN + USERLEN + HOSTLEN + 3];
+    char            owner[NICKLEN+1];
+    struct chanData *channel;
 
-    time_t		set;
-    time_t		triggered;
-    time_t              expires;
+    time_t          set;
+    time_t          triggered;
+    time_t          expires;
 
-    char		*reason;
+    char            *reason;
 
-    struct banData	*prev;
-    struct banData	*next;
+    struct banData  *prev;
+    struct banData  *next;
 };
 
 struct suspended
 {
-    struct chanData	*cData;
-    char		*suspender;
+    struct chanData     *cData;
+    char                *suspender;
     char                *reason;
     time_t              issued, expires, revoked;
     struct suspended    *previous;

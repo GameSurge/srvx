@@ -38,7 +38,7 @@ static const struct message_entry msgtab[] = {
     { NULL, NULL }
 };
 
-#define DEFAULT_LINE_SIZE	MAX_LINE_SIZE
+#define DEFAULT_LINE_SIZE       MAX_LINE_SIZE
 #define DEFAULT_TABLE_SIZE      80
 
 extern struct userNode *global, *chanserv, *opserv, *nickserv;
@@ -419,8 +419,8 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
 
     /* figure out how to send the messages */
     if (handle) {
-	msg_type |= (HANDLE_FLAGGED(handle, USE_PRIVMSG) ? 1 : 0);
-	use_color = HANDLE_FLAGGED(handle, MIRC_COLOR);
+        msg_type |= (HANDLE_FLAGGED(handle, USE_PRIVMSG) ? 1 : 0);
+        use_color = HANDLE_FLAGGED(handle, MIRC_COLOR);
         size = handle->screen_width;
         if (size > sizeof(line))
             size = sizeof(line);
@@ -450,20 +450,20 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
     expand_pos = pos = 0;
     chars_sent = 0;
     while (input.list[ipos]) {
-	char ch, *value, *free_value;
+        char ch, *value, *free_value;
 
         while ((ch = input.list[ipos]) && (ch != '$') && (ch != '\n') && (pos < size)) {
-	    line[pos++] = ch;
+            line[pos++] = ch;
             ipos++;
-	}
+        }
 
-	if (!input.list[ipos])
+        if (!input.list[ipos])
             goto send_line;
         if (input.list[ipos] == '\n') {
             ipos++;
             goto send_line;
         }
-	if (pos == size) {
+        if (pos == size) {
             unsigned int new_ipos;
             /* Scan backwards for a space in the input, until we hit
              * either the last newline or the last variable expansion.
@@ -488,53 +488,53 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
             ipos = new_ipos;
             while (input.list[ipos] == ' ')
                 ipos++;
-	    goto send_line;
-	}
+            goto send_line;
+        }
 
         free_value = 0;
-	switch (input.list[++ipos]) {
+        switch (input.list[++ipos]) {
         /* Literal '$' or end of string. */
-	case 0:
-	    ipos--;
-	case '$':
-	    value = "$";
-	    break;
-	/* The following two expand to mIRC color codes if enabled
-	   by the user. */
-	case 'b':
-	    value = use_color ? "\002" : "";
-	    break;
-	case 'o':
-	    value = use_color ? "\017" : "";
-	    break;
+        case 0:
+            ipos--;
+        case '$':
+            value = "$";
+            break;
+        /* The following two expand to mIRC color codes if enabled
+           by the user. */
+        case 'b':
+            value = use_color ? "\002" : "";
+            break;
+        case 'o':
+            value = use_color ? "\017" : "";
+            break;
         case 'r':
             value = use_color ? "\026" : "";
             break;
-	case 'u':
-	    value = use_color ? "\037" : "";
-	    break;
-	/* Service nicks. */
+        case 'u':
+            value = use_color ? "\037" : "";
+            break;
+        /* Service nicks. */
         case 'S':
             value = src->nick;
             break;
-	case 'G':
-	    value = global ? global->nick : "Global";
-	    break;
-	case 'C':
-	    value = chanserv ? chanserv->nick : "ChanServ";
-	    break;
-	case 'O':
-	    value = opserv ? opserv->nick : "OpServ";
-	    break;
-	case 'N':
+        case 'G':
+            value = global ? global->nick : "Global";
+            break;
+        case 'C':
+            value = chanserv ? chanserv->nick : "ChanServ";
+            break;
+        case 'O':
+            value = opserv ? opserv->nick : "OpServ";
+            break;
+        case 'N':
             value = nickserv ? nickserv->nick : "NickServ";
             break;
         case 's':
             value = self->name;
             break;
-	case 'H':
-	    value = handle ? handle->handle : "Account";
-	    break;
+        case 'H':
+            value = handle ? handle->handle : "Account";
+            break;
 #define SEND_LINE(TRUNCED) do { \
     line[pos] = 0; \
     if (pos > 0) { \
@@ -547,9 +547,9 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
     newline_ipos = ipos; \
     if (!(msg_type & MSG_TYPE_MULTILINE)) return chars_sent; \
 } while (0)
-	/* Custom expansion handled by helpfile-specific function. */
-	case '{':
-	case '(': {
+        /* Custom expansion handled by helpfile-specific function. */
+        case '{':
+        case '(': {
             struct helpfile_expansion exp;
             char *name_end = input.list + ipos + 1, *colon = NULL;
 
@@ -595,14 +595,14 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
             ipos = name_end - input.list;
             break;
         }
-	default:
+        default:
         fallthrough:
             value = alloca(3);
             value[0] = '$';
             value[1] = input.list[ipos];
             value[2] = 0;
-	}
-	ipos++;
+        }
+        ipos++;
         while ((pos + strlen(value) > size) || strchr(value, '\n')) {
             unsigned int avail;
             avail = size - pos - 1;
@@ -639,10 +639,10 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
             }
         }
         length = strlen(value);
-	memcpy(line + pos, value, length);
+        memcpy(line + pos, value, length);
         if (free_value)
             free(free_value);
-	pos += length;
+        pos += length;
         if ((pos < size-1) && input.list[ipos]) {
             expand_pos = pos;
             expand_ipos = ipos;
@@ -733,7 +733,7 @@ send_help(struct userNode *dest, struct userNode *src, struct helpfile *hf, cons
     if (!rec)
         return send_message(dest, src, "MSG_TOPIC_UNKNOWN");
     if (rec->type != RECDB_QSTRING)
-	return send_message(dest, src, "HFMSG_HELP_NOT_STRING");
+        return send_message(dest, src, "HFMSG_HELP_NOT_STRING");
     return _send_help(dest, src, hf->expand, rec->d.qstring);
 }
 
@@ -937,25 +937,25 @@ unlistify_help(const char *key, void *data, void *extra)
 
     switch (rd->type) {
     case RECDB_QSTRING:
-	dict_insert(newdb, strdup(key), alloc_record_data_qstring(GET_RECORD_QSTRING(rd)));
-	return 0;
+        dict_insert(newdb, strdup(key), alloc_record_data_qstring(GET_RECORD_QSTRING(rd)));
+        return 0;
     case RECDB_STRING_LIST: {
-	struct string_list *slist = GET_RECORD_STRING_LIST(rd);
-	char *dest;
-	unsigned int totlen, len, i;
+        struct string_list *slist = GET_RECORD_STRING_LIST(rd);
+        char *dest;
+        unsigned int totlen, len, i;
 
-	for (i=totlen=0; i<slist->used; i++)
-	    totlen = totlen + strlen(slist->list[i]) + 1;
-	dest = alloca(totlen+1);
-	for (i=totlen=0; i<slist->used; i++) {
-	    len = strlen(slist->list[i]);
-	    memcpy(dest+totlen, slist->list[i], len);
-	    dest[totlen+len] = '\n';
-	    totlen = totlen + len + 1;
-	}
-	dest[totlen] = 0;
-	dict_insert(newdb, strdup(key), alloc_record_data_qstring(dest));
-	return 0;
+        for (i=totlen=0; i<slist->used; i++)
+            totlen = totlen + strlen(slist->list[i]) + 1;
+        dest = alloca(totlen+1);
+        for (i=totlen=0; i<slist->used; i++) {
+            len = strlen(slist->list[i]);
+            memcpy(dest+totlen, slist->list[i], len);
+            dest[totlen+len] = '\n';
+            totlen = totlen + len + 1;
+        }
+        dest[totlen] = 0;
+        dict_insert(newdb, strdup(key), alloc_record_data_qstring(dest));
+        return 0;
     }
     case RECDB_OBJECT: {
         dict_iterator_t it;
@@ -985,7 +985,7 @@ unlistify_help(const char *key, void *data, void *extra)
         return 0;
     }
     default:
-	return 1;
+        return 1;
     }
 }
 
@@ -1006,8 +1006,8 @@ open_helpfile(const char *fname, expand_func_t expand)
         dict_insert(language_find("C")->helpfiles, hf->name, hf);
     }
     if (db) {
-	dict_foreach(db, unlistify_help, hf->db);
-	free_database(db);
+        dict_foreach(db, unlistify_help, hf->db);
+        free_database(db);
     }
     return hf;
 }

@@ -24,8 +24,8 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int 
     log_module(MAIN_LOG, LOG_INFO, "Initializing daemon...");
 
     if (!conf_read(services_config)) {
-	log_module(MAIN_LOG, LOG_FATAL, "Unable to read %s.", services_config);
-	exit(0);
+        log_module(MAIN_LOG, LOG_FATAL, "Unable to read %s.", services_config);
+        exit(0);
     }
 
     boot_time = time(&now);

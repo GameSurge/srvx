@@ -63,12 +63,12 @@ heap_heapify_up(heap_t heap, unsigned int index)
     last_key = heap->data[index*2];
     last_data = heap->data[index*2+1];
     while (index > 0) {
-	parent = (index - 1) >> 1;
-	res = heap->comparator(last_key, heap->data[parent*2]);
-	if (res > 0) break;
-	heap->data[index*2] = heap->data[parent*2];
-	heap->data[index*2+1] = heap->data[parent*2+1];
-	index = parent;
+        parent = (index - 1) >> 1;
+        res = heap->comparator(last_key, heap->data[parent*2]);
+        if (res > 0) break;
+        heap->data[index*2] = heap->data[parent*2];
+        heap->data[index*2+1] = heap->data[parent*2+1];
+        index = parent;
     }
     heap->data[index*2] = last_key;
     heap->data[index*2+1] = last_data;
@@ -81,8 +81,8 @@ void
 heap_insert(heap_t heap, void *key, void *data)
 {
     if (heap->data_used == heap->data_alloc) {
-	heap->data_alloc *= 2;
-	heap->data = realloc(heap->data, 2*heap->data_alloc*sizeof(void*));
+        heap->data_alloc *= 2;
+        heap->data = realloc(heap->data, 2*heap->data_alloc*sizeof(void*));
     }
     heap->data[heap->data_used*2] = key;
     heap->data[heap->data_used*2+1] = data;
@@ -115,16 +115,16 @@ heap_heapify_down(heap_t heap, int pos)
     last_data = heap->data[pos*2+1];
     /* start at left child */
     while ((child=pos*2+1) < heap->data_used) {
-	/* use right child if it exists and is smaller */
-	if (child+1 < heap->data_used) {
-	    res = heap->comparator(heap->data[(child+1)*2], heap->data[child*2]);
-	    if (res < 0) child = child+1;
-	}
-	res = heap->comparator(last_key, heap->data[child*2]);
-	if (res <= 0) break;
-	heap->data[pos*2] = heap->data[child*2];
-	heap->data[pos*2+1] = heap->data[child*2+1];
-	pos = child;
+        /* use right child if it exists and is smaller */
+        if (child+1 < heap->data_used) {
+            res = heap->comparator(heap->data[(child+1)*2], heap->data[child*2]);
+            if (res < 0) child = child+1;
+        }
+        res = heap->comparator(last_key, heap->data[child*2]);
+        if (res <= 0) break;
+        heap->data[pos*2] = heap->data[child*2];
+        heap->data[pos*2+1] = heap->data[child*2+1];
+        pos = child;
     }
     heap->data[pos*2] = last_key;
     heap->data[pos*2+1] = last_data;
@@ -179,7 +179,7 @@ heap_remove_pred(heap_t heap, int (*pred)(void *key, void *data, void *extra), v
         pos = 1;
     }
     while (pos < heap->data_used) {
-	if (pred(heap->data[pos*2], heap->data[pos*2+1], extra)) {
+        if (pred(heap->data[pos*2], heap->data[pos*2+1], extra)) {
             heap_remove(heap, pos);
             pos = 0;
         } else {

@@ -606,8 +606,8 @@ log_discrim_create(struct userNode *service, struct userNode *user, unsigned int
     /* Assume all criteria require arguments. */
     if((argc - 1) % 2)
     {
-	send_message(user, service, "MSG_MISSING_PARAMS", argv[0]);
-	return NULL;
+        send_message(user, service, "MSG_MISSING_PARAMS", argv[0]);
+        return NULL;
     }
 
     discrim = malloc(sizeof(struct logSearch));
@@ -674,10 +674,10 @@ log_discrim_create(struct userNode *service, struct userNode *user, unsigned int
                 send_message(user, service, "MSG_INVALID_FACILITY", argv[ii]);
                 goto fail;
             }
-	} else {
-	    send_message(user, service, "MSG_INVALID_CRITERIA", argv[ii]);
-	    goto fail;
-	}
+        } else {
+            send_message(user, service, "MSG_INVALID_CRITERIA", argv[ii]);
+            goto fail;
+        }
     }
 
     return discrim;
@@ -707,7 +707,7 @@ entry_match(struct logSearch *discrim, struct logEntry *entry)
             && !match_ircglob(entry->user_hostmask, discrim->masks.user_hostmask))
         || (discrim->masks.command
             && !match_ircglob(entry->command, discrim->masks.command))) {
-	return 0;
+        return 0;
     }
     return 1;
 }

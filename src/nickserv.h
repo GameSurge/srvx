@@ -42,8 +42,8 @@ struct svccmd;
 #define HANDLE_FLAGS "SphgscfnHb"
 
 /* HI_STYLE_* go into handle_info.userlist_style */
-#define HI_STYLE_DEF	       'd'
-#define HI_STYLE_ZOOT	       'Z'
+#define HI_STYLE_DEF    'd'
+#define HI_STYLE_ZOOT   'Z'
 
 #define HI_DEFAULT_FLAGS       (HI_FLAG_MIRC_COLOR)
 #define HI_DEFAULT_STYLE       HI_STYLE_DEF

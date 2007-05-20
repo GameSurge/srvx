@@ -49,13 +49,13 @@ void
 reg_server_link_func(server_link_func_t handler)
 {
     if (slf_used == slf_size) {
-	if (slf_size) {
-	    slf_size <<= 1;
-	    slf_list = realloc(slf_list, slf_size*sizeof(server_link_func_t));
-	} else {
-	    slf_size = 8;
-	    slf_list = malloc(slf_size*sizeof(server_link_func_t));
-	}
+        if (slf_size) {
+            slf_size <<= 1;
+            slf_list = realloc(slf_list, slf_size*sizeof(server_link_func_t));
+        } else {
+            slf_size = 8;
+            slf_list = malloc(slf_size*sizeof(server_link_func_t));
+        }
     }
     slf_list[slf_used++] = handler;
 }
@@ -73,13 +73,13 @@ void
 reg_new_user_func(new_user_func_t handler)
 {
     if (nuf_used == nuf_size) {
-	if (nuf_size) {
-	    nuf_size <<= 1;
-	    nuf_list = realloc(nuf_list, nuf_size*sizeof(new_user_func_t));
-	} else {
-	    nuf_size = 8;
-	    nuf_list = malloc(nuf_size*sizeof(new_user_func_t));
-	}
+        if (nuf_size) {
+            nuf_size <<= 1;
+            nuf_list = realloc(nuf_list, nuf_size*sizeof(new_user_func_t));
+        } else {
+            nuf_size = 8;
+            nuf_list = malloc(nuf_size*sizeof(new_user_func_t));
+        }
     }
     nuf_list[nuf_used++] = handler;
 }
@@ -110,13 +110,13 @@ void
 reg_del_user_func(del_user_func_t handler)
 {
     if (duf_used == duf_size) {
-	if (duf_size) {
-	    duf_size <<= 1;
-	    duf_list = realloc(duf_list, duf_size*sizeof(del_user_func_t));
-	} else {
-	    duf_size = 8;
-	    duf_list = malloc(duf_size*sizeof(del_user_func_t));
-	}
+        if (duf_size) {
+            duf_size <<= 1;
+            duf_list = realloc(duf_list, duf_size*sizeof(del_user_func_t));
+        } else {
+            duf_size = 8;
+            duf_list = malloc(duf_size*sizeof(del_user_func_t));
+        }
     }
     duf_list[duf_used++] = handler;
 }
@@ -139,13 +139,13 @@ ReintroduceUser(struct userNode *user)
 {
     struct mod_chanmode change;
     unsigned int n;
-	
+
     irc_user(user);
     mod_chanmode_init(&change);
     change.argc = 1;
     for (n = 0; n < user->channels.used; n++) {
         struct modeNode *mn = user->channels.list[n];
-	irc_join(user, mn->channel);
+        irc_join(user, mn->channel);
         if (mn->modes) {
             change.args[0].mode = mn->modes;
             change.args[0].u.member = mn;
@@ -253,13 +253,13 @@ void
 reg_new_channel_func(new_channel_func_t handler)
 {
     if (ncf_used == ncf_size) {
-	if (ncf_size) {
-	    ncf_size <<= 1;
-	    ncf_list = realloc(ncf_list, ncf_size*sizeof(ncf_list[0]));
-	} else {
-	    ncf_size = 8;
-	    ncf_list = malloc(ncf_size*sizeof(ncf_list[0]));
-	}
+        if (ncf_size) {
+            ncf_size <<= 1;
+            ncf_list = realloc(ncf_list, ncf_size*sizeof(ncf_list[0]));
+        } else {
+            ncf_size = 8;
+            ncf_list = malloc(ncf_size*sizeof(ncf_list[0]));
+        }
     }
     ncf_list[ncf_used++] = handler;
 }
@@ -271,13 +271,13 @@ void
 reg_join_func(join_func_t handler)
 {
     if (jf_used == jf_size) {
-	if (jf_size) {
-	    jf_size <<= 1;
-	    jf_list = realloc(jf_list, jf_size*sizeof(join_func_t));
-	} else {
-	    jf_size = 8;
-	    jf_list = malloc(jf_size*sizeof(join_func_t));
-	}
+        if (jf_size) {
+            jf_size <<= 1;
+            jf_list = realloc(jf_list, jf_size*sizeof(join_func_t));
+        } else {
+            jf_size = 8;
+            jf_list = malloc(jf_size*sizeof(join_func_t));
+        }
     }
     jf_list[jf_used++] = handler;
 }
@@ -415,13 +415,13 @@ void
 reg_del_channel_func(del_channel_func_t handler)
 {
     if (dcf_used == dcf_size) {
-	if (dcf_size) {
-	    dcf_size <<= 1;
-	    dcf_list = realloc(dcf_list, dcf_size*sizeof(dcf_list[0]));
-	} else {
-	    dcf_size = 8;
-	    dcf_list = malloc(dcf_size*sizeof(dcf_list[0]));
-	}
+        if (dcf_size) {
+            dcf_size <<= 1;
+            dcf_list = realloc(dcf_list, dcf_size*sizeof(dcf_list[0]));
+        } else {
+            dcf_size = 8;
+            dcf_list = malloc(dcf_size*sizeof(dcf_list[0]));
+        }
     }
     dcf_list[dcf_used++] = handler;
 }
@@ -440,7 +440,7 @@ DelChannel(struct chanNode *channel)
 
     /* go through all channel members and delete them from the channel */
     for (n=channel->members.used; n>0; )
-	DelChannelUser(channel->members.list[--n]->user, channel, NULL, 1);
+        DelChannelUser(channel->members.list[--n]->user, channel, NULL, 1);
 
     /* delete all channel bans */
     for (n=channel->banlist.used; n>0; )
@@ -458,28 +458,28 @@ DelChannel(struct chanNode *channel)
 struct modeNode *
 AddChannelUser(struct userNode *user, struct chanNode* channel)
 {
-	struct modeNode *mNode;
-	unsigned int n;
+        struct modeNode *mNode;
+        unsigned int n;
 
-	mNode = GetUserMode(channel, user);
-	if (mNode)
+        mNode = GetUserMode(channel, user);
+        if (mNode)
             return mNode;
 
-	mNode = malloc(sizeof(*mNode));
+        mNode = malloc(sizeof(*mNode));
 
-	/* set up modeNode */
-	mNode->channel = channel;
-	mNode->user = user;
-	mNode->modes = 0;
+        /* set up modeNode */
+        mNode->channel = channel;
+        mNode->user = user;
+        mNode->modes = 0;
         mNode->oplevel = -1;
         mNode->idle_since = now;
 
-	/* Add modeNode to channel and to user.
+        /* Add modeNode to channel and to user.
          * We have to do this before calling join funcs in case the
          * modeNode is manipulated (e.g. chanserv ops the user).
          */
-	modeList_append(&channel->members, mNode);
-	modeList_append(&user->channels, mNode);
+        modeList_append(&channel->members, mNode);
+        modeList_append(&user->channels, mNode);
 
         if (channel->members.used == 1
             && !(channel->modes & MODE_REGISTERED)
@@ -493,10 +493,10 @@ AddChannelUser(struct userNode *user, struct chanNode* channel)
                 return NULL;
         }
 
-	if (IsLocal(user))
+        if (IsLocal(user))
             irc_join(user, channel);
 
-	return mNode;
+        return mNode;
 }
 
 static part_func_t *pf_list;
@@ -506,13 +506,13 @@ void
 reg_part_func(part_func_t handler)
 {
     if (pf_used == pf_size) {
-	if (pf_size) {
-	    pf_size <<= 1;
-	    pf_list = realloc(pf_list, pf_size*sizeof(part_func_t));
-	} else {
-	    pf_size = 8;
-	    pf_list = malloc(pf_size*sizeof(part_func_t));
-	}
+        if (pf_size) {
+            pf_size <<= 1;
+            pf_list = realloc(pf_list, pf_size*sizeof(part_func_t));
+        } else {
+            pf_size = 8;
+            pf_list = malloc(pf_size*sizeof(part_func_t));
+        }
     }
     pf_list[pf_used++] = handler;
 }
@@ -567,13 +567,13 @@ DelChannelUser(struct userNode* user, struct chanNode* channel, const char *reas
 
     /* make callbacks */
     for (n=0; n<pf_used; n++)
-	pf_list[n](mNode, reason);
+        pf_list[n](mNode, reason);
 
     /* free memory */
     free(mNode);
 
     /* A single check for APASS only should be enough here */
-    if (!deleting && !channel->members.used && !channel->locks 
+    if (!deleting && !channel->members.used && !channel->locks
         && !(channel->modes & MODE_REGISTERED) && !(channel->modes & MODE_APASS))
         DelChannel(channel);
 }
@@ -588,9 +588,9 @@ KickChannelUser(struct userNode* target, struct chanNode* channel, struct userNo
 
     if (IsLocal(target))
     {
-	/* NULL reason because we don't want a PART message to be
-	   sent by DelChannelUser. */
-	DelChannelUser(target, channel, NULL, 0);
+        /* NULL reason because we don't want a PART message to be
+           sent by DelChannelUser. */
+        DelChannelUser(target, channel, NULL, 0);
     }
 }
 
@@ -601,13 +601,13 @@ void
 reg_kick_func(kick_func_t handler)
 {
     if (kf_used == kf_size) {
-	if (kf_size) {
-	    kf_size <<= 1;
-	    kf_list = realloc(kf_list, kf_size*sizeof(kick_func_t));
-	} else {
-	    kf_size = 8;
-	    kf_list = malloc(kf_size*sizeof(kick_func_t));
-	}
+        if (kf_size) {
+            kf_size <<= 1;
+            kf_list = realloc(kf_list, kf_size*sizeof(kick_func_t));
+        } else {
+            kf_size = 8;
+            kf_list = malloc(kf_size*sizeof(kick_func_t));
+        }
     }
     kf_list[kf_used++] = handler;
 }
@@ -626,12 +626,12 @@ ChannelUserKicked(struct userNode* kicker, struct userNode* victim, struct chanN
         mn->idle_since = now;
 
     for (n=0; n<kf_used; n++)
-	kf_list[n](kicker, victim, channel);
+        kf_list[n](kicker, victim, channel);
 
     DelChannelUser(victim, channel, 0, 0);
 
     if (IsLocal(victim))
-	irc_part(victim, channel, NULL);
+        irc_part(victim, channel, NULL);
 }
 
 int ChannelBanExists(struct chanNode *channel, const char *ban)
@@ -639,8 +639,8 @@ int ChannelBanExists(struct chanNode *channel, const char *ban)
     unsigned int n;
 
     for (n = 0; n < channel->banlist.used; n++)
-	if (match_ircglobs(channel->banlist.list[n]->ban, ban))
-	    return 1;
+        if (match_ircglobs(channel->banlist.list[n]->ban, ban))
+            return 1;
     return 0;
 }
 
@@ -651,13 +651,13 @@ void
 reg_topic_func(topic_func_t handler)
 {
     if (tf_used == tf_size) {
-	if (tf_size) {
-	    tf_size <<= 1;
-	    tf_list = realloc(tf_list, tf_size*sizeof(topic_func_t));
-	} else {
-	    tf_size = 8;
-	    tf_list = malloc(tf_size*sizeof(topic_func_t));
-	}
+        if (tf_size) {
+            tf_size <<= 1;
+            tf_list = realloc(tf_list, tf_size*sizeof(topic_func_t));
+        } else {
+            tf_size = 8;
+            tf_list = malloc(tf_size*sizeof(topic_func_t));
+        }
     }
     tf_list[tf_used++] = handler;
 }
@@ -682,12 +682,12 @@ SetChannelTopic(struct chanNode *channel, struct userNode *user, const char *top
     }
 
     if (announce) {
-	/* We don't really care if a local user messes with the topic,
+        /* We don't really care if a local user messes with the topic,
          * so don't call the tf_list functions. */
-	irc_topic(user, channel, topic);
+        irc_topic(user, channel, topic);
     } else {
-	for (n=0; n<tf_used; n++)
-	    if (tf_list[n](user, channel, old_topic))
+        for (n=0; n<tf_used; n++)
+            if (tf_list[n](user, channel, old_topic))
                 break;
     }
 }
@@ -709,21 +709,21 @@ GetUserMode(struct chanNode *channel, struct userNode *user)
     verify(user);
     verify(user->channels.list);
     if (channel->members.used < user->channels.used) {
-	for (n=0; n<channel->members.used; n++) {
+        for (n=0; n<channel->members.used; n++) {
             verify(channel->members.list[n]);
-	    if (user == channel->members.list[n]->user) {
-		mn = channel->members.list[n];
-		break;
-	    }
-	}
+            if (user == channel->members.list[n]->user) {
+                mn = channel->members.list[n];
+                break;
+            }
+        }
     } else {
-	for (n=0; n<user->channels.used; n++) {
+        for (n=0; n<user->channels.used; n++) {
             verify(user->channels.list[n]);
-	    if (channel == user->channels.list[n]->channel) {
-		mn = user->channels.list[n];
-		break;
-	    }
-	}
+            if (channel == user->channels.list[n]->channel) {
+                mn = user->channels.list[n];
+                break;
+            }
+        }
     }
     return mn;
 }

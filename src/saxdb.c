@@ -236,7 +236,7 @@ saxdb_pre_object(struct saxdb_context *dest) {
     }
 }
 #else
-#define saxdb_pre_object(DEST) 
+#define saxdb_pre_object(DEST)
 #endif
 
 static inline void

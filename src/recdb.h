@@ -34,10 +34,10 @@ enum recdb_type {
 struct record_data {
     enum recdb_type type;
     union {
-	char *qstring;
-	dict_t object;
-	struct string_list *slist;
-	void *whatever;
+        char *qstring;
+        dict_t object;
+        struct string_list *slist;
+        void *whatever;
     } d;
 };
 

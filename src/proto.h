@@ -27,9 +27,9 @@
  * which has much nicer interfaces that hide most of the ugly
  * differences between protocol dialects. */
 
-#define COMBO_NUMERIC_LEN 5   /* 1/2, 1/3 or 2/3 digits for server/client parts */
-#define MAXLEN		512   /* Maximum IRC line length */
-#define MAXNUMPARAMS    200
+#define COMBO_NUMERIC_LEN   5   /* 1/2, 1/3 or 2/3 digits for server/client parts */
+#define MAXLEN              512   /* Maximum IRC line length */
+#define MAXNUMPARAMS        200
 #define ALLCHANMSG_FUNCS_MAX  4 /* +1 == 5 potential 'allchanmsg' funcs */
 
 struct gline;
@@ -47,37 +47,37 @@ enum cState
     CONNECTED
 };
 
-#define UPLINK_UNAVAILABLE	0x001
+#define UPLINK_UNAVAILABLE  0x001
 
 struct uplinkNode
 {
-    char		*name;
+    char    *name;
 
-    char		*host;
-    int			port;
+    char    *host;
+    int     port;
 
-    struct sockaddr 	*bind_addr;
-    int 		bind_addr_len;
+    struct sockaddr *bind_addr;
+    int     bind_addr_len;
 
-    char		*password;
-    char		*their_password;
+    char    *password;
+    char    *their_password;
 
-    enum cState		state;
-    int			tries;
-    int			max_tries;
-    long		flags;
+    enum cState state;
+    int         tries;
+    int         max_tries;
+    long        flags;
 
-    struct uplinkNode	*prev;
-    struct uplinkNode	*next;
+    struct uplinkNode   *prev;
+    struct uplinkNode   *next;
 };
 
 struct cManagerNode
 {
-    struct uplinkNode	*uplinks;
-    struct uplinkNode	*uplink;
+    struct uplinkNode   *uplinks;
+    struct uplinkNode   *uplink;
 
-    int			cycles;
-    int			enabled;
+    int     cycles;
+    int     enabled;
 };
 
 #ifdef WITH_PROTOCOL_P10
@@ -205,7 +205,7 @@ struct mod_chanmode {
 #define MCP_ALLOW_OVB     0x0001 /* allow op, voice, ban manipulation */
 #define MCP_FROM_SERVER   0x0002 /* parse as from a server */
 #define MCP_KEY_FREE      0x0004 /* -k without a key argument */
-#define MCP_REGISTERED	  0x0008 /* chan is already registered; do not allow changes to MODE_REGISTERED */
+#define MCP_REGISTERED    0x0008 /* chan is already registered; do not allow changes to MODE_REGISTERED */
 #define MCP_UPASS_FREE    0x0010 /* -U without a key argument */
 #define MCP_APASS_FREE    0x0020 /* -A without a key argument */
 #define MC_ANNOUNCE       0x0100 /* send a mod_chanmode() change out */

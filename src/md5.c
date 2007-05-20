@@ -130,7 +130,7 @@ unsigned int inputLen;                     /* length of input block */
       MD5Transform (context->state, context->buffer);
 
       for (i = partLen; i + 63 < inputLen; i += 64)
-	  MD5Transform (context->state, &input[i]);
+          MD5Transform (context->state, &input[i]);
 
       index = 0;
   }
@@ -338,8 +338,8 @@ cryptpass_real(const char *pass, char *buffer, int seed)
         j = 0;
     }
     for (i=0; i<sizeof(buff); i++) {
-	buffer[j++] = hex_digits[buff[i] >> 4];
-	buffer[j++] = hex_digits[buff[i] & 15];
+        buffer[j++] = hex_digits[buff[i] >> 4];
+        buffer[j++] = hex_digits[buff[i] & 15];
     }
     buffer[j] = 0;
     return buffer;

@@ -311,11 +311,11 @@ static CMD_FUNC(cmd_pass)
         return 0;
     true_pass = cManager.uplink->their_password;
     if (true_pass && strcmp(true_pass, argv[1])) {
-	/* It might be good to mark the uplink as unavailable when
-	   this happens, though there should be a way of resetting
-	   the flag. */
-	irc_squit(self, "Incorrect password received.", NULL);
-	return 1;
+        /* It might be good to mark the uplink as unavailable when
+           this happens, though there should be a way of resetting
+           the flag. */
+        irc_squit(self, "Incorrect password received.", NULL);
+        return 1;
     }
 
     cManager.uplink->state = BURSTING;
@@ -334,9 +334,9 @@ static CMD_FUNC(cmd_error)
     log_module(MAIN_LOG, LOG_ERROR, "Error received from uplink, squitting.");
 
     if (cManager.uplink->state != CONNECTED) {
-	/* Error messages while connected should be fine. */
-	cManager.uplink->flags |= UPLINK_UNAVAILABLE;
-	log_module(MAIN_LOG, LOG_ERROR, "Disabling uplink.");
+        /* Error messages while connected should be fine. */
+        cManager.uplink->flags |= UPLINK_UNAVAILABLE;
+        log_module(MAIN_LOG, LOG_ERROR, "Disabling uplink.");
     }
 
     close_socket();
@@ -493,7 +493,7 @@ void
 reg_chanmsg_func(unsigned char prefix, struct userNode *service, chanmsg_func_t handler)
 {
     if (chanmsg_funcs[prefix].func)
-	log_module(MAIN_LOG, LOG_WARNING, "Re-registering new chanmsg handler for character `%c'.", prefix);
+        log_module(MAIN_LOG, LOG_WARNING, "Re-registering new chanmsg handler for character `%c'.", prefix);
     chanmsg_funcs[prefix].func = handler;
     chanmsg_funcs[prefix].service = service;
 }
@@ -524,13 +524,13 @@ void
 reg_mode_change_func(mode_change_func_t handler)
 {
     if (mcf_used == mcf_size) {
-	if (mcf_size) {
-	    mcf_size <<= 1;
-	    mcf_list = realloc(mcf_list, mcf_size*sizeof(mode_change_func_t));
-	} else {
-	    mcf_size = 8;
-	    mcf_list = malloc(mcf_size*sizeof(mode_change_func_t));
-	}
+        if (mcf_size) {
+            mcf_size <<= 1;
+            mcf_list = realloc(mcf_list, mcf_size*sizeof(mode_change_func_t));
+        } else {
+            mcf_size = 8;
+            mcf_list = malloc(mcf_size*sizeof(mode_change_func_t));
+        }
     }
     mcf_list[mcf_used++] = handler;
 }

@@ -58,13 +58,13 @@ int check_record(const char *key, void *data, UNUSED_ARG(void *extra))
     struct record_data *rd = data;
     switch (rd->type) {
     case RECDB_INVALID:
-	fprintf(stdout, "Invalid database record type for key %s\n", key);
-	return 1;
+        fprintf(stdout, "Invalid database record type for key %s\n", key);
+        return 1;
     case RECDB_QSTRING:
     case RECDB_STRING_LIST:
-	return 0;
+        return 0;
     case RECDB_OBJECT:
-	return dict_foreach(rd->d.object, check_record, NULL) ? 1 : 0;
+        return dict_foreach(rd->d.object, check_record, NULL) ? 1 : 0;
     }
     return 0;
 }

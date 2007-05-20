@@ -391,19 +391,19 @@ split_line(char *line, int irc_colon, int argv_size, char *argv[])
     int argc = 0;
     int n;
     while (*line && (argc < argv_size)) {
-	while (*line == ' ')
+        while (*line == ' ')
             *line++ = 0;
-	if (*line == ':' && irc_colon && argc > 0) {
-	    /* the rest is a single parameter */
-	    argv[argc++] = line + 1;
-	    break;
-	}
+        if (*line == ':' && irc_colon && argc > 0) {
+            /* the rest is a single parameter */
+            argv[argc++] = line + 1;
+            break;
+        }
         if (!*line)
             break;
-	argv[argc++] = line;
-	if (argc >= argv_size)
+        argv[argc++] = line;
+        if (argc >= argv_size)
             break;
-	while (*line != ' ' && *line)
+        while (*line != ' ' && *line)
             line++;
     }
 #ifdef NDEBUG
@@ -430,7 +430,7 @@ int mmatch(const char *old_mask, const char *new_mask)
     if (*m == '*')
     {
       while (*m == '*')
-	m++;
+        m++;
       wild = 1;
       ma = m;
       na = n;
@@ -439,25 +439,25 @@ int mmatch(const char *old_mask, const char *new_mask)
     if (!*m)
     {
       if (!*n)
-	return 0;
+        return 0;
       for (m--; (m > old_mask) && (*m == '?'); m--)
-	;
+        ;
       if ((*m == '*') && (m > old_mask) && (m[-1] != '\\'))
-	return 0;
+        return 0;
       if (!wild)
-	return 1;
+        return 1;
       m = ma;
 
       /* Added to `mmatch' : Because '\?' and '\*' now is one character: */
       if ((*na == '\\') && ((na[1] == '*') || (na[1] == '?')))
-	++na;
+        ++na;
 
       n = ++na;
     }
     else if (!*n)
     {
       while (*m == '*')
-	m++;
+        m++;
       return (*m != 0);
     }
     if ((*m == '\\') && ((m[1] == '*') || (m[1] == '?')))
@@ -494,23 +494,23 @@ int mmatch(const char *old_mask, const char *new_mask)
  *  cases upfront (which took 2 hours!)).
  */
     if ((*m == '*' && !mq) ||
-	((!mq || nq) && tolower(*m) == tolower(*n)) ||
-	(*m == '?' && !mq && (*n != '*' || nq)))
+        ((!mq || nq) && tolower(*m) == tolower(*n)) ||
+        (*m == '?' && !mq && (*n != '*' || nq)))
     {
       if (*m)
-	m++;
+        m++;
       if (*n)
-	n++;
+        n++;
     }
     else
     {
       if (!wild)
-	return 1;
+        return 1;
       m = ma;
 
       /* Added to `mmatch' : Because '\?' and '\*' now is one character: */
       if ((*na == '\\') && ((na[1] == '*') || (na[1] == '?')))
-	++na;
+        ++na;
 
       n = ++na;
     }
@@ -703,20 +703,20 @@ sanitize_ircmask(char *input)
     mask = input;
     while(*input++ != '!')
     {
-	length++;
+        length++;
     }
     if(length > NICKLEN)
     {
-	mask += NICKLEN;
-	*mask++ = '!';
+        mask += NICKLEN;
+        *mask++ = '!';
 
-	/* This flag is used to indicate following parts should
-	   be shifted. */
-	flag = 1;
+        /* This flag is used to indicate following parts should
+           be shifted. */
+        flag = 1;
     }
     else
     {
-	mask = input;
+        mask = input;
     }
 
     /* The ident and host must be truncated at the beginning and
@@ -725,46 +725,46 @@ sanitize_ircmask(char *input)
     start = input;
     while(*input++ != '@')
     {
-	length++;
+        length++;
     }
     if(length > USERLEN || flag)
     {
-	if(length > USERLEN)
-	{
-	    start = input - USERLEN;
-	    *mask++ = '*';
-	}
-	while(*start != '@')
-	{
-	    *mask++ = *start++;
-	}
-	*mask++ = '@';
+        if(length > USERLEN)
+        {
+            start = input - USERLEN;
+            *mask++ = '*';
+        }
+        while(*start != '@')
+        {
+            *mask++ = *start++;
+        }
+        *mask++ = '@';
 
-	flag = 1;
+        flag = 1;
     }
     else
     {
-	mask = input;
+        mask = input;
     }
 
     length = 0;
     start = input;
     while(*input++)
     {
-	length++;
+        length++;
     }
     if(length > HOSTLEN || flag)
     {
-	if(length > HOSTLEN)
-	{
-	    start = input - HOSTLEN;
-	    *mask++ = '*';
-	}
-	while(*start)
-	{
-	    *mask++ = *start++;
-	}
-	*mask = '\0';
+        if(length > HOSTLEN)
+        {
+            start = input - HOSTLEN;
+            *mask++ = '*';
+        }
+        while(*start)
+        {
+            *mask++ = *start++;
+        }
+        *mask = '\0';
     }
 
     return output;
@@ -875,13 +875,13 @@ intervalString(char *output, time_t interval, struct handle_info *hi)
     if(!interval)
     {
         msg = language_find_message(lang, "MSG_0_SECONDS");
-	return strcpy(output, msg);
+        return strcpy(output, msg);
     }
 
     for (type = 0, words = pos = 0;
          interval && (words < 2) && (type < ArrayLength(unit));
          type++) {
-	if (interval < unit[type].length)
+        if (interval < unit[type].length)
             continue;
         count = interval / unit[type].length;
         interval = interval % unit[type].length;

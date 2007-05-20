@@ -26,94 +26,94 @@
 #include "saxdb.h"
 #include "timeq.h"
 
-#define CHANSERV_CONF_NAME	"services/chanserv"
+#define CHANSERV_CONF_NAME  "services/chanserv"
 
 /* ChanServ options */
-#define KEY_SUPPORT_CHANNEL     "support_channel"
-#define KEY_SUPPORT_CHANNEL_MODES "support_channel_modes"
-#define KEY_DB_BACKUP_FREQ	"db_backup_freq"
-#define KEY_INFO_DELAY		"info_delay"
-#define KEY_MAX_GREETLEN       	"max_greetlen"
-#define KEY_ADJUST_THRESHOLD   	"adjust_threshold"
-#define KEY_ADJUST_DELAY   	"adjust_delay"
-#define KEY_CHAN_EXPIRE_FREQ	"chan_expire_freq"
-#define KEY_CHAN_EXPIRE_DELAY	"chan_expire_delay"
-#define KEY_DNR_EXPIRE_FREQ	"dnr_expire_freq"
-#define KEY_MAX_CHAN_USERS     	"max_chan_users"
-#define KEY_MAX_CHAN_BANS	"max_chan_bans"
-#define KEY_NICK		"nick"
-#define KEY_OLD_CHANSERV_NAME	"old_chanserv_name"
-#define KEY_8BALL_RESPONSES     "8ball"
-#define KEY_OLD_BAN_NAMES       "old_ban_names"
-#define KEY_REFRESH_PERIOD      "refresh_period"
+#define KEY_SUPPORT_CHANNEL         "support_channel"
+#define KEY_SUPPORT_CHANNEL_MODES   "support_channel_modes"
+#define KEY_DB_BACKUP_FREQ          "db_backup_freq"
+#define KEY_INFO_DELAY              "info_delay"
+#define KEY_MAX_GREETLEN            "max_greetlen"
+#define KEY_ADJUST_THRESHOLD        "adjust_threshold"
+#define KEY_ADJUST_DELAY            "adjust_delay"
+#define KEY_CHAN_EXPIRE_FREQ        "chan_expire_freq"
+#define KEY_CHAN_EXPIRE_DELAY       "chan_expire_delay"
+#define KEY_DNR_EXPIRE_FREQ         "dnr_expire_freq"
+#define KEY_MAX_CHAN_USERS          "max_chan_users"
+#define KEY_MAX_CHAN_BANS           "max_chan_bans"
+#define KEY_NICK                    "nick"
+#define KEY_OLD_CHANSERV_NAME       "old_chanserv_name"
+#define KEY_8BALL_RESPONSES         "8ball"
+#define KEY_OLD_BAN_NAMES           "old_ban_names"
+#define KEY_REFRESH_PERIOD          "refresh_period"
 #define KEY_CTCP_SHORT_BAN_DURATION "ctcp_short_ban_duration"
 #define KEY_CTCP_LONG_BAN_DURATION  "ctcp_long_ban_duration"
 #define KEY_MAX_OWNED               "max_owned"
 #define KEY_IRC_OPERATOR_EPITHET    "irc_operator_epithet"
 #define KEY_NETWORK_HELPER_EPITHET  "network_helper_epithet"
 #define KEY_SUPPORT_HELPER_EPITHET  "support_helper_epithet"
-#define KEY_NODELETE_LEVEL      "nodelete_level"
-#define KEY_MAX_USERINFO_LENGTH "max_userinfo_length"
-#define KEY_GIVEOWNERSHIP_PERIOD "giveownership_timeout"
+#define KEY_NODELETE_LEVEL          "nodelete_level"
+#define KEY_MAX_USERINFO_LENGTH     "max_userinfo_length"
+#define KEY_GIVEOWNERSHIP_PERIOD    "giveownership_timeout"
 
 /* ChanServ database */
-#define KEY_CHANNELS		"channels"
-#define KEY_NOTE_TYPES          "note_types"
+#define KEY_CHANNELS                "channels"
+#define KEY_NOTE_TYPES              "note_types"
 
 /* Note type parameters */
-#define KEY_NOTE_OPSERV_ACCESS  "opserv_access"
-#define KEY_NOTE_CHANNEL_ACCESS "channel_access"
-#define KEY_NOTE_SETTER_ACCESS  "setter_access"
-#define KEY_NOTE_VISIBILITY     "visibility"
-#define KEY_NOTE_VIS_PRIVILEGED "privileged"
-#define KEY_NOTE_VIS_CHANNEL_USERS "channel_users"
-#define KEY_NOTE_VIS_ALL        "all"
-#define KEY_NOTE_MAX_LENGTH     "max_length"
-#define KEY_NOTE_SETTER         "setter"
-#define KEY_NOTE_NOTE           "note"
+#define KEY_NOTE_OPSERV_ACCESS      "opserv_access"
+#define KEY_NOTE_CHANNEL_ACCESS     "channel_access"
+#define KEY_NOTE_SETTER_ACCESS      "setter_access"
+#define KEY_NOTE_VISIBILITY         "visibility"
+#define KEY_NOTE_VIS_PRIVILEGED     "privileged"
+#define KEY_NOTE_VIS_CHANNEL_USERS  "channel_users"
+#define KEY_NOTE_VIS_ALL            "all"
+#define KEY_NOTE_MAX_LENGTH         "max_length"
+#define KEY_NOTE_SETTER             "setter"
+#define KEY_NOTE_NOTE               "note"
 
 /* Do-not-register channels */
-#define KEY_DNR                 "dnr"
-#define KEY_DNR_SET             "set"
-#define KEY_DNR_SETTER          "setter"
-#define KEY_DNR_REASON          "reason"
+#define KEY_DNR             "dnr"
+#define KEY_DNR_SET         "set"
+#define KEY_DNR_SETTER      "setter"
+#define KEY_DNR_REASON      "reason"
 
 /* Channel data */
-#define KEY_REGISTERED		"registered"
-#define KEY_REGISTRAR		"registrar"
-#define KEY_SUSPENDED           "suspended"
-#define KEY_PREVIOUS            "previous"
-#define KEY_SUSPENDER		"suspender"
-#define KEY_ISSUED              "issued"
-#define KEY_REVOKED             "revoked"
-#define KEY_SUSPEND_EXPIRES     "suspend_expires"
-#define KEY_SUSPEND_REASON      "suspend_reason"
-#define KEY_VISITED		"visited"
-#define KEY_TOPIC		"topic"
-#define KEY_GREETING		"greeting"
-#define KEY_USER_GREETING	"user_greeting"
-#define KEY_MODES		"modes"
-#define KEY_FLAGS		"flags"
-#define KEY_OPTIONS             "options"
-#define KEY_USERS		"users"
-#define KEY_BANS		"bans"
-#define KEY_MAX			"max"
-#define KEY_NOTES               "notes"
-#define KEY_TOPIC_MASK          "topic_mask"
-#define KEY_OWNER_TRANSFER      "owner_transfer"
+#define KEY_REGISTERED      "registered"
+#define KEY_REGISTRAR       "registrar"
+#define KEY_SUSPENDED       "suspended"
+#define KEY_PREVIOUS        "previous"
+#define KEY_SUSPENDER       "suspender"
+#define KEY_ISSUED          "issued"
+#define KEY_REVOKED         "revoked"
+#define KEY_SUSPEND_EXPIRES "suspend_expires"
+#define KEY_SUSPEND_REASON  "suspend_reason"
+#define KEY_VISITED         "visited"
+#define KEY_TOPIC           "topic"
+#define KEY_GREETING        "greeting"
+#define KEY_USER_GREETING   "user_greeting"
+#define KEY_MODES           "modes"
+#define KEY_FLAGS           "flags"
+#define KEY_OPTIONS         "options"
+#define KEY_USERS           "users"
+#define KEY_BANS            "bans"
+#define KEY_MAX             "max"
+#define KEY_NOTES           "notes"
+#define KEY_TOPIC_MASK      "topic_mask"
+#define KEY_OWNER_TRANSFER  "owner_transfer"
 
 /* User data */
-#define KEY_LEVEL		"level"
-#define KEY_INFO		"info"
-#define KEY_SEEN		"seen"
+#define KEY_LEVEL   "level"
+#define KEY_INFO    "info"
+#define KEY_SEEN    "seen"
 
 /* Ban data */
-#define KEY_OWNER		"owner"
-#define KEY_REASON		"reason"
-#define KEY_SET			"set"
-#define KEY_DURATION		"duration"
-#define KEY_EXPIRES             "expires"
-#define KEY_TRIGGERED		"triggered"
+#define KEY_OWNER       "owner"
+#define KEY_REASON      "reason"
+#define KEY_SET         "set"
+#define KEY_DURATION    "duration"
+#define KEY_EXPIRES     "expires"
+#define KEY_TRIGGERED   "triggered"
 
 #define CHANNEL_DEFAULT_FLAGS   (CHANNEL_OFFCHANNEL | CHANNEL_UNREVIEWED)
 #define CHANNEL_PRESERVED_FLAGS (CHANNEL_UNREVIEWED)
@@ -456,26 +456,26 @@ static const struct message_entry msgtab[] = {
 };
 
 /* eject_user and unban_user flags */
-#define ACTION_KICK		0x0001
-#define ACTION_BAN		0x0002
-#define ACTION_ADD_BAN		0x0004
-#define ACTION_ADD_TIMED_BAN   	0x0008
-#define ACTION_UNBAN		0x0010
-#define ACTION_DEL_BAN		0x0020
+#define ACTION_KICK             0x0001
+#define ACTION_BAN              0x0002
+#define ACTION_ADD_BAN          0x0004
+#define ACTION_ADD_TIMED_BAN    0x0008
+#define ACTION_UNBAN            0x0010
+#define ACTION_DEL_BAN          0x0020
 
 /* The 40 allows for [+-ntlksimprD] and lots of fudge factor. */
-#define MODELEN			40 + KEYLEN
-#define PADLEN			21
-#define ACCESSLEN		10
+#define MODELEN     40 + KEYLEN
+#define PADLEN      21
+#define ACCESSLEN   10
 
-#define CSFUNC_ARGS		user, channel, argc, argv, cmd
+#define CSFUNC_ARGS user, channel, argc, argv, cmd
 
 #define CHANSERV_FUNC(NAME) MODCMD_FUNC(NAME)
-#define CHANSERV_SYNTAX() 	svccmd_send_help(user, chanserv, cmd)
-#define REQUIRE_PARAMS(N)	if(argc < (N)) {            \
-	reply("MSG_MISSING_PARAMS", argv[0]); \
-	CHANSERV_SYNTAX(); \
-	return 0; }
+#define CHANSERV_SYNTAX() svccmd_send_help(user, chanserv, cmd)
+#define REQUIRE_PARAMS(N)   if(argc < (N)) {            \
+        reply("MSG_MISSING_PARAMS", argv[0]); \
+        CHANSERV_SYNTAX(); \
+        return 0; }
 
 DECLARE_LIST(dnrList, struct do_not_register *);
 DEFINE_LIST(dnrList, struct do_not_register *);
@@ -493,26 +493,26 @@ static struct
     struct channelList  support_channels;
     struct mod_chanmode default_modes;
 
-    unsigned long 	db_backup_frequency;
-    unsigned long 	channel_expire_frequency;
-    unsigned long 	dnr_expire_frequency;
+    unsigned long   db_backup_frequency;
+    unsigned long   channel_expire_frequency;
+    unsigned long   dnr_expire_frequency;
 
-    long 		info_delay;
-    unsigned int 	adjust_delay;
-    long	 	channel_expire_delay;
-    unsigned int        nodelete_level;
+    long            info_delay;
+    unsigned int    adjust_delay;
+    long            channel_expire_delay;
+    unsigned int    nodelete_level;
 
-    unsigned int	adjust_threshold;
-    int			join_flood_threshold;
+    unsigned int    adjust_threshold;
+    int             join_flood_threshold;
 
-    unsigned int 	greeting_length;
-    unsigned int        refresh_period;
-    unsigned int        giveownership_period;
+    unsigned int    greeting_length;
+    unsigned int    refresh_period;
+    unsigned int    giveownership_period;
 
-    unsigned int        max_owned;
-    unsigned int 	max_chan_users;
-    unsigned int 	max_chan_bans;
-    unsigned int        max_userinfo_length;
+    unsigned int    max_owned;
+    unsigned int    max_chan_users;
+    unsigned int    max_chan_bans;
+    unsigned int    max_userinfo_length;
 
     struct string_list  *set_shows;
     struct string_list  *eightball;
@@ -702,52 +702,52 @@ _GetChannelUser(struct chanData *channel, struct handle_info *handle, int overri
     if(override && HANDLE_FLAGGED(handle, HELPING)
        && ((handle->opserv_level >= chanserv_conf.nodelete_level) || !IsProtected(channel)))
     {
-	for(uData = helperList;
-	    uData && uData->handle != handle;
-	    uData = uData->next);
+        for(uData = helperList;
+            uData && uData->handle != handle;
+            uData = uData->next);
 
-	if(!uData)
-	{
-	    uData = calloc(1, sizeof(struct userData));
-	    uData->handle = handle;
+        if(!uData)
+        {
+            uData = calloc(1, sizeof(struct userData));
+            uData->handle = handle;
 
-	    uData->access = UL_HELPER;
-	    uData->seen = 0;
+            uData->access = UL_HELPER;
+            uData->seen = 0;
 
-	    uData->info = NULL;
+            uData->info = NULL;
 
-	    uData->prev = NULL;
-	    uData->next = helperList;
-	    if(helperList)
-		helperList->prev = uData;
-	    helperList = uData;
-	}
+            uData->prev = NULL;
+            uData->next = helperList;
+            if(helperList)
+                helperList->prev = uData;
+            helperList = uData;
+        }
 
-	head = &helperList;
+        head = &helperList;
     }
     else
     {
-	for(uData = channel->users; uData; uData = uData->next)
+        for(uData = channel->users; uData; uData = uData->next)
             if((uData->handle == handle) && (allow_suspended || !IsUserSuspended(uData)))
                 break;
 
-	head = &(channel->users);
+        head = &(channel->users);
     }
 
     if(uData && (uData != *head))
     {
-	/* Shuffle the user to the head of whatever list he was in. */
-	if(uData->next)
+        /* Shuffle the user to the head of whatever list he was in. */
+        if(uData->next)
             uData->next->prev = uData->prev;
-	if(uData->prev)
+        if(uData->prev)
             uData->prev->next = uData->next;
 
-	uData->prev = NULL;
-	uData->next = *head;
+        uData->prev = NULL;
+        uData->next = *head;
 
-	if(*head)
-	    (**head).prev = uData;
-	*head = uData;
+        if(*head)
+            (**head).prev = uData;
+        *head = uData;
     }
 
     return uData;
@@ -854,7 +854,7 @@ chanserv_deref_note_type(void *data)
     struct note_type *ntype = data;
 
     if(--ntype->refs > 0)
-	return;
+        return;
     free(ntype);
 }
 
@@ -872,12 +872,12 @@ chanserv_truncate_notes(struct note_type *ntype)
     struct chanData *cData;
     struct note *note;
     unsigned int size = sizeof(*note) + ntype->max_length;
-    
+
     for(cData = channelList; cData; cData = cData->next) {
         note = dict_find(cData->notes, ntype->name, NULL);
         if(!note)
             continue;
-	if(strlen(note->note) <= ntype->max_length)
+        if(strlen(note->note) <= ntype->max_length)
             continue;
         dict_remove2(cData->notes, ntype->name, 1);
         note = realloc(note, size);
@@ -922,7 +922,7 @@ static MODCMD_FUNC(cmd_createnote) {
     if((ntype = dict_find(note_types, argv[1], NULL)))
         existed = 1;
     else
-	ntype = chanserv_create_note_type(argv[arg]);
+        ntype = chanserv_create_note_type(argv[arg]);
     if(!irccasecmp(argv[++arg], "privileged"))
     {
         arg++;
@@ -935,7 +935,7 @@ static MODCMD_FUNC(cmd_createnote) {
         if(!ulvl)
         {
             reply("CSMSG_INVALID_ACCESS", argv[arg]);
-	    goto fail;
+            goto fail;
         }
         ntype->set_access_type = NOTE_SET_CHANNEL_ACCESS;
         ntype->set_access.min_ulevel = ulvl;
@@ -947,7 +947,7 @@ static MODCMD_FUNC(cmd_createnote) {
     else
     {
         reply("CSMSG_BAD_NOTE_ACCESS", argv[arg]);
-	goto fail;
+        goto fail;
     }
 
     if(!irccasecmp(argv[++arg], "privileged"))
@@ -958,35 +958,35 @@ static MODCMD_FUNC(cmd_createnote) {
         ntype->visible_type = NOTE_VIS_ALL;
     else {
         reply("CSMSG_BAD_NOTE_ACCESS", argv[arg]);
-	goto fail;
+        goto fail;
     }
 
     if((arg+1) >= argc) {
         reply("MSG_MISSING_PARAMS", argv[0]);
-	goto fail;
+        goto fail;
     }
     max_length = strtoul(argv[++arg], NULL, 0);
     if(max_length < 20 || max_length > 450)
     {
         reply("CSMSG_BAD_MAX_LENGTH", argv[arg]);
-	goto fail;
+        goto fail;
     }
     if(existed && (max_length < ntype->max_length))
     {
-	ntype->max_length = max_length;
-	chanserv_truncate_notes(ntype);
+        ntype->max_length = max_length;
+        chanserv_truncate_notes(ntype);
     }
     ntype->max_length = max_length;
 
     if(existed)
-        reply("CSMSG_NOTE_MODIFIED", ntype->name);    
+        reply("CSMSG_NOTE_MODIFIED", ntype->name);
     else
         reply("CSMSG_NOTE_CREATED", ntype->name);
     return 1;
 
 fail:
     if(!existed)
-	dict_remove(note_types, ntype->name);
+        dict_remove(note_types, ntype->name);
     return 0;
 }
 
@@ -1103,7 +1103,7 @@ register_channel(struct chanNode *cNode, char *registrar)
     channel->next = channelList;
 
     if(channelList)
-	channelList->prev = channel;
+        channelList->prev = channel;
     channelList = channel;
     registered_channels++;
 
@@ -1120,7 +1120,7 @@ add_channel_user(struct chanData *channel, struct handle_info *handle, unsigned 
     struct userData *ud;
 
     if(access > UL_OWNER)
-	return NULL;
+        return NULL;
 
     ud = calloc(1, sizeof(*ud));
     ud->channel = channel;
@@ -1132,7 +1132,7 @@ add_channel_user(struct chanData *channel, struct handle_info *handle, unsigned 
     ud->prev = NULL;
     ud->next = channel->users;
     if(channel->users)
-	channel->users->prev = ud;
+        channel->users->prev = ud;
     channel->users = ud;
 
     channel->userCount++;
@@ -1217,12 +1217,12 @@ add_channel_ban(struct chanData *channel, const char *mask, char *owner, time_t 
     bd->reason = strdup(reason);
 
     if(expires)
-	timeq_add(expires, expire_ban, bd);
+        timeq_add(expires, expire_ban, bd);
 
     bd->prev = NULL;
     bd->next = channel->bans;
     if(channel->bans)
-	channel->bans->prev = bd;
+        channel->bans->prev = bd;
     channel->bans = bd;
     channel->banCount++;
     banCount++;
@@ -1245,7 +1245,7 @@ del_channel_ban(struct banData *ban)
         ban->next->prev = ban->prev;
 
     if(ban->expires)
-	timeq_del(0, expire_ban, ban, TIMEQ_IGNORE_WHEN);
+        timeq_del(0, expire_ban, ban, TIMEQ_IGNORE_WHEN);
 
     if(ban->reason)
         free(ban->reason);
@@ -1267,7 +1267,7 @@ expire_ban(void *data)
         for(ii=0; ii<bans.used; ii++)
         {
             if(!strcmp(bans.list[ii]->ban, bd->mask))
-	    {
+            {
                 change.argc = 1;
                 change.args[0].mode = MODE_REMOVE|MODE_BAN;
                 change.args[0].u.hostmask = bd->mask;
@@ -1298,7 +1298,7 @@ unregister_channel(struct chanData *channel, const char *reason)
     */
 
     if(!channel)
-	return;
+        return;
 
     timeq_del(0, NULL, channel, TIMEQ_IGNORE_FUNC | TIMEQ_IGNORE_WHEN);
 
@@ -1310,10 +1310,10 @@ unregister_channel(struct chanData *channel, const char *reason)
     }
 
     while(channel->users)
-	del_channel_user(channel->users, 0);
+        del_channel_user(channel->users, 0);
 
     while(channel->bans)
-	del_channel_ban(channel->bans);
+        del_channel_ban(channel->bans);
 
     free(channel->topic);
     free(channel->registrar);
@@ -1331,8 +1331,8 @@ unregister_channel(struct chanData *channel, const char *reason)
 
     if(channel->suspended)
     {
-	struct chanNode *cNode = channel->channel;
-	struct suspended *suspended, *next_suspended;
+        struct chanNode *cNode = channel->channel;
+        struct suspended *suspended, *next_suspended;
 
         for(suspended = channel->suspended; suspended; suspended = next_suspended)
         {
@@ -1344,8 +1344,8 @@ unregister_channel(struct chanData *channel, const char *reason)
             free(suspended);
         }
 
-	if(cNode)
-	    cNode->channel_info = NULL;
+        if(cNode)
+            cNode->channel_info = NULL;
     }
     channel->channel->channel_info = NULL;
 
@@ -1371,7 +1371,7 @@ expire_channels(UNUSED_ARG(void *data))
 
     for(channel = channelList; channel; channel = next)
     {
-	next = channel->next;
+        next = channel->next;
 
         /* See if the channel can be expired. */
         if(((now - channel->visited) <= chanserv_conf.channel_expire_delay)
@@ -1391,7 +1391,7 @@ expire_channels(UNUSED_ARG(void *data))
     }
 
     if(chanserv_conf.channel_expire_frequency)
-	timeq_add(now + chanserv_conf.channel_expire_frequency, expire_channels, NULL);
+        timeq_add(now + chanserv_conf.channel_expire_frequency, expire_channels, NULL);
 }
 
 static void
@@ -1435,7 +1435,7 @@ protect_user(const struct userNode *victim, const struct userNode *aggressor, st
     /* Don't protect if no one is to be protected, someone is attacking
        himself, or if the aggressor is an IRC Operator. */
     if(protect == 'n' || victim == aggressor || IsOper(aggressor))
-	return 0;
+        return 0;
 
     /* Don't protect if the victim isn't authenticated (because they
        can't be a channel user), unless we are to protect non-users
@@ -1457,14 +1457,14 @@ protect_user(const struct userNode *victim, const struct userNode *aggressor, st
     switch(protect)
     {
     case 'l':
-	if(cs_victim->access > cs_aggressor->access)
+        if(cs_victim->access > cs_aggressor->access)
             return 1;
-	break;
+        break;
     case 'a':
     case 'e':
-	if(cs_victim->access >= cs_aggressor->access)
+        if(cs_victim->access >= cs_aggressor->access)
             return 1;
-	break;
+        break;
     }
 
     return 0;
@@ -1480,8 +1480,8 @@ validate_op(struct userNode *user, struct chanNode *channel, struct userNode *vi
         || (cs_victim->access < cData->lvlOpts[lvlGiveOps]))
        && !check_user_level(channel, user, lvlEnfOps, 0, 0))
     {
-	send_message(user, chanserv, "CSMSG_OPBY_LOCKED");
-	return 0;
+        send_message(user, chanserv, "CSMSG_OPBY_LOCKED");
+        return 0;
     }
 
     return 1;
@@ -1492,14 +1492,14 @@ validate_deop(struct userNode *user, struct chanNode *channel, struct userNode *
 {
     if(IsService(victim))
     {
-	send_message(user, chanserv, "MSG_SERVICE_IMMUNE", victim->nick);
-	return 0;
+        send_message(user, chanserv, "MSG_SERVICE_IMMUNE", victim->nick);
+        return 0;
     }
 
     if(protect_user(victim, user, channel->channel_info))
     {
-	send_message(user, chanserv, "CSMSG_USER_PROTECTED", victim->nick);
-	return 0;
+        send_message(user, chanserv, "CSMSG_USER_PROTECTED", victim->nick);
+        return 0;
     }
 
     return 1;
@@ -2034,20 +2034,20 @@ static CHANSERV_FUNC(cmd_register)
 
     if(argc >= (new_channel+2))
     {
-	if(!IsHelping(user))
-	{
-	    reply("CSMSG_PROXY_FORBIDDEN");
-	    return 0;
-	}
+        if(!IsHelping(user))
+        {
+            reply("CSMSG_PROXY_FORBIDDEN");
+            return 0;
+        }
 
-	if(!(handle = modcmd_get_handle_info(user, argv[new_channel+1])))
+        if(!(handle = modcmd_get_handle_info(user, argv[new_channel+1])))
             return 0;
         force = (argc > (new_channel+2)) && !irccasecmp(argv[new_channel+2], "force");
         dnr = chanserv_is_dnr(chan_name, handle);
     }
     else
     {
-	handle = user->handle_info;
+        handle = user->handle_info;
         dnr = chanserv_is_dnr(chan_name, handle);
     }
     if(dnr && !force)
@@ -2153,11 +2153,11 @@ static CHANSERV_FUNC(cmd_unregister)
             return 0;
         }
         confirm_string = make_confirmation_string(uData);
-	if((argc < 2) || strcmp(argv[1], confirm_string))
-	{
-	    reply("CSMSG_CONFIRM_UNREG", confirm_string);
-	    return 0;
-	}
+        if((argc < 2) || strcmp(argv[1], confirm_string))
+        {
+            reply("CSMSG_CONFIRM_UNREG", confirm_string);
+            return 0;
+        }
     }
 
     sprintf(reason, "unregistered by %s.", user->handle_info->handle);
@@ -2181,8 +2181,8 @@ static CHANSERV_FUNC(cmd_move)
 
     if(IsProtected(channel->channel_info))
     {
-	reply("CSMSG_MOVE_NODELETE", channel->name);
-	return 0;
+        reply("CSMSG_MOVE_NODELETE", channel->name);
+        return 0;
     }
 
     if(!IsChannelName(argv[1]))
@@ -2221,8 +2221,8 @@ static CHANSERV_FUNC(cmd_move)
     }
     else if(target->channel_info)
     {
-	reply("CSMSG_ALREADY_REGGED", target->name);
-	return 0;
+        reply("CSMSG_ALREADY_REGGED", target->name);
+        return 0;
     }
     else if((!(mn = GetUserMode(target, user)) || !(mn->modes && MODE_CHANOP))
             && !IsHelping(user))
@@ -2262,8 +2262,8 @@ static CHANSERV_FUNC(cmd_move)
     if(!IsSuspended(target->channel_info))
     {
         char reason2[MAXLEN];
-	sprintf(reason2, "Channel moved to %s by %s.", target->name, user->handle_info->handle);
-	DelChannelUser(chanserv, channel, reason2, 0);
+        sprintf(reason2, "Channel moved to %s by %s.", target->name, user->handle_info->handle);
+        DelChannelUser(chanserv, channel, reason2, 0);
     }
     UnlockChannel(channel);
     LockChannel(target);
@@ -2282,7 +2282,7 @@ merge_users(struct chanData *source, struct chanData *target)
 
     /* Insert the source's users into the scratch area. */
     for(suData = source->users; suData; suData = suData->next)
-	dict_insert(merge, suData->handle->handle, suData);
+        dict_insert(merge, suData->handle->handle, suData);
 
     /* Iterate through the target's users, looking for
        users common to both channels. The lower access is
@@ -2290,50 +2290,50 @@ merge_users(struct chanData *source, struct chanData *target)
        list. */
     for(tuData = target->users; tuData; tuData = next)
     {
-	struct userData *choice;
+        struct userData *choice;
 
-	next = tuData->next;
+        next = tuData->next;
 
-	/* If a source user exists with the same handle as a target
-	   channel's user, resolve the conflict by removing one. */
-	suData = dict_find(merge, tuData->handle->handle, NULL);
-	if(!suData)
-	    continue;
+        /* If a source user exists with the same handle as a target
+           channel's user, resolve the conflict by removing one. */
+        suData = dict_find(merge, tuData->handle->handle, NULL);
+        if(!suData)
+            continue;
 
-	/* Pick the data we want to keep. */
+        /* Pick the data we want to keep. */
         /* If the access is the same, use the later seen time. */
-	if(suData->access == tuData->access)
-	    choice = (suData->seen > tuData->seen) ? suData : tuData;
-	else /* Otherwise, keep the higher access level. */
-	    choice = (suData->access > tuData->access) ? suData : tuData;
+        if(suData->access == tuData->access)
+            choice = (suData->seen > tuData->seen) ? suData : tuData;
+        else /* Otherwise, keep the higher access level. */
+            choice = (suData->access > tuData->access) ? suData : tuData;
 
-	/* Remove the user that wasn't picked. */
-	if(choice == tuData)
-	{
-	    dict_remove(merge, suData->handle->handle);
-	    del_channel_user(suData, 0);
-	}
-	else
-	    del_channel_user(tuData, 0);
+        /* Remove the user that wasn't picked. */
+        if(choice == tuData)
+        {
+            dict_remove(merge, suData->handle->handle);
+            del_channel_user(suData, 0);
+        }
+        else
+            del_channel_user(tuData, 0);
     }
 
     /* Move the remaining users to the target channel. */
     for(it = dict_first(merge); it; it = iter_next(it))
     {
-	suData = iter_data(it);
+        suData = iter_data(it);
 
-	/* Insert the user into the target channel's linked list. */
-	suData->prev = NULL;
-	suData->next = target->users;
+        /* Insert the user into the target channel's linked list. */
+        suData->prev = NULL;
+        suData->next = target->users;
         suData->channel = target;
 
-	if(target->users)
-	    target->users->prev = suData;
-	target->users = suData;
+        if(target->users)
+            target->users->prev = suData;
+        target->users = suData;
 
-	/* Update the user counts for the target channel; the
-	   source counts are left alone. */
-	target->userCount++;
+        /* Update the user counts for the target channel; the
+           source counts are left alone. */
+        target->userCount++;
     }
 
     /* Possible to assert (source->users == NULL) here. */
@@ -2353,72 +2353,72 @@ merge_bans(struct chanData *source, struct chanData *target)
     /* Perform a totally expensive O(n*m) merge, ick. */
     for(sbData = source->bans; sbData; sbData = sNext)
     {
-	/* Flag to track whether the ban's been moved
-	   to the destination yet. */
-	int moved = 0;
+        /* Flag to track whether the ban's been moved
+           to the destination yet. */
+        int moved = 0;
 
-	/* Possible to assert (sbData->prev == NULL) here. */
-	sNext = sbData->next;
+        /* Possible to assert (sbData->prev == NULL) here. */
+        sNext = sbData->next;
 
-	for(tbData = tFront; tbData; tbData = tNext)
-	{
-	    tNext = tbData->next;
+        for(tbData = tFront; tbData; tbData = tNext)
+        {
+            tNext = tbData->next;
 
-	    /* Perform two comparisons between each source
-	       and target ban, conflicts are resolved by
-	       keeping the broader ban and copying the later
-	       expiration and triggered time. */
-	    if(match_ircglobs(tbData->mask, sbData->mask))
-	    {
-		/* There is a broader ban in the target channel that
-		   overrides one in the source channel; remove the 
-		   source ban and break. */
-		if(sbData->expires > tbData->expires)
-		    tbData->expires = sbData->expires;
-		if(sbData->triggered > tbData->triggered)
-		    tbData->triggered = sbData->triggered;
-		del_channel_ban(sbData);
-		break;
-	    }
-	    else if(match_ircglobs(sbData->mask, tbData->mask))
-	    {
-		/* There is a broader ban in the source channel that
-		   overrides one in the target channel; remove the
-		   target ban, fall through and move the source over. */
-		if(tbData->expires > sbData->expires)
-		    sbData->expires = tbData->expires;
-		if(tbData->triggered > sbData->triggered)
-		    sbData->triggered = tbData->triggered;
-		if(tbData == tFront)
-		    tFront = tNext;
-		del_channel_ban(tbData);
-	    }
+            /* Perform two comparisons between each source
+               and target ban, conflicts are resolved by
+               keeping the broader ban and copying the later
+               expiration and triggered time. */
+            if(match_ircglobs(tbData->mask, sbData->mask))
+            {
+                /* There is a broader ban in the target channel that
+                   overrides one in the source channel; remove the
+                   source ban and break. */
+                if(sbData->expires > tbData->expires)
+                    tbData->expires = sbData->expires;
+                if(sbData->triggered > tbData->triggered)
+                    tbData->triggered = sbData->triggered;
+                del_channel_ban(sbData);
+                break;
+            }
+            else if(match_ircglobs(sbData->mask, tbData->mask))
+            {
+                /* There is a broader ban in the source channel that
+                   overrides one in the target channel; remove the
+                   target ban, fall through and move the source over. */
+                if(tbData->expires > sbData->expires)
+                    sbData->expires = tbData->expires;
+                if(tbData->triggered > sbData->triggered)
+                    sbData->triggered = tbData->triggered;
+                if(tbData == tFront)
+                    tFront = tNext;
+                del_channel_ban(tbData);
+            }
 
-	    /* Source bans can override multiple target bans, so
-	       we allow a source to run through this loop multiple
-	       times, but we can only move it once. */
-	    if(moved)
-		continue;
-	    moved = 1;
+            /* Source bans can override multiple target bans, so
+               we allow a source to run through this loop multiple
+               times, but we can only move it once. */
+            if(moved)
+                continue;
+            moved = 1;
 
-	    /* Remove the source ban from the source ban list. */
-	    if(sbData->next)
-		sbData->next->prev = sbData->prev;
+            /* Remove the source ban from the source ban list. */
+            if(sbData->next)
+                sbData->next->prev = sbData->prev;
 
-	    /* Modify the source ban's associated channel. */
-	    sbData->channel = target;
+            /* Modify the source ban's associated channel. */
+            sbData->channel = target;
 
-	    /* Insert the ban into the target channel's linked list. */
-	    sbData->prev = NULL;
-	    sbData->next = target->bans;
+            /* Insert the ban into the target channel's linked list. */
+            sbData->prev = NULL;
+            sbData->next = target->bans;
 
-	    if(target->bans)
-		target->bans->prev = sbData;
-	    target->bans = sbData;
+            if(target->bans)
+                target->bans->prev = sbData;
+            target->bans = sbData;
 
-	    /* Update the user counts for the target channel. */
-	    target->banCount++;
-	}
+            /* Update the user counts for the target channel. */
+            target->banCount++;
+        }
     }
 
     /* Possible to assert (source->bans == NULL) here. */
@@ -2433,7 +2433,7 @@ merge_data(struct chanData *source, struct chanData *target)
      * Do not touch last_refresh, ban count or user counts.
      */
     if(source->visited > target->visited)
-	target->visited = source->visited;
+        target->visited = source->visited;
     if(source->registered < target->registered)
         target->registered = source->registered;
     if(source->ownerTransfer > target->ownerTransfer)
@@ -2536,15 +2536,15 @@ static CHANSERV_FUNC(cmd_adduser)
 
     if(channel->channel_info->userCount >= chanserv_conf.max_chan_users)
     {
-	reply("CSMSG_MAXIMUM_USERS", chanserv_conf.max_chan_users);
-	return 0;
+        reply("CSMSG_MAXIMUM_USERS", chanserv_conf.max_chan_users);
+        return 0;
     }
 
     access = user_level_from_name(argv[2], UL_OWNER);
     if(!access)
     {
-	reply("CSMSG_INVALID_ACCESS", argv[2]);
-	return 0;
+        reply("CSMSG_INVALID_ACCESS", argv[2]);
+        return 0;
     }
 
     actor = GetChannelUser(channel->channel_info, user->handle_info);
@@ -2552,8 +2552,8 @@ static CHANSERV_FUNC(cmd_adduser)
 
     if(actor->access <= access)
     {
-	reply("CSMSG_NO_BUMP_ACCESS");
-	return 0;
+        reply("CSMSG_NO_BUMP_ACCESS");
+        return 0;
     }
 
     /* Trying to add someone with equal/more access? */
@@ -2565,8 +2565,8 @@ static CHANSERV_FUNC(cmd_adduser)
 
     if((actee = GetTrueChannelAccess(channel->channel_info, handle)))
     {
-	reply("CSMSG_USER_EXISTS", handle->handle, channel->name, actee->access);
-	return 0;
+        reply("CSMSG_USER_EXISTS", handle->handle, channel->name, actee->access);
+        return 0;
     }
 
     actee = add_channel_user(channel->channel_info, handle, access, 0, NULL);
@@ -2593,34 +2593,34 @@ static CHANSERV_FUNC(cmd_clvl)
 
     if(handle == user->handle_info && !privileged)
     {
-	reply("CSMSG_NO_SELF_CLVL");
-	return 0;
+        reply("CSMSG_NO_SELF_CLVL");
+        return 0;
     }
 
     if(!(victim = GetTrueChannelAccess(channel->channel_info, handle)))
     {
-	reply("CSMSG_NO_CHAN_USER", handle->handle, channel->name);
-	return 0;
+        reply("CSMSG_NO_CHAN_USER", handle->handle, channel->name);
+        return 0;
     }
 
     if(actor->access <= victim->access && !privileged)
     {
-	reply("MSG_USER_OUTRANKED", handle->handle);
-	return 0;
+        reply("MSG_USER_OUTRANKED", handle->handle);
+        return 0;
     }
 
     new_access = user_level_from_name(argv[2], UL_OWNER);
 
     if(!new_access)
     {
-	reply("CSMSG_INVALID_ACCESS", argv[2]);
-	return 0;
+        reply("CSMSG_INVALID_ACCESS", argv[2]);
+        return 0;
     }
 
     if(new_access >= actor->access && !privileged)
     {
-	reply("CSMSG_NO_BUMP_ACCESS");
-	return 0;
+        reply("CSMSG_NO_BUMP_ACCESS");
+        return 0;
     }
 
     /* Trying to clvl a equal/higher user? */
@@ -2656,8 +2656,8 @@ static CHANSERV_FUNC(cmd_deluser)
 
     if(!(victim = GetTrueChannelAccess(channel->channel_info, handle)))
     {
-	reply("CSMSG_NO_CHAN_USER", handle->handle, channel->name);
-	return 0;
+        reply("CSMSG_NO_CHAN_USER", handle->handle, channel->name);
+        return 0;
     }
 
     if(argc > 2)
@@ -2668,11 +2668,11 @@ static CHANSERV_FUNC(cmd_deluser)
             reply("CSMSG_INVALID_ACCESS", argv[1]);
             return 0;
         }
-	if(access != victim->access)
-	{
-	    reply("CSMSG_INCORRECT_ACCESS", handle->handle, victim->access, argv[1]);
-	    return 0;
-	}
+        if(access != victim->access)
+        {
+            reply("CSMSG_INCORRECT_ACCESS", handle->handle, victim->access, argv[1]);
+            return 0;
+        }
     }
     else
     {
@@ -2681,8 +2681,8 @@ static CHANSERV_FUNC(cmd_deluser)
 
     if((actor->access <= victim->access) && !IsHelping(user))
     {
-	reply("MSG_USER_OUTRANKED", victim->handle->handle);
-	return 0;
+        reply("MSG_USER_OUTRANKED", victim->handle->handle);
+        return 0;
     }
 
     /* If people delete themselves it is an override, but they
@@ -2715,8 +2715,8 @@ cmd_mdel_user(struct userNode *user, struct chanNode *channel, unsigned short mi
 
     if((actor->access <= max_access) && !IsHelping(user))
     {
-	reply("CSMSG_NO_ACCESS");
-	return 0;
+        reply("CSMSG_NO_ACCESS");
+        return 0;
     }
 
     if(!real_actor || real_actor->access <= max_access)
@@ -2724,12 +2724,12 @@ cmd_mdel_user(struct userNode *user, struct chanNode *channel, unsigned short mi
 
     for(uData = channel->channel_info->users; uData; uData = next)
     {
-	next = uData->next;
+        next = uData->next;
 
-	if((uData->access >= min_access)
+        if((uData->access >= min_access)
            && (uData->access <= max_access)
            && match_ircglob(uData->handle->handle, mask))
-	    del_channel_user(uData, 1);
+            del_channel_user(uData, 1);
     }
 
     reply("CSMSG_DELETED_USERS", mask, min_access, max_access, channel->name);
@@ -2773,7 +2773,7 @@ cmd_trim_bans(struct userNode *user, struct chanNode *channel, unsigned long dur
     limit = now - duration;
     for(bData = channel->channel_info->bans; bData; bData = next)
     {
-	next = bData->next;
+        next = bData->next;
 
         if((bData->triggered && bData->triggered >= limit) || (bData->set && bData->set >= limit))
             continue;
@@ -2804,27 +2804,27 @@ cmd_trim_users(struct userNode *user, struct chanNode *channel, unsigned short m
 
     if(!actor || actor->access <= max_access)
     {
-	send_message(user, chanserv, "CSMSG_NO_ACCESS");
-	return 0;
+        send_message(user, chanserv, "CSMSG_NO_ACCESS");
+        return 0;
     }
 
     count = 0;
     limit = now - duration;
     for(uData = channel->channel_info->users; uData; uData = next)
     {
-	next = uData->next;
+        next = uData->next;
 
-	if((uData->seen > limit)
+        if((uData->seen > limit)
            || uData->present
            || (HANDLE_FLAGGED(uData->handle, FROZEN) && !vacation))
-	    continue;
+            continue;
 
-	if(((uData->access >= min_access) && (uData->access <= max_access))
+        if(((uData->access >= min_access) && (uData->access <= max_access))
            || (!max_access && (uData->access < actor->access)))
-	{
-	    del_channel_user(uData, 1);
-	    count++;
-	}
+        {
+            del_channel_user(uData, 1);
+            count++;
+        }
     }
 
     if(!max_access)
@@ -2848,29 +2848,29 @@ static CHANSERV_FUNC(cmd_trim)
     duration = ParseInterval(argv[2]);
     if(duration < 60)
     {
-	reply("CSMSG_CANNOT_TRIM");
-	return 0;
+        reply("CSMSG_CANNOT_TRIM");
+        return 0;
     }
 
     if(!irccasecmp(argv[1], "bans"))
     {
-	cmd_trim_bans(user, channel, duration);
-	return 1;
+        cmd_trim_bans(user, channel, duration);
+        return 1;
     }
     else if(!irccasecmp(argv[1], "users"))
     {
-	cmd_trim_users(user, channel, 0, 0, duration, vacation);
-	return 1;
+        cmd_trim_users(user, channel, 0, 0, duration, vacation);
+        return 1;
     }
     else if(parse_level_range(&min_level, &max_level, argv[1]))
     {
-	cmd_trim_users(user, channel, min_level, max_level, duration, vacation);
-	return 1;
+        cmd_trim_users(user, channel, min_level, max_level, duration, vacation);
+        return 1;
     }
     else if((min_level = user_level_from_name(argv[1], UL_OWNER)))
     {
-	cmd_trim_users(user, channel, min_level, min_level, duration, vacation);
-	return 1;
+        cmd_trim_users(user, channel, min_level, min_level, duration, vacation);
+        return 1;
     }
     else
     {
@@ -2894,7 +2894,7 @@ static CHANSERV_FUNC(cmd_up)
     {
         if(argc)
             reply("MSG_CHANNEL_ABSENT", channel->name);
-	return 0;
+        return 0;
     }
 
     uData = GetChannelAccess(channel->channel_info, user->handle_info);
@@ -2942,14 +2942,14 @@ static CHANSERV_FUNC(cmd_down)
     {
         if(argc)
             reply("MSG_CHANNEL_ABSENT", channel->name);
-	return 0;
+        return 0;
     }
 
     if(!change.args[0].u.member->modes)
     {
         if(argc)
             reply("CSMSG_ALREADY_DOWN", channel->name);
-	return 0;
+        return 0;
     }
 
     change.args[0].mode = MODE_REMOVE | change.args[0].u.member->modes;
@@ -2963,12 +2963,12 @@ static int cmd_all(struct userNode *user, UNUSED_ARG(struct chanNode *channel), 
 
     for(cList = user->handle_info->channels; cList; cList = cList->u_next)
     {
-	if(IsSuspended(cList->channel)
+        if(IsSuspended(cList->channel)
            || IsUserSuspended(cList)
            || !GetUserMode(cList->channel->channel, user))
-	    continue;
+            continue;
 
-	mcmd(user, cList->channel->channel, 0, NULL, cmd);
+        mcmd(user, cList->channel->channel, 0, NULL, cmd);
     }
 
     return 1;
@@ -2998,20 +2998,20 @@ modify_users(struct userNode *user, struct chanNode *channel, unsigned int argc,
 
     for(ii=valid=0; ++ii < argc; )
     {
-	if(!(victim = GetUserH(argv[ii])))
+        if(!(victim = GetUserH(argv[ii])))
             continue;
         change->args[valid].mode = mode;
         change->args[valid].u.member = GetUserMode(channel, victim);
         if(!change->args[valid].u.member)
             continue;
         if(validate && !validate(user, channel, victim))
-	    continue;
+            continue;
         valid++;
     }
 
     change->argc = valid;
     if(valid < (argc-1))
-	reply("CSMSG_PROCESS_FAILED");
+        reply("CSMSG_PROCESS_FAILED");
     if(valid)
     {
         modcmd_chanmode_announce(change);
@@ -3080,7 +3080,7 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
     REQUIRE_PARAMS(offset);
     if(argc > offset)
     {
-	reason = unsplit_string(argv + offset, argc - offset, NULL);
+        reason = unsplit_string(argv + offset, argc - offset, NULL);
         if(strlen(reason) > (TOPICLEN - (NICKLEN + 3)))
         {
             /* Truncate the reason to a length of TOPICLEN, as
@@ -3099,13 +3099,13 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
          * want to allow those (e.g.  unbans) in that case.  If we add
          * some other ejection action for in-channel users, change
          * this too. */
-	victimCount = victims[0] ? 1 : 0;
+        victimCount = victims[0] ? 1 : 0;
 
-	if(IsService(victim))
-	{
-	    reply("MSG_SERVICE_IMMUNE", victim->nick);
-	    return 0;
-	}
+        if(IsService(victim))
+        {
+            reply("MSG_SERVICE_IMMUNE", victim->nick);
+            return 0;
+        }
 
         if((action == ACTION_KICK) && !victimCount)
         {
@@ -3113,30 +3113,30 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
             return 0;
         }
 
-	if(protect_user(victim, user, channel->channel_info))
-	{
-	    reply("CSMSG_USER_PROTECTED", victim->nick);
-	    return 0;
-	}
+        if(protect_user(victim, user, channel->channel_info))
+        {
+            reply("CSMSG_USER_PROTECTED", victim->nick);
+            return 0;
+        }
 
-	ban = generate_hostmask(victim, GENMASK_STRICT_HOST|GENMASK_ANY_IDENT);
-	name = victim->nick;
+        ban = generate_hostmask(victim, GENMASK_STRICT_HOST|GENMASK_ANY_IDENT);
+        name = victim->nick;
     }
     else
     {
-	if(!is_ircmask(argv[1]))
-	{
-	    reply("MSG_NICK_UNKNOWN", argv[1]);
-	    return 0;
-	}
+        if(!is_ircmask(argv[1]))
+        {
+            reply("MSG_NICK_UNKNOWN", argv[1]);
+            return 0;
+        }
 
-	victims = alloca(sizeof(victims[0]) * channel->members.used);
+        victims = alloca(sizeof(victims[0]) * channel->members.used);
 
         if(bad_channel_ban(channel, user, argv[1], &victimCount, victims))
         {
-	    reply("CSMSG_MASK_PROTECTED", argv[1]);
-	    return 0;
-	}
+            reply("CSMSG_MASK_PROTECTED", argv[1]);
+            return 0;
+        }
 
         if((victimCount > 4) && ((victimCount * 3) > channel->members.used) && !IsOper(user))
         {
@@ -3150,7 +3150,7 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
             return 0;
         }
 
-	name = ban = strdup(argv[1]);
+        name = ban = strdup(argv[1]);
     }
 
     /* Truncate the ban in place if necessary; we must ensure
@@ -3159,108 +3159,108 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
 
     if(action & ACTION_ADD_BAN)
     {
-	struct banData *bData, *next;
+        struct banData *bData, *next;
 
-	if(channel->channel_info->banCount >= chanserv_conf.max_chan_bans)
-	{
-	    reply("CSMSG_MAXIMUM_BANS", chanserv_conf.max_chan_bans);
-	    free(ban);
-	    return 0;
-	}
+        if(channel->channel_info->banCount >= chanserv_conf.max_chan_bans)
+        {
+            reply("CSMSG_MAXIMUM_BANS", chanserv_conf.max_chan_bans);
+            free(ban);
+            return 0;
+        }
 
-	if(action & ACTION_ADD_TIMED_BAN)
-	{
-	    duration = ParseInterval(argv[2]);
+        if(action & ACTION_ADD_TIMED_BAN)
+        {
+            duration = ParseInterval(argv[2]);
 
-	    if(duration < 15)
-	    {
-		reply("CSMSG_DURATION_TOO_LOW");
-		free(ban);
-		return 0;
-	    }
-	    else if(duration > (86400 * 365 * 2))
-	    {
-		reply("CSMSG_DURATION_TOO_HIGH");
-		free(ban);
-		return 0;
-	    }
-	}
+            if(duration < 15)
+            {
+                reply("CSMSG_DURATION_TOO_LOW");
+                free(ban);
+                return 0;
+            }
+            else if(duration > (86400 * 365 * 2))
+            {
+                reply("CSMSG_DURATION_TOO_HIGH");
+                free(ban);
+                return 0;
+            }
+        }
 
-	for(bData = channel->channel_info->bans; bData; bData = next)
-	{
-	    if(match_ircglobs(bData->mask, ban))
-	    {
-		int exact = !irccasecmp(bData->mask, ban);
+        for(bData = channel->channel_info->bans; bData; bData = next)
+        {
+            if(match_ircglobs(bData->mask, ban))
+            {
+                int exact = !irccasecmp(bData->mask, ban);
 
-		/* The ban is redundant; there is already a ban
-		   with the same effect in place. */
-		if(exact)
-		{
-		    if(bData->reason)
+                /* The ban is redundant; there is already a ban
+                   with the same effect in place. */
+                if(exact)
+                {
+                    if(bData->reason)
                         free(bData->reason);
-		    bData->reason = strdup(reason);
+                    bData->reason = strdup(reason);
                     safestrncpy(bData->owner, (user->handle_info ? user->handle_info->handle : user->nick), sizeof(bData->owner));
                     if(cmd)
                         reply("CSMSG_REASON_CHANGE", ban);
-		    if(!bData->expires)
+                    if(!bData->expires)
                         goto post_add_ban;
-		}
-		if(exact && bData->expires)
-		{
-		    int reset = 0;
+                }
+                if(exact && bData->expires)
+                {
+                    int reset = 0;
 
-		    /* If the ban matches an existing one exactly,
-		       extend the expiration time if the provided
-		       duration is longer. */
-		    if(duration && ((time_t)(now + duration) > bData->expires))
-		    {
-			bData->expires = now + duration;
-			reset = 1;
-		    }
-		    else if(!duration)
-		    {
-			bData->expires = 0;
-			reset = 1;
-		    }
+                    /* If the ban matches an existing one exactly,
+                       extend the expiration time if the provided
+                       duration is longer. */
+                    if(duration && ((time_t)(now + duration) > bData->expires))
+                    {
+                        bData->expires = now + duration;
+                        reset = 1;
+                    }
+                    else if(!duration)
+                    {
+                        bData->expires = 0;
+                        reset = 1;
+                    }
 
-		    if(reset)
-		    {
-			/* Delete the expiration timeq entry and
-			   requeue if necessary. */
-			timeq_del(0, expire_ban, bData, TIMEQ_IGNORE_WHEN);
+                    if(reset)
+                    {
+                        /* Delete the expiration timeq entry and
+                           requeue if necessary. */
+                        timeq_del(0, expire_ban, bData, TIMEQ_IGNORE_WHEN);
 
-			if(bData->expires)
-			    timeq_add(bData->expires, expire_ban, bData);
+                        if(bData->expires)
+                            timeq_add(bData->expires, expire_ban, bData);
 
                         if(!cmd)
                         {
                             /* automated kickban */
                         }
-			else if(duration)
-			    reply("CSMSG_BAN_EXTENDED", ban, intervalString(interval, duration, user->handle_info));
-			else
-			    reply("CSMSG_BAN_ADDED", name, channel->name);
+                        else if(duration)
+                            reply("CSMSG_BAN_EXTENDED", ban, intervalString(interval, duration, user->handle_info));
+                        else
+                            reply("CSMSG_BAN_ADDED", name, channel->name);
 
-			goto post_add_ban;
-		    }
-		}
+                        goto post_add_ban;
+                    }
+                }
                 if(cmd)
                     reply("CSMSG_REDUNDANT_BAN", name, channel->name);
 
-		free(ban);
-		return 0;
-	    }
+                free(ban);
+                return 0;
+            }
 
-	    next = bData->next;
-	    if(match_ircglobs(ban, bData->mask))
-	    {
-		/* The ban we are adding makes previously existing
-		   bans redundant; silently remove them. */
-		del_channel_ban(bData);
-	    }
-	}
+            next = bData->next;
+            if(match_ircglobs(ban, bData->mask))
+            {
+                /* The ban we are adding makes previously existing
+                   bans redundant; silently remove them. */
+                del_channel_ban(bData);
+            }
+        }
 
-	bData = add_channel_ban(channel->channel_info, ban, (user->handle_info ? user->handle_info->handle : user->nick), now, (victimCount ? now : 0), (duration ? now + duration : 0), reason);
+        bData = add_channel_ban(channel->channel_info, ban, (user->handle_info ? user->handle_info->handle : user->nick), now, (victimCount ? now : 0), (duration ? now + duration : 0), reason);
         free(ban);
         name = ban = strdup(bData->mask);
     }
@@ -3286,19 +3286,19 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
         }
     }
 
-  post_add_ban:
+    post_add_ban:
     if(action & ACTION_BAN)
     {
-	unsigned int exists;
+        unsigned int exists;
         struct mod_chanmode *change;
 
-	if(channel->banlist.used >= MAXBANS)
-	{
+        if(channel->banlist.used >= MAXBANS)
+        {
             if(cmd)
                 reply("CSMSG_BANLIST_FULL", channel->name);
-	    free(ban);
-	    return 0;
-	}
+            free(ban);
+            return 0;
+        }
 
         exists = ChannelBanExists(channel, ban);
         change = mod_chanmode_alloc(victimCount + 1);
@@ -3320,7 +3320,7 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
         mod_chanmode_free(change);
 
         if(exists && (action == ACTION_BAN))
-	{
+        {
             if(cmd)
                 reply("CSMSG_REDUNDANT_BAN", name, channel->name);
             free(ban);
@@ -3331,10 +3331,10 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
     if(action & ACTION_KICK)
     {
         char kick_reason[MAXLEN];
-	sprintf(kick_reason, "(%s) %s", user->nick, reason);
+        sprintf(kick_reason, "(%s) %s", user->nick, reason);
 
-	for(n = 0; n < victimCount; n++)
-	    KickChannelUser(victims[n]->user, channel, chanserv, kick_reason);
+        for(n = 0; n < victimCount; n++)
+            KickChannelUser(victims[n]->user, channel, chanserv, kick_reason);
     }
 
     if(!cmd)
@@ -3343,17 +3343,17 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
     }
     else if(action & ACTION_ADD_BAN)
     {
-	if(duration)
-	    reply("CSMSG_TIMED_BAN_ADDED", name, channel->name, intervalString(interval, duration, user->handle_info));
-	else
-	    reply("CSMSG_BAN_ADDED", name, channel->name);
+        if(duration)
+            reply("CSMSG_TIMED_BAN_ADDED", name, channel->name, intervalString(interval, duration, user->handle_info));
+        else
+            reply("CSMSG_BAN_ADDED", name, channel->name);
     }
     else if((action & (ACTION_BAN | ACTION_KICK)) == (ACTION_BAN | ACTION_KICK))
-	reply("CSMSG_KICK_BAN_DONE", name, channel->name);
+        reply("CSMSG_KICK_BAN_DONE", name, channel->name);
     else if(action & ACTION_BAN)
-	reply("CSMSG_BAN_DONE", name, channel->name);
+        reply("CSMSG_BAN_DONE", name, channel->name);
     else if(action & ACTION_KICK && victimCount)
-	reply("CSMSG_KICK_DONE", name, channel->name);
+        reply("CSMSG_KICK_DONE", name, channel->name);
 
     free(ban);
     return 1;
@@ -3437,13 +3437,13 @@ unban_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
     /* may want to allow a comma delimited list of users... */
     if(!(actee = GetUserH(argv[1])))
     {
-	if(!is_ircmask(argv[1]))
-	{
-	    reply("MSG_NICK_UNKNOWN", argv[1]);
-	    return 0;
-	}
+        if(!is_ircmask(argv[1]))
+        {
+            reply("MSG_NICK_UNKNOWN", argv[1]);
+            return 0;
+        }
 
-	mask = strdup(argv[1]);
+        mask = strdup(argv[1]);
     }
 
     /* We don't sanitize the mask here because ircu
@@ -3466,31 +3466,31 @@ unban_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
 
     if(action & ACTION_DEL_BAN)
     {
-	struct banData *ban, *next;
+        struct banData *ban, *next;
 
-	ban = channel->channel_info->bans;
-	while(ban)
-	{
-	    if(actee)
-		for( ; ban && !user_matches_glob(actee, ban->mask,
+        ban = channel->channel_info->bans;
+        while(ban)
+        {
+            if(actee)
+                for( ; ban && !user_matches_glob(actee, ban->mask,
                                                  MATCH_USENICK | MATCH_VISIBLE);
-		     ban = ban->next);
-	    else
-		for( ; ban && !match_ircglobs(mask, ban->mask);
-		     ban = ban->next);
-	    if(!ban)
+                     ban = ban->next);
+            else
+                for( ; ban && !match_ircglobs(mask, ban->mask);
+                     ban = ban->next);
+            if(!ban)
                 break;
-	    next = ban->next;
-	    del_channel_ban(ban);
-	    ban = next;
-	    acted = 1;
-	}
+            next = ban->next;
+            del_channel_ban(ban);
+            ban = next;
+            acted = 1;
+        }
     }
 
     if(!acted)
-	reply("CSMSG_BAN_NOT_FOUND", actee ? actee->nick : mask);
+        reply("CSMSG_BAN_NOT_FOUND", actee ? actee->nick : mask);
     else
-	reply("CSMSG_BAN_REMOVED", actee ? actee->nick : mask);
+        reply("CSMSG_BAN_REMOVED", actee ? actee->nick : mask);
     if(mask)
         free(mask);
     return 1;
@@ -3515,7 +3515,7 @@ static CHANSERV_FUNC(cmd_unbanme)
 
     /* remove permanent bans if the user has the proper access. */
     if(uData->access >= UL_MASTER)
-	flags |= ACTION_DEL_BAN;
+        flags |= ACTION_DEL_BAN;
 
     argv[1] = user->nick;
     return unban_user(user, channel, 2, argv, cmd, flags);
@@ -3528,8 +3528,8 @@ static CHANSERV_FUNC(cmd_unbanall)
 
     if(!channel->banlist.used)
     {
-	reply("CSMSG_NO_BANS", channel->name);
-	return 0;
+        reply("CSMSG_NO_BANS", channel->name);
+        return 0;
     }
 
     change = mod_chanmode_alloc(channel->banlist.used);
@@ -3635,7 +3635,7 @@ static CHANSERV_FUNC(cmd_access)
 
     if(argc < 2)
     {
-	target = user;
+        target = user;
         target_handle = target->handle_info;
     }
     else if((target = GetUserH(argv[1])))
@@ -3660,8 +3660,8 @@ static CHANSERV_FUNC(cmd_access)
 
     if(target == chanserv)
     {
-	reply("CSMSG_IS_CHANSERV");
-	return 1;
+        reply("CSMSG_IS_CHANSERV");
+        return 1;
     }
 
     if(!target_handle)
@@ -3671,11 +3671,11 @@ static CHANSERV_FUNC(cmd_access)
             reply("CSMSG_LAZY_SMURF_TARGET", target->nick, chanserv_conf.irc_operator_epithet);
             return 0;
         }
-	if(target != user)
-	{
-	    reply("MSG_USER_AUTHENTICATE", target->nick);
-	    return 0;
-	}
+        if(target != user)
+        {
+            reply("MSG_USER_AUTHENTICATE", target->nick);
+            return 0;
+        }
         reply("MSG_AUTHENTICATE");
         return 0;
     }
@@ -3846,22 +3846,22 @@ cmd_list_users(struct userNode *user, struct chanNode *channel, unsigned int arg
 
     if(user->handle_info)
     {
-	switch(user->handle_info->userlist_style)
-	{
-	case HI_STYLE_DEF: send_list = def_list; break;
+        switch(user->handle_info->userlist_style)
+        {
+        case HI_STYLE_DEF: send_list = def_list; break;
         case HI_STYLE_ZOOT: send_list = def_list; break;
-	}
+        }
     }
 
     lData.users = alloca(channel->channel_info->userCount * sizeof(struct userData *));
     matches = 0;
     for(uData = channel->channel_info->users; uData; uData = uData->next)
     {
-	if((uData->access < lowest)
+        if((uData->access < lowest)
            || (uData->access > highest)
            || (lData.search && !match_ircglob(uData->handle->handle, lData.search)))
-	    continue;
-	lData.users[matches++] = uData;
+            continue;
+        lData.users[matches++] = uData;
     }
     qsort(lData.users, matches, sizeof(lData.users[0]), userData_access_comp);
 
@@ -3952,7 +3952,7 @@ static CHANSERV_FUNC(cmd_bans)
         search = NULL;
     else if(strchr(search = argv[1], '!'))
     {
-	search = argv[1];
+        search = argv[1];
         search_wilds = search[strcspn(search, "?*")];
     }
     else if(!(search_u = GetUserH(search)))
@@ -3967,13 +3967,13 @@ static CHANSERV_FUNC(cmd_bans)
             if(!user_matches_glob(search_u, ban->mask, MATCH_USENICK | MATCH_VISIBLE))
                 continue;
         }
-	else if(search)
+        else if(search)
         {
             if(search_wilds ? !match_ircglobs(search, ban->mask) : !match_ircglob(search, ban->mask))
                 continue;
         }
-	bans[matches++] = ban;
-	if(ban->expires)
+        bans[matches++] = ban;
+        if(ban->expires)
             timed = 1;
     }
 
@@ -3996,28 +3996,28 @@ static CHANSERV_FUNC(cmd_bans)
     if(!matches)
     {
         table_send(cmd->parent->bot, user->nick, 0, NULL, tbl);
-	reply("MSG_NONE");
+        reply("MSG_NONE");
         free(tbl.contents[0]);
         free(tbl.contents);
-	return 0;
+        return 0;
     }
 
     msg_never = user_find_message(user, "MSG_NEVER");
     for(ii = 0; ii < matches; )
     {
-	ban = bans[ii];
+        ban = bans[ii];
 
-	if(!timed)
-	    expires = "";
-	else if(ban->expires)
-	    expires = intervalString(e_buffer, ban->expires - now, user->handle_info);
-	else
-	    expires = msg_never;
+        if(!timed)
+            expires = "";
+        else if(ban->expires)
+            expires = intervalString(e_buffer, ban->expires - now, user->handle_info);
+        else
+            expires = msg_never;
 
-	if(ban->triggered)
-	    triggered = intervalString(t_buffer, now - ban->triggered, user->handle_info);
-	else
-	    triggered = msg_never;
+        if(ban->triggered)
+            triggered = intervalString(t_buffer, now - ban->triggered, user->handle_info);
+        else
+            triggered = msg_never;
 
         tbl.contents[++ii] = malloc(tbl.width * sizeof(tbl.contents[0][0]));
         tbl.contents[ii][0] = ban->mask;
@@ -4067,12 +4067,12 @@ static CHANSERV_FUNC(cmd_topic)
     cData = channel->channel_info;
     if(argc < 2)
     {
-	if(cData->topic)
-	{
-	    SetChannelTopic(channel, chanserv, cData->topic, 1);
-	    reply("CSMSG_TOPIC_SET", cData->topic);
+        if(cData->topic)
+        {
+            SetChannelTopic(channel, chanserv, cData->topic, 1);
+            reply("CSMSG_TOPIC_SET", cData->topic);
             return 1;
-	}
+        }
 
         reply("CSMSG_NO_TOPIC", channel->name);
         return 0;
@@ -4144,12 +4144,12 @@ static CHANSERV_FUNC(cmd_mode)
     if(argc < 2)
     {
         change = &channel->channel_info->modes;
-	if(change->modes_set || change->modes_clear) {
+        if(change->modes_set || change->modes_clear) {
             modcmd_chanmode_announce(change);
             reply("CSMSG_DEFAULTED_MODES", channel->name);
-	} else
-	    reply("CSMSG_NO_MODES", channel->name);
-	return 1;
+        } else
+            reply("CSMSG_NO_MODES", channel->name);
+        return 1;
     }
 
     uData = GetChannelUser(channel->channel_info, user->handle_info);
@@ -4162,8 +4162,8 @@ static CHANSERV_FUNC(cmd_mode)
     change = mod_chanmode_parse(channel, argv+1, argc-1, MCP_KEY_FREE|MCP_REGISTERED, base_oplevel);
     if(!change)
     {
-	reply("MSG_INVALID_MODES", unsplit_string(argv+1, argc-1, NULL));
-	return 0;
+        reply("MSG_INVALID_MODES", unsplit_string(argv+1, argc-1, NULL));
+        return 0;
     }
 
     if(!check_user_level(channel, user, lvlEnfModes, 1, 0)
@@ -4191,7 +4191,7 @@ static CHANSERV_FUNC(cmd_invite)
     if(argc > 1)
     {
         if(!(invite = GetUserH(argv[1])))
-	{
+        {
             reply("MSG_NICK_UNKNOWN", argv[1]);
             return 0;
         }
@@ -4201,8 +4201,8 @@ static CHANSERV_FUNC(cmd_invite)
 
     if(GetUserMode(channel, invite))
     {
-	reply("CSMSG_ALREADY_PRESENT", invite->nick, channel->name);
-	return 0;
+        reply("CSMSG_ALREADY_PRESENT", invite->nick, channel->name);
+        return 0;
     }
 
     if(user != invite)
@@ -4217,7 +4217,7 @@ static CHANSERV_FUNC(cmd_invite)
     }
     irc_invite(chanserv, invite, channel);
     if(argc > 1)
-	reply("CSMSG_INVITED_USER", argv[1], channel->name);
+        reply("CSMSG_INVITED_USER", argv[1], channel->name);
 
     return 1;
 }
@@ -4226,8 +4226,8 @@ static CHANSERV_FUNC(cmd_inviteme)
 {
     if(GetUserMode(channel, user))
     {
-	reply("CSMSG_YOU_ALREADY_PRESENT", channel->name);
-	return 0;
+        reply("CSMSG_YOU_ALREADY_PRESENT", channel->name);
+        return 0;
     }
     if(channel->channel_info
        && !check_user_level(channel, user, lvlInviteMe, 1, 0))
@@ -4311,8 +4311,8 @@ static CHANSERV_FUNC(cmd_info)
     if(uData && (uData->access >= cData->lvlOpts[lvlGiveOps]))
     {
         mod_chanmode_format(&cData->modes, modes);
-	reply("CSMSG_CHANNEL_TOPIC", cData->topic);
-	reply("CSMSG_CHANNEL_MODES", modes[0] ? modes : user_find_message(user, "MSG_NONE"));
+        reply("CSMSG_CHANNEL_TOPIC", cData->topic);
+        reply("CSMSG_CHANNEL_MODES", modes[0] ? modes : user_find_message(user, "MSG_NONE"));
     }
 
     for(it = dict_first(cData->notes); it; it = iter_next(it))
@@ -4452,8 +4452,8 @@ static CHANSERV_FUNC(cmd_peek)
     table.contents = alloca(channel->members.used*sizeof(*table.contents));
     for(n = 0; n < channel->members.used; n++)
     {
-	mn = channel->members.list[n];
-	if(!(mn->modes & MODE_CHANOP) || IsLocal(mn->user))
+        mn = channel->members.list[n];
+        if(!(mn->modes & MODE_CHANOP) || IsLocal(mn->user))
             continue;
         table.contents[table.length] = alloca(sizeof(**table.contents));
         table.contents[table.length][0] = mn->user->nick;
@@ -4564,24 +4564,24 @@ static CHANSERV_FUNC(cmd_seen)
 
     if(!irccasecmp(argv[1], chanserv->nick))
     {
-	reply("CSMSG_IS_CHANSERV");
-	return 1;
+        reply("CSMSG_IS_CHANSERV");
+        return 1;
     }
 
     if(!(handle = get_handle_info(argv[1])))
     {
-	reply("MSG_HANDLE_UNKNOWN", argv[1]);
-	return 0;
+        reply("MSG_HANDLE_UNKNOWN", argv[1]);
+        return 0;
     }
 
     if(!(uData = GetTrueChannelAccess(channel->channel_info, handle)))
     {
-	reply("CSMSG_NO_CHAN_USER", handle->handle, channel->name);
-	return 0;
+        reply("CSMSG_NO_CHAN_USER", handle->handle, channel->name);
+        return 0;
     }
 
     if(uData->present)
-	reply("CSMSG_USER_PRESENT", handle->handle);
+        reply("CSMSG_USER_PRESENT", handle->handle);
     else if(uData->seen)
         reply("CSMSG_USER_SEEN", handle->handle, channel->name, intervalString(seen, now - uData->seen, user->handle_info));
     else
@@ -4781,9 +4781,9 @@ static CHANSERV_FUNC(cmd_events)
     reply("CSMSG_EVENT_SEARCH_RESULTS");
     matches = log_entry_search(&discrim, log_report_entry, &report);
     if(matches)
-	reply("MSG_MATCH_COUNT", matches);
+        reply("MSG_MATCH_COUNT", matches);
     else
-	reply("MSG_NO_MATCHES");
+        reply("MSG_NO_MATCHES");
     return 1;
 }
 
@@ -4888,9 +4888,9 @@ static CHANSERV_FUNC(cmd_csuspend)
         argv[1]++;
     else if(IsSuspended(channel->channel_info))
     {
-	reply("CSMSG_ALREADY_SUSPENDED", channel->name);
+        reply("CSMSG_ALREADY_SUSPENDED", channel->name);
         show_suspension_info(cmd, user, channel->channel_info->suspended);
-	return 0;
+        return 0;
     }
 
     if(!strcmp(argv[1], "0"))
@@ -4996,49 +4996,49 @@ chanserv_search_create(struct userNode *user, unsigned int argc, char *argv[])
 
     for(i = 0; i < argc; i++)
     {
-	/* Assume all criteria require arguments. */
-	if(i == (argc - 1))
-	{
-	    send_message(user, chanserv, "MSG_MISSING_PARAMS", argv[i]);
+        /* Assume all criteria require arguments. */
+        if(i == (argc - 1))
+        {
+            send_message(user, chanserv, "MSG_MISSING_PARAMS", argv[i]);
             goto fail;
-	}
+        }
 
-	if(!irccasecmp(argv[i], "name"))
-	    search->name = argv[++i];
-	else if(!irccasecmp(argv[i], "registrar"))
-	    search->registrar = argv[++i];
-	else if(!irccasecmp(argv[i], "unvisited"))
-	    search->unvisited = ParseInterval(argv[++i]);
-	else if(!irccasecmp(argv[i], "registered"))
-	    search->registered = ParseInterval(argv[++i]);
-	else if(!irccasecmp(argv[i], "flags"))
-	{
-	    i++;
-	    if(!irccasecmp(argv[i], "nodelete"))
-		search->flags |= CHANNEL_NODELETE;
-	    else if(!irccasecmp(argv[i], "suspended"))
-		search->flags |= CHANNEL_SUSPENDED;
+        if(!irccasecmp(argv[i], "name"))
+            search->name = argv[++i];
+        else if(!irccasecmp(argv[i], "registrar"))
+            search->registrar = argv[++i];
+        else if(!irccasecmp(argv[i], "unvisited"))
+            search->unvisited = ParseInterval(argv[++i]);
+        else if(!irccasecmp(argv[i], "registered"))
+            search->registered = ParseInterval(argv[++i]);
+        else if(!irccasecmp(argv[i], "flags"))
+        {
+            i++;
+            if(!irccasecmp(argv[i], "nodelete"))
+                search->flags |= CHANNEL_NODELETE;
+            else if(!irccasecmp(argv[i], "suspended"))
+                search->flags |= CHANNEL_SUSPENDED;
             else if(!irccasecmp(argv[i], "unreviewed"))
                 search->flags |= CHANNEL_UNREVIEWED;
-	    else
-	    {
-		send_message(user, chanserv, "CSMSG_INVALID_CFLAG", argv[i]);
-		goto fail;
-	    }
-	}
-	else if(!irccasecmp(argv[i], "limit"))
-	    search->limit = strtoul(argv[++i], NULL, 10);
-	else
-	{
-	    send_message(user, chanserv, "MSG_INVALID_CRITERIA", argv[i]);
-	    goto fail;
-	}
+            else
+            {
+                send_message(user, chanserv, "CSMSG_INVALID_CFLAG", argv[i]);
+                goto fail;
+            }
+        }
+        else if(!irccasecmp(argv[i], "limit"))
+            search->limit = strtoul(argv[++i], NULL, 10);
+        else
+        {
+            send_message(user, chanserv, "MSG_INVALID_CRITERIA", argv[i]);
+            goto fail;
+        }
     }
 
     if(search->name && !strcmp(search->name, "*"))
-	search->name = 0;
+        search->name = 0;
     if(search->registrar && !strcmp(search->registrar, "*"))
-	search->registrar = 0;
+        search->registrar = 0;
 
     return search;
   fail:
@@ -5056,7 +5056,7 @@ chanserv_channel_match(struct chanData *channel, search_t search)
        (search->unvisited && (now - channel->visited) < search->unvisited) ||
        (search->registered && (now - channel->registered) > search->registered) ||
        (search->flags && ((search->flags & channel->flags) != search->flags)))
-	return 0;
+        return 0;
 
     return 1;
 }
@@ -5069,10 +5069,10 @@ chanserv_channel_search(search_t search, channel_search_func smf, void *data)
 
     for(channel = channelList; channel && matches < search->limit; channel = channel->next)
     {
-	if(!chanserv_channel_match(channel, search))
+        if(!chanserv_channel_match(channel, search))
             continue;
-	matches++;
-	smf(channel, data);
+        matches++;
+        smf(channel, data);
     }
 
     return matches;
@@ -5098,13 +5098,13 @@ static CHANSERV_FUNC(cmd_search)
     REQUIRE_PARAMS(3);
 
     if(!irccasecmp(argv[1], "count"))
-	action = search_count;
+        action = search_count;
     else if(!irccasecmp(argv[1], "print"))
-	action = search_print;
+        action = search_print;
     else
     {
-	reply("CSMSG_ACTION_INVALID", argv[1]);
-	return 0;
+        reply("CSMSG_ACTION_INVALID", argv[1]);
+        return 0;
     }
 
     search = chanserv_search_create(user, argc - 2, argv + 2);
@@ -5112,17 +5112,17 @@ static CHANSERV_FUNC(cmd_search)
         return 0;
 
     if(action == search_count)
-	search->limit = INT_MAX;
+        search->limit = INT_MAX;
 
     if(action == search_print)
-	reply("CSMSG_CHANNEL_SEARCH_RESULTS");
+        reply("CSMSG_CHANNEL_SEARCH_RESULTS");
 
     matches = chanserv_channel_search(search, action, user);
 
     if(matches)
-	reply("MSG_MATCH_COUNT", matches);
+        reply("MSG_MATCH_COUNT", matches);
     else
-	reply("MSG_NO_MATCHES");
+        reply("MSG_NO_MATCHES");
 
     free(search);
     return 1;
@@ -5137,8 +5137,8 @@ static CHANSERV_FUNC(cmd_unvisited)
 
     if(argc > 1)
     {
-	interval = ParseInterval(argv[1]);
-	if(argc > 2)
+        interval = ParseInterval(argv[1]);
+        if(argc > 2)
             limit = atoi(argv[2]);
     }
 
@@ -5147,12 +5147,12 @@ static CHANSERV_FUNC(cmd_unvisited)
 
     for(cData = channelList; cData && matches < limit; cData = cData->next)
     {
-	if((now - cData->visited) < interval)
+        if((now - cData->visited) < interval)
             continue;
 
-	intervalString(buffer, now - cData->visited, user->handle_info);
-	reply("CSMSG_UNVISITED_DATA", cData->channel->name, buffer);
-	matches++;
+        intervalString(buffer, now - cData->visited, user->handle_info);
+        reply("CSMSG_UNVISITED_DATA", cData->channel->name, buffer);
+        matches++;
     }
 
     return 1;
@@ -5170,20 +5170,20 @@ static MODCMD_FUNC(chan_opt_defaulttopic)
             return 0;
         }
 
-	topic = unsplit_string(argv+1, argc-1, NULL);
+        topic = unsplit_string(argv+1, argc-1, NULL);
 
         free(channel->channel_info->topic);
-	if(topic[0] == '*' && topic[1] == 0)
-	{
+        if(topic[0] == '*' && topic[1] == 0)
+        {
             topic = channel->channel_info->topic = NULL;
-	}
-	else
-	{
-	    topic = channel->channel_info->topic = strdup(topic);
+        }
+        else
+        {
+            topic = channel->channel_info->topic = strdup(topic);
             if(channel->channel_info->topic_mask
                && !match_ircglob(channel->channel_info->topic, channel->channel_info->topic_mask))
                 reply("CSMSG_TOPIC_MISMATCH", channel->name);
-	}
+        }
         SetChannelTopic(channel, chanserv, topic ? topic : "", 1);
     }
 
@@ -5207,22 +5207,22 @@ static MODCMD_FUNC(chan_opt_topicmask)
             return 0;
         }
 
-	mask = unsplit_string(argv+1, argc-1, NULL);
+        mask = unsplit_string(argv+1, argc-1, NULL);
 
         if(cData->topic_mask)
             free(cData->topic_mask);
-	if(mask[0] == '*' && mask[1] == 0)
-	{
-	    cData->topic_mask = 0;
-	}
-	else
-	{
+        if(mask[0] == '*' && mask[1] == 0)
+        {
+            cData->topic_mask = 0;
+        }
+        else
+        {
             cData->topic_mask = strdup(mask);
             if(!cData->topic)
                 reply("CSMSG_MASK_BUT_NO_TOPIC", channel->name);
             else if(!match_ircglob(cData->topic, cData->topic_mask))
                 reply("CSMSG_TOPIC_MISMATCH", channel->name);
-	}
+        }
     }
 
     if(channel->channel_info->topic_mask)
@@ -5240,18 +5240,18 @@ int opt_greeting_common(struct userNode *user, struct svccmd *cmd, int argc, cha
         char *previous;
 
         previous = *data;
-	if(greeting[0] == '*' && greeting[1] == 0)
-	    *data = NULL;
-	else
-	{
-	    unsigned int length = strlen(greeting);
-	    if(length > chanserv_conf.greeting_length)
-	    {
-		reply("CSMSG_GREETING_TOO_LONG", length, chanserv_conf.greeting_length);
-		return 0;
-	    }
-	    *data = strdup(greeting);
-	}
+        if(greeting[0] == '*' && greeting[1] == 0)
+            *data = NULL;
+        else
+        {
+            unsigned int length = strlen(greeting);
+            if(length > chanserv_conf.greeting_length)
+            {
+                reply("CSMSG_GREETING_TOO_LONG", length, chanserv_conf.greeting_length);
+                return 0;
+            }
+            *data = strdup(greeting);
+        }
         if(previous)
             free(previous);
     }
@@ -5285,12 +5285,12 @@ static MODCMD_FUNC(chan_opt_modes)
             reply("CSMSG_NO_ACCESS");
             return 0;
         }
-	if(argv[1][0] == '*' && argv[1][1] == 0)
-	{
+        if(argv[1][0] == '*' && argv[1][1] == 0)
+        {
             memset(&channel->channel_info->modes, 0, sizeof(channel->channel_info->modes));
-	}
-	else if(!(new_modes = mod_chanmode_parse(channel, argv+1, argc-1, MCP_KEY_FREE|MCP_REGISTERED, 0)))
-	{
+        }
+        else if(!(new_modes = mod_chanmode_parse(channel, argv+1, argc-1, MCP_KEY_FREE|MCP_REGISTERED, 0)))
+        {
             reply("CSMSG_INVALID_MODE_LOCK", unsplit_string(argv+1, argc-1, NULL));
             return 0;
         }
@@ -5325,27 +5325,27 @@ channel_binary_option(char *name, unsigned long mask, struct userNode *user, str
 
     if(argc > 1)
     {
-	/* Set flag according to value. */
-	if(enabled_string(argv[1]))
-	{
-	    cData->flags |= mask;
-	    value = 1;
-	}
-	else if(disabled_string(argv[1]))
-	{
-	    cData->flags &= ~mask;
-	    value = 0;
-	}
-	else
-	{
-	    reply("MSG_INVALID_BINARY", argv[1]);
-	    return 0;
-	}
+        /* Set flag according to value. */
+        if(enabled_string(argv[1]))
+        {
+            cData->flags |= mask;
+            value = 1;
+        }
+        else if(disabled_string(argv[1]))
+        {
+            cData->flags &= ~mask;
+            value = 0;
+        }
+        else
+        {
+            reply("MSG_INVALID_BINARY", argv[1]);
+            return 0;
+        }
     }
     else
     {
-	/* Find current option value. */
-	value = (cData->flags & mask) ? 1 : 0;
+        /* Find current option value. */
+        value = (cData->flags & mask) ? 1 : 0;
     }
 
     if(value)
@@ -5359,8 +5359,8 @@ static MODCMD_FUNC(chan_opt_nodelete)
 {
     if((argc > 1) && (!IsOper(user) || !user->handle_info || (user->handle_info->opserv_level < chanserv_conf.nodelete_level)))
     {
-	reply("MSG_SETTING_PRIVILEGED", argv[0]);
-	return 0;
+        reply("MSG_SETTING_PRIVILEGED", argv[0]);
+        return 0;
     }
 
     CHANNEL_BINARY_OPTION("CSMSG_SET_NODELETE", CHANNEL_NODELETE);
@@ -5378,16 +5378,16 @@ static MODCMD_FUNC(chan_opt_offchannel)
 
     if(argc > 1)
     {
-	/* Set flag according to value. */
-	if(enabled_string(argv[1]))
-	{
+        /* Set flag according to value. */
+        if(enabled_string(argv[1]))
+        {
             if(!IsOffChannel(cData))
                 DelChannelUser(chanserv, channel, "Going off-channel.", 0);
-	    cData->flags |= CHANNEL_OFFCHANNEL;
-	    value = 1;
-	}
-	else if(disabled_string(argv[1]))
-	{
+            cData->flags |= CHANNEL_OFFCHANNEL;
+            value = 1;
+        }
+        else if(disabled_string(argv[1]))
+        {
             if(IsOffChannel(cData))
             {
                 struct mod_chanmode change;
@@ -5397,19 +5397,19 @@ static MODCMD_FUNC(chan_opt_offchannel)
                 change.args[0].u.member = AddChannelUser(chanserv, channel);
                 mod_chanmode_announce(chanserv, channel, &change);
             }
-	    cData->flags &= ~CHANNEL_OFFCHANNEL;
-	    value = 0;
-	}
-	else
-	{
-	    reply("MSG_INVALID_BINARY", argv[1]);
-	    return 0;
-	}
+            cData->flags &= ~CHANNEL_OFFCHANNEL;
+            value = 0;
+        }
+        else
+        {
+            reply("MSG_INVALID_BINARY", argv[1]);
+            return 0;
+        }
     }
     else
     {
-	/* Find current option value. */
-	value = (cData->flags & CHANNEL_OFFCHANNEL) ? 1 : 0;
+        /* Find current option value. */
+        value = (cData->flags & CHANNEL_OFFCHANNEL) ? 1 : 0;
     }
 
     if(value)
@@ -5434,10 +5434,10 @@ static MODCMD_FUNC(chan_opt_unreviewed)
         else if(disabled_string(argv[1]))
             new_value = 0;
         else
-	{
-	    reply("MSG_INVALID_BINARY", argv[1]);
-	    return 0;
-	}
+        {
+            reply("MSG_INVALID_BINARY", argv[1]);
+            return 0;
+        }
 
         if (new_value != value)
         {
@@ -5521,8 +5521,8 @@ channel_level_option(enum levelOption option, struct userNode *user, struct chan
         }
         value = user_level_from_name(argv[1], UL_OWNER+1);
         if(!value && strcmp(argv[1], "0"))
-	{
-	    reply("CSMSG_INVALID_ACCESS", argv[1]);
+        {
+            reply("CSMSG_INVALID_ACCESS", argv[1]);
             return 0;
         }
         uData = GetChannelUser(cData, user->handle_info);
@@ -5632,22 +5632,22 @@ channel_multiple_option(enum charOption option, struct userNode *user, struct ch
     {
         index = atoi(argv[1]);
 
-	if(!isdigit(argv[1][0]) || (index < 0) || (index >= count))
-	{
-	    reply("CSMSG_INVALID_NUMERIC", index);
+        if(!isdigit(argv[1][0]) || (index < 0) || (index >= count))
+        {
+            reply("CSMSG_INVALID_NUMERIC", index);
             /* Show possible values. */
             for(index = 0; index < count; index++)
                 reply(charOptions[option].format_name, index, user_find_message(user, charOptions[option].values[index].format_name));
-	    return 0;
-	}
+            return 0;
+        }
 
-	cData->chOpts[option] = charOptions[option].values[index].value;
+        cData->chOpts[option] = charOptions[option].values[index].value;
     }
     else
     {
-	/* Find current option value. */
+        /* Find current option value. */
       find_value:
-	for(index = 0;
+        for(index = 0;
             (index < count) && (cData->chOpts[option] != charOptions[option].values[index].value);
             index++);
         if(index == count)
@@ -5722,13 +5722,13 @@ static CHANSERV_FUNC(cmd_set)
 
     if(argc < 2)
     {
-	reply("CSMSG_CHANNEL_OPTIONS");
+        reply("CSMSG_CHANNEL_OPTIONS");
         for(ii = 0; ii < set_shows_list.used; ii++)
         {
             subcmd = set_shows_list.list[ii];
             subcmd->command->func(user, channel, 1, argv+1, subcmd);
         }
-	return 1;
+        return 1;
     }
 
     sprintf(buf, "%s %s", argv[0], argv[1]);
@@ -5763,7 +5763,7 @@ user_binary_option(char *name, unsigned long mask, struct userNode *user, struct
 
     if(argc < 2)
     {
-	/* Just show current option value. */
+        /* Just show current option value. */
     }
     else if(enabled_string(argv[1]))
     {
@@ -5813,11 +5813,11 @@ static MODCMD_FUNC(user_opt_info)
 
     if(!uData)
     {
-	/* If they got past the command restrictions (which require access)
+        /* If they got past the command restrictions (which require access)
          * but fail this test, we have some fool with security override on.
          */
-	reply("CSMSG_NOT_USER", channel->name);
-	return 0;
+        reply("CSMSG_NOT_USER", channel->name);
+        return 0;
     }
 
     if(argc > 1)
@@ -5886,11 +5886,11 @@ static CHANSERV_FUNC(cmd_uset)
 
     if(argc < 2)
     {
-	/* Do this so options are presented in a consistent order. */
-	reply("CSMSG_USER_OPTIONS");
+        /* Do this so options are presented in a consistent order. */
+        reply("CSMSG_USER_OPTIONS");
         for(ii = 0; ii < uset_shows_list.used; ii++)
             uset_shows_list.list[ii]->command->func(user, channel, 1, argv+1, uset_shows_list.list[ii]);
-	return 1;
+        return 1;
     }
 
     sprintf(buf, "%s %s", argv[0], argv[1]);
@@ -6487,7 +6487,7 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
     unsigned int ii, jj;
 
     if(!user->handle_info)
-	return;
+        return;
 
     mod_chanmode_init(&change);
     change.argc = 1;
@@ -6512,8 +6512,8 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
             continue;
         }
 
-	if(channel->access >= UL_PRESENT)
-	    channel->channel->visited = now;
+        if(channel->access >= UL_PRESENT)
+            channel->channel->visited = now;
 
         if(IsUserAutoOp(channel))
         {
@@ -6528,8 +6528,8 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
                 mod_chanmode_announce(chanserv, cn, &change);
         }
 
-	channel->seen = now;
-	channel->present = 1;
+        channel->seen = now;
+        channel->present = 1;
     }
 
     for(ii = 0; ii < user->channels.used; ++ii)
@@ -6586,18 +6586,18 @@ handle_part(struct modeNode *mn, UNUSED_ARG(const char *reason))
 
     if((cData->flags & CHANNEL_DYNAMIC_LIMIT) && !mn->channel->join_flooded)
     {
-	/* Allow for a bit of padding so that the limit doesn't
-	   track the user count exactly, which could get annoying. */
-	if((mn->channel->limit - mn->channel->members.used) > chanserv_conf.adjust_threshold + 5)
-	{
-	    timeq_del(0, chanserv_adjust_limit, cData, TIMEQ_IGNORE_WHEN);
-	    timeq_add(now + chanserv_conf.adjust_delay, chanserv_adjust_limit, cData);
-	}
+        /* Allow for a bit of padding so that the limit doesn't
+           track the user count exactly, which could get annoying. */
+        if((mn->channel->limit - mn->channel->members.used) > chanserv_conf.adjust_threshold + 5)
+        {
+            timeq_del(0, chanserv_adjust_limit, cData, TIMEQ_IGNORE_WHEN);
+            timeq_add(now + chanserv_conf.adjust_delay, chanserv_adjust_limit, cData);
+        }
     }
 
     if((uData = GetTrueChannelAccess(cData, mn->user->handle_info)))
     {
-	scan_user_presence(uData, mn->user);
+        scan_user_presence(uData, mn->user);
         uData->seen = now;
         if (uData->access >= UL_PRESENT)
             cData->visited = now;
@@ -6632,7 +6632,7 @@ handle_kick(struct userNode *kicker, struct userNode *victim, struct chanNode *c
     if(protect_user(victim, kicker, channel->channel_info))
     {
         const char *reason = user_find_message(kicker, "CSMSG_USER_PROTECTED");
-	KickChannelUser(kicker, channel, chanserv, reason);
+        KickChannelUser(kicker, channel, chanserv, reason);
     }
 
     if((uData = GetTrueChannelAccess(channel->channel_info, victim->handle_info)))
@@ -6844,8 +6844,8 @@ chanserv_conf_read(void)
 
     if(!(conf_node = conf_get_data(CHANSERV_CONF_NAME, RECDB_OBJECT)))
     {
-	log_module(CS_LOG, LOG_ERROR, "Invalid config node `%s'.", CHANSERV_CONF_NAME);
-	return;
+        log_module(CS_LOG, LOG_ERROR, "Invalid config node `%s'.", CHANSERV_CONF_NAME);
+        return;
     }
     for(ii = 0; ii < chanserv_conf.support_channels.used; ++ii)
         UnlockChannel(chanserv_conf.support_channels.list[ii]);
@@ -7048,15 +7048,15 @@ user_read_helper(const char *key, struct record_data *rd, struct chanData *chan)
 
     if(rd->type != RECDB_OBJECT || !dict_size(rd->d.object))
     {
-	log_module(CS_LOG, LOG_ERROR, "Invalid user in %s.", chan->channel->name);
-	return;
+        log_module(CS_LOG, LOG_ERROR, "Invalid user in %s.", chan->channel->name);
+        return;
     }
 
     access = atoi(database_get_data(rd->d.object, KEY_LEVEL, RECDB_QSTRING));
     if(access > UL_OWNER)
     {
-	log_module(CS_LOG, LOG_ERROR, "Invalid access level for %s in %s.", key, chan->channel->name);
-	return;
+        log_module(CS_LOG, LOG_ERROR, "Invalid access level for %s in %s.", key, chan->channel->name);
+        return;
     }
 
     inf = database_get_data(rd->d.object, KEY_INFO, RECDB_QSTRING);
@@ -7083,8 +7083,8 @@ ban_read_helper(const char *key, struct record_data *rd, struct chanData *chan)
 
     if(rd->type != RECDB_OBJECT || !dict_size(rd->d.object))
     {
-	log_module(CS_LOG, LOG_ERROR, "Invalid ban in %s.", chan->channel->name);
-	return;
+        log_module(CS_LOG, LOG_ERROR, "Invalid ban in %s.", chan->channel->name);
+        return;
     }
 
     set = database_get_data(rd->d.object, KEY_SET, RECDB_QSTRING);
@@ -7158,7 +7158,7 @@ chanserv_channel_read(const char *key, struct record_data *hir)
     if(!cData)
     {
         log_module(CS_LOG, LOG_ERROR, "Unable to register channel %s from database.", key);
-	return 0;
+        return 0;
     }
 
     if((obj = database_get_data(channel, KEY_OPTIONS, RECDB_OBJECT)))
@@ -7196,7 +7196,7 @@ chanserv_channel_read(const char *key, struct record_data *hir)
         enum charOption chOpt;
         unsigned int count;
 
-	cData->flags = base64toint(str, 5);
+        cData->flags = base64toint(str, 5);
         count = strlen(str += 5);
         for(lvlOpt = 0; lvlOpt < NUM_LEVEL_OPTIONS; ++lvlOpt)
         {
@@ -7223,7 +7223,7 @@ chanserv_channel_read(const char *key, struct record_data *hir)
         for(chOpt = 0; chOpt < NUM_CHAR_OPTIONS; ++chOpt)
             cData->chOpts[chOpt] = ((count <= charOptions[chOpt].old_idx) ? str : CHANNEL_DEFAULT_OPTIONS)[charOptions[chOpt].old_idx];
     }
-   
+
     if((obj = database_get_data(hir->d.object, KEY_SUSPENDED, RECDB_OBJECT)))
     {
         suspended = chanserv_read_suspended(obj);
@@ -7290,7 +7290,7 @@ chanserv_channel_read(const char *key, struct record_data *hir)
        && (argc = split_line(str, 0, ArrayLength(argv), argv))
        && (modes = mod_chanmode_parse(cNode, argv, argc, MCP_KEY_FREE, 0))) {
         cData->modes = *modes;
-	if(off_channel > 0)
+        if(off_channel > 0)
           cData->modes.modes_set |= MODE_REGISTERED;
         if(cData->modes.argc > 1)
             cData->modes.argc = 1;
@@ -7300,12 +7300,12 @@ chanserv_channel_read(const char *key, struct record_data *hir)
 
     obj = database_get_data(channel, KEY_USERS, RECDB_OBJECT);
     for(it = dict_first(obj); it; it = iter_next(it))
-	user_read_helper(iter_key(it), iter_data(it), cData);
+        user_read_helper(iter_key(it), iter_data(it), cData);
 
     if(!cData->users && !IsProtected(cData))
     {
         log_module(CS_LOG, LOG_ERROR, "Channel %s had no users in database, unregistering it.", key);
-	unregister_channel(cData, "has empty user list.");
+        unregister_channel(cData, "has empty user list.");
         return 0;
     }
 
@@ -7387,8 +7387,8 @@ chanserv_saxdb_read(struct dict *database)
             chanserv_note_type_read(iter_key(it), iter_data(it));
 
     if((section = database_get_data(database, KEY_CHANNELS, RECDB_OBJECT)))
-	for(it = dict_first(section); it; it = iter_next(it))
-	    chanserv_channel_read(iter_key(it), iter_data(it));
+        for(it = dict_first(section); it; it = iter_next(it))
+            chanserv_channel_read(iter_key(it), iter_data(it));
 
     if((section = database_get_data(database, KEY_DNR, RECDB_OBJECT)))
         for(it = dict_first(section); it; it = iter_next(it))
@@ -7411,7 +7411,7 @@ chanserv_write_users(struct saxdb_context *ctx, struct userData *uData)
         saxdb_write_int(ctx, KEY_SEEN, uData->seen);
         if(uData->flags)
             saxdb_write_int(ctx, KEY_FLAGS, uData->flags);
-	if(uData->info)
+        if(uData->info)
             saxdb_write_string(ctx, KEY_INFO, uData->info);
         saxdb_end_record(ctx);
     }
@@ -7498,7 +7498,7 @@ chanserv_write_channel(struct saxdb_context *ctx, struct chanData *channel)
 
     if(channel->modes.modes_set || channel->modes.modes_clear)
     {
-	mod_chanmode_format(&channel->modes, buf);
+        mod_chanmode_format(&channel->modes, buf);
         saxdb_write_string(ctx, KEY_MODES, buf);
     }
 
@@ -7512,7 +7512,7 @@ chanserv_write_channel(struct saxdb_context *ctx, struct chanData *channel)
         saxdb_start_record(ctx, KEY_NOTES, 1);
         for(it = dict_first(channel->notes); it; it = iter_next(it))
         {
-	    struct note *note = iter_data(it);
+            struct note *note = iter_data(it);
             saxdb_start_record(ctx, iter_key(it), 0);
             saxdb_write_string(ctx, KEY_NOTE_SETTER, note->setter);
             saxdb_write_string(ctx, KEY_NOTE_NOTE, note->note);
@@ -7823,7 +7823,7 @@ init_chanserv(const char *nick)
     saxdb_register("ChanServ", chanserv_saxdb_read, chanserv_saxdb_write);
 
     if(chanserv_conf.channel_expire_frequency)
-	timeq_add(now + chanserv_conf.channel_expire_frequency, expire_channels, NULL);
+        timeq_add(now + chanserv_conf.channel_expire_frequency, expire_channels, NULL);
 
     if(chanserv_conf.dnr_expire_frequency)
         timeq_add(now + chanserv_conf.dnr_expire_frequency, expire_dnrs, NULL);

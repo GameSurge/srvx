@@ -81,8 +81,8 @@ timeq_del_matching(void *key, void *data, void *extra)
     struct timeq_entry *a = data;
     struct timeq_extra *b = extra;
     if (((b->mask & TIMEQ_IGNORE_WHEN) || ((time_t)key == b->when))
-	&& ((b->mask & TIMEQ_IGNORE_FUNC) || (a->func == b->func))
-	&& ((b->mask & TIMEQ_IGNORE_DATA) || (a->data == b->data))) {
+        && ((b->mask & TIMEQ_IGNORE_FUNC) || (a->func == b->func))
+        && ((b->mask & TIMEQ_IGNORE_DATA) || (a->data == b->data))) {
         free(data);
         return 1;
     } else {
@@ -114,12 +114,12 @@ timeq_run(void)
     void *k, *d;
     struct timeq_entry *ent;
     while (heap_size(timeq) > 0) {
-	heap_peek(timeq, &k, &d);
-	if ((time_t)k > now)
+        heap_peek(timeq, &k, &d);
+        if ((time_t)k > now)
             break;
-	ent = d;
-	heap_pop(timeq);
-	ent->func(ent->data);
+        ent = d;
+        heap_pop(timeq);
+        ent->func(ent->data);
         free(ent);
     }
 }

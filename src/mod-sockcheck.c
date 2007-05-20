@@ -174,8 +174,8 @@ static void
 sockcheck_list_append(struct sockcheck_list *list, struct sockcheck_state *new_item)
 {
     if (list->used == list->size) {
-	list->size <<= 1;
-	list->list = realloc(list->list, list->size*sizeof(list->list[0]));
+        list->size <<= 1;
+        list->list = realloc(list->list, list->size*sizeof(list->list[0]));
     }
     list->list[list->used++] = new_item;
 }
@@ -297,30 +297,30 @@ expand_var(const struct sockcheck_client *client, char var, char **p_expansion, 
         exp_length = strlen(expansion);
         break;
     case 'i':
-	exp4 = client->addr->addr.in6_32[3];
-	exp_length = sizeof(exp4);
-	expansion = (char*)&exp4;
-	break;
+        exp4 = client->addr->addr.in6_32[3];
+        exp_length = sizeof(exp4);
+        expansion = (char*)&exp4;
+        break;
     case 'p':
-	exp2 = htons(client->state->port);
-	exp_length = sizeof(exp2);
-	expansion = (char*)&exp2;
-	break;
+        exp2 = htons(client->state->port);
+        exp_length = sizeof(exp2);
+        expansion = (char*)&exp2;
+        break;
     case 'u':
-	expansion = cManager.uplink->host;
-	exp_length = strlen(expansion);
-	break;
+        expansion = cManager.uplink->host;
+        exp_length = strlen(expansion);
+        break;
     default:
         log_module(PC_LOG, LOG_WARNING, "Request to expand unknown sockcheck variable $%c, using empty expansion.", var);
-	expansion = "";
-	exp_length = 0;
+        expansion = "";
+        exp_length = 0;
     }
     if (p_expansion) {
-	*p_expansion = malloc(exp_length);
-	memcpy(*p_expansion, expansion, exp_length);
+        *p_expansion = malloc(exp_length);
+        memcpy(*p_expansion, expansion, exp_length);
     }
     if (p_exp_length) {
-	*p_exp_length = exp_length;
+        *p_exp_length = exp_length;
     }
 }
 
@@ -402,7 +402,7 @@ sockcheck_elaborate_state(struct sockcheck_client *client)
     }
     for (nn=0; nn<client->state->responses.used; nn++) {
         /* Set their resp_state to the start of the response. */
-	client->resp_state[nn] = client->state->responses.list[nn]->template;
+        client->resp_state[nn] = client->state->responses.list[nn]->template;
         /* If it doesn't require reading, take it now. */
         if (client->resp_state[nn] && !*client->resp_state[nn]) {
             if (SOCKCHECK_DEBUG) {
@@ -429,32 +429,32 @@ sockcheck_decide(struct sockcheck_client *client, enum sockcheck_decision decisi
     client->addr->last_touched = now;
     switch (decision) {
     case ACCEPT:
-	/* do nothing */
+        /* do nothing */
         if (SOCKCHECK_DEBUG) {
             log_module(PC_LOG, LOG_INFO, "Proxy check passed for client at %s.", client->addr->hostname);
         }
         break;
     case REJECT:
-	client->addr->reason = client->state->template;
-	proxies_detected++;
-	sockcheck_issue_gline(client->addr);
+        client->addr->reason = client->state->template;
+        proxies_detected++;
+        sockcheck_issue_gline(client->addr);
         if (SOCKCHECK_DEBUG) {
             log_module(PC_LOG, LOG_INFO, "Proxy check rejects client at %s (%s)", client->addr->hostname, client->addr->reason);
         }
-	/* Don't compare test_index != 0 directly, because somebody
-	 * else may have reordered the tests already. */
-	if (client->tests->list[client->test_index] != tests->list[0]) {
-	    struct sockcheck_list *new_tests = sockcheck_list_clone(tests);
-	    struct sockcheck_state *new_first = client->tests->list[client->test_index];
+        /* Don't compare test_index != 0 directly, because somebody
+         * else may have reordered the tests already. */
+        if (client->tests->list[client->test_index] != tests->list[0]) {
+            struct sockcheck_list *new_tests = sockcheck_list_clone(tests);
+            struct sockcheck_state *new_first = client->tests->list[client->test_index];
             for (n=0; (n<tests->used) && (tests->list[n] != new_first); n++) ;
             for (; n>0; n--) new_tests->list[n] = new_tests->list[n-1];
-	    new_tests->list[0] = new_first;
-	    sockcheck_list_unref(tests);
-	    tests = new_tests;
-	}
+            new_tests->list[0] = new_first;
+            sockcheck_list_unref(tests);
+            tests = new_tests;
+        }
         break;
     default:
-	log_module(PC_LOG, LOG_ERROR, "BUG: sockcheck_decide(\"%s\", %d): unrecognized decision.", client->addr->hostname, decision);
+        log_module(PC_LOG, LOG_ERROR, "BUG: sockcheck_decide(\"%s\", %d): unrecognized decision.", client->addr->hostname, decision);
     }
     n = client->client_index;
     sockcheck_free_client(client);
@@ -477,16 +477,16 @@ sockcheck_advance(struct sockcheck_client *client, unsigned int next_state)
         unsigned int n, m;
         char buffer[201];
         static const char *hexmap = "0123456789ABCDEF";
-	log_module(PC_LOG, LOG_INFO, "sockcheck_advance(%s) following response %d (type %d) of %d.", client->addr->hostname, next_state, client->state->responses.list[next_state]->next->type, client->state->responses.used);
-	for (n=0; n<client->read_used; n++) {
-	    for (m=0; (m<(sizeof(buffer)-1)>>1) && ((n+m) < client->read_used); m++) {
-		buffer[m << 1] = hexmap[client->read[n+m] >> 4];
-		buffer[m << 1 | 1] = hexmap[client->read[n+m] & 15];
-	    }
-	    buffer[m<<1] = 0;
-	    log_module(PC_LOG, LOG_INFO, " .. read data: %s", buffer);
-	    n += m;
-	}
+        log_module(PC_LOG, LOG_INFO, "sockcheck_advance(%s) following response %d (type %d) of %d.", client->addr->hostname, next_state, client->state->responses.list[next_state]->next->type, client->state->responses.used);
+        for (n=0; n<client->read_used; n++) {
+            for (m=0; (m<(sizeof(buffer)-1)>>1) && ((n+m) < client->read_used); m++) {
+                buffer[m << 1] = hexmap[client->read[n+m] >> 4];
+                buffer[m << 1 | 1] = hexmap[client->read[n+m] & 15];
+            }
+            buffer[m<<1] = 0;
+            log_module(PC_LOG, LOG_INFO, " .. read data: %s", buffer);
+            n += m;
+        }
         sockcheck_print_client(client);
     }
 
@@ -527,66 +527,66 @@ sockcheck_readable(struct io_fd *fd)
     if (res < 0) {
         switch (res = errno) {
         default:
-	    log_module(PC_LOG, LOG_ERROR, "BUG: sockcheck_readable(%d/%s): read() returned errno %d (%s)", fd->fd, client->addr->hostname, errno, strerror(errno));
+            log_module(PC_LOG, LOG_ERROR, "BUG: sockcheck_readable(%d/%s): read() returned errno %d (%s)", fd->fd, client->addr->hostname, errno, strerror(errno));
         case EAGAIN:
             return;
         case ECONNRESET:
             sockcheck_advance(client, client->state->responses.used - 1);
             return;
-	}
+        }
     } else if (res == 0) {
         sockcheck_advance(client, client->state->responses.used - 1);
         return;
     } else {
-	client->read_used += res;
+        client->read_used += res;
     }
     if (SOCKCHECK_DEBUG) {
         unsigned int n, m;
         char buffer[201];
         static const char *hexmap = "0123456789ABCDEF";
-	for (n=0; n<client->read_used; n++) {
-	    for (m=0; (m<(sizeof(buffer)-1)>>1) && ((n+m) < client->read_used); m++) {
-		buffer[m << 1] = hexmap[client->read[n+m] >> 4];
-		buffer[m << 1 | 1] = hexmap[client->read[n+m] & 15];
-	    }
-	    buffer[m<<1] = 0;
-	    log_module(PC_LOG, LOG_INFO, "read %d bytes data: %s", client->read_used, buffer);
-	    n += m;
-	}
+        for (n=0; n<client->read_used; n++) {
+            for (m=0; (m<(sizeof(buffer)-1)>>1) && ((n+m) < client->read_used); m++) {
+                buffer[m << 1] = hexmap[client->read[n+m] >> 4];
+                buffer[m << 1 | 1] = hexmap[client->read[n+m] & 15];
+            }
+            buffer[m<<1] = 0;
+            log_module(PC_LOG, LOG_INFO, "read %d bytes data: %s", client->read_used, buffer);
+            n += m;
+        }
     }
 
     /* See if what's been read matches any of the expected responses */
     while (client->read_pos < client->read_used) {
         unsigned int last_pos = client->read_pos;
-	char bleh;
-	const char *resp_state;
+        char bleh;
+        const char *resp_state;
 
-	for (nn=0; nn<(client->state->responses.used-1); nn++) {
+        for (nn=0; nn<(client->state->responses.used-1); nn++) {
             char *expected;
             unsigned int exp_length = 1, free_exp = 0;
-	    /* compare against possible target */
-	    resp_state = client->resp_state[nn];
-	    if (resp_state == NULL) continue;
-	    switch (*resp_state) {
-	    case '=': 
+            /* compare against possible target */
+            resp_state = client->resp_state[nn];
+            if (resp_state == NULL) continue;
+            switch (*resp_state) {
+            case '=':
                 bleh = resp_state[1];
                 expected = &bleh;
                 break;
-	    case '.':
+            case '.':
                 /* any character passes */
                 client->read_pos++;
                 exp_length = 0;
                 break;
-	    case '0': case '1': case '2': case '3': case '4':
-	    case '5': case '6': case '7': case '8': case '9':
-	    case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
-	    case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
-		bleh = hexvals[(unsigned char)resp_state[0]] << 4
+            case '0': case '1': case '2': case '3': case '4':
+            case '5': case '6': case '7': case '8': case '9':
+            case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
+            case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+                bleh = hexvals[(unsigned char)resp_state[0]] << 4
                     | hexvals[(unsigned char)resp_state[1]];
                 expected = &bleh;
-		break;
-	    case '$':
-		expand_var(client, resp_state[1], &expected, &exp_length);
+                break;
+            case '$':
+                expand_var(client, resp_state[1], &expected, &exp_length);
                 free_exp = 1;
                 break;
             }
@@ -601,27 +601,27 @@ sockcheck_readable(struct io_fd *fd)
                 resp_state -= 2;
             }
             if (free_exp) free(expected);
-	    if (resp_state) {
-		client->resp_state[nn] = resp_state = resp_state + 2;
-		if (!*resp_state) {
+            if (resp_state) {
+                client->resp_state[nn] = resp_state = resp_state + 2;
+                if (!*resp_state) {
                     sockcheck_advance(client, nn);
-		    return;
-		}
-	    } else {
-		client->resp_state[nn] = NULL;
-	    }
-	}
+                    return;
+                }
+            } else {
+                client->resp_state[nn] = NULL;
+            }
+        }
         if (last_pos == client->read_pos) break;
     }
 
     /* nothing seemed to match.  what now? */
     if (client->read_used >= client->read_size) {
-	/* we got more data than we expected to get .. don't read any more */
+        /* we got more data than we expected to get .. don't read any more */
         if (SOCKCHECK_DEBUG) {
             log_module(PC_LOG, LOG_INFO, "Buffer filled (unmatched) for client %s", client->addr->hostname);
         }
         sockcheck_advance(client, client->state->responses.used-1);
-	return;
+        return;
     }
 }
 
@@ -691,7 +691,7 @@ sockcheck_start_client(unsigned int idx)
         return;
     }
     memmove(pending_sci_list.list, pending_sci_list.list+1,
-	    (--pending_sci_list.used)*sizeof(pending_sci_list.list[0]));
+            (--pending_sci_list.used)*sizeof(pending_sci_list.list[0]));
     sockcheck_num_clients++;
     if (!tests) return;
     client = client_list[idx] = sockcheck_alloc_client(sci);
@@ -772,29 +772,29 @@ sockcheck_create_response(const char *key, void *data, void *extra)
     response_list_append(&parent->responses, resp);
     /* now figure out how to create resp->next */
     if ((str = GET_RECORD_QSTRING(rd))) {
-	if (!ircncasecmp(str, "reject", 6)) {
-	    resp->next->type = REJECT;
-	} else if (!ircncasecmp(str, "accept", 6)) {
-	    resp->next->type = ACCEPT;
-	} else {
-	    log_module(PC_LOG, LOG_ERROR, "Error: unknown sockcheck decision `%s', defaulting to accept.", str);
-	    resp->next->type = ACCEPT;
-	}
-	if (str[6]) {
-	    resp->next->template = strdup(str+7);
-	} else {
-	    resp->next->template = strdup("No explanation given");
-	}
+        if (!ircncasecmp(str, "reject", 6)) {
+            resp->next->type = REJECT;
+        } else if (!ircncasecmp(str, "accept", 6)) {
+            resp->next->type = ACCEPT;
+        } else {
+            log_module(PC_LOG, LOG_ERROR, "Error: unknown sockcheck decision `%s', defaulting to accept.", str);
+            resp->next->type = ACCEPT;
+        }
+        if (str[6]) {
+            resp->next->template = strdup(str+7);
+        } else {
+            resp->next->template = strdup("No explanation given");
+        }
     } else if ((resps = GET_RECORD_OBJECT(rd))) {
-	resp->next->type = CHECKING;
-	response_list_init(&resp->next->responses);
-	if (*end == ':') {
-	    resp->next->template = strdup(end+1);
+        resp->next->type = CHECKING;
+        response_list_init(&resp->next->responses);
+        if (*end == ':') {
+            resp->next->template = strdup(end+1);
             if (!sockcheck_check_template(resp->next->template, 0)) _exit(1);
-	} else {
-	    resp->next->template = strdup("");
-	}
-	dict_foreach(resps, sockcheck_create_response, resp->next);
+        } else {
+            resp->next->template = strdup("");
+        }
+        dict_foreach(resps, sockcheck_create_response, resp->next);
     }
     return 0;
 }
@@ -821,7 +821,7 @@ sockcheck_create_test(const char *key, void *data, void *extra)
     new_test->type = CHECKING;
     response_list_init(&new_test->responses);
     if (!(object = GET_RECORD_OBJECT(rd))) {
-	log_module(PC_LOG, LOG_ERROR, "Error: misformed sockcheck test `%s', skipping it.", key);
+        log_module(PC_LOG, LOG_ERROR, "Error: misformed sockcheck test `%s', skipping it.", key);
         free(new_test);
         return 1;
     }
@@ -841,29 +841,29 @@ sockcheck_create_test(const char *key, void *data, void *extra)
         }
     }
     if (!new_test->template) {
-	log_module(PC_LOG, LOG_ERROR, "Error: misformed sockcheck test `%s', skipping it.", key);
-	free(new_test);
-	return 1;
+        log_module(PC_LOG, LOG_ERROR, "Error: misformed sockcheck test `%s', skipping it.", key);
+        free(new_test);
+        return 1;
     }
     dict_foreach(object, sockcheck_create_response, new_test);
     /* If none of the responses have template "other", create a
      * default response that goes to accept. */
     for (n=0; n<new_test->responses.used; n++) {
-	if (!strcmp(new_test->responses.list[n]->template, "other")) break;
+        if (!strcmp(new_test->responses.list[n]->template, "other")) break;
     }
     if (n == new_test->responses.used) {
-	rd = alloc_record_data_qstring("accept");
-	sockcheck_create_response("other", rd, new_test);
-	free_record_data(rd);
+        rd = alloc_record_data_qstring("accept");
+        sockcheck_create_response("other", rd, new_test);
+        free_record_data(rd);
     } else if (n != (new_test->responses.used - 1)) {
-	struct sockcheck_response *tmp;
-	/* switch the response for "other" to the end */
-	tmp = new_test->responses.list[new_test->responses.used - 1];
-	new_test->responses.list[new_test->responses.used - 1] = new_test->responses.list[n];
-	new_test->responses.list[n] = tmp;
+        struct sockcheck_response *tmp;
+        /* switch the response for "other" to the end */
+        tmp = new_test->responses.list[new_test->responses.used - 1];
+        new_test->responses.list[new_test->responses.used - 1] = new_test->responses.list[n];
+        new_test->responses.list[n] = tmp;
     }
     if (new_test->responses.used > max_responses) {
-	max_responses = new_test->responses.used;
+        max_responses = new_test->responses.used;
     }
     sockcheck_list_append(extra, new_test);
     return 0;
@@ -876,14 +876,14 @@ sockcheck_read_tests(void)
     struct sockcheck_list *new_tests;
     test_db = parse_database(SOCKCHECK_TEST_DB);
     if (!test_db)
-	return;
+        return;
     if (dict_size(test_db) > 0) {
-	new_tests = sockcheck_list_alloc(dict_size(test_db));
-	dict_foreach(test_db, sockcheck_create_test, new_tests);
-	if (tests) sockcheck_list_unref(tests);
-	tests = new_tests;
+        new_tests = sockcheck_list_alloc(dict_size(test_db));
+        dict_foreach(test_db, sockcheck_create_test, new_tests);
+        if (tests) sockcheck_list_unref(tests);
+        tests = new_tests;
     } else {
-	log_module(PC_LOG, LOG_ERROR, "%s was empty - disabling sockcheck.", SOCKCHECK_TEST_DB);
+        log_module(PC_LOG, LOG_ERROR, "%s was empty - disabling sockcheck.", SOCKCHECK_TEST_DB);
     }
     free_database(test_db);
 }
@@ -893,12 +893,12 @@ sockcheck_free_state(struct sockcheck_state *state)
 {
     unsigned int n;
     if (state->type == CHECKING) {
-	for (n=0; n<state->responses.used; n++) {
-	    free((char*)state->responses.list[n]->template);
-	    sockcheck_free_state(state->responses.list[n]->next);
-	    free(state->responses.list[n]);
-	}
-	response_list_clean(&state->responses);
+        for (n=0; n<state->responses.used; n++) {
+            free((char*)state->responses.list[n]->template);
+            sockcheck_free_state(state->responses.list[n]->next);
+            free(state->responses.list[n]);
+        }
+        response_list_clean(&state->responses);
     }
     free((char*)state->template);
     free(state);
@@ -916,8 +916,8 @@ sockcheck_add_test(const char *desc)
         return reason;
     new_tests = sockcheck_list_clone(tests);
     if (sockcheck_create_test(name, rd, new_tests)) {
-	sockcheck_list_unref(new_tests);
-	return "Sockcheck test parse error";
+        sockcheck_list_unref(new_tests);
+        return "Sockcheck test parse error";
     }
     sockcheck_list_unref(tests);
     tests = new_tests;
@@ -940,12 +940,12 @@ sockcheck_shutdown(void)
     dict_delete(checked_ip_dict);
     sci_list_clean(&pending_sci_list);
     if (tests)
-	for (n=0; n<tests->used; n++)
-	    sockcheck_free_state(tests->list[n]);
+        for (n=0; n<tests->used; n++)
+            sockcheck_free_state(tests->list[n]);
     sockcheck_list_unref(tests);
     if (sockcheck_conf.local_addr) {
-	free(sockcheck_conf.local_addr);
-	sockcheck_conf.local_addr_len = 0;
+        free(sockcheck_conf.local_addr);
+        sockcheck_conf.local_addr_len = 0;
     }
 }
 
@@ -1001,8 +1001,8 @@ static MODCMD_FUNC(cmd_defproxy)
     const char *reason;
 
     if ((reason = sockcheck_add_test(unsplit_string(argv+1, argc-1, NULL)))) {
-	reply("PCMSG_PROXY_DEFINITION_FAILED", reason);
-	return 0;
+        reply("PCMSG_PROXY_DEFINITION_FAILED", reason);
+        return 0;
     }
     reply("PCMSG_PROXY_DEFINITION_SUCCEEDED");
     return 1;
@@ -1015,7 +1015,7 @@ static MODCMD_FUNC(cmd_hostscan)
     char hnamebuf[IRC_NTOP_MAX_SIZE];
 
     for (n=1; n<argc; n++) {
-	struct userNode *un = GetUserH(argv[n]);
+        struct userNode *un = GetUserH(argv[n]);
 
         if (un) {
             if (!irc_in_addr_is_valid(un->ip)
@@ -1056,10 +1056,10 @@ static MODCMD_FUNC(cmd_clearhost)
         }
         switch (sockcheck_uncache_host(scanhost)) {
         case -1:
-	    reply("PCMSG_CHECKING_ADDRESS", scanhost);
+            reply("PCMSG_CHECKING_ADDRESS", scanhost);
             break;
         case 0:
-	    reply("PCMSG_NOT_REMOVED_FROM_CACHE", scanhost);
+            reply("PCMSG_NOT_REMOVED_FROM_CACHE", scanhost);
             break;
         default:
             reply("PCMSG_REMOVED_FROM_CACHE", scanhost);
@@ -1137,19 +1137,19 @@ sockcheck_read_conf(void)
     }
     /* now try to read from the conf database */
     if ((my_node = conf_get_data("modules/sockcheck", RECDB_OBJECT))) {
-	str = database_get_data(my_node, "max_sockets", RECDB_QSTRING);
-	if (str) sockcheck_conf.max_clients = strtoul(str, NULL, 0);
-	str = database_get_data(my_node, "max_clients", RECDB_QSTRING);
-	if (str) sockcheck_conf.max_clients = strtoul(str, NULL, 0);
-	str = database_get_data(my_node, "max_read", RECDB_QSTRING);
-	if (str) sockcheck_conf.max_read = strtoul(str, NULL, 0);
-	str = database_get_data(my_node, "max_cache_age", RECDB_QSTRING);
-	if (str) sockcheck_conf.max_cache_age = ParseInterval(str);
+        str = database_get_data(my_node, "max_sockets", RECDB_QSTRING);
+        if (str) sockcheck_conf.max_clients = strtoul(str, NULL, 0);
+        str = database_get_data(my_node, "max_clients", RECDB_QSTRING);
+        if (str) sockcheck_conf.max_clients = strtoul(str, NULL, 0);
+        str = database_get_data(my_node, "max_read", RECDB_QSTRING);
+        if (str) sockcheck_conf.max_read = strtoul(str, NULL, 0);
+        str = database_get_data(my_node, "max_cache_age", RECDB_QSTRING);
+        if (str) sockcheck_conf.max_cache_age = ParseInterval(str);
         str = database_get_data(my_node, "gline_duration", RECDB_QSTRING);
         if (str) sockcheck_conf.gline_duration = ParseInterval(str);
-	str = database_get_data(my_node, "address", RECDB_QSTRING);
+        str = database_get_data(my_node, "address", RECDB_QSTRING);
         if (!getaddrinfo(str, NULL, NULL, &ai)) {
-	    sockcheck_conf.local_addr_len = ai->ai_addrlen;
+            sockcheck_conf.local_addr_len = ai->ai_addrlen;
             sockcheck_conf.local_addr = calloc(1, ai->ai_addrlen);
             memcpy(sockcheck_conf.local_addr, ai->ai_addr, ai->ai_addrlen);
             freeaddrinfo(ai);
@@ -1158,7 +1158,7 @@ sockcheck_read_conf(void)
             sockcheck_conf.local_addr = NULL;
             if (str)
                 log_module(PC_LOG, LOG_ERROR, "Error: Unable to get host named `%s', not checking a specific address.", str);
-	}
+        }
     }
 }
 

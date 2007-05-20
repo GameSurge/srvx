@@ -25,21 +25,21 @@
 #include "saxdb.h"
 #include "timeq.h"
 
-#define GLOBAL_CONF_NAME	"services/global"
+#define GLOBAL_CONF_NAME    "services/global"
 
-#define GLOBAL_DB		"global.db"
-#define GLOBAL_TEMP_DB		"global.db.new"
+#define GLOBAL_DB           "global.db"
+#define GLOBAL_TEMP_DB      "global.db.new"
 
 /* Global options */
-#define KEY_DB_BACKUP_FREQ	"db_backup_freq"
-#define KEY_NICK		"nick"
+#define KEY_DB_BACKUP_FREQ  "db_backup_freq"
+#define KEY_NICK            "nick"
 
 /* Message data */
-#define KEY_FLAGS		"flags"
-#define KEY_POSTED		"posted"
-#define KEY_DURATION		"duration"
-#define KEY_FROM		"from"
-#define KEY_MESSAGE		"message"
+#define KEY_FLAGS       "flags"
+#define KEY_POSTED      "posted"
+#define KEY_DURATION    "duration"
+#define KEY_FROM        "from"
+#define KEY_MESSAGE     "message"
 
 /* Clarification: Notices are immediate, they are sent to matching users
    _once_, then forgotten. Messages are stored in Global's database and
@@ -66,18 +66,18 @@ static const struct message_entry msgtab[] = {
 
 struct globalMessage
 {
-    unsigned long      			id;
-    long				flags;
+    unsigned long   id;
+    long            flags;
 
-    time_t                              posted;
-    char				posted_s[24];
-    unsigned long		      	duration;
+    time_t          posted;
+    char            posted_s[24];
+    unsigned long   duration;
 
-    char				*from;
-    char				*message;
+    char            *from;
+    char            *message;
 
-    struct globalMessage		*prev;
-    struct globalMessage 		*next;
+    struct globalMessage    *prev;
+    struct globalMessage    *next;
 };
 
 struct userNode *global;
@@ -107,7 +107,7 @@ message_add(long flags, time_t posted, unsigned long duration, char *from, const
     message = malloc(sizeof(struct globalMessage));
     if(!message)
     {
-	return NULL;
+        return NULL;
     }
 
     message->id = messageCount++;
@@ -125,7 +125,7 @@ message_add(long flags, time_t posted, unsigned long duration, char *from, const
 
     if(messageList)
     {
-	messageList->prev = message;
+        messageList->prev = message;
     }
     message->prev = NULL;
     message->next = messageList;
@@ -134,7 +134,7 @@ message_add(long flags, time_t posted, unsigned long duration, char *from, const
 
     if(duration)
     {
-	timeq_add(now + duration, message_expire, message);
+        timeq_add(now + duration, message_expire, message);
     }
 
     return message;
@@ -145,7 +145,7 @@ message_del(struct globalMessage *message)
 {
     if(message->duration)
     {
-	timeq_del(0, NULL, message, TIMEQ_IGNORE_FUNC | TIMEQ_IGNORE_WHEN);
+        timeq_del(0, NULL, message, TIMEQ_IGNORE_FUNC | TIMEQ_IGNORE_WHEN);
     }
 
     if(message->prev) message->prev->next = message->next;
@@ -176,60 +176,60 @@ message_create(struct userNode *user, unsigned int argc, char *argv[])
     unsigned int i;
 
     sender = user->handle_info->handle;
-    
+
     for(i = 0; i < argc; i++)
     {
-	if((i + 1) > argc)
-	{
-	    global_notice(user, "MSG_MISSING_PARAMS", argv[argc]);
-	    return NULL;
-	}
+        if((i + 1) > argc)
+        {
+            global_notice(user, "MSG_MISSING_PARAMS", argv[argc]);
+            return NULL;
+        }
 
-	if(!irccasecmp(argv[i], "text"))
-	{
-	    i++;
-	    text = unsplit_string(argv + i, argc - i, NULL);
-	    break;
-	} else if (!irccasecmp(argv[i], "sourceless")) {
-	    i++;
-	    flags |= MESSAGE_OPTION_SOURCELESS;
-	} else if (!irccasecmp(argv[i], "target")) {
-	    i++;
+        if(!irccasecmp(argv[i], "text"))
+        {
+            i++;
+            text = unsplit_string(argv + i, argc - i, NULL);
+            break;
+        } else if (!irccasecmp(argv[i], "sourceless")) {
+            i++;
+            flags |= MESSAGE_OPTION_SOURCELESS;
+        } else if (!irccasecmp(argv[i], "target")) {
+            i++;
 
-	    if(!irccasecmp(argv[i], "all")) {
-		flags |= MESSAGE_RECIPIENT_ALL;
-	    } else if(!irccasecmp(argv[i], "users")) {
-		flags |= MESSAGE_RECIPIENT_LUSERS;
-	    } else if(!irccasecmp(argv[i], "helpers")) {
-		flags |= MESSAGE_RECIPIENT_HELPERS;
-	    } else if(!irccasecmp(argv[i], "opers")) {
-		flags |= MESSAGE_RECIPIENT_OPERS;
-	    } else if(!irccasecmp(argv[i], "staff") || !irccasecmp(argv[i], "privileged")) {
-		flags |= MESSAGE_RECIPIENT_STAFF;
-	    } else if(!irccasecmp(argv[i], "channels")) {
-		flags |= MESSAGE_RECIPIENT_CHANNELS;
-	    } else {
-		global_notice(user, "GMSG_INVALID_TARGET", argv[i]);
-		return NULL;
-	    }
-	} else if (irccasecmp(argv[i], "duration") == 0) {
-	    duration = ParseInterval(argv[++i]);
+            if(!irccasecmp(argv[i], "all")) {
+                flags |= MESSAGE_RECIPIENT_ALL;
+            } else if(!irccasecmp(argv[i], "users")) {
+                flags |= MESSAGE_RECIPIENT_LUSERS;
+            } else if(!irccasecmp(argv[i], "helpers")) {
+                flags |= MESSAGE_RECIPIENT_HELPERS;
+            } else if(!irccasecmp(argv[i], "opers")) {
+                flags |= MESSAGE_RECIPIENT_OPERS;
+            } else if(!irccasecmp(argv[i], "staff") || !irccasecmp(argv[i], "privileged")) {
+                flags |= MESSAGE_RECIPIENT_STAFF;
+            } else if(!irccasecmp(argv[i], "channels")) {
+                flags |= MESSAGE_RECIPIENT_CHANNELS;
+            } else {
+                global_notice(user, "GMSG_INVALID_TARGET", argv[i]);
+                return NULL;
+            }
+        } else if (irccasecmp(argv[i], "duration") == 0) {
+            duration = ParseInterval(argv[++i]);
         } else if (irccasecmp(argv[i], "from") == 0) {
             sender = argv[++i];
-	} else {
-	    global_notice(user, "MSG_INVALID_CRITERIA", argv[i]);
-	    return NULL;
-	}
+        } else {
+            global_notice(user, "MSG_INVALID_CRITERIA", argv[i]);
+            return NULL;
+        }
     }
 
     if(!flags)
     {
-	flags = MESSAGE_RECIPIENT_LUSERS;
+        flags = MESSAGE_RECIPIENT_LUSERS;
     }
 
     if(!text) {
-	global_notice(user, "GMSG_MESSAGE_REQUIRED");
-	return NULL;
+        global_notice(user, "GMSG_MESSAGE_REQUIRED");
+        return NULL;
     }
 
     return message_add(flags, now, duration, sender, text);
@@ -240,27 +240,27 @@ messageType(const struct globalMessage *message)
 {
     if((message->flags & MESSAGE_RECIPIENT_ALL) == MESSAGE_RECIPIENT_ALL)
     {
-	return "all";
+        return "all";
     }
     if((message->flags & MESSAGE_RECIPIENT_STAFF) == MESSAGE_RECIPIENT_STAFF)
     {
-	return "staff";
+        return "staff";
     }
     else if(message->flags & MESSAGE_RECIPIENT_OPERS)
     {
-	return "opers";
+        return "opers";
     }
     else if(message->flags & MESSAGE_RECIPIENT_HELPERS)
     {
-	return "helpers";
+        return "helpers";
     }
     else if(message->flags & MESSAGE_RECIPIENT_LUSERS)
     {
-	return "users";
+        return "users";
     }
     else
     {
-	return "channels";
+        return "channels";
     }
 }
 
@@ -269,14 +269,14 @@ notice_target(const char *target, struct globalMessage *message)
 {
     if(!(message->flags & MESSAGE_OPTION_SOURCELESS))
     {
-	if(message->flags & MESSAGE_OPTION_IMMEDIATE)
-	{
-	    send_target_message(0, target, global, "GMSG_NOTICE_SOURCE", messageType(message), message->from);
-	}
-	else
-	{
-	    send_target_message(0, target, global, "GMSG_MESSAGE_SOURCE", messageType(message), message->from, message->posted_s);
-	}
+        if(message->flags & MESSAGE_OPTION_IMMEDIATE)
+        {
+            send_target_message(0, target, global, "GMSG_NOTICE_SOURCE", messageType(message), message->from);
+        }
+        else
+        {
+            send_target_message(0, target, global, "GMSG_MESSAGE_SOURCE", messageType(message), message->from, message->posted_s);
+        }
     }
 
     send_target_message(4, target, global, "%s", message->message);
@@ -288,7 +288,7 @@ notice_channel(const char *key, void *data, void *extra)
     struct chanNode *channel = data;
     /* It should be safe to assume channel is not NULL. */
     if(channel->channel_info)
- 	notice_target(key, extra);
+         notice_target(key, extra);
     return 0;
 }
 
@@ -300,37 +300,37 @@ message_send(struct globalMessage *message)
 
     if(message->flags & MESSAGE_RECIPIENT_CHANNELS)
     {
-	dict_foreach(channels, notice_channel, message);
+        dict_foreach(channels, notice_channel, message);
     }
 
     if(message->flags & MESSAGE_RECIPIENT_LUSERS)
     {
-	notice_target("$*", message);
-	return;
+        notice_target("$*", message);
+        return;
     }
 
     if(message->flags & MESSAGE_RECIPIENT_OPERS)
     {
-	for(n = 0; n < curr_opers.used; n++)
-	{
-	    user = curr_opers.list[n];
+        for(n = 0; n < curr_opers.used; n++)
+        {
+            user = curr_opers.list[n];
 
-	    if(user->uplink != self)
-	    {
-		notice_target(user->nick, message);
-	    }
-	}
+            if(user->uplink != self)
+            {
+                notice_target(user->nick, message);
+            }
+        }
     }
 
     if(message->flags & MESSAGE_RECIPIENT_HELPERS)
     {
-	for(n = 0; n < curr_helpers.used; n++)
-	{
-	    user = curr_helpers.list[n];
+        for(n = 0; n < curr_helpers.used; n++)
+        {
+            user = curr_helpers.list[n];
             if (IsOper(user))
                 continue;
-	    notice_target(user->nick, message);
-	}
+            notice_target(user->nick, message);
+        }
     }
 }
 
@@ -340,11 +340,11 @@ global_message(long targets, char *text)
     struct globalMessage *message;
 
     if(!targets || !global)
-	return;
+        return;
 
     message = message_add(targets | MESSAGE_OPTION_SOURCELESS, now, 0, "", text);
     if(!message)
-	return;
+        return;
 
     message_send(message);
     message_del(message);
@@ -360,20 +360,20 @@ static GLOBAL_FUNC(cmd_notice)
     assert(argc >= 3);
     sender = user->handle_info->handle;
     if(!irccasecmp(argv[1], "all")) {
-	target = MESSAGE_RECIPIENT_ALL;
+        target = MESSAGE_RECIPIENT_ALL;
     } else if(!irccasecmp(argv[1], "users")) {
-	target = MESSAGE_RECIPIENT_LUSERS;
+        target = MESSAGE_RECIPIENT_LUSERS;
     } else if(!irccasecmp(argv[1], "helpers")) {
-	target = MESSAGE_RECIPIENT_HELPERS;
+        target = MESSAGE_RECIPIENT_HELPERS;
     } else if(!irccasecmp(argv[1], "opers")) {
-	target = MESSAGE_RECIPIENT_OPERS;
+        target = MESSAGE_RECIPIENT_OPERS;
     } else if(!irccasecmp(argv[1], "staff") || !irccasecmp(argv[1], "privileged")) {
-	target |= MESSAGE_RECIPIENT_HELPERS | MESSAGE_RECIPIENT_OPERS;
+        target |= MESSAGE_RECIPIENT_HELPERS | MESSAGE_RECIPIENT_OPERS;
     } else if(!irccasecmp(argv[1], "channels")) {
-	target = MESSAGE_RECIPIENT_CHANNELS;
+        target = MESSAGE_RECIPIENT_CHANNELS;
     } else {
-	global_notice(user, "GMSG_INVALID_TARGET", argv[1]);
-	return 0;
+        global_notice(user, "GMSG_INVALID_TARGET", argv[1]);
+        return 0;
     }
     if(!irccasecmp(argv[2], "from")) {
         if (argc < 5) {
@@ -389,7 +389,7 @@ static GLOBAL_FUNC(cmd_notice)
 
     message = message_add(target | MESSAGE_OPTION_IMMEDIATE, now, 0, sender, text);
     if(!message)
-	return 0;
+        return 0;
 
     recipient = messageType(message);
     message_send(message);
@@ -421,7 +421,7 @@ static GLOBAL_FUNC(cmd_list)
 
     if(!messageList)
     {
-	global_notice(user, "GMSG_NO_MESSAGES");
+        global_notice(user, "GMSG_NO_MESSAGES");
         return 1;
     }
 
@@ -451,13 +451,13 @@ static GLOBAL_FUNC(cmd_list)
             strcpy(buffer, "Never.");
         table.contents[nn][2] = strdup(buffer);
         table.contents[nn][3] = message->from;
-	length = strlen(message->message);
-	safestrncpy(buffer, message->message, sizeof(buffer));
-	if(length > (sizeof(buffer) - 4))
-	{
-	    buffer[sizeof(buffer) - 1] = 0;
-	    buffer[sizeof(buffer) - 2] = buffer[sizeof(buffer) - 3] = buffer[sizeof(buffer) - 4] = '.';
-	}
+        length = strlen(message->message);
+        safestrncpy(buffer, message->message, sizeof(buffer));
+        if(length > (sizeof(buffer) - 4))
+        {
+            buffer[sizeof(buffer) - 1] = 0;
+            buffer[sizeof(buffer) - 2] = buffer[sizeof(buffer) - 3] = buffer[sizeof(buffer) - 4] = '.';
+        }
         table.contents[nn][4] = strdup(buffer);
     }
     table_send(global, user->nick, 0, NULL, table);
@@ -484,12 +484,12 @@ static GLOBAL_FUNC(cmd_remove)
 
     for(message = messageList; message; message = message->next)
     {
-	if(message->id == id)
-	{
-	    message_del(message);
-	    global_notice(user, "GMSG_MESSAGE_DELETED", argv[1]);
-	    return 1;
-	}
+        if(message->id == id)
+        {
+            message_del(message);
+            global_notice(user, "GMSG_MESSAGE_DELETED", argv[1]);
+            return 1;
+        }
     }
 
     global_notice(user, "GMSG_ID_INVALID", argv[1]);
@@ -504,15 +504,15 @@ send_messages(struct userNode *user, long mask, int obstreperize)
 
     while(message)
     {
-	if(message->flags & mask)
-	{
+        if(message->flags & mask)
+        {
             if (obstreperize && !count)
                 send_target_message(0, user->nick, global, "GMSG_MOTD_HEADER");
-	    notice_target(user->nick, message);
-	    count++;
-	}
+            notice_target(user->nick, message);
+            count++;
+        }
 
-	message = message->next;
+        message = message->next;
     }
     if (obstreperize && count)
         send_target_message(0, user->nick, global, "GMSG_MOTD_FOOTER");
@@ -525,16 +525,16 @@ static GLOBAL_FUNC(cmd_messages)
     unsigned int count;
 
     if(IsOper(user))
-	mask |= MESSAGE_RECIPIENT_OPERS;
+        mask |= MESSAGE_RECIPIENT_OPERS;
 
     if(IsHelper(user))
-	mask |= MESSAGE_RECIPIENT_HELPERS;
+        mask |= MESSAGE_RECIPIENT_HELPERS;
 
     count = send_messages(user, mask, 0);
     if(count)
-	global_notice(user, "GMSG_MESSAGE_COUNT", count);
+        global_notice(user, "GMSG_MESSAGE_COUNT", count);
     else
-	global_notice(user, "GMSG_NO_MESSAGES");
+        global_notice(user, "GMSG_NO_MESSAGES");
 
     return 1;
 }
@@ -551,11 +551,11 @@ global_process_user(struct userNode *user)
      */
     if((now - max_clients_time) <= 30 && (now - last_max_alert) > 30)
     {
-	char *message;
-	message = alloca(36);
-	sprintf(message, "New user count record: %d", max_clients);
-	global_message(MESSAGE_RECIPIENT_OPERS, message);
-	last_max_alert = now;
+        char *message;
+        message = alloca(36);
+        sprintf(message, "New user count record: %d", max_clients);
+        global_message(MESSAGE_RECIPIENT_OPERS, message);
+        last_max_alert = now;
     }
 
     return 0;
@@ -565,7 +565,7 @@ static void
 global_process_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
 {
     if(IsHelper(user))
-	send_messages(user, MESSAGE_RECIPIENT_HELPERS, 0);
+        send_messages(user, MESSAGE_RECIPIENT_HELPERS, 0);
 }
 
 static void
@@ -583,8 +583,8 @@ global_conf_read(void)
     const char *str;
 
     if (!(conf_node = conf_get_data(GLOBAL_CONF_NAME, RECDB_OBJECT))) {
-	log_module(G_LOG, LOG_ERROR, "config node `%s' is missing or has wrong type.", GLOBAL_CONF_NAME);
-	return;
+        log_module(G_LOG, LOG_ERROR, "config node `%s' is missing or has wrong type.", GLOBAL_CONF_NAME);
+        return;
     }
 
     str = database_get_data(conf_node, KEY_DB_BACKUP_FREQ, RECDB_QSTRING);
@@ -608,11 +608,11 @@ global_saxdb_read(struct dict *db)
     for(it=dict_first(db); it; it=iter_next(it))
     {
         hir = iter_data(it);
-	if(hir->type != RECDB_OBJECT)
-	{
-	    log_module(G_LOG, LOG_WARNING, "Unexpected rectype %d for %s.", hir->type, iter_key(it));
+        if(hir->type != RECDB_OBJECT)
+        {
+            log_module(G_LOG, LOG_WARNING, "Unexpected rectype %d for %s.", hir->type, iter_key(it));
             continue;
-	}
+        }
 
         str = database_get_data(hir->d.object, KEY_FLAGS, RECDB_QSTRING);
         flags = str ? strtoul(str, NULL, 0) : 0;
@@ -626,7 +626,7 @@ global_saxdb_read(struct dict *db)
         from = database_get_data(hir->d.object, KEY_FROM, RECDB_QSTRING);
         message = database_get_data(hir->d.object, KEY_MESSAGE, RECDB_QSTRING);
 
-	message_add(flags, posted, duration, from, message);
+        message_add(flags, posted, duration, from, message);
     }
     return 0;
 }

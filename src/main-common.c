@@ -91,7 +91,7 @@ uplink_insert(const char *key, void *data, UNUSED_ARG(void *extra))
 
     if(!uplink)
     {
-	return 0;
+        return 0;
     }
 
     uplink->name = (char *)key;
@@ -105,7 +105,7 @@ uplink_insert(const char *key, void *data, UNUSED_ARG(void *extra))
     str = database_get_data(rd->d.object, "enabled", RECDB_QSTRING);
     if(str)
     {
-	enabled = atoi(str) ? 1 : 0;
+        enabled = atoi(str) ? 1 : 0;
     }
 
     cManager.enabled += enabled;
@@ -123,14 +123,14 @@ uplink_insert(const char *key, void *data, UNUSED_ARG(void *extra))
     if (!getaddrinfo(str, NULL, &hints, &ai))
     {
         uplink->bind_addr_len = ai->ai_addrlen;
-	uplink->bind_addr = calloc(1, ai->ai_addrlen);
+        uplink->bind_addr = calloc(1, ai->ai_addrlen);
         memcpy(uplink->bind_addr, ai->ai_addr, ai->ai_addrlen);
         freeaddrinfo(ai);
     }
     else
     {
-	uplink->bind_addr = NULL;
-	uplink->bind_addr_len = 0;
+        uplink->bind_addr = NULL;
+        uplink->bind_addr_len = 0;
     }
 
     uplink->next = cManager.uplinks;
@@ -138,7 +138,7 @@ uplink_insert(const char *key, void *data, UNUSED_ARG(void *extra))
 
     if(cManager.uplinks)
     {
-	cManager.uplinks->prev = uplink;
+        cManager.uplinks->prev = uplink;
     }
 
     cManager.uplinks = uplink;
@@ -150,9 +150,9 @@ uplink_insert(const char *key, void *data, UNUSED_ARG(void *extra))
        && !irccasecmp(uplink->host, cManager.uplink->host)
        && uplink->port == cManager.uplink->port)
     {
-	uplink->state = cManager.uplink->state;
-	uplink->tries = cManager.uplink->tries;
-	cManager.uplink = uplink;
+        uplink->state = cManager.uplink->state;
+        uplink->tries = cManager.uplink->tries;
+        cManager.uplink = uplink;
     }
 
     return 0;
@@ -174,7 +174,7 @@ uplink_compile(void)
     if(!(conf_node = conf_get_data("uplinks", RECDB_OBJECT)))
     {
         log_module(MAIN_LOG, LOG_FATAL, "No uplinks configured; giving up.");
-	exit(1);
+        exit(1);
     }
 
     cManager.enabled = 0;
@@ -184,29 +184,29 @@ uplink_compile(void)
        is a reference to one of these, because it won't get dereferenced. */
     if(oldUplinks)
     {
-	struct uplinkNode *uplink, *next;
+        struct uplinkNode *uplink, *next;
 
-	oldUplinks->prev->next = NULL;
+        oldUplinks->prev->next = NULL;
 
-	for(uplink = oldUplinks; uplink; uplink = next)
-	{
-	    next = uplink->next;
+        for(uplink = oldUplinks; uplink; uplink = next)
+        {
+            next = uplink->next;
             free(uplink->bind_addr);
-	    free(uplink);
-	}
+            free(uplink);
+        }
     }
 
     /* If the uplink hasn't changed, it's either NULL or pointing at
        an uplink that was just deleted, select a new one. */
     if(cManager.uplink == oldUplink)
     {
-	if(oldUplink)
-	{
-	    irc_squit(self, "Uplinks updated; selecting new uplink.", NULL);
-	}
+        if(oldUplink)
+        {
+            irc_squit(self, "Uplinks updated; selecting new uplink.", NULL);
+        }
 
-	cManager.uplink = NULL;
-	uplink_select(NULL);
+        cManager.uplink = NULL;
+        uplink_select(NULL);
     }
 }
 
@@ -217,15 +217,15 @@ uplink_find(char *name)
 
     if(!cManager.enabled || !cManager.uplinks)
     {
-	return NULL;
+        return NULL;
     }
 
     for(uplink = cManager.uplinks; uplink; uplink = uplink->next)
     {
-	if(!strcasecmp(uplink->name, name))
-	{
-	    return uplink;
-	}
+        if(!strcasecmp(uplink->name, name))
+        {
+            return uplink;
+        }
     }
 
     return NULL;
@@ -239,84 +239,84 @@ uplink_select(char *name)
 
     if(!cManager.enabled || !cManager.uplinks)
     {
-	log_module(MAIN_LOG, LOG_FATAL, "No uplinks enabled; giving up.");
-	exit(1);
+        log_module(MAIN_LOG, LOG_FATAL, "No uplinks enabled; giving up.");
+        exit(1);
     }
 
     if(!cManager.uplink)
     {
-	start = cManager.uplinks;
+        start = cManager.uplinks;
     }
     else
     {
-	start = cManager.uplink->next;
-	if(!start)
-	{
-	    start = cManager.uplinks;
-	}
+        start = cManager.uplink->next;
+        if(!start)
+        {
+            start = cManager.uplinks;
+        }
     }
 
     stop = 0;
     for(uplink = start; uplink; uplink = next)
     {
-	next = uplink->next ? uplink->next : cManager.uplinks;
+        next = uplink->next ? uplink->next : cManager.uplinks;
 
-	if(stop)
-	{
-	    uplink = NULL;
-	    break;
-	}
+        if(stop)
+        {
+            uplink = NULL;
+            break;
+        }
 
-	/* We've wrapped around the list. */
-	if(next == start)
-	{
-	    sleep((cManager.cycles >> 1) * 5);
-	    cManager.cycles++;
+        /* We've wrapped around the list. */
+        if(next == start)
+        {
+            sleep((cManager.cycles >> 1) * 5);
+            cManager.cycles++;
 
-	    if(max_cycles && (cManager.cycles >= max_cycles))
-	    {
-		log_module(MAIN_LOG, LOG_FATAL, "Maximum uplink list cycles exceeded; giving up.");
-		exit(1);
-	    }
+            if(max_cycles && (cManager.cycles >= max_cycles))
+            {
+                log_module(MAIN_LOG, LOG_FATAL, "Maximum uplink list cycles exceeded; giving up.");
+                exit(1);
+            }
 
-	    /* Give the uplink currently in 'uplink' consideration,
-	       and if not selected, break on the next iteration. */
-	    stop = 1;
-	}
+            /* Give the uplink currently in 'uplink' consideration,
+               and if not selected, break on the next iteration. */
+            stop = 1;
+        }
 
-	/* Skip bad uplinks. */
-	if(uplink->flags & UPLINK_UNAVAILABLE)
-	{
-	    continue;
-	}
+        /* Skip bad uplinks. */
+        if(uplink->flags & UPLINK_UNAVAILABLE)
+        {
+            continue;
+        }
 
-	if(name && irccasecmp(uplink->name, name))
-	{
-	    /* If we were told to connect to a specific uplink, don't stop
-	       until we find it.
-	    */
-	    continue;
-	}
+        if(name && irccasecmp(uplink->name, name))
+        {
+            /* If we were told to connect to a specific uplink, don't stop
+               until we find it.
+            */
+            continue;
+        }
 
-	/* It would be possible to track uplink health through a variety
-	   of statistics and only break on the best uplink. For now, break
-	   on the first available one.
-	*/
+        /* It would be possible to track uplink health through a variety
+           of statistics and only break on the best uplink. For now, break
+           on the first available one.
+        */
 
-	break;
+        break;
     }
 
     if(!uplink)
     {
-	/* We are shit outta luck if every single uplink has been passed
-	   over. Use the current uplink if possible. */
-	if(!cManager.uplink || cManager.uplink->flags & UPLINK_UNAVAILABLE)
-	{
-	    log_module(MAIN_LOG, LOG_FATAL, "All available uplinks exhausted; giving up.");
-	    exit(1);
-	}
+        /* We are shit outta luck if every single uplink has been passed
+           over. Use the current uplink if possible. */
+        if(!cManager.uplink || cManager.uplink->flags & UPLINK_UNAVAILABLE)
+        {
+            log_module(MAIN_LOG, LOG_FATAL, "All available uplinks exhausted; giving up.");
+            exit(1);
+        }
 
-	return;
+        return;
     }
 
     cManager.uplink = uplink;
@@ -329,36 +329,36 @@ uplink_connect(void)
 
     if(uplink->state != DISCONNECTED)
     {
-	return 0;
+        return 0;
     }
 
     if(uplink->flags & UPLINK_UNAVAILABLE)
     {
-	uplink_select(NULL);
-	uplink = cManager.uplink;
+        uplink_select(NULL);
+        uplink = cManager.uplink;
     }
 
     if(uplink->tries)
     {
-	/* This delay could scale with the number of tries. */
-	sleep(2);
+        /* This delay could scale with the number of tries. */
+        sleep(2);
     }
 
     if(!create_socket_client(uplink))
     {
-	if(uplink->max_tries && (uplink->tries >= uplink->max_tries))
-	{
-	    /* This is a bad uplink, move on. */
-	    uplink->flags |= UPLINK_UNAVAILABLE;
-	    uplink_select(NULL);
-	}
+        if(uplink->max_tries && (uplink->tries >= uplink->max_tries))
+        {
+            /* This is a bad uplink, move on. */
+            uplink->flags |= UPLINK_UNAVAILABLE;
+            uplink_select(NULL);
+        }
 
-	return 0;
+        return 0;
     }
     else
     {
-	uplink->state = AUTHENTICATING;
-	irc_introduce(uplink->password);
+        uplink->state = AUTHENTICATING;
+        irc_introduce(uplink->password);
     }
 
     return 1;
@@ -380,13 +380,13 @@ static unsigned int ef_size = 0, ef_used = 0;
 void reg_exit_func(exit_func_t handler)
 {
     if (ef_used == ef_size) {
-	if (ef_size) {
-	    ef_size <<= 1;
-	    ef_list = realloc(ef_list, ef_size*sizeof(exit_func_t));
-	} else {
-	    ef_size = 8;
-	    ef_list = malloc(ef_size*sizeof(exit_func_t));
-	}
+        if (ef_size) {
+            ef_size <<= 1;
+            ef_list = realloc(ef_list, ef_size*sizeof(exit_func_t));
+        } else {
+            ef_size = 8;
+            ef_list = malloc(ef_size*sizeof(exit_func_t));
+        }
     }
     ef_list[ef_used++] = handler;
 }
@@ -402,7 +402,7 @@ void call_exit_funcs(void)
      */
 
     while (n > 0) {
-	ef_list[--n]();
+        ef_list[--n]();
     }
     free(ef_list);
     ef_used = ef_size = 0;

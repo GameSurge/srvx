@@ -84,34 +84,34 @@ dict_splay(struct dict_node *node, const char *key)
     while (1) {
         verify(node);
         res = irccasecmp(key, node->key);
-	if (!res) break;
-	if (res < 0) {
-	    if (!node->l) break;
-	    res = irccasecmp(key, node->l->key);
-	    if (res < 0) {
-		y = node->l;
-		node->l = y->r;
-		y->r = node;
-		node = y;
-		if (!node->l) break;
-	    }
-	    r->l = node;
-	    r = node;
-	    node = node->l;
-	} else { /* res > 0 */
-	    if (!node->r) break;
-	    res = irccasecmp(key, node->r->key);
-	    if (res > 0) {
-		y = node->r;
-		node->r = y->l;
-		y->l = node;
-		node = y;
-		if (!node->r) break;
-	    }
-	    l->r = node;
-	    l = node;
-	    node = node->r;
-	}
+        if (!res) break;
+        if (res < 0) {
+            if (!node->l) break;
+            res = irccasecmp(key, node->l->key);
+            if (res < 0) {
+                y = node->l;
+                node->l = y->r;
+                y->r = node;
+                node = y;
+                if (!node->l) break;
+            }
+            r->l = node;
+            r = node;
+            node = node->l;
+        } else { /* res > 0 */
+            if (!node->r) break;
+            res = irccasecmp(key, node->r->key);
+            if (res > 0) {
+                y = node->r;
+                node->r = y->l;
+                y->l = node;
+                node = y;
+                if (!node->r) break;
+            }
+            l->r = node;
+            l = node;
+            node = node->r;
+        }
     }
     l->r = node->l;
     r->l = node->r;
@@ -157,14 +157,14 @@ dict_insert(dict_t dict, const char *key, void *data)
     new_node->key = key;
     new_node->data = data;
     if (dict->root) {
-	int res;
-	dict->root = dict_splay(dict->root, key);
-	res = irccasecmp(key, dict->root->key);
-	if (res < 0) {
+        int res;
+        dict->root = dict_splay(dict->root, key);
+        res = irccasecmp(key, dict->root->key);
+        if (res < 0) {
             /* insert just "before" current root */
-	    new_node->l = dict->root->l;
-	    new_node->r = dict->root;
-	    dict->root->l = NULL;
+            new_node->l = dict->root->l;
+            new_node->r = dict->root;
+            dict->root->l = NULL;
             if (dict->root->prev) {
                 dict->root->prev->next = new_node;
             } else {
@@ -173,12 +173,12 @@ dict_insert(dict_t dict, const char *key, void *data)
             new_node->prev = dict->root->prev;
             new_node->next = dict->root;
             dict->root->prev = new_node;
-	    dict->root = new_node;
-	} else if (res > 0) {
+            dict->root = new_node;
+        } else if (res > 0) {
             /* insert just "after" current root */
-	    new_node->r = dict->root->r;
-	    new_node->l = dict->root;
-	    dict->root->r = NULL;
+            new_node->r = dict->root->r;
+            new_node->l = dict->root;
+            dict->root->r = NULL;
             if (dict->root->next) {
                 dict->root->next->prev = new_node;
             } else {
@@ -187,10 +187,10 @@ dict_insert(dict_t dict, const char *key, void *data)
             new_node->next = dict->root->next;
             new_node->prev = dict->root;
             dict->root->next = new_node;
-	    dict->root = new_node;
-	} else {
-	    /* maybe we don't want to overwrite it .. oh well */
-	    if (dict->free_data) {
+            dict->root = new_node;
+        } else {
+            /* maybe we don't want to overwrite it .. oh well */
+            if (dict->free_data) {
                 if (dict->free_data == free)
                     free(dict->root->data);
                 else
@@ -204,14 +204,14 @@ dict_insert(dict_t dict, const char *key, void *data)
             }
             free(new_node);
             dict->root->key = key;
-	    dict->root->data = data;
-	    /* decrement the count since we dropped the node */
-	    dict->count--;
-	}
+            dict->root->data = data;
+            /* decrement the count since we dropped the node */
+            dict->count--;
+        }
     } else {
-	new_node->l = new_node->r = NULL;
+        new_node->l = new_node->r = NULL;
         new_node->next = new_node->prev = NULL;
-	dict->root = dict->first = dict->last = new_node;
+        dict->root = dict->first = dict->last = new_node;
     }
     dict->count++;
 }
@@ -265,9 +265,9 @@ dict_find(dict_t dict, const char *key, int *found)
 {
     int was_found;
     if (!dict || !dict->root || !key) {
-	if (found)
+        if (found)
             *found = 0;
-	return NULL;
+        return NULL;
     }
     verify(dict);
     dict->root = dict_splay(dict->root, key);
