@@ -1231,6 +1231,8 @@ static CMD_FUNC(cmd_burst)
                 if ((*pos == 'k') || (*pos == 'l') || (*pos == 'A')
                     || (*pos == 'U'))
                     n_modes++;
+            if (next + n_modes > argc)
+                n_modes = argc - next;
             unsplit_string(argv+next, n_modes, modes);
             next += n_modes;
             break;
