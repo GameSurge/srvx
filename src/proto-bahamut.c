@@ -1174,6 +1174,18 @@ reg_privmsg_func(struct userNode *user, privmsg_func_t handler) {
 }
 
 void
+unreg_privmsg_func(struct userNode *user) {
+    struct service_message_info *info;
+    info = dict_find(service_msginfo_dict, user->nick, NULL);
+    if (info) {
+        info->on_privmsg = NULL;
+        if (info->on_notice == NULL) {
+            dict_remove(service_msginfo_dict, user->nick);
+        }
+    }
+}
+
+void
 reg_notice_func(struct userNode *user, privmsg_func_t handler) {
     struct service_message_info *info = dict_find(service_msginfo_dict, user->nick, NULL);
     if (!info) {
@@ -1181,6 +1193,18 @@ reg_notice_func(struct userNode *user, privmsg_func_t handler) {
         dict_insert(service_msginfo_dict, user->nick, info);
     }
     info->on_notice = handler;
+}
+
+void
+unreg_notice_func(struct userNode *user) {
+    struct service_message_info *info;
+    info = dict_find(service_msginfo_dict, user->nick, NULL);
+    if (info) {
+        info->on_notice = NULL;
+        if (info->on_privmsg == NULL) {
+            dict_remove(service_msginfo_dict, user->nick);
+        }
+    }
 }
 
 void

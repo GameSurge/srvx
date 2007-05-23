@@ -2749,9 +2749,10 @@ reg_privmsg_func(struct userNode *user, privmsg_func_t handler)
 {
     unsigned int numeric = user->num_local;
     if (numeric >= num_privmsg_funcs) {
-        int newnum = numeric + 8;
+        int newnum = numeric + 8, ii;
         privmsg_funcs = realloc(privmsg_funcs, newnum*sizeof(privmsg_func_t));
-        memset(privmsg_funcs+num_privmsg_funcs, 0, (newnum-num_privmsg_funcs)*sizeof(privmsg_func_t));
+        for (ii = num_privmsg_funcs; ii < newnum; ++ii)
+            privmsg_funcs[ii] = NULL;
         num_privmsg_funcs = newnum;
     }
     if (privmsg_funcs[numeric])
@@ -2760,20 +2761,12 @@ reg_privmsg_func(struct userNode *user, privmsg_func_t handler)
 }
 
 void
-unreg_privmsg_func(struct userNode *user, privmsg_func_t handler)
+unreg_privmsg_func(struct userNode *user)
 {
-    unsigned int x;
+    if (!IsLocal(user) || user->num_local >= num_privmsg_funcs)
+        return; /* this really only works with users */
 
-    if (!user || handler)
-      return; /* this really only works with users */
-
-    memset(privmsg_funcs+user->num_local, 0, sizeof(privmsg_func_t));
-
-    for (x = user->num_local+1; x < num_privmsg_funcs; x++)
-       memmove(privmsg_funcs+x-1, privmsg_funcs+x, sizeof(privmsg_func_t));
-
-    privmsg_funcs = realloc(privmsg_funcs, num_privmsg_funcs*sizeof(privmsg_func_t));
-    num_privmsg_funcs--;
+    privmsg_funcs[user->num_local] = NULL;
 }
 
 
@@ -2782,9 +2775,10 @@ reg_notice_func(struct userNode *user, privmsg_func_t handler)
 {
     unsigned int numeric = user->num_local;
     if (numeric >= num_notice_funcs) {
-        int newnum = numeric + 8;
+        int newnum = numeric + 8, ii;
         notice_funcs = realloc(notice_funcs, newnum*sizeof(privmsg_func_t));
-        memset(notice_funcs+num_notice_funcs, 0, (newnum-num_notice_funcs)*sizeof(privmsg_func_t));
+        for (ii = num_privmsg_funcs; ii < newnum; ++ii)
+            privmsg_funcs[ii] = NULL;
         num_notice_funcs = newnum;
     }
     if (notice_funcs[numeric])
@@ -2793,21 +2787,12 @@ reg_notice_func(struct userNode *user, privmsg_func_t handler)
 }
 
 void
-unreg_notice_func(struct userNode *user, privmsg_func_t handler)
+unreg_notice_func(struct userNode *user)
 {
-    unsigned int x;
+    if (!IsLocal(user) || user->num_local >= num_privmsg_funcs)
+        return; /* this really only works with users */
 
-    if (!user || handler)
-          return; /* this really only works with users */
-
-    memset(notice_funcs+user->num_local, 0, sizeof(privmsg_func_t));
-
-    for (x = user->num_local+1; x < num_notice_funcs; x++)
-       memmove(notice_funcs+x-1, notice_funcs+x, sizeof(privmsg_func_t));
-
-    memset(notice_funcs+user->num_local, 0, sizeof(privmsg_func_t));
-    notice_funcs = realloc(notice_funcs, num_notice_funcs*sizeof(privmsg_func_t));
-    num_notice_funcs--;
+    notice_funcs[user->num_local] = NULL;
 }
 
 void

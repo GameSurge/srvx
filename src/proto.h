@@ -98,8 +98,8 @@ struct userNode *get_chanmsg_bot(unsigned char prefix);
 typedef void (*privmsg_func_t) (struct userNode *user, struct userNode *target, const char *text, int server_qualified);
 void reg_privmsg_func(struct userNode *user, privmsg_func_t handler);
 void reg_notice_func(struct userNode *user, privmsg_func_t handler);
-void unreg_privmsg_func(struct userNode *user, privmsg_func_t handler);
-void unreg_notice_func(struct userNode *user, privmsg_func_t handler);
+void unreg_privmsg_func(struct userNode *user);
+void unreg_notice_func(struct userNode *user);
 
 typedef void (*oper_func_t) (struct userNode *user);
 void reg_oper_func(oper_func_t handler);
