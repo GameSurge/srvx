@@ -3122,6 +3122,35 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
         ban = generate_hostmask(victim, GENMASK_STRICT_HOST|GENMASK_ANY_IDENT);
         name = victim->nick;
     }
+    else if(!is_ircmask(argv[1]) && (*argv[1] == '*'))
+    {
+        struct handle_info *hi;
+        char banmask[NICKLEN + USERLEN + HOSTLEN + 3];
+        const char *accountname = argv[1] + 1;
+
+        if(!(hi = get_handle_info(accountname)))
+        {
+            reply("MSG_HANDLE_UNKNOWN", accountname);
+            return 0;
+        }
+
+        snprintf(banmask, sizeof(banmask), "*!*@%s.*", hi->handle);
+        victims = alloca(sizeof(victims[0]) * channel->members.used);
+
+        if(bad_channel_ban(channel, user, banmask, &victimCount, victims))
+        {
+            reply("CSMSG_MASK_PROTECTED", banmask);
+            return 0;
+        }
+
+        if((action == ACTION_KICK) && (victimCount == 0))
+        {
+            reply("CSMSG_NO_MATCHING_USERS", channel->name, banmask);
+            return 0;
+        }
+
+        name = ban = strdup(banmask);
+    }
     else
     {
         if(!is_ircmask(argv[1]))
@@ -3437,13 +3466,23 @@ unban_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
     /* may want to allow a comma delimited list of users... */
     if(!(actee = GetUserH(argv[1])))
     {
-        if(!is_ircmask(argv[1]))
+        if(!is_ircmask(argv[1]) && *argv[1] == '*')
+        {
+            char banmask[NICKLEN + USERLEN + HOSTLEN + 3];
+            const char *accountname = argv[1] + 1;
+
+            snprintf(banmask, sizeof(banmask), "*!*@%s.*", accountname);
+            mask = strdup(banmask);
+        }
+        else if(!is_ircmask(argv[1]))
         {
             reply("MSG_NICK_UNKNOWN", argv[1]);
             return 0;
         }
-
-        mask = strdup(argv[1]);
+        else
+        {
+            mask = strdup(argv[1]);
+        }
     }
 
     /* We don't sanitize the mask here because ircu
