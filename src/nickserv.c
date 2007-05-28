@@ -1368,7 +1368,7 @@ static NICKSERV_FUNC(cmd_handleinfo)
         reply(type);
     }
 
-    if (oper_has_access(user, cmd->parent->bot, 0, 1) || IsSupport(user)) {
+    if (oper_has_access(user, cmd->parent->bot, 0, 1) || IsStaff(user)) {
         if (!hi->notes) {
             reply("NSMSG_HANDLEINFO_NO_NOTES");
         } else {

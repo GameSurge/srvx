@@ -807,7 +807,7 @@ static MODCMD_FUNC(cmd_block)
         offset = 3;
     }
     if(duration && duration != opserv_conf.block_gline_duration) {
-        // We require more access when the duration is not the default block duration.
+        /* We require more access when the duration is not the default block duration. */
         gline_cmd = dict_find(cmd->parent->commands, "gline", NULL);
         if(!gline_cmd)
         {
@@ -3318,7 +3318,7 @@ is_oper_victim(struct userNode *user, struct userNode *target, int match_opers, 
                   || (target->handle_info
                       && target->handle_info->opserv_level > user->handle_info->opserv_level));
 
-    // If we don't need an ip check or want to hit opers or the the "cheap" check already disqualified the target, we are done.
+    /* If we don't need an ip check or want to hit opers or the the "cheap" check already disqualified the target, we are done. */
     if (!check_ip || match_opers || !is_victim)
         return is_victim;
 
