@@ -60,7 +60,7 @@
         "$bKILL$b:    Kill matching clients.",
         "$bGLINE$b:   Issue a gline for the client's host (by default, 1 hour long).",
         "$bGAG$b:     Gag all matching users (by default, does not expire).",
-        "$bDOMAINS$b: Display counts of users in each domain (length specified by DEPTH criteria.", 
+        "$bDOMAINS$b: Display counts of users in each domain (length specified by DEPTH criteria.",
         "Note: By default, IRC operators are not affected by the KILL, GLINE or GAG actions.  You can override this by specifying the $bABUSE OPERS$b criteria for a trace.  Even if you do specify $bABUSE OPERS$b, it will not affect opers at your access level or above.");
 "TRACE CRITERIA" ("$bTRACE CRITERIA$b",
         "Criteria and values for $btrace$b (a search with $btrace$b must match all specified items):",
@@ -84,6 +84,8 @@
         "$bCLONES$b min             Ignore clients from hosts with fewer than this many connections.",
         "$bINFO_SPACE$b yes/no      Clients match only if their info starts with a space (' ') character.",
         "$bABUSE OPERS$b            Force adverse actions to affect opers as well.",
+        "$bABUSE TRUSTED$b          Force adverse actions to affect users on trusted hosts as well.",
+        "$bTARGET$b                 Send alert notice to this channel.",
         "$bLOG$b                    Record matching users in $O's log file (in addition to acting).",
         "Additionally, the $bCHANNEL$b target may be prefixed with @ to select channel operators, + to select voiced users (will not select chanops unless @ is also used), or - to select non-voiced non-chanop users.  For example, CHANNEL #foo will select all users in #foo; CHANNEL +#foo will select only users voiced in #foo; CHANNEL @+#foo will select ops and voiced users in #foo; etc.");
 "WHOIS" ("/msg $O WHOIS <nick>",

@@ -327,7 +327,7 @@ opserv_free_hostinfo(void *data)
 typedef struct opservDiscrim {
     struct chanNode *channels[DISCRIM_MAX_CHANS];
     unsigned int channel_count;
-    char *mask_nick, *mask_ident, *mask_host, *mask_info, *server, *reason, *accountmask;
+    char *mask_nick, *mask_ident, *mask_host, *mask_info, *server, *reason, *notice_target, *accountmask;
     irc_in_addr_t ip_mask;
     unsigned long limit;
     time_t min_ts, max_ts;
@@ -381,6 +381,7 @@ opserv_free_user_alert(void *data)
 
 #define opserv_debug(format...) do { if (opserv_conf.debug_channel) send_channel_notice(opserv_conf.debug_channel , opserv , ## format); } while (0)
 #define opserv_alert(format...) do { if (opserv_conf.alert_channel) send_channel_notice(opserv_conf.alert_channel , opserv , ## format); } while (0)
+#define opserv_custom_alert(chan, format...) do { if (chan) send_target_message(4 , chan , opserv , ## format); else if (opserv_conf.alert_channel) send_channel_notice(opserv_conf.alert_channel , opserv , ## format); } while (0)
 
 /* A lot of these commands are very similar to what ChanServ can do,
  * but OpServ can do them even on channels that aren't registered.
@@ -3084,6 +3085,12 @@ opserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[], in
         } else if (irccasecmp(argv[i], "reason") == 0) {
             discrim->reason = strdup(unsplit_string(argv+i+1, argc-i-1, NULL));
             i = argc;
+        } else if (irccasecmp(argv[i], "notice_target") == 0 || irccasecmp(argv[i], "target") == 0) {
+            if (!IsChannelName(argv[i + 1])) {
+                send_message(user, opserv, "MSG_NOT_CHANNEL_NAME");
+                goto fail;
+            }
+            discrim->notice_target = argv[++i];
         } else if (irccasecmp(argv[i], "last") == 0) {
             discrim->min_ts = now - ParseInterval(argv[++i]);
         } else if ((irccasecmp(argv[i], "linked") == 0)
@@ -3881,7 +3888,7 @@ alert_check_user(const char *key, void *data, void *extra)
         log_module(OS_LOG, LOG_ERROR, "Invalid reaction type %d for alert %s.", alert->reaction, key);
         /* fall through to REACT_NOTICE case */
     case REACT_NOTICE:
-        opserv_alert("Alert $b%s$b triggered by user $b%s$b!%s@%s (%s).", key, user->nick, user->ident, user->hostname, alert->discrim->reason);
+        opserv_custom_alert(alert->discrim->notice_target, "Alert $b%s$b triggered by user $b%s$b!%s@%s (%s).", key, user->nick, user->ident, user->hostname, alert->discrim->reason);
         break;
     }
     return 0;
