@@ -918,9 +918,9 @@ static CMD_FUNC(cmd_whois)
         mlen = strlen(self->name) + strlen(from->nick) + 12 + strlen(who->nick);
         len = 0;
         *buf = '\0';
-        for (i = 0; i < who->channels.used; i++)
+        for (i = who->channels.used; i > 0; )
         {
-            mn = who->channels.list[i];
+            mn = who->channels.list[--i];
 
             if (!IsOper(from) && (mn->channel->modes & (MODE_PRIVATE | MODE_SECRET)) && !GetUserMode(mn->channel, from))
                 continue;
