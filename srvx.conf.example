@@ -312,10 +312,17 @@
         "file_reason" "client is blacklisted";
         // How long should a blacklist G-line last?
         "gline_duration" "1h";
+        // Bot used to send debug notices
+        "debug_bot" "OpServ";
+        // To which channel should debug output be sent?
+        "debug_channel" "#opserv";
+        "debug_channel_modes" "+tinms";
         // If you want to use DNS blacklists, add them here:
         "dnsbl" {
             // This DNSBL zone does not exist - you'll have to pick your own.
             "dnsbl.example.org" {
+                // Send a notice instead of glining blacklisted ips
+                "debug" "1";
                 "description" "Example DNSBL entry";
                 "reason" "busted by a dns blacklist";
                 "duration" "1h";

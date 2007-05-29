@@ -32,6 +32,7 @@ struct dnsbl_zone {
     const char *reason;
     unsigned int duration;
     unsigned int mask;
+    unsigned int debug : 1;
     char zone[1];
 };
 
@@ -46,8 +47,12 @@ static dict_t blacklist_hosts; /* maps IPs or hostnames to reasons from blacklis
 static dict_t blacklist_reasons; /* maps strings to themselves (poor man's data sharing) */
 
 static struct {
+    struct userNode *debug_bot;
+    struct chanNode *debug_channel;
     unsigned long gline_duration;
 } conf;
+
+#define blacklist_debug(format...) do { if (conf.debug_bot && conf.debug_channel) send_channel_notice(conf.debug_channel , conf.debug_bot , ## format); } while (0)
 
 static void
 do_expandos(char *output, unsigned int out_len, const char *input, ...)
@@ -136,11 +141,15 @@ dnsbl_hit(struct sar_request *req, struct dns_header *hdr, struct dns_rr *rr, un
         /* Expand elements of the message as necessary. */
         do_expandos(reason, sizeof(reason), message, "%txt%", (txt ? txt : "(no-txt)"), "%ip%", data->client_ip, NULL);
 
-        /* Now generate the G-line. */
-        target[0] = '*';
-        target[1] = '@';
-        strcpy(target + 2, data->client_ip);
-        gline_add(self->name, target, zone->duration, reason, now, now, 1);
+        if (zone->debug) {
+            blacklist_debug("DNSBL match: [%s] %s (%s)", zone->zone, data->client_ip, reason);
+        } else {
+            /* Now generate the G-line. */
+            target[0] = '*';
+            target[1] = '@';
+            strcpy(target + 2, data->client_ip);
+            gline_add(self->name, target, zone->duration, reason, now, now, 1);
+        }
     }
     free(txt);
 }
@@ -292,6 +301,21 @@ blacklist_conf_read(void)
     if (node == NULL)
         return;
 
+    str1 = database_get_data(node, "debug_bot", RECDB_QSTRING);
+    if (str1)
+        conf.debug_bot = GetUserH(str1);
+
+    str1 = database_get_data(node, "debug_channel", RECDB_QSTRING);
+    if (conf.debug_bot && str1) {
+        str2 = database_get_data(node, "debug_channel_modes", RECDB_QSTRING);
+        if (!str2)
+            str2 = "+tinms";
+        conf.debug_channel = AddChannel(str1, now, str2, NULL);
+        AddChannelUser(conf.debug_bot, conf.debug_channel)->modes |= MODE_CHANOP;
+    } else {
+        conf.debug_channel = NULL;
+    }
+
     str1 = database_get_data(node, "file", RECDB_QSTRING);
     str2 = database_get_data(node, "file_reason", RECDB_QSTRING);
     blacklist_load_file(str1, str2);
@@ -324,6 +348,8 @@ blacklist_conf_read(void)
             zone->duration = str1 ? ParseInterval(str1) : 3600;
             str1 = database_get_data(dnsbl, "mask", RECDB_QSTRING);
             zone->mask = str1 ? strtoul(str1, NULL, 0) : ~0u;
+            str1 = database_get_data(dnsbl, "debug", RECDB_QSTRING);
+            zone->debug = str1 ? enabled_string(str1) : 0;
             zone->reasons.used = 0;
             zone->reasons.size = 0;
             zone->reasons.list = NULL;
