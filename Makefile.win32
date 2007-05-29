@@ -58,17 +58,17 @@ SRVX_OBJS = \
 	src/proto-$(PROTOCOL).o \
 	src/recdb.o \
 	src/saxdb.o \
-	src/sendmail.o \
+	src/mail-smtp.o \
 	src/timeq.o \
 	src/tools.o \
 	$(addsuffix .o,$(addprefix src/mod-,$(MODULES)))
 
 srvx$(EXE_EXT): src/config.h src/modules-list.h $(RX_OBJS) $(SRVX_OBJS)
-	$(CC) -o $< $(RX_OBJS) $(SRVX_OBJS) $(LIBS)
+	$(CC) -o $@ $(RX_OBJS) $(SRVX_OBJS) $(LIBS)
 src/config.h: $(VPATH)/src/config.h.win32
 	cp $< $@
 src/modules-list.h:
-	rm -f $@; \
+	rm -f $@ ; \
 	for module in $(MODULES) ; do \
 		echo "WITH_MODULE($$module)" >> $@ ; \
 	done

@@ -103,6 +103,7 @@ ioset_win32_init(void)
     if (res)
     {
         log_module(MAIN_LOG, LOG_FATAL, "Unable to start Windows Sockets (%d)", res);
+        return 0;
     }
 
     // Get Windows HINSTANCE.
@@ -117,15 +118,17 @@ ioset_win32_init(void)
     if (!RegisterClassEx(&wcx))
     {
         log_module(MAIN_LOG, LOG_FATAL, "Unable to register window class (%lu)", GetLastError());
+        return 0;
     }
 
     ioset_window = CreateWindow("srvxMainWindow", PACKAGE_STRING, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hinst, NULL);
     if (!ioset_window)
     {
         log_module(MAIN_LOG, LOG_FATAL, "Unable to create window (%lu)", GetLastError());
+        return 0;
     }
 
-    return 0;
+    return 1;
 }
 
 static long
@@ -253,6 +256,9 @@ ioset_win32_loop(struct timeval *timeout)
     }
     else
     {
+        extern int clock_skew;
+
+        now = time(NULL) + clock_skew;
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }

@@ -31,6 +31,55 @@
 #include <sys/socket.h>
 #endif
 
+#ifdef WITH_IOSET_WIN32
+
+# undef errno
+# define errno WSAGetLastError()
+# undef EINPROGRESS
+# define EINPROGRESS WSAEINPROGRESS
+# undef EHOSTUNREACH
+# define EHOSTUNREACH WSAEHOSTUNREACH
+# undef ECONNREFUSED
+# define ECONNREFUSED WSAECONNREFUSED
+# undef EAGAIN
+# define EAGAIN WSAEWOULDBLOCK
+# define strerror wsa_strerror
+
+static const char *
+wsa_strerror(int wsa_err)
+{
+    switch (wsa_err)
+    {
+    case WSAEINTR: return "Operation interrupted";
+    case WSAEBADF: return "Bad file descriptor";
+    case WSAEACCES: return "Permission denied";
+    case WSAEFAULT: return "Invalid address";
+    case WSAEINVAL: return "Invalid parameter";
+    case WSAEMFILE: return "Too many open files";
+    case WSAEWOULDBLOCK: return "Try again later";
+    case WSAEINPROGRESS: return "Operation in progress";
+    case WSAEALREADY: return "Operation already in progress";
+    case WSAENOTSOCK: return "Not a socket";
+    case WSAEDESTADDRREQ: return "Destination address required";
+    case WSAEMSGSIZE: return "Invalid message size";
+    case WSAEPROTOTYPE: return "Invalid protocol type for socket";
+    case WSAENOPROTOOPT: return "Invalid protocol option";
+    case WSAEPROTONOSUPPORT: return "Protocol not supported";
+    case WSAEOPNOTSUPP: return "Operation not supported";
+    case WSAEADDRINUSE: return "Address already in use";
+    case WSAEADDRNOTAVAIL: return "Address not available";
+    case WSAENETDOWN: return "Network down";
+    case WSAENETUNREACH: return "Network unreachable";
+    case WSAENETRESET: return "Network reset";
+    case WSAECONNABORTED: return "Connection aborted";
+    case WSAECONNRESET: return "Connection reset by peer";
+    case WSAECONNREFUSED: return "Connection refused";
+    }
+    return "unknown error";
+}
+
+#endif /* WITH_IOSET_WIN32 */
+
 #define IS_EOL(CH) ((CH) == '\n')
 
 extern int uplink_connect(void);
@@ -290,13 +339,10 @@ ioset_try_write(struct io_fd *fd) {
     unsigned int req;
 
     req = ioq_get_avail(&fd->send);
-    res = write(fd->fd, fd->send.buf+fd->send.get, req);
+    res = send(fd->fd, fd->send.buf+fd->send.get, req, 0);
     if (res < 0) {
-        switch (errno) {
-        case EAGAIN:
-            break;
-        default:
-            log_module(MAIN_LOG, LOG_ERROR, "write() on fd %d error %d: %s", fd->fd, errno, strerror(errno));
+        if (errno != EAGAIN) {
+            log_module(MAIN_LOG, LOG_ERROR, "send() on fd %d error %d: %s", fd->fd, errno, strerror(errno));
         }
     } else {
         fd->send.get += res;
@@ -396,13 +442,10 @@ ioset_buffered_read(struct io_fd *fd) {
 
     if (!(put_avail = ioq_put_avail(&fd->recv)))
         put_avail = ioq_grow(&fd->recv);
-    nbr = read(fd->fd, fd->recv.buf + fd->recv.put, put_avail);
+    nbr = recv(fd->fd, fd->recv.buf + fd->recv.put, put_avail, 0);
     if (nbr < 0) {
-        switch (errno) {
-        case EAGAIN:
-            break;
-        default:
-            log_module(MAIN_LOG, LOG_ERROR, "Unexpected read() error %d on fd %d: %s", errno, fd->fd, strerror(errno));
+        if (errno != EAGAIN) {
+            log_module(MAIN_LOG, LOG_ERROR, "Unexpected recv() error %d on fd %d: %s", errno, fd->fd, strerror(errno));
             /* Just flag it as EOF and call readable_cb() to notify the fd's owner. */
             fd->state = IO_CLOSED;
             fd->readable_cb(fd);

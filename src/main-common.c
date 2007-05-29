@@ -529,6 +529,49 @@ conf_rlimits(void)
 
 #endif
 
+static void
+usage(char *self)
+{
+    /* We can assume we have getopt_long(). */
+    printf("Usage: %s [-c config] [-r log] [-d] [-f] [-v|-h]\n"
+           " -c, --config         selects a different configuration file.\n"
+           " -d, --debug          enables debug mode.\n"
+           " -f, --foreground     run srvx in the foreground.\n"
+           " -h, --help           prints this usage message.\n"
+           " -k, --check          checks the configuration file's syntax.\n"
+           " -r, --replay         replay a log file (for debugging).\n"
+           " -v, --version        prints this program's version.\n"
+           , self);
+}
+
+static void
+version()
+{
+    printf("    --------------------------------------------------\n"
+           "    - "PACKAGE_STRING" ("CODENAME"), Built: " __DATE__ ", " __TIME__".\n"
+           "    - Copyright (C) 2000 - 2005, srvx Development Team\n"
+           "    --------------------------------------------------\n");
+}
+
+static void
+license()
+{
+    printf("\n"
+           "This program is free software; you can redistribute it and/or modify\n"
+           "it under the terms of the GNU General Public License as published by\n"
+           "the Free Software Foundation; either version 2 of the License, or\n"
+           "(at your option) any later version.\n"
+           "\n"
+           "This program is distributed in the hope that it will be useful,\n"
+           "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+           "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+           "GNU General Public License for more details.\n"
+           "\n"
+           "You should have received a copy of the GNU General Public License\n"
+           "along with this program; if not, write to the Free Software\n"
+           "Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.\n\n");
+}
+
 void main_shutdown(void)
 {
     struct uplinkNode *ul, *ul_next;
