@@ -166,6 +166,10 @@ blacklist_check_user(struct userNode *user)
     char ip[IRC_NTOP_MAX_SIZE];
     char dnsbl_target[128];
 
+    /* Users added during burst should not be checked. */
+    if (user->uplink->burst)
+        return 0;
+
     /* Users with bogus IPs are probably service bots. */
     if (!irc_in_addr_is_valid(user->ip))
         return 0;
