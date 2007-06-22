@@ -252,6 +252,7 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_CHANINFO_USER_COUNT", "Users (%d):" },
     { "OSMSG_CSEARCH_CHANNEL_INFO", "%s [%d users] %s %s" },
     { "OSMSG_TRACE_MAX_CHANNELS", "You may not use the 'channel' criterion more than %d times." },
+    { "OSMSG_FORCEKICK_LOCAL", "You cannot kick $b%s$b forcefully." },
     { NULL, NULL }
 };
 
@@ -1003,6 +1004,34 @@ static MODCMD_FUNC(cmd_kick)
         return 0;
     }
     KickChannelUser(target, channel, cmd->parent->bot, reason);
+    return 1;
+}
+
+static MODCMD_FUNC(cmd_forcekick)
+{
+    struct userNode *target;
+    char *reason;
+
+    if (argc < 3) {
+        reason = alloca(strlen(OSMSG_KICK_REQUESTED)+strlen(user->nick)+1);
+        sprintf(reason, OSMSG_KICK_REQUESTED, user->nick);
+    } else {
+        reason = unsplit_string(argv+2, argc-2, NULL);
+    }
+    target = GetUserH(argv[1]);
+    if (!target) {
+        reply("MSG_NICK_UNKNOWN", argv[1]);
+        return 0;
+    }
+    if (!GetUserMode(channel, target)) {
+        reply("OSMSG_NOT_ON_CHANNEL", target->nick, channel->name);
+        return 0;
+    }
+    if (IsLocal(target)) {
+        reply("OSMSG_FORCEKICK_LOCAL", target->nick);
+        return 0;
+    }
+    irc_kick(cmd->parent->bot, target, channel, reason);
     return 1;
 }
 
@@ -4267,6 +4296,7 @@ init_opserv(const char *nick)
     opserv_define_func("JUMP", cmd_jump, 900, 0, 2);
     opserv_define_func("JUPE", cmd_jupe, 900, 0, 4);
     opserv_define_func("KICK", cmd_kick, 100, 2, 2);
+    opserv_define_func("FORCEKICK", cmd_forcekick, 800, 2, 2);
     opserv_define_func("KICKALL", cmd_kickall, 400, 2, 0);
     opserv_define_func("KICKBAN", cmd_kickban, 100, 2, 2);
     opserv_define_func("KICKBANALL", cmd_kickbanall, 450, 2, 0);

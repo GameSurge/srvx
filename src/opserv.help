@@ -164,6 +164,7 @@
         "  DEOP       [${level/deop}]",
         "  DEOPALL    [${level/deopall}]",
         "  DEVOICEALL [${level/devoiceall}]",
+        "  FORCEKICK  [${level/forcekick}]",
         "  KICK       [${level/kick}]",
         "  KICKALL    [${level/kickall}]",
         "  KICKBAN    [${level/kickban}]",
@@ -205,7 +206,11 @@
 "KICK" ("/msg $O KICK <#channel> <nick> [reason]",
         "Kicks the specified user from the specified channel.",
         "If the channel is omitted, then $bkick$b will be done in the channel where the command was given.",
-        "$uSee Also:$u ban, kickall, kickban, kickbanall");
+        "$uSee Also:$u ban, kickall, kickban, kickbanall, forcekick");
+"FORCEKICK" ("/msg $O FORCEKICK <#channel> <nick> [reason]",
+        "Kicks the specified user from the specified channel even if he is a channel service (+k).",
+        "If the channel is omitted, then $bforcekick$b will be done in the channel where the command was given.",
+        "$uSee Also:$u ban, kick, kickall, kickban, kickbanall");
 "KICKALL" ("/msg $O KICKALL <#channel> [reason]",
         "Kicks all users in the specified channel except for the user issuing the command.",
         "If the channel is omitted, then $bkickall$b will be done in the channel where the command was given.",
