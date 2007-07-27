@@ -93,7 +93,7 @@ typedef struct recdb_outfile {
 } RECDB_OUT;
 
 #ifdef HAVE_MMAP
-static int mmap_error=0;
+static int mmap_error;
 #endif
 
 #define EOL '\n'
@@ -616,6 +616,9 @@ parse_database(const char *filename)
         return NULL;
     }
     recdb.length = (size_t)statinfo.st_size;
+    if (recdb.length == 0) {
+        return alloc_database();
+    }
 
 #ifdef HAVE_MMAP
     /* Try mmap */
