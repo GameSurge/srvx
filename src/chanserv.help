@@ -128,7 +128,7 @@
         "$uSee Also:$u register, noregister, dnrsearch, unregister");
 "BAN" ("/msg $C BAN <#channel> <mask|nick>",
         "This command will temporarily add a ban for the user specified as the parameter. Masks are to be supplied in the format <Nick>!<Ident>@<Host> and usually contain wildcards. If a nick is specified, a mask is automatically generated (though not completely foolproof). This ban is removed either by removing it from the channel ban list using any irc client, or sending the UNBAN or UNBANALL commands. If you are banned with this method, the UNBANME command can be used.",
-        "$uFor assistance, please join to #support$u",
+        "$uFor assistance, please join #support$u",
         "Example: *!*serv@*.gamesurge.net would ban anyone with ident 'serv' and a gamesurge.net hostname from joining the channel.",
         "$uSee Also:$u unban, unbanall, unbanme");
 "BANS" ("/msg $C BANS <#channel> [mask|nick]",
