@@ -263,13 +263,13 @@
 #define PACKAGE_NAME "srvx"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "srvx 1.3.1-win"
+#define PACKAGE_STRING "srvx 1.4-win"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "srvx-1.3.1"
+#define PACKAGE_TARNAME "srvx-1.4"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.3.1"
+#define PACKAGE_VERSION "1.4"
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE void
@@ -292,7 +292,7 @@
 #define TM_IN_SYS_TIME 1
 
 /* Version number of package */
-#define VERSION 1.3.1
+#define VERSION 1.4
 
 /* Define if using the Win32 I/O backend */
 #define WITH_IOSET_WIN32 1
@@ -331,4 +331,4 @@
 #endif
 
 /* type to use in place of socklen_t if not defined */
-#undef socklen_t
+#define socklen_t int
