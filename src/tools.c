@@ -533,6 +533,8 @@ match_ircglob(const char *text, const char *glob)
             return 0;
         m = m_tmp;
         n = ++n_tmp;
+        if (!*n)
+            return 0;
         break;
     case '\\':
         m++;
