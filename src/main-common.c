@@ -275,7 +275,7 @@ uplink_select(char *name)
 
             if(max_cycles && (cManager.cycles >= max_cycles))
             {
-                log_module(MAIN_LOG, LOG_FATAL, "Maximum uplink list cycles exceeded; giving up.");
+                log_module(MAIN_LOG, LOG_ERROR, "Maximum uplink list cycles exceeded; giving up.");
                 exit(1);
             }
 
@@ -312,7 +312,7 @@ uplink_select(char *name)
            over. Use the current uplink if possible. */
         if(!cManager.uplink || cManager.uplink->flags & UPLINK_UNAVAILABLE)
         {
-            log_module(MAIN_LOG, LOG_FATAL, "All available uplinks exhausted; giving up.");
+            log_module(MAIN_LOG, LOG_ERROR, "All available uplinks exhausted; giving up.");
             exit(1);
         }
 
