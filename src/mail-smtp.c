@@ -383,6 +383,7 @@ static void mail_destroyed(struct io_fd *fd)
     assert(smtp_fd == fd);
     smtp_state = CLOSED;
     smtp_fd = NULL;
+    (void)fd; /* in case NDEBUG causes assert() to be empty */
 }
 
 static void mail_connected(struct io_fd *fd, int error)
