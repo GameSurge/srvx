@@ -1159,7 +1159,7 @@ static MODCMD_FUNC(cmd_part)
         reply("OSMSG_NOT_ON_CHANNEL", cmd->parent->bot->nick, channel->name);
         return 0;
     }
-    reason = (argc < 3) ? "Leaving." : unsplit_string(argv+2, argc-2, NULL);
+    reason = (argc < 2) ? "Leaving." : unsplit_string(argv+1, argc-1, NULL);
     reply("OSMSG_LEAVING", channel->name);
     DelChannelUser(cmd->parent->bot, channel, reason, 0);
     return 1;
