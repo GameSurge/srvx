@@ -1157,7 +1157,7 @@ sockcheck_read_conf(void)
             sockcheck_conf.local_addr_len = 0;
             sockcheck_conf.local_addr = NULL;
             if (str)
-                log_module(PC_LOG, LOG_ERROR, "Error: Unable to get host named `%s', not checking a specific address.", str);
+                log_module(PC_LOG, LOG_ERROR, "Error: Unable to get host named `%s', not checking from a specific address.", str);
         }
     }
 }

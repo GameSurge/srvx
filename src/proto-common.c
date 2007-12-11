@@ -330,7 +330,7 @@ static CMD_FUNC(cmd_dummy)
 
 static CMD_FUNC(cmd_error)
 {
-    if (argv[1]) log_module(MAIN_LOG, LOG_ERROR, "Error: %s", argv[1]);
+    if (argv[1]) log_module(MAIN_LOG, LOG_ERROR, "Error from ircd: %s", argv[1]);
     log_module(MAIN_LOG, LOG_ERROR, "Error received from uplink, squitting.");
 
     if (cManager.uplink->state != CONNECTED) {
