@@ -24,6 +24,10 @@
 #include "log.h"
 #include "timeq.h"
 
+#if defined(HAVE_NETINET_IN_H)
+# include <netinet/in.h> /* sockaddr_in6 on some BSDs */
+#endif
+
 static const char hexdigits[] = "0123456789abcdef";
 
 struct dns_rr;
