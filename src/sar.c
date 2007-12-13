@@ -1080,8 +1080,19 @@ sar_services_init(const char *etc_services)
     struct service_byname *byname;
     unsigned int ii;
 
+    /* Forget old services dicts and allocate new ones. */
+    dict_delete(services_byname);
+    services_byname = dict_new();
+    dict_set_free_data(services_byname, free);
+
+    dict_delete(services_byport);
+    services_byport = dict_new();
+    dict_set_free_data(services_byport, free);
+
+    /* Load the list from the services file. */
     sar_services_load_file(etc_services);
 
+    /* Mark well-known services as using DNS-SD SRV records. */
     for (ii = 0; tcp_srvs[ii]; ++ii) {
         byname = sar_service_byname(tcp_srvs[ii], 1);
         byname->protos[SERVICE_TCP].srv = 1;
@@ -2031,12 +2042,6 @@ sar_init(void)
 
     sar_nameservers = dict_new();
     dict_set_free_data(sar_nameservers, free);
-
-    services_byname = dict_new();
-    dict_set_free_data(services_byname, free);
-
-    services_byport = dict_new();
-    dict_set_free_data(services_byport, free);
 
     sar_register_helper(&sar_ipv4_helper);
 #if defined(AF_INET6)
