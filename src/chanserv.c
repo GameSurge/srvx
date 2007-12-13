@@ -1397,29 +1397,29 @@ expire_channels(UNUSED_ARG(void *data))
 static void
 expire_dnrs(UNUSED_ARG(void *data))
 {
-    dict_iterator_t it;
+    dict_iterator_t it, next;
     struct do_not_register *dnr;
 
-    for(it = dict_first(handle_dnrs); it; it = iter_next(it))
+    for(it = dict_first(handle_dnrs); it; it = next)
     {
         dnr = iter_data(it);
-        if(!dnr->expires || dnr->expires > now)
-            continue;
-        dict_remove(handle_dnrs, dnr->chan_name + 1);
+        next = iter_next(it);
+        if(dnr->expires && dnr->expires <= now)
+            dict_remove(handle_dnrs, dnr->chan_name + 1);
     }
-    for(it = dict_first(plain_dnrs); it; it = iter_next(it))
+    for(it = dict_first(plain_dnrs); it; it = next)
     {
         dnr = iter_data(it);
-        if(!dnr->expires || dnr->expires > now)
-            continue;
-        dict_remove(plain_dnrs, dnr->chan_name);
+        next = iter_next(it);
+        if(dnr->expires && dnr->expires <= now)
+            dict_remove(plain_dnrs, dnr->chan_name + 1);
     }
-    for(it = dict_first(mask_dnrs); it; it = iter_next(it))
+    for(it = dict_first(mask_dnrs); it; it = next)
     {
         dnr = iter_data(it);
-        if(!dnr->expires || dnr->expires > now)
-            continue;
-        dict_remove(mask_dnrs, dnr->chan_name);
+        next = iter_next(it);
+        if(dnr->expires && dnr->expires <= now)
+            dict_remove(mask_dnrs, dnr->chan_name + 1);
     }
 
     if(chanserv_conf.dnr_expire_frequency)
@@ -1734,8 +1734,10 @@ dnr_search_matches(const struct do_not_register *dnr, const struct dnr_search *s
 {
     return !((dnr->set < search->min_set)
              || (dnr->set > search->max_set)
-             || (dnr->expires && ((dnr->expires < search->min_expires)
-                                  || (dnr->expires > search->max_expires)))
+             || (dnr->expires < search->min_expires)
+             || (search->max_expires
+                 && ((dnr->expires == 0)
+                     || (dnr->expires > search->max_expires)))
              || (search->chan_mask
                  && !match_ircglob(dnr->chan_name, search->chan_mask))
              || (search->setter_mask
@@ -1756,7 +1758,6 @@ dnr_search_create(struct userNode *user, struct svccmd *cmd, unsigned int argc, 
     discrim->setter_mask = NULL;
     discrim->reason_mask = NULL;
     discrim->max_set = INT_MAX;
-    discrim->max_expires = INT_MAX;
     discrim->limit = 50;
 
     for(ii=0; ii<argc; ++ii)
