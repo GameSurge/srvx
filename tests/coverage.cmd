@@ -369,7 +369,7 @@ connect cl3 test3 test3 %srv1% :Test Bot 3
 :cl1 privmsg %helpserv% :PAGE and i-----i'm calling all you angels
 :cl1 privmsg %helpserv% :STATSREPORT
 :cl1 part %testchan%1
-:cl1 privmsg %opserv% :HELPSERV 
+:cl1 privmsg %opserv% :HELPSERV
 :cl1 privmsg %opserv% :HELPSERV BOGUS
 :cl1 privmsg %opserv% :HELPSERV PICKUP
 :cl1 privmsg %opserv% :HELPSERV READHELP
