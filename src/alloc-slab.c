@@ -25,8 +25,17 @@
 # error The slab allocator requires that your system have the mmap() system call.
 #endif
 
-#define SLAB_DEBUG 1
-#define SLAB_RESERVE 1024
+#if !defined(SLAB_DEBUG)
+# define SLAB_DEBUG 1
+#endif
+
+#if !defined(SLAB_RESERVE)
+# define SLAB_RESERVE 0
+#endif
+
+#if !defined(MAX_SLAB_FREE)
+# define MAX_SLAB_FREE 1024
+#endif
 
 #if SLAB_DEBUG
 
@@ -299,36 +308,52 @@ slab_unalloc(void *ptr, size_t size)
         }
 
 #if SLAB_RESERVE
-        if (!free_slab_count) {
-            /* Make sure we have enough free slab pages. */
-            while (free_slab_count < SLAB_RESERVE) {
-                struct slab *tslab;
-                void *item;
+        /* Make sure we have enough free slab pages. */
+        while (free_slab_count < SLAB_RESERVE) {
+            struct slab *tslab;
+            void *item;
 
-                item = slab_map(slab_pagesize());
-                tslab = (struct slab*)((char*)item + slab_pagesize() - sizeof(*slab));
-                tslab->base = item;
-                tslab->prev = free_slab_tail;
-                free_slab_tail = tslab;
-                if (!free_slab_head)
-                    free_slab_head = tslab;
-                free_slab_count++;
-                slab_count++;
-            }
+            item = slab_map(slab_pagesize());
+            tslab = (struct slab*)((char*)item + slab_pagesize() - sizeof(*slab));
+            tslab->base = item;
+            tslab->prev = free_slab_tail;
+            free_slab_tail = tslab;
+            if (!free_slab_head)
+                free_slab_head = tslab;
+            else
+                tslab->prev->next = tslab;
+            free_slab_count++;
+            slab_count++;
         }
+#endif
 
-        /* Unmap old slab, so accesses to stale pointers will fault. */
-        munmap(slab->base, slab_pagesize());
-        slab_count--;
-#else
         /* Link to list of free slabs. */
         slab->parent = NULL;
-        slab->prev = free_slab_tail;
         slab->next = NULL;
+        slab->prev = free_slab_tail;
         free_slab_tail = slab;
-        if (!free_slab_head)
+        if (free_slab_head)
+            slab->prev->next = slab;
+        else
             free_slab_head = slab;
         free_slab_count++;
+
+#if MAX_SLAB_FREE >= 0
+        /* Unlink and unmap old slabs, so accesses to stale-enough
+         * pointers will fault. */
+        while (free_slab_count > MAX_SLAB_FREE) {
+            struct slab *tslab;
+
+            tslab = free_slab_tail;
+            free_slab_tail = tslab->prev;
+            if (tslab->prev)
+                tslab->prev->next = NULL;
+            else
+                free_slab_head = NULL;
+            free_slab_count--;
+            slab_count--;
+            munmap(slab->base, slab_pagesize());
+        }
 #endif
     }
     (void)size;
