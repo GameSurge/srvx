@@ -1,7 +1,7 @@
 AM_CPPFLAGS = @RX_INCLUDES@
 LIBS = @LIBS@ @RX_LIBS@
 
-noinst_PROGRAMS = srvx
+noinst_PROGRAMS = srvx slab-read
 EXTRA_PROGRAMS = checkdb globtest
 noinst_DATA = \
 	chanserv.help \
@@ -87,3 +87,4 @@ srvx_SOURCES = \
 
 checkdb_SOURCES = checkdb.c common.h compat.c compat.h dict-splay.c dict.h recdb.c recdb.h saxdb.c saxdb.h tools.c conf.h log.h modcmd.h saxdb.h timeq.h
 globtest_SOURCES = common.h compat.c compat.h dict-splay.c dict.h globtest.c tools.c
+slab_read_SOURCES = slab-read.c
