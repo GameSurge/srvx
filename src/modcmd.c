@@ -18,7 +18,6 @@
  * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
  */
 
-#include "git-version.h"
 #include "chanserv.h"
 #include "conf.h"
 #include "modcmd.h"
@@ -877,7 +876,7 @@ modcmd_privmsg(struct userNode *user, struct userNode *bot, const char *text, in
              * users, except to add copyright information pertaining
              * to changes you make to srvx.
              */
-            snprintf(response, sizeof(response), "\x01VERSION %s (%s) %s\x01", PACKAGE_STRING, CODENAME, GIT_VERSION);
+            snprintf(response, sizeof(response), "\x01VERSION %s (%s) %s\x01", PACKAGE_STRING, CODENAME, git_version);
             irc_notice_user(bot, user, response);
         }
         return;
@@ -1857,7 +1856,7 @@ static MODCMD_FUNC(cmd_version) {
      */
     send_message_type(4, user, cmd->parent->bot, "$b"PACKAGE_STRING"$b ("CODENAME"), Built: "__DATE__", "__TIME__".  Copyright 2000-2007 srvx Development Team.");
     if (argc > 1)
-        send_message_type(4, user, cmd->parent->bot, "%s", GIT_VERSION);
+        send_message_type(4, user, cmd->parent->bot, "%s", git_version);
     else
         send_message_type(12, user, cmd->parent->bot, "The srvx Development Team includes Paul Chang, Adrian Dewhurst, Miles Peterson, Michael Poole and others.\nThe srvx Development Team can be reached at http://sf.net/projects/srvx/ or in #srvx on irc.gamesurge.net.");
     return 1;

@@ -2,6 +2,6 @@ Makefile.in
 config.h.in
 .deps
 config.h
-git-version.h
+git-version.c
 modules-list.h
 stamp-h1

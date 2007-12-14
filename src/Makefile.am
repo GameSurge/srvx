@@ -15,23 +15,22 @@ noinst_DATA = \
 	mod-memoserv.help \
 	mod-sockcheck.help
 EXTRA_DIST = $(noinst_DATA)
-BUILT_SOURCES = git-version.h
-noinst_HEADERS = git-version.h
 
 if HAS_GIT
+BUILT_SOURCES = git-version.c
 .PHONY: checkversion
-git-version.h: checkversion
+git-version.c: checkversion
 checkversion:
 	@GIT_VERSION=`$(GIT) describe`; \
 	[ "z$$GIT_VERSION" != "z" ] || exit 0; \
-	TMPFILE=`mktemp git-version.h.XXXXXX` || exit 1 ; \
-	echo "#define GIT_VERSION \"$${GIT_VERSION}\"" >> $$TMPFILE ; \
-	if diff -q git-version.h $$TMPFILE >/dev/null 2>&1 ; then \
+	TMPFILE=`mktemp git-version.c.XXXXXX` || exit 1 ; \
+	echo "const char git_version[] = \"$${GIT_VERSION}\";" >> $$TMPFILE ; \
+	if diff -q git-version.c $$TMPFILE >/dev/null 2>&1 ; then \
 	    rm $$TMPFILE ; \
         else \
-	    echo "Putting new git version into git-version.h" ; \
-	    rm -f git-version.h ; \
-	    mv $$TMPFILE git-version.h ; \
+	    echo "Putting new git version into git-version.c" ; \
+	    rm -f git-version.c ; \
+	    mv $$TMPFILE git-version.c ; \
 	fi
 endif
 
@@ -57,7 +56,7 @@ EXTRA_srvx_SOURCES = \
 srvx_LDADD = @MODULE_OBJS@
 srvx_DEPENDENCIES = @MODULE_OBJS@
 srvx_SOURCES = \
-	git-version.h \
+	git-version.c \
 	chanserv.c chanserv.h \
 	compat.c compat.h \
 	conf.c conf.h \

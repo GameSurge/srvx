@@ -122,6 +122,7 @@ extern void verify(const void *ptr);
 extern time_t now;
 extern int quit_services;
 extern struct log_type *MAIN_LOG;
+extern const char git_version[];
 
 typedef union irc_in_addr {
     uint32_t in6_32[4];

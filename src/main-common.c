@@ -549,8 +549,10 @@ version()
 {
     printf("    --------------------------------------------------\n"
            "    - "PACKAGE_STRING" ("CODENAME"), Built: " __DATE__ ", " __TIME__".\n"
-           "    - Copyright (C) 2000 - 2005, srvx Development Team\n"
-           "    --------------------------------------------------\n");
+           "    - Copyright (C) 2000 - 2007, srvx Development Team\n"
+           "    - Version tag %s\n"
+           "    --------------------------------------------------\n",
+           git_version);
 }
 
 static void
