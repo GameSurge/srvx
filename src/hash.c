@@ -42,6 +42,18 @@ void init_structs(void)
     reg_exit_func(hash_cleanup);
 }
 
+int userList_contains(struct userList *list, struct userNode *user)
+{
+    unsigned int ii;
+
+    for (ii = 0; ii < list->used; ++ii) {
+        if (user == list->list[ii]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 server_link_func_t *slf_list;
 unsigned int slf_size = 0, slf_used = 0;
 

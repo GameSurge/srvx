@@ -944,7 +944,7 @@ set_user_handle_info(struct userNode *user, struct handle_info *hi, int stamp)
         user->next_authed = hi->users;
         hi->users = user;
         hi->lastseen = now;
-        if (IsHelper(user))
+        if (IsHelper(user) && !userList_contains(&curr_helpers, user))
             userList_append(&curr_helpers, user);
 
         if (hi->fakehost || old_info)

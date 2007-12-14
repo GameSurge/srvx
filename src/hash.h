@@ -199,6 +199,8 @@ struct userNode* GetUserH(const char *nick);   /* using nick */
 struct chanNode* GetChannel(const char *name);
 struct modeNode* GetUserMode(struct chanNode* channel, struct userNode* user);
 
+int userList_contains(struct userList *list, struct userNode *user);
+
 typedef void (*server_link_func_t) (struct server *server);
 void reg_server_link_func(server_link_func_t handler);
 

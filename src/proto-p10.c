@@ -2213,11 +2213,11 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
         case '-': add = 0; break;
         case 'o':
             do_user_mode(FLAGS_OPER);
-            if (add) {
+            if (!add) {
+                userList_remove(&curr_opers, user);
+            } else if (!userList_contains(&curr_opers, user)) {
                 userList_append(&curr_opers, user);
                 call_oper_funcs(user);
-            } else {
-                userList_remove(&curr_opers, user);
             }
             break;
         case 'i': do_user_mode(FLAGS_INVISIBLE);
