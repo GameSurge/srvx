@@ -2010,6 +2010,8 @@ sar_cleanup(void)
     dict_delete(services_byport);
     dict_delete(sar_nameservers);
     dict_delete(sar_requests);
+    free_string_list(conf.sar_search);
+    free_string_list(conf.sar_nslist);
 }
 
 static void

@@ -613,10 +613,12 @@ parse_database(const char *filename)
 
     if (fstat(fileno(recdb.f), &statinfo)) {
         log_module(MAIN_LOG, LOG_ERROR, "Unable to fstat database file '%s': %s", filename, strerror(errno));
+        fclose(recdb.f);
         return NULL;
     }
     recdb.length = (size_t)statinfo.st_size;
     if (recdb.length == 0) {
+        fclose(recdb.f);
         return alloc_database();
     }
 

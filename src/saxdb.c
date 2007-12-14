@@ -58,6 +58,7 @@ saxdb_read_db(struct saxdb *db) {
     if (!data)
         return;
     if (db->writer == saxdb_mondo_writer) {
+        free_database(mondo_db);
         mondo_db = data;
     } else {
         db->reader(data);
