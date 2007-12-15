@@ -431,7 +431,7 @@ privmsg_chan_helper(struct chanNode *cn, void *data)
 {
     struct privmsg_desc *pd = data;
     struct modeNode *mn;
-    struct chanmsg_func *cf = &chanmsg_funcs[(unsigned char)pd->text[0]];
+    struct chanmsg_func *cf;
     int x;
 
     /* Don't complain if it can't find the modeNode because the channel might
@@ -440,8 +440,9 @@ privmsg_chan_helper(struct chanNode *cn, void *data)
         mn->idle_since = now;
 
     /* Never send a NOTICE to a channel to one of the services */
-    if (!pd->is_notice && cf->func
-        && ((cn->modes & MODE_REGISTERED) || GetUserMode(cn, cf->service)))
+    cf = &chanmsg_funcs[(unsigned char)pd->text[0]];
+    if (!pd->is_notice && cf->func && GetUserMode(cn, cf->service) && !IsDeaf(cf->service))
+        cf->func(pd->user, cn, pd->text+1, cf->service);
 
     /* This catches *all* text sent to the channel that the services server sees */
     for (x = 0; x < ALLCHANMSG_FUNCS_MAX; x++) {
