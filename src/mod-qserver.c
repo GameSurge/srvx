@@ -183,7 +183,9 @@ qserver_conf_read(void)
     node = conf_get_data("modules/qserver", RECDB_OBJECT);
     if (!node)
         return;
-    str1 = database_get_data(node, "address", RECDB_QSTRING);
+    str1 = database_get_data(node, "bind_address", RECDB_QSTRING);
+    if (!str1)
+        str1 = database_get_data(node, "address", RECDB_QSTRING);
     str2 = database_get_data(node, "port", RECDB_QSTRING);
     if (!str2)
         return;

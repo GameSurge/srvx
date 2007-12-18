@@ -1147,7 +1147,8 @@ sockcheck_read_conf(void)
         if (str) sockcheck_conf.max_cache_age = ParseInterval(str);
         str = database_get_data(my_node, "gline_duration", RECDB_QSTRING);
         if (str) sockcheck_conf.gline_duration = ParseInterval(str);
-        str = database_get_data(my_node, "address", RECDB_QSTRING);
+        str = database_get_data(my_node, "bind_address", RECDB_QSTRING);
+        if (!str) str = database_get_data(my_node, "address", RECDB_QSTRING);
         if (!getaddrinfo(str, NULL, NULL, &ai)) {
             sockcheck_conf.local_addr_len = ai->ai_addrlen;
             sockcheck_conf.local_addr = calloc(1, ai->ai_addrlen);
