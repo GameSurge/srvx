@@ -274,7 +274,7 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_SET_FLAG", "Applied flags $b%s$b to %s's $N account." },
     { "NSMSG_FLAG_PRIVILEGED", "You have insufficient access to set flag %c." },
     { "NSMSG_DB_UNREADABLE", "Unable to read database file %s; check the log for more information." },
-    { "NSMSG_DB_MERGED", "$N merged DB from %s (in "FMT_TIME_T".%03lu seconds)." },
+    { "NSMSG_DB_MERGED", "$N merged DB from %s (in %lu.%03lu seconds)." },
     { "NSMSG_HANDLE_CHANGED", "$b%s$b's account name has been changed to $b%s$b." },
     { "NSMSG_BAD_HANDLE", "Account $b%s$b not registered because it is in use by a network service, is too long, or contains invalid characters." },
     { "NSMSG_BAD_NICK", "Nickname $b%s$b not registered because it is in use by a network service, is too long, or contains invalid characters." },
@@ -1313,6 +1313,7 @@ static NICKSERV_FUNC(cmd_handleinfo)
     struct userNode *target, *next_un;
     struct handle_info *hi;
     const char *nsmsg_none;
+    time_t feh;
 
     if (argc < 2) {
         if (!(hi = user->handle_info)) {
@@ -1328,7 +1329,8 @@ static NICKSERV_FUNC(cmd_handleinfo)
 #ifdef WITH_PROTOCOL_BAHAMUT
     reply("NSMSG_HANDLEINFO_ID", hi->id);
 #endif
-    reply("NSMSG_HANDLEINFO_REGGED", ctime(&hi->registered));
+    feh = hi->registered;
+    reply("NSMSG_HANDLEINFO_REGGED", ctime(&feh));
 
     if (!hi->users) {
         intervalString(buff, now - hi->lastseen, user->handle_info);
@@ -3089,8 +3091,8 @@ static NICKSERV_FUNC(cmd_merge)
 
 struct nickserv_discrim {
     unsigned long flags_on, flags_off;
-    time_t min_registered, max_registered;
-    time_t lastseen;
+    unsigned long min_registered, max_registered;
+    unsigned long lastseen;
     unsigned int limit;
     int min_level, max_level;
     int min_karma, max_karma;
@@ -3123,8 +3125,8 @@ nickserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[])
     discrim->max_level = INT_MAX;
     discrim->limit = 50;
     discrim->min_registered = 0;
-    discrim->max_registered = INT_MAX;
-    discrim->lastseen = LONG_MAX;
+    discrim->max_registered = ULONG_MAX;
+    discrim->lastseen = ULONG_MAX;
     discrim->min_karma = INT_MIN;
     discrim->max_karma = INT_MAX;
 
@@ -3501,9 +3503,9 @@ nickserv_db_read_handle(const char *handle, dict_t obj)
     if (str)
         hi->infoline = strdup(str);
     str = database_get_data(obj, KEY_REGISTER_ON, RECDB_QSTRING);
-    hi->registered = str ? (time_t)strtoul(str, NULL, 0) : now;
+    hi->registered = str ? strtoul(str, NULL, 0) : now;
     str = database_get_data(obj, KEY_LAST_SEEN, RECDB_QSTRING);
-    hi->lastseen = str ? (time_t)strtoul(str, NULL, 0) : hi->registered;
+    hi->lastseen = str ? strtoul(str, NULL, 0) : hi->registered;
     str = database_get_data(obj, KEY_KARMA, RECDB_QSTRING);
     hi->karma = str ? strtoul(str, NULL, 0) : 0;
     /* We want to read the nicks even if disable_nicks is set.  This is so
@@ -3656,7 +3658,7 @@ static NICKSERV_FUNC(cmd_mergedb)
         stop.tv_sec -= 1;
         stop.tv_usec += 1000000;
     }
-    reply("NSMSG_DB_MERGED", argv[1], stop.tv_sec, stop.tv_usec/1000);
+    reply("NSMSG_DB_MERGED", argv[1], (unsigned long)stop.tv_sec, (unsigned long)stop.tv_usec/1000);
     return 1;
 }
 
@@ -3664,7 +3666,7 @@ static void
 expire_handles(UNUSED_ARG(void *data))
 {
     dict_iterator_t it, next;
-    time_t expiry;
+    unsigned long expiry;
     struct handle_info *hi;
 
     for (it=dict_first(nickserv_handle_dict); it; it=next) {

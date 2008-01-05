@@ -53,7 +53,7 @@ enum sockcheck_decision {
 typedef struct {
     irc_in_addr_t addr;
     const char *reason;
-    time_t last_touched;
+    unsigned long last_touched;
     enum sockcheck_decision decision;
     char hostname[IRC_NTOP_MAX_SIZE]; /* acts as key for checked_ip_dict */
 } *sockcheck_cache_info;
@@ -257,10 +257,11 @@ static void
 sockcheck_print_client(const struct sockcheck_client *client)
 {
     static const char *decs[] = {"CHECKING", "ACCEPT", "REJECT"};
-    log_module(PC_LOG, LOG_INFO, "client %p: { addr = %p { decision = %s; last_touched = "FMT_TIME_T"; reason = %s; hostname = \"%s\" }; "
+    log_module(PC_LOG, LOG_INFO, "client %p: { addr = %p { decision = %s; last_touched = %lu; reason = %s; hostname = \"%s\" }; "
         "test_index = %d; state = %p { port = %d; type = %s; template = \"%s\"; ... }; "
         "fd = %p(%d); read = %p; read_size = %d; read_used = %d; read_pos = %d; }",
-        client, client->addr, decs[client->addr->decision], client->addr->last_touched,
+        client, client->addr, decs[client->addr->decision],
+        client->addr->last_touched,
         client->addr->reason, client->addr->hostname,
         client->test_index, client->state,
         (client->state ? client->state->port : 0),
@@ -715,10 +716,12 @@ sockcheck_queue_address(irc_in_addr_t addr)
             /* We are already checking this host. */
             return;
         case ACCEPT:
-            if ((sci->last_touched + sockcheck_conf.max_cache_age) >= (unsigned)now) return;
+            if (sci->last_touched + sockcheck_conf.max_cache_age >= now) {
+                return;
+            }
             break;
         case REJECT:
-            if ((sci->last_touched + sockcheck_conf.gline_duration) >= (unsigned)now) {
+            if (sci->last_touched + sockcheck_conf.gline_duration >= now) {
                 sockcheck_issue_gline(sci);
                 return;
             }
@@ -970,7 +973,7 @@ sockcheck_clean_cache(UNUSED_ARG(void *data))
             string_buffer_append_string(&sb, client_list[nn]->addr->hostname);
         }
         string_buffer_append(&sb, '\0');
-        log_module(PC_LOG, LOG_INFO, "Cleaning sockcheck cache at "FMT_TIME_T"; current clients: %s.", now, sb.list);
+        log_module(PC_LOG, LOG_INFO, "Cleaning sockcheck cache at %lu; current clients: %s.", (unsigned long)now, sb.list);
         string_buffer_clean(&sb);
     } else {
         for (curr_clients = dict_new(), nn=0; nn < sockcheck_conf.max_clients; nn++) {
@@ -987,7 +990,7 @@ sockcheck_clean_cache(UNUSED_ARG(void *data))
         if (((sci->last_touched + max_age) < now)
             && !dict_find(curr_clients, sci->hostname, NULL)) {
             if (SOCKCHECK_DEBUG) {
-                log_module(PC_LOG, LOG_INFO, " .. nuking %s (last touched "FMT_TIME_T").", sci->hostname, sci->last_touched);
+                log_module(PC_LOG, LOG_INFO, " .. nuking %s (last touched %lu).", sci->hostname, sci->last_touched);
             }
             dict_remove(checked_ip_dict, sci->hostname);
         }

@@ -18,7 +18,7 @@ void log_module(UNUSED_ARG(struct log_type *lt), UNUSED_ARG(enum log_severity ls
 
 /* and because saxdb is tied in to lots of stuff.. */
 
-time_t now;
+unsigned long now;
 
 void *conf_get_data(UNUSED_ARG(const char *full_path), UNUSED_ARG(enum recdb_type type)) {
     return NULL;
@@ -30,10 +30,10 @@ void conf_register_reload(UNUSED_ARG(conf_reload_func crf)) {
 void reg_exit_func(UNUSED_ARG(exit_func_t handler)) {
 }
 
-void timeq_add(UNUSED_ARG(time_t when), UNUSED_ARG(timeq_func func), UNUSED_ARG(void *data)) {
+void timeq_add(UNUSED_ARG(unsigned long when), UNUSED_ARG(timeq_func func), UNUSED_ARG(void *data)) {
 }
 
-void timeq_del(UNUSED_ARG(time_t when), UNUSED_ARG(timeq_func func), UNUSED_ARG(void *data), UNUSED_ARG(int mask)) {
+void timeq_del(UNUSED_ARG(unsigned long when), UNUSED_ARG(timeq_func func), UNUSED_ARG(void *data), UNUSED_ARG(int mask)) {
 }
 
 int send_message(UNUSED_ARG(struct userNode *dest), UNUSED_ARG(struct userNode *src), UNUSED_ARG(const char *message), ...) {

@@ -73,8 +73,8 @@ static const struct message_entry msgtab[] = {
     { "MCMSG_HELPFILE_UNBOUND", "Since that was the last command from module %s on the service, the helpfile for %s was removed." },
     { "MCMSG_NO_HELPFILE", "Module %s does not have a help file." },
     { "MCMSG_HELPFILE_ERROR", "Syntax error reading %s; help contents not changed." },
-    { "MCMSG_HELPFILE_READ", "Read %s help database in "FMT_TIME_T".%03lu seconds." },
-    { "MCMSG_COMMAND_TIME", "Command $b%s$b finished in "FMT_TIME_T".%06lu seconds." },
+    { "MCMSG_HELPFILE_READ", "Read %s help database in %lu.%03lu seconds." },
+    { "MCMSG_COMMAND_TIME", "Command $b%s$b finished in %lu.%06lu seconds." },
     { "MCMSG_NEED_OPSERV_LEVEL", "You must have $O access of at least $b%u$b." },
     { "MCMSG_NEED_CHANSERV_LEVEL", "You must have $C access of at least $b%u$b in the channel." },
     { "MCMSG_NEED_ACCOUNT_FLAGS", "You must have account flags $b%s$b." },
@@ -862,9 +862,9 @@ modcmd_privmsg(struct userNode *user, struct userNode *bot, const char *text, in
                 irc_notice_user(bot,user, "\x01PING\x01");
             }
         } else if (!irccasecmp(text, "TIME")) {
-            struct tm tm;
-            localtime_r(&now, &tm);
-            strftime(response, sizeof(response), "\x01TIME %a %b %d %H:%M:%S %Y\x01", &tm);
+            time_t feh;
+            feh = now;
+            strftime(response, sizeof(response), "\x01TIME %a %b %d %H:%M:%S %Y\x01", localtime(&feh));
             irc_notice_user(bot, user, response);
         } else if (!irccasecmp(text, "USERINFO")) {
             snprintf(response, sizeof(response), "\x01USERINFO %s\x01", bot->info);
@@ -1215,7 +1215,7 @@ static MODCMD_FUNC(cmd_readhelp) {
         stop.tv_sec -= 1;
         stop.tv_usec += 1000000;
     }
-    reply("MCMSG_HELPFILE_READ", module->name, stop.tv_sec, stop.tv_usec/1000);
+    reply("MCMSG_HELPFILE_READ", module->name, (unsigned long)stop.tv_sec, (unsigned long)stop.tv_usec/1000);
     return 1;
 }
 
@@ -1240,7 +1240,7 @@ static MODCMD_FUNC(cmd_timecmd) {
         stop.tv_sec -= 1;
         stop.tv_usec += 1000000;
     }
-    reply("MCMSG_COMMAND_TIME", cmd_text, stop.tv_sec, stop.tv_usec);
+    reply("MCMSG_COMMAND_TIME", cmd_text, (unsigned long)stop.tv_sec, (unsigned long)stop.tv_usec);
     return 1;
 }
 

@@ -71,14 +71,14 @@ struct handle_cookie {
     struct handle_info *hi;
     char *data;
     enum cookie_type type;
-    time_t expires;
+    unsigned long expires;
     char cookie[COOKIELEN+1];
 };
 
 struct handle_note {
     struct handle_note *next;
-    time_t expires;
-    time_t set;
+    unsigned long expires;
+    unsigned long set;
     int id;
     char setter[NICKSERV_HANDLE_LEN+1];
     char note[1];
@@ -100,8 +100,8 @@ struct handle_info {
 #ifdef WITH_PROTOCOL_BAHAMUT
     unsigned long id;
 #endif
-    time_t registered;
-    time_t lastseen;
+    unsigned long registered;
+    unsigned long lastseen;
     int karma;
     unsigned short flags;
     unsigned short opserv_level;

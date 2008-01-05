@@ -1,6 +1,8 @@
 extern FILE *replay_file;
 
-time_t boot_time, burst_begin, now;
+unsigned long boot_time;
+unsigned long burst_begin;
+unsigned long now;
 unsigned long burst_length;
 struct log_type *MAIN_LOG;
 
@@ -59,8 +61,8 @@ static const struct message_entry msgtab[] = {
     { "MSG_DB_UNKNOWN", "I do not know of a database named %s." },
     { "MSG_DB_IS_MONDO", "Database %s is in the \"mondo\" database and cannot be written separately." },
     { "MSG_DB_WRITE_ERROR", "Error while writing database %s." },
-    { "MSG_DB_WROTE_DB", "Wrote database %s (in "FMT_TIME_T".%06lu seconds)." },
-    { "MSG_DB_WROTE_ALL", "Wrote all databases (in "FMT_TIME_T".%06lu seconds)." },
+    { "MSG_DB_WROTE_DB", "Wrote database %s (in %lu.%06lu seconds)." },
+    { "MSG_DB_WROTE_ALL", "Wrote all databases (in %lu.%06lu seconds)." },
     { "MSG_AND", "and" },
     { "MSG_0_SECONDS", "0 seconds" },
     { "MSG_YEAR", "year" },

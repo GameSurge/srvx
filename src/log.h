@@ -57,15 +57,15 @@ void log_replay(struct log_type *type, int is_write, const char *line);
 struct logEntry
 {
                                       /* field nullable in real entries? */
-    time_t            time;
-    enum log_severity slvl;
+    unsigned long     time;           /* no */
+    enum log_severity slvl;           /* no */
     struct userNode   *bot;           /* no */
     char              *channel_name;  /* yes */
     char              *user_nick;     /* no */
     char              *user_account;  /* yes */
     char              *user_hostmask; /* yes */
     char              *command;       /* no */
-    char              *default_desc;
+    char              *default_desc;  /* no */
     struct logEntry   *next;
     struct logEntry   *prev;
 };
@@ -74,8 +74,8 @@ struct logSearch
 {
     struct logEntry  masks;
     struct log_type  *type;
-    time_t           min_time;
-    time_t           max_time;
+    unsigned long    min_time;
+    unsigned long    max_time;
     unsigned int     limit;
     unsigned int     severities;
 };

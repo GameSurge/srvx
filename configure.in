@@ -141,32 +141,6 @@ fi
 dnl Check for post-C89 keywords
 AC_C_INLINE
 
-dnl Now figure out how to printf() a time_t
-AC_MSG_CHECKING(for time_t format)
-AC_CACHE_VAL(ac_cv_fmt_time_t, [
-ac_cv_fmt_time_t=no
-AC_COMPILE_IFELSE([#include <sys/types.h>
-#include <stdio.h>
-void myfunc(void) {
-  time_t test=0;
-  printf("%li", test);
-}], ac_cv_fmt_time_t="\"%li\"")
-if test $ac_cv_fmt_time_t = no; then
-AC_COMPILE_IFELSE([#include <sys/types.h>
-#include <stdio.h>
-void myfunc(void) {
-  time_t test=0;
-  printf("%i", test);
-}], ac_cv_fmt_time_t="\"%i\"")
-fi
-if test $ac_cv_fmt_time_t = no; then
-AC_MSG_ERROR([Cannot detect format string for time_t
-Please check sys/types.h for the typedef of time_t and submit to a developer])
-fi
-])
-AC_DEFINE_UNQUOTED(FMT_TIME_T, $ac_cv_fmt_time_t, [Define to printf format for a time_t variable])
-AC_MSG_RESULT($ac_cv_fmt_time_t)
-
 dnl How to copy one va_list to another?
 AC_CACHE_CHECK([for va_copy], ac_cv_c_va_copy, [AC_LINK_IFELSE(
   [AC_LANG_PROGRAM([#include <stdarg.h>], [va_list ap1, ap2; va_copy(ap1, ap2);])],

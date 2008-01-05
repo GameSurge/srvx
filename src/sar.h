@@ -138,7 +138,7 @@ typedef void (*sar_request_fail_cb)(struct sar_request *req, unsigned int rcode)
  */
 struct sar_request {
     int id;
-    time_t expiry;
+    unsigned long expiry;
     sar_request_ok_cb cb_ok;
     sar_request_fail_cb cb_fail;
     unsigned char *body;

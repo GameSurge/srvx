@@ -497,9 +497,9 @@ static struct
     unsigned long   channel_expire_frequency;
     unsigned long   dnr_expire_frequency;
 
-    long            info_delay;
-    unsigned int    adjust_delay;
-    long            channel_expire_delay;
+    unsigned long   info_delay;
+    unsigned long   adjust_delay;
+    unsigned long   channel_expire_delay;
     unsigned int    nodelete_level;
 
     unsigned int    adjust_threshold;
@@ -1115,7 +1115,7 @@ register_channel(struct chanNode *cNode, char *registrar)
 }
 
 static struct userData*
-add_channel_user(struct chanData *channel, struct handle_info *handle, unsigned short access, time_t seen, const char *info)
+add_channel_user(struct chanData *channel, struct handle_info *handle, unsigned short access, unsigned long seen, const char *info)
 {
     struct userData *ud;
 
@@ -1180,7 +1180,7 @@ del_channel_user(struct userData *user, int do_gc)
 static void expire_ban(void *data);
 
 static struct banData*
-add_channel_ban(struct chanData *channel, const char *mask, char *owner, time_t set, time_t triggered, time_t expires, char *reason)
+add_channel_ban(struct chanData *channel, const char *mask, char *owner, unsigned long set, unsigned long triggered, unsigned long expires, char *reason)
 {
     struct banData *bd;
     unsigned int ii, l1, l2;
@@ -1506,7 +1506,7 @@ validate_deop(struct userNode *user, struct chanNode *channel, struct userNode *
 }
 
 static struct do_not_register *
-chanserv_add_dnr(const char *chan_name, const char *setter, time_t expires, const char *reason)
+chanserv_add_dnr(const char *chan_name, const char *setter, unsigned long expires, const char *reason)
 {
     struct do_not_register *dnr = calloc(1, sizeof(*dnr)+strlen(reason));
     safestrncpy(dnr->chan_name, chan_name, sizeof(dnr->chan_name));
@@ -1571,13 +1571,18 @@ static int dnr_print_func(struct do_not_register *dnr, void *extra)
     struct userNode *user;
     char buf1[INTERVALLEN];
     char buf2[INTERVALLEN];
+    time_t feh;
 
     user = extra;
     if(dnr->set)
-        strftime(buf1, sizeof(buf1), "%d %b %Y", localtime(&dnr->set));
+    {
+        feh = dnr->set;
+        strftime(buf1, sizeof(buf1), "%d %b %Y", localtime(&feh));
+    }
     if(dnr->expires)
     {
-        strftime(buf2, sizeof(buf2), "%d %b %Y", localtime(&dnr->expires));
+        feh = dnr->expires;
+        strftime(buf2, sizeof(buf2), "%d %b %Y", localtime(&feh));
         send_message(user, chanserv, "CSMSG_DNR_INFO_SET_EXPIRES", dnr->chan_name, buf1, dnr->setter, buf2, dnr->reason);
     }
     else if(dnr->set)
@@ -1641,7 +1646,7 @@ static unsigned int send_dnrs(struct userNode *user, dict_t dict)
 static CHANSERV_FUNC(cmd_noregister)
 {
     const char *target;
-    time_t expiry, duration;
+    unsigned long expiry, duration;
     unsigned int matches;
 
     if(argc < 2)
@@ -1724,8 +1729,8 @@ struct dnr_search {
     char *chan_mask;
     char *setter_mask;
     char *reason_mask;
-    time_t min_set, max_set;
-    time_t min_expires, max_expires;
+    unsigned long min_set, max_set;
+    unsigned long min_expires, max_expires;
     unsigned int limit;
 };
 
@@ -2768,7 +2773,7 @@ cmd_trim_bans(struct userNode *user, struct chanNode *channel, unsigned long dur
     struct banData *bData, *next;
     char interval[INTERVALLEN];
     unsigned int count;
-    time_t limit;
+    unsigned long limit;
 
     count = 0;
     limit = now - duration;
@@ -2794,7 +2799,7 @@ cmd_trim_users(struct userNode *user, struct chanNode *channel, unsigned short m
     struct userData *actor, *uData, *next;
     char interval[INTERVALLEN];
     unsigned int count;
-    time_t limit;
+    unsigned long limit;
 
     actor = GetChannelAccess(channel->channel_info, user->handle_info);
     if(min_access > max_access)
@@ -3242,7 +3247,7 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
                     /* If the ban matches an existing one exactly,
                        extend the expiration time if the provided
                        duration is longer. */
-                    if(duration && ((time_t)(now + duration) > bData->expires))
+                    if(duration && (now + duration > bData->expires))
                     {
                         bData->expires = now + duration;
                         reset = 1;
@@ -4401,7 +4406,7 @@ static CHANSERV_FUNC(cmd_info)
 
 static CHANSERV_FUNC(cmd_netinfo)
 {
-    extern time_t boot_time;
+    extern unsigned long boot_time;
     extern unsigned long burst_length;
     char interval[INTERVALLEN];
 
@@ -4913,7 +4918,7 @@ static CHANSERV_FUNC(cmd_csuspend)
 {
     struct suspended *suspended;
     char reason[MAXLEN];
-    time_t expiry, duration;
+    unsigned long expiry, duration;
     struct userData *uData;
 
     REQUIRE_PARAMS(3);
@@ -5015,8 +5020,8 @@ typedef struct chanservSearch
     char *name;
     char *registrar;
 
-    time_t unvisited;
-    time_t registered;
+    unsigned long unvisited;
+    unsigned long registered;
 
     unsigned long flags;
     unsigned int limit;
@@ -5171,7 +5176,7 @@ static CHANSERV_FUNC(cmd_search)
 static CHANSERV_FUNC(cmd_unvisited)
 {
     struct chanData *cData;
-    time_t interval = chanserv_conf.channel_expire_delay;
+    unsigned long interval = chanserv_conf.channel_expire_delay;
     char buffer[INTERVALLEN];
     unsigned int limit = 25, matches = 0;
 
@@ -5978,7 +5983,7 @@ static CHANSERV_FUNC(cmd_giveownership)
         }
         curr_user = owner;
     }
-    else if(!force && (now < (time_t)(cData->ownerTransfer + chanserv_conf.giveownership_period)))
+    else if(!force && (now < cData->ownerTransfer + chanserv_conf.giveownership_period))
     {
         char delay[INTERVALLEN];
         intervalString(delay, cData->ownerTransfer + chanserv_conf.giveownership_period - now, user->handle_info);
@@ -7083,7 +7088,7 @@ user_read_helper(const char *key, struct record_data *rd, struct chanData *chan)
     struct handle_info *handle;
     struct userData *uData;
     char *seen, *inf, *flags;
-    time_t last_seen;
+    unsigned long last_seen;
     unsigned short access;
 
     if(rd->type != RECDB_OBJECT || !dict_size(rd->d.object))
@@ -7101,7 +7106,7 @@ user_read_helper(const char *key, struct record_data *rd, struct chanData *chan)
 
     inf = database_get_data(rd->d.object, KEY_INFO, RECDB_QSTRING);
     seen = database_get_data(rd->d.object, KEY_SEEN, RECDB_QSTRING);
-    last_seen = seen ? (signed)strtoul(seen, NULL, 0) : now;
+    last_seen = seen ? strtoul(seen, NULL, 0) : now;
     flags = database_get_data(rd->d.object, KEY_FLAGS, RECDB_QSTRING);
     handle = get_handle_info(key);
     if(!handle)
@@ -7119,7 +7124,7 @@ ban_read_helper(const char *key, struct record_data *rd, struct chanData *chan)
 {
     struct banData *bData;
     char *set, *triggered, *s_duration, *s_expires, *reason, *owner;
-    time_t set_time, triggered_time, expires_time;
+    unsigned long set_time, triggered_time, expires_time;
 
     if(rd->type != RECDB_OBJECT || !dict_size(rd->d.object))
     {
@@ -7136,10 +7141,10 @@ ban_read_helper(const char *key, struct record_data *rd, struct chanData *chan)
     if (!reason || !owner)
         return;
 
-    set_time = set ? (time_t)strtoul(set, NULL, 0) : now;
-    triggered_time = triggered ? (time_t)strtoul(triggered, NULL, 0) : 0;
+    set_time = set ? strtoul(set, NULL, 0) : now;
+    triggered_time = triggered ? strtoul(triggered, NULL, 0) : 0;
     if(s_expires)
-        expires_time = (time_t)strtoul(s_expires, NULL, 0);
+        expires_time = strtoul(s_expires, NULL, 0);
     else if(s_duration)
         expires_time = set_time + atoi(s_duration);
     else
@@ -7159,11 +7164,11 @@ chanserv_read_suspended(dict_t obj)
     dict_t previous;
 
     str = database_get_data(obj, KEY_EXPIRES, RECDB_QSTRING);
-    suspended->expires = str ? (time_t)strtoul(str, NULL, 0) : 0;
+    suspended->expires = str ? strtoul(str, NULL, 0) : 0;
     str = database_get_data(obj, KEY_REVOKED, RECDB_QSTRING);
-    suspended->revoked = str ? (time_t)strtoul(str, NULL, 0) : 0;
+    suspended->revoked = str ? strtoul(str, NULL, 0) : 0;
     str = database_get_data(obj, KEY_ISSUED, RECDB_QSTRING);
-    suspended->issued = str ? (time_t)strtoul(str, NULL, 0) : 0;
+    suspended->issued = str ? strtoul(str, NULL, 0) : 0;
     suspended->suspender = strdup(database_get_data(obj, KEY_SUSPENDER, RECDB_QSTRING));
     suspended->reason = strdup(database_get_data(obj, KEY_REASON, RECDB_QSTRING));
     previous = database_get_data(obj, KEY_PREVIOUS, RECDB_OBJECT);
@@ -7309,11 +7314,11 @@ chanserv_channel_read(const char *key, struct record_data *hir)
     }
 
     str = database_get_data(channel, KEY_REGISTERED, RECDB_QSTRING);
-    cData->registered = str ? (time_t)strtoul(str, NULL, 0) : now;
+    cData->registered = str ? strtoul(str, NULL, 0) : now;
     str = database_get_data(channel, KEY_VISITED, RECDB_QSTRING);
-    cData->visited = str ? (time_t)strtoul(str, NULL, 0) : now;
+    cData->visited = str ? strtoul(str, NULL, 0) : now;
     str = database_get_data(channel, KEY_OWNER_TRANSFER, RECDB_QSTRING);
-    cData->ownerTransfer = str ? (time_t)strtoul(str, NULL, 0) : 0;
+    cData->ownerTransfer = str ? strtoul(str, NULL, 0) : 0;
     str = database_get_data(channel, KEY_MAX, RECDB_QSTRING);
     cData->max = str ? atoi(str) : 0;
     str = database_get_data(channel, KEY_GREETING, RECDB_QSTRING);
@@ -7388,7 +7393,7 @@ chanserv_dnr_read(const char *key, struct record_data *hir)
 {
     const char *setter, *reason, *str;
     struct do_not_register *dnr;
-    time_t expiry;
+    unsigned long expiry;
 
     setter = database_get_data(hir->d.object, KEY_DNR_SETTER, RECDB_QSTRING);
     if(!setter)
@@ -7403,7 +7408,7 @@ chanserv_dnr_read(const char *key, struct record_data *hir)
         return;
     }
     str = database_get_data(hir->d.object, KEY_EXPIRES, RECDB_QSTRING);
-    expiry = str ? (time_t)strtoul(str, NULL, 0) : 0;
+    expiry = str ? strtoul(str, NULL, 0) : 0;
     if(expiry && expiry <= now)
         return;
     dnr = chanserv_add_dnr(key, setter, expiry, reason);
@@ -7870,7 +7875,7 @@ init_chanserv(const char *nick)
 
     if(chanserv_conf.refresh_period)
     {
-        time_t next_refresh;
+        unsigned long next_refresh;
         next_refresh = (now + chanserv_conf.refresh_period - 1) / chanserv_conf.refresh_period * chanserv_conf.refresh_period;
         timeq_add(next_refresh, chanserv_refresh_topics, NULL);
     }

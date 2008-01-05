@@ -24,9 +24,6 @@
 /* Define if tokenized P10 desired */
 #define ENABLE_TOKENS 1
 
-/* Define to printf format for a time_t variable */
-#define FMT_TIME_T "%ld"
-
 /* Define to 1 if you have `alloca', as a function or macro. */
 #define HAVE_ALLOCA 1
 

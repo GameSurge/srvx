@@ -91,7 +91,7 @@ const char *helpserv_module_deps[] = { NULL };
 /* General */
 #define HSFMT_TIME               "%a, %d %b %Y %H:%M:%S %Z"
 static const struct message_entry msgtab[] = {
-    { "HSMSG_READHELP_SUCCESS", "Read HelpServ help database in "FMT_TIME_T".%03ld seconds." },
+    { "HSMSG_READHELP_SUCCESS", "Read HelpServ help database in %lu.%03lu seconds." },
     { "HSMSG_INVALID_BOT", "This command requires a valid HelpServ bot name." },
     { "HSMSG_ILLEGAL_CHANNEL", "$b%s$b is an illegal channel; cannot use it." },
     { "HSMSG_INTERNAL_COMMAND", "$b%s$b appears to be an internal HelpServ command, sorry." },
@@ -479,7 +479,7 @@ static struct {
     char user_escape;
 } helpserv_conf;
 
-static time_t last_stats_update;
+static unsigned long last_stats_update;
 static int shutting_down;
 static FILE *reqlog_f;
 static struct log_type *HS_LOG;
@@ -519,8 +519,8 @@ struct helpserv_bot {
 
     unsigned int helpchan_empty : 1;
 
-    time_t registered;
-    time_t last_active;
+    unsigned long registered;
+    unsigned long last_active;
     char *registrar;
 };
 
@@ -531,7 +531,7 @@ struct helpserv_user {
     unsigned int week_start : 3;
     enum helpserv_level level;
     /* statistics */
-    time_t join_time; /* when they joined, or 0 if not in channel */
+    unsigned long join_time; /* when they joined, or 0 if not in channel */
     /* [0] through [3] are n weeks ago, [4] is the total of everything before that */
     unsigned int time_per_week[5]; /* how long they've were in the channel the past 4 weeks */
     unsigned int picked_up[5]; /* how many requests they have picked up */
@@ -562,9 +562,9 @@ struct helpserv_request {
     struct handle_info *handle;
 
     unsigned long id;
-    time_t opened;
-    time_t assigned;
-    time_t updated;
+    unsigned long opened;
+    unsigned long assigned;
+    unsigned long updated;
 };
 
 #define DEFINE_LIST_ALLOC(STRUCTNAME) \
@@ -659,7 +659,7 @@ struct helpserv_cmd {
 
 static void run_empty_interval(void *data);
 
-static void helpserv_interval(char *output, time_t interval) {
+static void helpserv_interval(char *output, unsigned long interval) {
     int num_hours = interval / 3600;
     int num_minutes = (interval % 3600) / 60;
     sprintf(output, "%u hour%s, %u minute%s", num_hours, num_hours == 1 ? "" : "s", num_minutes, num_minutes == 1 ? "" : "s");
@@ -698,7 +698,7 @@ static void helpserv_log_request(struct helpserv_request *req, const char *reaso
     assert(reason != NULL);
     if (!(ctx = saxdb_open_context(reqlog_f)))
         return;
-    sprintf(key, "%s-" FMT_TIME_T "-%lu", req->hs->helpserv->nick, req->opened, req->id);
+    sprintf(key, "%s-%lu-%lu", req->hs->helpserv->nick, (unsigned long)req->opened, req->id);
     if ((res = setjmp(ctx->jbuf)) != 0) {
         log_module(HS_LOG, LOG_ERROR, "Unable to log helpserv request: %s.", strerror(res));
     } else {
@@ -864,7 +864,7 @@ static struct helpserv_request * create_request(struct userNode *user, struct he
     req->user = user;
     req->handle = user->handle_info;
     if (from_join && self->burst) {
-        extern time_t burst_begin;
+        extern unsigned long burst_begin;
         /* We need to keep all the requests during a burst join together,
          * even if the burst takes more than 1 second. ircu seems to burst
          * in reverse-join order. */
@@ -1062,11 +1062,13 @@ static void helpserv_usermsg(struct userNode *user, struct helpserv_bot *hs, con
             helpserv_msguser(user, "HSMSG_USERCMD_UNKNOWN", cmdname);
         return;
     } else if (hs->intervals[INTERVAL_STALE_DELAY]
-               && (req->updated < (time_t)(now - hs->intervals[INTERVAL_STALE_DELAY]))
+               && (req->updated < now - hs->intervals[INTERVAL_STALE_DELAY])
                && (!hs->req_maxlen || req->text->used < hs->req_maxlen)) {
         char buf[MAX_LINE_SIZE], updatestr[INTERVALLEN], timestr[MAX_LINE_SIZE];
+        time_t feh;
 
-        strftime(timestr, MAX_LINE_SIZE, HSFMT_TIME, localtime(&req->opened));
+        feh = req->opened;
+        strftime(timestr, MAX_LINE_SIZE, HSFMT_TIME, localtime(&feh));
         intervalString(updatestr, now - req->updated, user->handle_info);
         if (req->helper && (hs->notify >= NOTIFY_USER))
             if (user->handle_info)
@@ -1078,7 +1080,8 @@ static void helpserv_usermsg(struct userNode *user, struct helpserv_bot *hs, con
                 helpserv_page(PGSRC_STATUS, "HSMSG_PAGE_UPD_REQUEST_AUTHED", req->id, user->nick, user->handle_info->handle, timestr, updatestr);
             else
                 helpserv_page(PGSRC_STATUS, "HSMSG_PAGE_UPD_REQUEST_NOT_AUTHED", req->id, user->nick, timestr, updatestr);
-        strftime(timestr, MAX_LINE_SIZE, HSFMT_TIME, localtime(&now));
+        feh = now;
+        strftime(timestr, MAX_LINE_SIZE, HSFMT_TIME, localtime(&feh));
         snprintf(buf, MAX_LINE_SIZE, "[Stale request updated at %s]", timestr);
         string_list_append(req->text, strdup(buf));
     }
@@ -1277,7 +1280,7 @@ static HELPSERV_FUNC(cmd_readhelp) {
         stop.tv_sec -= 1;
         stop.tv_usec += 1000000;
     }
-    helpserv_notice(user, "HSMSG_READHELP_SUCCESS", stop.tv_sec, stop.tv_usec/1000);
+    helpserv_notice(user, "HSMSG_READHELP_SUCCESS", (unsigned long)stop.tv_sec, (unsigned long)stop.tv_usec/1000);
 
     return 1;
 }
@@ -1790,6 +1793,7 @@ static void helpserv_show(int from_opserv, struct helpserv_bot *hs, struct userN
     unsigned int nn;
     char buf[MAX_LINE_SIZE];
     char buf2[INTERVALLEN];
+    time_t feh;
 
     if (req->user)
         if (req->handle)
@@ -1803,7 +1807,8 @@ static void helpserv_show(int from_opserv, struct helpserv_bot *hs, struct userN
             helpserv_notice(user, "HSMSG_REQ_INFO_2d", req->handle->handle);
     else
         helpserv_notice(user, "HSMSG_REQ_INFO_2e");
-    strftime(buf, MAX_LINE_SIZE, HSFMT_TIME, localtime(&req->opened));
+    feh = req->opened;
+    strftime(buf, MAX_LINE_SIZE, HSFMT_TIME, localtime(&feh));
     intervalString(buf2, now - req->opened, user->handle_info);
     helpserv_notice(user, "HSMSG_REQ_INFO_3", buf, buf2);
     helpserv_notice(user, "HSMSG_REQ_INFO_4");
@@ -1987,6 +1992,7 @@ static HELPSERV_FUNC(cmd_addnote) {
     struct helpserv_request *req;
     struct helpserv_user *hs_user=GetHSUser(hs, user->handle_info);
     int num_requests=0;
+    time_t feh;
 
     REQUIRE_PARMS(3);
 
@@ -2000,7 +2006,8 @@ static HELPSERV_FUNC(cmd_addnote) {
 
     note = unsplit_string(argv+2, argc-2, NULL);
 
-    strftime(timestr, MAX_LINE_SIZE, HSFMT_TIME, localtime(&now));
+    feh = now;
+    strftime(timestr, MAX_LINE_SIZE, HSFMT_TIME, localtime(&feh));
     snprintf(text, MAX_LINE_SIZE, "[Helper note at %s]:", timestr);
     string_list_append(req->text, strdup(text));
     snprintf(text, MAX_LINE_SIZE, "  <%s> %s", user->handle_info->handle, note);
@@ -2389,7 +2396,7 @@ static void run_whine_interval(void *data) {
 
         for (unh = hs->unhandled; unh; unh = unh->next_unhandled) {
             queuesize++;
-            if ((now - unh->opened) >= (time_t)hs->intervals[INTERVAL_WHINE_DELAY]) {
+            if ((now - unh->opened) >= hs->intervals[INTERVAL_WHINE_DELAY]) {
                 helpserv_reqlist_append(&reqlist, unh);
             }
         }
@@ -2397,7 +2404,7 @@ static void run_whine_interval(void *data) {
         if (reqlist.used) {
             char strwhinedelay[INTERVALLEN];
 
-            intervalString(strwhinedelay, (time_t)hs->intervals[INTERVAL_WHINE_DELAY], NULL);
+            intervalString(strwhinedelay, hs->intervals[INTERVAL_WHINE_DELAY], NULL);
 #if ANNOYING_ALERT_PAGES
             tbl.length = reqlist.used + 1;
             tbl.width = 4;
@@ -2502,7 +2509,7 @@ static void run_whine_interval(void *data) {
                 tbl.contents[i][3] = strdup(idle_time);
             }
 
-            intervalString(stridledelay, (time_t)hs->intervals[INTERVAL_IDLE_DELAY], NULL);
+            intervalString(stridledelay, hs->intervals[INTERVAL_IDLE_DELAY], NULL);
             helpserv_page(PGSRC_STATUS, "HSMSG_PAGE_IDLE_HEADER", mode_list.used, hs->helpchan->name, stridledelay);
             table_send(hs->helpserv, hs->page_targets[PGSRC_STATUS]->name, 0, page_types[hs->page_types[PGSRC_STATUS]].func, tbl);
 
@@ -3398,12 +3405,12 @@ static int request_read_helper(const char *key, void *data, void *extra) {
         log_module(HS_LOG, LOG_ERROR, "Request %s:%s has a nonexistant opening time. Using time(NULL).", hs->helpserv->nick, key);
         request->opened = time(NULL);
     } else {
-        request->opened = (time_t)strtoul(str, NULL, 0);
+        request->opened = strtoul(str, NULL, 0);
     }
 
     str = database_get_data(rd->d.object, KEY_REQUEST_ASSIGNED, RECDB_QSTRING);
     if (str)
-        request->assigned = (time_t)strtoul(str, NULL, 0);
+        request->assigned = strtoul(str, NULL, 0);
 
     str = database_get_data(rd->d.object, KEY_REQUEST_HELPER, RECDB_QSTRING);
     if (str) {
@@ -3593,7 +3600,7 @@ static int helpserv_bot_read(const char *key, void *data, UNUSED_ARG(void *extra
     hs->notify = str ? notification_from_name(str) : NOTIFY_NONE;
     str = database_get_data(GET_RECORD_OBJECT(br), KEY_REGISTERED, RECDB_QSTRING);
     if (str)
-        hs->registered = (time_t)strtol(str, NULL, 0);
+        hs->registered = strtol(str, NULL, 0);
     str = database_get_data(GET_RECORD_OBJECT(br), KEY_IDWRAP, RECDB_QSTRING);
     if (str)
         hs->id_wrap = strtoul(str, NULL, 0);
@@ -3612,7 +3619,7 @@ static int helpserv_bot_read(const char *key, void *data, UNUSED_ARG(void *extra
     str = database_get_data(GET_RECORD_OBJECT(br), KEY_AUTO_DEVOICE, RECDB_QSTRING);
     hs->auto_devoice = str ? enabled_string(str) : 0;
     str = database_get_data(GET_RECORD_OBJECT(br), KEY_LAST_ACTIVE, RECDB_QSTRING);
-    hs->last_active = str ? atoi(str) : now;
+    hs->last_active = str ? strtoul(str, NULL, 0) : now;
 
     dict_foreach(users, user_read_helper, hs);
 
@@ -3633,7 +3640,7 @@ helpserv_saxdb_read(struct dict *conf_db) {
     }
 
     str = database_get_data(conf_db, KEY_LAST_STATS_UPDATE, RECDB_QSTRING);
-    last_stats_update = str ? (time_t)strtol(str, NULL, 0) : now;
+    last_stats_update = str ? strtoul(str, NULL, 0) : now;
     return 0;
 }
 
@@ -4107,6 +4114,7 @@ static void handle_nickserv_auth(struct userNode *user, struct handle_info *old_
                 for (j=1; j <= helper_reqs.used; j++) {
                     struct helpserv_request *req=helper_reqs.list[j-1];
                     char reqid[12], timestr[MAX_LINE_SIZE];
+                    time_t feh;
 
                     tbl.contents[j] = alloca(tbl.width * sizeof(**tbl.contents));
                     tbl.contents[j][0] = req->hs->helpserv->nick;
@@ -4114,7 +4122,8 @@ static void handle_nickserv_auth(struct userNode *user, struct handle_info *old_
                     tbl.contents[j][1] = strdup(reqid);
                     tbl.contents[j][2] = req->user ? req->user->nick : "Not online";
                     tbl.contents[j][3] = req->handle ? req->handle->handle : "Not authed";
-                    strftime(timestr, MAX_LINE_SIZE, HSFMT_TIME, localtime(&req->opened));
+                    feh = req->opened;
+                    strftime(timestr, MAX_LINE_SIZE, HSFMT_TIME, localtime(&feh));
                     tbl.contents[j][4] = strdup(timestr);
                 }
 
@@ -4377,7 +4386,7 @@ static void handle_nickserv_failpw(struct userNode *user, struct handle_info *ha
     }
 }
 
-static time_t helpserv_next_stats(time_t after_when) {
+static unsigned long helpserv_next_stats(time_t after_when) {
     struct tm *timeinfo = localtime(&after_when);
 
     /* This works because mktime(3) says it will accept out-of-range values
@@ -4391,15 +4400,17 @@ static time_t helpserv_next_stats(time_t after_when) {
 }
 
 /* If data != NULL, then don't add to the timeq */
-static void helpserv_run_stats(time_t when) {
-    struct tm when_s;
+static void helpserv_run_stats(unsigned long when) {
     struct helpserv_bot *hs;
     struct helpserv_user *hs_user;
+    time_t feh;
+    unsigned int day;
     int i;
     dict_iterator_t it, it2;
 
     last_stats_update = when;
-    localtime_r(&when, &when_s);
+    feh = when;
+    day = localtime(&feh)->tm_wday;
     for (it=dict_first(helpserv_bots_dict); it; it=iter_next(it)) {
         hs = iter_data(it);
 
@@ -4407,7 +4418,7 @@ static void helpserv_run_stats(time_t when) {
             hs_user = iter_data(it2);
 
             /* Skip the helper if it's not their week-start day. */
-            if (hs_user->week_start != when_s.tm_wday)
+            if (hs_user->week_start != day)
                 continue;
 
             /* Adjust their credit if they are in-channel at rollover. */
@@ -4549,7 +4560,7 @@ int helpserv_init() {
     /* Make up for downtime... though this will only really affect the
      * time_per_week */
     if (last_stats_update && (helpserv_next_stats(last_stats_update) < now)) {
-        time_t statsrun = last_stats_update;
+        unsigned long statsrun = last_stats_update;
         while ((statsrun = helpserv_next_stats(statsrun)) < now)
             helpserv_run_stats(statsrun);
     }

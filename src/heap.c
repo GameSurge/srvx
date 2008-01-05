@@ -210,7 +210,7 @@ heap_size(heap_t heap)
 
 /* prepackaged comparators */
 int
-int_comparator(const void *a, const void *b)
+ulong_comparator(const void *a, const void *b)
 {
-    return (time_t)a-(time_t)b;
+    return (unsigned long)a-(unsigned long)b;
 }

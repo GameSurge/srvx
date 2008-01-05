@@ -119,7 +119,7 @@ extern void verify(const void *ptr);
 # define verify(ptr) (void)(ptr)
 #endif
 
-extern time_t now;
+extern unsigned long now;
 extern int quit_services;
 extern struct log_type *MAIN_LOG;
 extern const char git_version[];
@@ -239,7 +239,7 @@ void STRUCTNAME##_clean(struct STRUCTNAME *list) {\
 #define INTERVALLEN 50
 
 struct handle_info;
-char *intervalString(char *output, time_t interval, struct handle_info *hi);
+char *intervalString(char *output, unsigned long interval, struct handle_info *hi);
 int getipbyname(const char *name, unsigned long *ip);
 int set_policer_param(const char *param, void *data, void *extra);
 const char *strtab(unsigned int ii);

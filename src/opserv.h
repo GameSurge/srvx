@@ -22,7 +22,7 @@
 #define _opserv_h
 
 void init_opserv(const char *nick);
-unsigned int gag_create(const char *mask, const char *owner, const char *reason, time_t expires);
+unsigned int gag_create(const char *mask, const char *owner, const char *reason, unsigned long expires);
 int opserv_bad_channel(const char *name);
 
 #endif

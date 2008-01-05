@@ -91,7 +91,7 @@ struct memo {
     struct memo_account *recipient;
     struct memo_account *sender;
     char *message;
-    time_t sent;
+    unsigned long sent;
     unsigned int is_read : 1;
 };
 
@@ -112,7 +112,7 @@ struct memo_account {
 
 static struct {
     struct userNode *bot;
-    int message_expiry;
+    unsigned long message_expiry;
 } memoserv_conf;
 
 const char *memoserv_module_deps[] = { NULL };
@@ -190,7 +190,7 @@ expire_memos(UNUSED_ARG(void *data))
 }
 
 static struct memo*
-add_memo(time_t sent, struct memo_account *recipient, struct memo_account *sender, char *message)
+add_memo(unsigned long sent, struct memo_account *recipient, struct memo_account *sender, char *message)
 {
     struct memo *memo;
 
@@ -275,15 +275,15 @@ static MODCMD_FUNC(cmd_list)
     struct memo *memo;
     unsigned int ii;
     char posted[24];
-    struct tm tm;
+    time_t feh;
 
     if (!(ma = memoserv_get_account(user->handle_info)))
         return 0;
     reply("MSMSG_LIST_HEAD");
     for (ii = 0; (ii < ma->recvd.used) && (ii < 15); ++ii) {
         memo = ma->recvd.list[ii];
-        localtime_r(&memo->sent, &tm);
-        strftime(posted, sizeof(posted), "%I:%M %p, %m/%d/%Y", &tm);
+        feh = memo->sent;
+        strftime(posted, sizeof(posted), "%I:%M %p, %m/%d/%Y", localtime(&feh));
         reply("MSMSG_LIST_FORMAT", ii, memo->sender->handle->handle, posted);
     }
     if (ii == 0)
@@ -301,14 +301,13 @@ static MODCMD_FUNC(cmd_read)
     unsigned int memoid;
     struct memo *memo;
     char posted[24];
-    struct tm tm;
+    time_t feh;
 
     if (!(ma = memoserv_get_account(user->handle_info)))
         return 0;
     if (!(memo = find_memo(user, cmd, ma, argv[1], &memoid)))
         return 0;
-    localtime_r(&memo->sent, &tm);
-    strftime(posted, sizeof(posted), "%I:%M %p, %m/%d/%Y", &tm);
+    strftime(posted, sizeof(posted), "%I:%M %p, %m/%d/%Y", localtime(&feh));
     reply("MSMSG_MEMO_HEAD", memoid, memo->sender->handle->handle, posted);
     send_message_type(4, user, cmd->parent->bot, "%s", memo->message);
     memo->is_read = 1;
@@ -467,7 +466,7 @@ memoserv_saxdb_read(struct dict *db)
     struct record_data *hir;
     struct memo *memo;
     dict_iterator_t it;
-    time_t sent;
+    unsigned long sent;
 
     for (it = dict_first(db); it; it = iter_next(it)) {
         hir = iter_data(it);
@@ -480,7 +479,7 @@ memoserv_saxdb_read(struct dict *db)
             log_module(MS_LOG, LOG_ERROR, "Date sent not present in memo %s; skipping", iter_key(it));
             continue;
         }
-        sent = atoi(str);
+        sent = strtoul(str, NULL, 0);
 
         if (!(str = database_get_data(hir->d.object, KEY_RECIPIENT, RECDB_QSTRING))) {
             log_module(MS_LOG, LOG_ERROR, "Recipient not present in memo %s; skipping", iter_key(it));

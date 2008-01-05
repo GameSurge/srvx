@@ -33,7 +33,7 @@ struct saxdb {
     saxdb_reader_func_t *reader;
     saxdb_writer_func_t *writer;
     unsigned int write_interval;
-    time_t last_write;
+    unsigned long last_write;
     unsigned int last_write_duration;
     struct saxdb *prev;
 };
@@ -122,7 +122,7 @@ saxdb_write_db(struct saxdb *db) {
     struct saxdb_context ctx;
     char tmp_fname[MAXLEN];
     int res, res2;
-    time_t start, finish;
+    unsigned long start, finish;
 
     assert(db->filename);
     sprintf(tmp_fname, "%s.new", db->filename);
@@ -387,7 +387,7 @@ static MODCMD_FUNC(cmd_write) {
                 stop.tv_sec -= 1;
                 stop.tv_usec += 1000000;
             }
-            reply("MSG_DB_WROTE_DB", db->name, stop.tv_sec, stop.tv_usec);
+            reply("MSG_DB_WROTE_DB", db->name, (unsigned long)stop.tv_sec, (unsigned long)stop.tv_usec);
             written++;
         }
     }
@@ -406,7 +406,7 @@ static MODCMD_FUNC(cmd_writeall) {
         stop.tv_sec -= 1;
         stop.tv_usec += 1000000;
     }
-    reply("MSG_DB_WROTE_ALL", stop.tv_sec, stop.tv_usec);
+    reply("MSG_DB_WROTE_ALL", (unsigned long)stop.tv_sec, (unsigned long)stop.tv_usec);
     return 1;
 }
 

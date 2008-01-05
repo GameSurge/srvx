@@ -527,7 +527,7 @@ log_audit(struct log_type *type, enum log_severity sev, struct userNode *user, s
     /* remove old elements from the linked list */
     while (type->log_count > type->max_count)
         log_type_free_oldest(type);
-    while (type->log_oldest && (type->log_oldest->time + (time_t)type->max_age < now))
+    while (type->log_oldest && (type->log_oldest->time + type->max_age < now))
         log_type_free_oldest(type);
     if (type->log_oldest)
         type->log_oldest->prev = 0;
@@ -753,10 +753,12 @@ log_entry_search(struct logSearch *discrim, entry_search_func esf, void *data)
 /* generic helper functions */
 
 static void
-log_format_timestamp(time_t when, struct string_buffer *sbuf)
+log_format_timestamp(unsigned long when, struct string_buffer *sbuf)
 {
     struct tm local;
-    localtime_r(&when, &local);
+    time_t feh;
+    feh = when;
+    localtime_r(&feh, &local);
     if (sbuf->size < 24) {
         sbuf->size = 24;
         free(sbuf->list);

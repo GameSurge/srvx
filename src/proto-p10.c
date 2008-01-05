@@ -292,7 +292,7 @@ static struct dict *unbursted_channels;
 static char *his_servername;
 static char *his_servercomment;
 
-static struct userNode *AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *numeric, const char *userinfo, time_t timestamp, const char *realip);
+static struct userNode *AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *numeric, const char *userinfo, unsigned long timestamp, const char *realip);
 
 extern int off_channel;
 
@@ -368,10 +368,10 @@ irc_server(struct server *srv)
     inttobase64(extranum, srv->num_mask, (srv->numeric[1] || (srv->num_mask >= 64*64)) ? 3 : 2);
     if (srv == self) {
         /* The +s, ignored by Run's ircu, means "service" to Undernet's ircu */
-        putsock(P10_SERVER " %s %d %li %li J10 %s%s +s6 :%s",
+        putsock(P10_SERVER " %s %d %lu %lu J10 %s%s +s6 :%s",
                 srv->name, srv->hops+1, srv->boot, srv->link, srv->numeric, extranum, srv->description);
     } else {
-        putsock("%s " P10_SERVER " %s %d %li %li %c10 %s%s +s6 :%s",
+        putsock("%s " P10_SERVER " %s %d %lu %lu %c10 %s%s +s6 :%s",
                 self->numeric, srv->name, srv->hops+1, srv->boot, srv->link, (srv->self_burst ? 'J' : 'P'), srv->numeric, extranum, srv->description);
     }
 }
@@ -484,11 +484,11 @@ irc_user(struct userNode *user)
         modes[modelen] = 0;
 
         /* we don't need to put the + in modes because it's in the format string. */
-        putsock("%s " P10_NICK " %s %d %li %s %s +%s %s %s :%s",
-                user->uplink->numeric, user->nick, user->uplink->hops+1, user->timestamp, user->ident, user->hostname, modes, b64ip, user->numeric, user->info);
+        putsock("%s " P10_NICK " %s %d %lu %s %s +%s %s %s :%s",
+                user->uplink->numeric, user->nick, user->uplink->hops+1, (unsigned long)user->timestamp, user->ident, user->hostname, modes, b64ip, user->numeric, user->info);
     } else {
-        putsock("%s " P10_NICK " %s %d %li %s %s %s %s :%s",
-                user->uplink->numeric, user->nick, user->uplink->hops+1, user->timestamp, user->ident, user->hostname, b64ip, user->numeric, user->info);
+        putsock("%s " P10_NICK " %s %d %lu %s %s %s %s :%s",
+                user->uplink->numeric, user->nick, user->uplink->hops+1, (unsigned long)user->timestamp, user->ident, user->hostname, b64ip, user->numeric, user->info);
     }
 }
 
@@ -513,7 +513,7 @@ irc_regnick(UNUSED_ARG(struct userNode *user))
 void
 irc_nick(struct userNode *user, UNUSED_ARG(const char *old_nick))
 {
-    putsock("%s " P10_NICK " %s "FMT_TIME_T, user->numeric, user->nick, now);
+    putsock("%s " P10_NICK " %s %lu", user->numeric, user->nick, (unsigned long)now);
 }
 
 void
@@ -638,7 +638,7 @@ irc_pong_asll(const char *who, const char *orig_ts)
     orig.tv_usec = (*delim == '.') ? strtoul(delim + 1, NULL, 10) : 0;
     gettimeofday(&now, NULL);
     diff = (now.tv_sec - orig.tv_sec) * 1000 + (now.tv_usec - orig.tv_usec) / 1000;
-    putsock("%s " P10_PONG " %s %s %d " FMT_TIME_T ".%06u", self->numeric, who, orig_ts, diff, now.tv_sec, (unsigned)now.tv_usec);
+    putsock("%s " P10_PONG " %s %s %d %lu.%06lu", self->numeric, who, orig_ts, diff, (unsigned long)now.tv_sec, (unsigned long)now.tv_usec);
 }
 
 void
@@ -663,20 +663,20 @@ void
 irc_gline(struct server *srv, struct gline *gline)
 {
     if (gline->lastmod)
-        putsock("%s " P10_GLINE " %s +%s %ld %ld :%s",
-                self->numeric, (srv ? srv->numeric : "*"), gline->target, gline->expires-now, gline->lastmod, gline->reason);
+        putsock("%s " P10_GLINE " %s +%s %lu %lu :%s",
+                self->numeric, (srv ? srv->numeric : "*"), gline->target, (unsigned long)(gline->expires-now), (unsigned long)gline->lastmod, gline->reason);
     else
-        putsock("%s " P10_GLINE " %s +%s %ld :%s",
-                self->numeric, (srv ? srv->numeric : "*"), gline->target, gline->expires-now, gline->reason);
+        putsock("%s " P10_GLINE " %s +%s %lu :%s",
+                self->numeric, (srv ? srv->numeric : "*"), gline->target, (unsigned long)(gline->expires-now), gline->reason);
 }
 
 void
-irc_settime(const char *srv_name_mask, time_t new_time)
+irc_settime(const char *srv_name_mask, unsigned long new_time)
 {
     ioset_set_time(new_time);
     if (!strcmp(srv_name_mask, "*"))
         srv_name_mask = "";
-    putsock("%s " P10_SETTIME " " FMT_TIME_T " %s", self->numeric, new_time, srv_name_mask);
+    putsock("%s " P10_SETTIME " %lu %s", self->numeric, new_time, srv_name_mask);
 }
 
 void
@@ -696,8 +696,9 @@ irc_burst(struct chanNode *chan)
     unsigned int first_ban;
     unsigned int n;
 
-    base_len = sprintf(burst_line, "%s " P10_BURST " %s " FMT_TIME_T " ",
-                       self->numeric, chan->name, chan->timestamp);
+    base_len = sprintf(burst_line, "%s " P10_BURST " %s %lu ",
+                       self->numeric, chan->name,
+                       (unsigned long)chan->timestamp);
     len = irc_make_chanmode(chan, burst_line+base_len);
     pos = base_len + len;
     if (len > 0 && chan->members.used > 0)
@@ -791,9 +792,9 @@ irc_kill(struct userNode *from, struct userNode *target, const char *message)
 void
 irc_mode(struct userNode *from, struct chanNode *target, const char *modes)
 {
-    putsock("%s " P10_MODE " %s %s "FMT_TIME_T,
+    putsock("%s " P10_MODE " %s %s %lu",
             (from ? from->numeric : self->numeric),
-            target->name, modes, target->timestamp);
+            target->name, modes, (unsigned long)target->timestamp);
 }
 
 void
@@ -807,9 +808,10 @@ irc_join(struct userNode *who, struct chanNode *what)
 {
     if (what->members.used == 1) {
         putsock("%s " P10_CREATE " %s %lu",
-                who->numeric, what->name, what->timestamp);
+                who->numeric, what->name, (unsigned long)what->timestamp);
     } else {
-        putsock("%s " P10_JOIN " %s %lu", who->numeric, what->name, what->timestamp);
+        putsock("%s " P10_JOIN " %s %lu", who->numeric, what->name,
+                (unsigned long)what->timestamp);
     }
 }
 
@@ -832,7 +834,7 @@ irc_stats(struct userNode *from, struct server *target, char type)
 void
 irc_svsnick(struct userNode *from, struct userNode *target, const char *newnick)
 {
-    putsock("%s " P10_SVSNICK " %s %s "FMT_TIME_T, from->uplink->numeric, target->numeric, newnick, now);
+    putsock("%s " P10_SVSNICK " %s %s %lu", from->uplink->numeric, target->numeric, newnick, (unsigned long)now);
 }
 
 void
@@ -1003,7 +1005,7 @@ static CMD_FUNC(cmd_server)
     if (srv->boot <= PREHISTORY) {
         /* Server from the mists of time.. */
         if (srv->hops == 1) {
-            log_module(MAIN_LOG, LOG_ERROR, "Server %s claims to have booted at time "FMT_TIME_T".  This is absurd.", srv->name, srv->boot);
+            log_module(MAIN_LOG, LOG_ERROR, "Server %s claims to have booted at time %lu.  This is absurd.", srv->name, (unsigned long)srv->boot);
         }
     } else if ((str = conf_get_data("server/reliable_clock", RECDB_QSTRING))
                && enabled_string(str)) {
@@ -1018,7 +1020,7 @@ static CMD_FUNC(cmd_server)
         }
     }
     if (srv == self->uplink) {
-        extern time_t burst_begin;
+        extern unsigned long burst_begin;
         burst_begin = now;
     }
     return 1;
@@ -1050,7 +1052,7 @@ static CMD_FUNC(cmd_eob)
 
 static CMD_FUNC(cmd_eob_ack)
 {
-    extern time_t burst_begin;
+    extern unsigned long burst_begin;
 
     if (GetServerH(origin) == self->uplink) {
         burst_length = now - burst_begin;
@@ -1091,7 +1093,7 @@ static CMD_FUNC(cmd_error_nick)
 
 struct create_desc {
     struct userNode *user;
-    time_t when;
+    unsigned long when;
 };
 
 static void
@@ -1217,7 +1219,7 @@ static CMD_FUNC(cmd_burst)
     long mode;
     int oplevel = -1;
     char *user, *end, sep;
-    time_t in_timestamp;
+    unsigned long in_timestamp;
 
     if (argc < 3)
         return 0;
@@ -1376,7 +1378,7 @@ static CMD_FUNC(cmd_clearmode)
 static CMD_FUNC(cmd_topic)
 {
     struct chanNode *cn;
-    time_t chan_ts, topic_ts;
+    unsigned long chan_ts, topic_ts;
 
     if (argc < 3)
         return 0;
@@ -1435,7 +1437,7 @@ static CMD_FUNC(cmd_num_topic)
 
 static CMD_FUNC(cmd_num_gline)
 {
-    time_t lastmod;
+    unsigned long lastmod;
     if (argc < 6)
         return 0;
     lastmod = (argc > 5) ? strtoul(argv[5], NULL, 0) : 0;
@@ -1554,7 +1556,7 @@ static CMD_FUNC(cmd_away)
 
 static CMD_FUNC(cmd_gline)
 {
-    time_t lastmod;
+    unsigned long lastmod;
 
     if (argc < 3)
         return 0;
@@ -1912,7 +1914,7 @@ make_numeric(struct server *svr, int local_num, char *outbuf)
 }
 
 struct server *
-AddServer(struct server *uplink, const char *name, int hops, time_t boot, time_t link, const char *numeric, const char *description)
+AddServer(struct server *uplink, const char *name, int hops, unsigned long boot, unsigned long link, const char *numeric, const char *description)
 {
     struct server* sNode;
     int slen, mlen;
@@ -1999,7 +2001,7 @@ AddLocalUser(const char *nick, const char *ident, const char *hostname, const ch
 {
     char numeric[COMBO_NUMERIC_LEN+1];
     int local_num = get_local_numeric();
-    time_t timestamp = now;
+    unsigned long timestamp = now;
     struct userNode *old_user = GetUserH(nick);
 
     if (!modes)
@@ -2024,7 +2026,7 @@ AddClone(const char *nick, const char *ident, const char *hostname, const char *
 {
     char numeric[COMBO_NUMERIC_LEN+1];
     int local_num = get_local_numeric();
-    time_t timestamp = now;
+    unsigned long timestamp = now;
     struct userNode *old_user = GetUserH(nick);
 
     if (old_user) {
@@ -2056,7 +2058,7 @@ is_valid_nick(const char *nick) {
 }
 
 static struct userNode*
-AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *numeric, const char *userinfo, time_t timestamp, const char *realip)
+AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *numeric, const char *userinfo, unsigned long timestamp, const char *realip)
 {
     struct userNode *oldUser, *uNode;
     unsigned int n, ignore_user, dummy;

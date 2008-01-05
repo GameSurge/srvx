@@ -41,7 +41,7 @@ static void privmsg_user_helper(struct userNode *un, void *data);
 void irc_svsmode(struct userNode *target, char *modes, unsigned long stamp);
 
 struct server *
-AddServer(struct server *uplink, const char *name, int hops, time_t boot, time_t link, UNUSED_ARG(const char *numeric), const char *description) {
+AddServer(struct server *uplink, const char *name, int hops, unsigned long boot, unsigned long link, UNUSED_ARG(const char *numeric), const char *description) {
     struct server* sNode;
 
     sNode = calloc(1, sizeof(*sNode));
@@ -112,7 +112,7 @@ is_valid_nick(const char *nick) {
 }
 
 struct userNode *
-AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *userinfo, time_t timestamp, irc_in_addr_t realip, const char *stamp) {
+AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *userinfo, unsigned long timestamp, irc_in_addr_t realip, const char *stamp) {
     struct userNode *uNode, *oldUser;
     unsigned int nn, dummy;
 
@@ -177,7 +177,7 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
 struct userNode *
 AddLocalUser(const char *nick, const char *ident, const char *hostname, const char *desc, const char *modes)
 {
-    time_t timestamp = now;
+    unsigned long timestamp = now;
     struct userNode *old_user = GetUserH(nick);
     static const irc_in_addr_t ipaddr;
 
@@ -252,9 +252,10 @@ irc_user(struct userNode *user) {
     if (IsReggedNick(user)) modes[modelen++] = 'r';
     if (IsGlobal(user)) modes[modelen++] = 'g';
     modes[modelen] = 0;
-    putsock("NICK %s %d "FMT_TIME_T" +%s %s %s %s %d %u :%s",
-            user->nick, user->uplink->hops+2, user->timestamp, modes,
-            user->ident, user->hostname, user->uplink->name, 0, ntohl(user->ip.in6_32[3]), user->info);
+    putsock("NICK %s %d %lu +%s %s %s %s %d %u :%s",
+            user->nick, user->uplink->hops+2, (unsigned long)user->timestamp,
+            modes, user->ident, user->hostname, user->uplink->name, 0,
+            ntohl(user->ip.in6_32[3]), user->info);
 }
 
 void
@@ -293,7 +294,7 @@ irc_nick(struct userNode *user, const char *old_nick) {
             dict_insert(service_msginfo_dict, user->nick, smi);
         }
     }
-    putsock(":%s NICK %s :"FMT_TIME_T, old_nick, user->nick, user->timestamp);
+    putsock(":%s NICK %s :%lu", old_nick, user->nick, (unsigned long)user->timestamp);
 }
 
 void
@@ -308,12 +309,12 @@ irc_capab() {
 
 void
 irc_svinfo() {
-    putsock("SVINFO 3 3 0 :"FMT_TIME_T, now);
+    putsock("SVINFO 3 3 0 :%lu", (unsigned long)now);
 }
 
 void
 irc_introduce(const char *passwd) {
-    extern time_t burst_begin;
+    extern unsigned long burst_begin;
 
     irc_pass(passwd);
     irc_capab();
@@ -410,9 +411,9 @@ irc_wallchops(UNUSED_ARG(struct userNode *from), UNUSED_ARG(const char *to), UNU
 void
 irc_join(struct userNode *who, struct chanNode *what) {
     if (what->members.used == 1) {
-        putsock(":%s SJOIN "FMT_TIME_T" %s + :@%s", self->name, what->timestamp, what->name, who->nick);
+        putsock(":%s SJOIN %lu %s + :@%s", self->name, (unsigned long)what->timestamp, what->name, who->nick);
     } else {
-        putsock(":%s SJOIN "FMT_TIME_T" %s", who->nick, what->timestamp, what->name);
+        putsock(":%s SJOIN %lu %s", who->nick, (unsigned long)what->timestamp, what->name);
     }
 }
 
@@ -423,16 +424,16 @@ irc_invite(struct userNode *from, struct userNode *who, struct chanNode *to) {
 
 void
 irc_mode(struct userNode *who, struct chanNode *target, const char *modes) {
-    putsock(":%s MODE %s "FMT_TIME_T" %s", who->nick, target->name, target->timestamp, modes);
+    putsock(":%s MODE %s %lu %s", who->nick, target->name, (unsigned long)target->timestamp, modes);
 }
 
 void
 irc_svsmode(struct userNode *target, char *modes, unsigned long stamp) {
     extern struct userNode *nickserv;
     if (stamp) {
-        putsock(":%s SVSMODE %s "FMT_TIME_T" %s %lu", nickserv->nick, target->nick, target->timestamp, modes, stamp);
+        putsock(":%s SVSMODE %s %lu %s %lu", nickserv->nick, target->nick, (unsigned long)target->timestamp, modes, stamp);
     } else {
-        putsock(":%s SVSMODE %s "FMT_TIME_T" %s", nickserv->nick, target->nick, target->timestamp, modes);
+        putsock(":%s SVSMODE %s %lu %s", nickserv->nick, target->nick, (unsigned long)target->timestamp, modes);
     }
 }
 
@@ -478,11 +479,11 @@ irc_gline(struct server *srv, struct gline *gline) {
     if (len > ArrayLength(ident)) len = ArrayLength(ident);
     safestrncpy(ident, gline->target, len);
     safestrncpy(host, sep+1, ArrayLength(host));
-    putsock(":%s AKILL %s %s "FMT_TIME_T" %s "FMT_TIME_T" :%s", self->name, host, ident, gline->expires-gline->issued, gline->issuer, gline->issued, gline->reason);
+    putsock(":%s AKILL %s %s %lu %s %lu :%s", self->name, host, ident, (unsigned long)(gline->expires-gline->issued), gline->issuer, (unsigned long)gline->issued, gline->reason);
 }
 
 void
-irc_settime(UNUSED_ARG(const char *srv_name_mask), UNUSED_ARG(time_t new_time))
+irc_settime(UNUSED_ARG(const char *srv_name_mask), UNUSED_ARG(unsigned long new_time))
 {
     /* Bahamut has nothing like this, so ignore it. */
 }
@@ -533,7 +534,7 @@ irc_stats(struct userNode *from, struct server *target, char type) {
 void
 irc_svsnick(struct userNode *from, struct userNode *target, const char *newnick)
 {
-    putsock(":%s SVSNICK %s %s :"FMT_TIME_T, from->nick, target->nick, newnick, now);
+    putsock(":%s SVSNICK %s %s :%lu", from->nick, target->nick, newnick, (unsigned long)now);
 }
 
 void
@@ -685,7 +686,7 @@ static void burst_channel(struct chanNode *chan) {
 
     if (!chan->members.used) return;
     /* send list of users in the channel.. */
-    base_len = sprintf(line, ":%s SJOIN "FMT_TIME_T" %s ", self->name, chan->timestamp, chan->name);
+    base_len = sprintf(line, ":%s SJOIN %lu %s ", self->name, (unsigned long)chan->timestamp, chan->name);
     len = irc_make_chanmode(chan, line+base_len);
     pos = base_len + len;
     line[pos++] = ' ';
@@ -711,7 +712,7 @@ static void burst_channel(struct chanNode *chan) {
     line[pos] = 0;
     putsock("%s", line);
     /* now send the bans.. */
-    base_len = sprintf(line, ":%s MODE "FMT_TIME_T" %s +", self->name, chan->timestamp, chan->name);
+    base_len = sprintf(line, ":%s MODE %lu %s +", self->name, (unsigned long)chan->timestamp, chan->name);
     pos = sizeof(line)-1;
     line[pos] = 0;
     for (nn=queued=0; nn<chan->banlist.used; nn++) {

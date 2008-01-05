@@ -57,7 +57,7 @@ extern new_user_func_t *nuf_list;
 extern unsigned int nuf_size, nuf_used;
 extern del_user_func_t *duf_list;
 extern unsigned int duf_size, duf_used;
-extern time_t boot_time;
+extern unsigned long boot_time;
 
 void received_ping(void);
 
@@ -155,7 +155,7 @@ void
 replay_read_line(void)
 {
     struct tm timestamp;
-    time_t new_time;
+    unsigned long new_time;
 
     if (replay_line[0]) return;
   read_line:
@@ -185,7 +185,7 @@ replay_read_line(void)
     timestamp.tm_year = strtoul(replay_line+16, NULL, 10) - 1900;
     timestamp.tm_isdst = 0;
     new_time = mktime(&timestamp);
-    if (new_time == -1) {
+    if (new_time == (unsigned long)-1) {
         log_module(MAIN_LOG, LOG_ERROR, "Unable to parse time struct tm_sec=%d tm_min=%d tm_hour=%d tm_mday=%d tm_mon=%d tm_year=%d", timestamp.tm_sec, timestamp.tm_min, timestamp.tm_hour, timestamp.tm_mday, timestamp.tm_mon, timestamp.tm_year);
     } else {
         now = new_time;
@@ -353,7 +353,8 @@ static CMD_FUNC(cmd_stats)
         return 0;
     switch (argv[1][0]) {
     case 'u': {
-        unsigned int uptime = now - boot_time;
+        unsigned long uptime;
+        uptime = now - boot_time;
         irc_numeric(un, RPL_STATSUPTIME, ":Server Up %d days %d:%02d:%02d",
                     uptime/(24*60*60), (uptime/(60*60))%24, (uptime/60)%60, uptime%60);
         irc_numeric(un, RPL_MAXCONNECTIONS, ":Highest connection count: %d (%d clients)",

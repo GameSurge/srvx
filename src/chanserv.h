@@ -79,10 +79,10 @@ struct chanData
     struct chanNode     *channel;
     struct mod_chanmode modes;
 
-    time_t  registered;
-    time_t  visited;
-    time_t  limitAdjusted;
-    time_t  ownerTransfer;
+    unsigned long       registered;
+    unsigned long       visited;
+    unsigned long       limitAdjusted;
+    unsigned long       ownerTransfer;
 
     char    *topic;
     char    *greeting;
@@ -122,7 +122,7 @@ struct userData
     struct chanData     *channel;
 
     char                *info;
-    time_t              seen;
+    unsigned long       seen;
     unsigned short      access;
     unsigned int        present : 1;
     unsigned int        flags : USER_FLAGS_SIZE;
@@ -141,9 +141,9 @@ struct banData
     char            owner[NICKLEN+1];
     struct chanData *channel;
 
-    time_t          set;
-    time_t          triggered;
-    time_t          expires;
+    unsigned long   set;
+    unsigned long   triggered;
+    unsigned long   expires;
 
     char            *reason;
 
@@ -156,7 +156,9 @@ struct suspended
     struct chanData     *cData;
     char                *suspender;
     char                *reason;
-    time_t              issued, expires, revoked;
+    unsigned long       issued;
+    unsigned long       expires;
+    unsigned long       revoked;
     struct suspended    *previous;
 };
 
@@ -164,7 +166,8 @@ struct do_not_register
 {
     char   chan_name[CHANNELLEN+1];
     char   setter[NICKSERV_HANDLE_LEN+1];
-    time_t set, expires;
+    unsigned long set;
+    unsigned long expires;
     char   reason[1];
 };
 

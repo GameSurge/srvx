@@ -42,7 +42,6 @@
 #include <arpa/inet.h>
 #endif
 
-extern time_t now;
 static struct {
     struct chanNode *channel;
     struct userNode *bot;
@@ -56,7 +55,7 @@ static int finalized;
 int snoop_finalize(void);
 
 #define SNOOP(FORMAT, ARGS...) send_channel_message(snoop_cfg.channel, snoop_cfg.bot, "%s "FORMAT, timestamp , ## ARGS)
-#define UPDATE_TIMESTAMP() strftime(timestamp, sizeof(timestamp), "[%H:%M:%S]", localtime(&now))
+#define UPDATE_TIMESTAMP() do { time_t feh = now; strftime(timestamp, sizeof(timestamp), "[%H:%M:%S]", localtime(&feh)); } while (0)
 
 static void
 snoop_nick_change(struct userNode *user, const char *old_nick) {

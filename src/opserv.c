@@ -296,15 +296,15 @@ struct trusted_host {
     char *issuer;
     char *reason;
     unsigned long limit;
-    time_t issued;
-    time_t expires;
+    unsigned long issued;
+    unsigned long expires;
 };
 
 struct gag_entry {
     char *mask;
     char *owner;
     char *reason;
-    time_t expires;
+    unsigned long expires;
     struct gag_entry *next;
 };
 
@@ -331,7 +331,7 @@ typedef struct opservDiscrim {
     char *mask_nick, *mask_ident, *mask_host, *mask_info, *server, *reason, *notice_target, *accountmask;
     irc_in_addr_t ip_mask;
     unsigned long limit;
-    time_t min_ts, max_ts;
+    unsigned long min_ts, max_ts;
     unsigned int min_level, max_level, domain_depth, duration, min_clones, min_channels, max_channels;
     unsigned char ip_mask_bits;
     unsigned int match_opers : 1, match_trusted : 1, option_log : 1;
@@ -434,11 +434,13 @@ static MODCMD_FUNC(cmd_chaninfo)
     const char *fmt;
     struct banNode *ban;
     struct modeNode *moden;
+    time_t feh;
     unsigned int n;
 
     reply("OSMSG_CHANINFO_HEADER", channel->name);
     fmt = user_find_message(user, "OSMSG_CHANINFO_TIMESTAMP");
-    strftime(buffer, sizeof(buffer), fmt, gmtime(&channel->timestamp));
+    feh = channel->timestamp;
+    strftime(buffer, sizeof(buffer), fmt, gmtime(&feh));
     send_message_type(4, user, cmd->parent->bot, "%s", buffer);
     irc_make_chanmode(channel, buffer);
     if (channel->bad_channel)
@@ -447,7 +449,8 @@ static MODCMD_FUNC(cmd_chaninfo)
         reply("OSMSG_CHANINFO_MODES", buffer);
     if (channel->topic_time) {
         fmt = user_find_message(user, "OSMSG_CHANINFO_TOPIC");
-        strftime(buffer, sizeof(buffer), fmt, gmtime(&channel->topic_time));
+        feh = channel->topic_time;
+        strftime(buffer, sizeof(buffer), fmt, gmtime(&feh));
         send_message_type(4, user, cmd->parent->bot, buffer, channel->topic_nick, channel->topic);
     } else {
         irc_fetchtopic(cmd->parent->bot, channel->name);
@@ -458,7 +461,8 @@ static MODCMD_FUNC(cmd_chaninfo)
         fmt = user_find_message(user, "OSMSG_CHANINFO_BAN");
         for (n = 0; n < channel->banlist.used; n++) {
             ban = channel->banlist.list[n];
-            strftime(buffer, sizeof(buffer), fmt, localtime(&ban->set));
+            feh = ban->set;
+            strftime(buffer, sizeof(buffer), fmt, localtime(&feh));
             send_message_type(4, user, cmd->parent->bot, buffer, ban->ban, ban->who);
         }
     }
@@ -1399,7 +1403,9 @@ static MODCMD_FUNC(cmd_stats_links) {
 
 
 static MODCMD_FUNC(cmd_stats_max) {
-    reply("OSMSG_MAX_CLIENTS", max_clients, asctime(localtime(&max_clients_time)));
+    time_t feh;
+    feh = max_clients_time;
+    reply("OSMSG_MAX_CLIENTS", max_clients, asctime(localtime(&feh)));
     return 1;
 }
 
@@ -1548,7 +1554,7 @@ static MODCMD_FUNC(cmd_stats_uplink) {
 
 static MODCMD_FUNC(cmd_stats_uptime) {
     extern int lines_processed;
-    extern time_t boot_time;
+    extern unsigned long boot_time;
     double kernel_time;
     double user_time;
     char uptime[INTERVALLEN];
@@ -2180,7 +2186,7 @@ opserv_expire_trusted_host(void *data)
 }
 
 static void
-opserv_add_trusted_host(const char *ipaddr, unsigned int limit, const char *issuer, time_t issued, time_t expires, const char *reason)
+opserv_add_trusted_host(const char *ipaddr, unsigned int limit, const char *issuer, unsigned long issued, unsigned long expires, const char *reason)
 {
     struct trusted_host *th;
     th = calloc(1, sizeof(*th));
@@ -2532,8 +2538,8 @@ foreach_matching_user(const char *hostmask, discrim_search_func func, void *extr
     if (!self->uplink) return 0;
     discrim = calloc(1, sizeof(*discrim));
     discrim->limit = dict_size(clients);
-    discrim->max_level = ~0;
-    discrim->max_ts = now;
+    discrim->max_level = UINT_MAX;
+    discrim->max_ts = ULONG_MAX;
     discrim->max_channels = INT_MAX;
     discrim->authed = -1;
     discrim->info_space = -1;
@@ -2583,7 +2589,7 @@ gag_expire(void *data)
 }
 
 unsigned int
-gag_create(const char *mask, const char *owner, const char *reason, time_t expires)
+gag_create(const char *mask, const char *owner, const char *reason, unsigned long expires)
 {
     struct gag_entry *gag;
 
@@ -2607,7 +2613,7 @@ add_gag_helper(const char *key, void *data, UNUSED_ARG(void *extra))
 {
     struct record_data *rd = data;
     char *owner, *reason, *expstr;
-    time_t expires;
+    unsigned long expires;
 
     owner = database_get_data(rd->d.object, KEY_OWNER, RECDB_QSTRING);
     reason = database_get_data(rd->d.object, KEY_REASON, RECDB_QSTRING);
@@ -2716,7 +2722,7 @@ trusted_host_read(const char *host, void *data, UNUSED_ARG(void *extra))
 {
     struct record_data *rd = data;
     const char *limit, *str, *reason, *issuer;
-    time_t issued, expires;
+    unsigned long issued, expires;
 
     if (rd->type == RECDB_QSTRING) {
         /* old style host by itself */
@@ -2968,7 +2974,7 @@ static MODCMD_FUNC(cmd_set)
 static MODCMD_FUNC(cmd_settime)
 {
     const char *srv_name_mask = "*";
-    time_t new_time = now;
+    unsigned long new_time = now;
 
     if (argc > 1)
         srv_name_mask = argv[1];
@@ -2987,8 +2993,8 @@ opserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[], in
 
     discrim = calloc(1, sizeof(*discrim));
     discrim->limit = 250;
-    discrim->max_level = ~0;
-    discrim->max_ts = INT_MAX;
+    discrim->max_level = UINT_MAX;
+    discrim->max_ts = ULONG_MAX;
     discrim->domain_depth = 2;
     discrim->max_channels = INT_MAX;
     discrim->authed = -1;
@@ -3578,18 +3584,18 @@ typedef struct channel_discrim {
     char *name, *topic;
 
     unsigned int min_users, max_users;
-    time_t min_ts, max_ts;
+    unsigned long min_ts, max_ts;
     unsigned int limit;
 } *cdiscrim_t;
 
 static cdiscrim_t opserv_cdiscrim_create(struct userNode *user, unsigned int argc, char *argv[]);
 static unsigned int opserv_cdiscrim_search(cdiscrim_t discrim, cdiscrim_search_func dsf, void *data);
 
-static time_t
+static unsigned long
 smart_parse_time(const char *str) {
     /* If an interval-style string is given, treat as time before now.
      * If it's all digits, treat directly as a Unix timestamp. */
-    return str[strspn(str, "0123456789")] ? (time_t)(now - ParseInterval(str)) : (time_t)atoi(str);
+    return str[strspn(str, "0123456789")] ? (now - ParseInterval(str)) : strtoul(str, NULL, 0);
 }
 
 static cdiscrim_t
@@ -3600,9 +3606,8 @@ opserv_cdiscrim_create(struct userNode *user, unsigned int argc, char *argv[])
 
     discrim = calloc(1, sizeof(*discrim));
     discrim->limit = 25;
-    discrim->max_users = ~0;
-    /* So, time_t is frequently signed.  Fun. */
-    discrim->max_ts = (1ul << (CHAR_BIT * sizeof(time_t) - 1)) - 1;
+    discrim->max_users = UINT_MAX;
+    discrim->max_ts = ULONG_MAX;
 
     for (i = 0; i < argc; i++) {
         /* Assume all criteria require arguments. */

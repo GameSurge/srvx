@@ -93,7 +93,7 @@ delete_gline_for_p(UNUSED_ARG(void *key), void *data, void *extra)
 static void
 gline_expire(UNUSED_ARG(void *data))
 {
-    time_t stopped;
+    unsigned long stopped;
     void *wraa;
 
     stopped = 0;
@@ -135,7 +135,7 @@ gline_remove(const char *target, int announce)
 }
 
 struct gline *
-gline_add(const char *issuer, const char *target, unsigned long duration, const char *reason, time_t issued, time_t lastmod, int announce)
+gline_add(const char *issuer, const char *target, unsigned long duration, const char *reason, unsigned long issued, unsigned long lastmod, int announce)
 {
     struct gline *ent;
     struct gline *prev_first;
@@ -146,7 +146,7 @@ gline_add(const char *issuer, const char *target, unsigned long duration, const 
     ent = dict_find(gline_dict, target, NULL);
     if (ent) {
         heap_remove_pred(gline_heap, gline_for_p, (char*)target);
-        if (ent->expires < (time_t)(now + duration))
+        if (ent->expires < now + duration)
             ent->expires = now + duration;
         if (ent->lastmod < lastmod)
             ent->lastmod = lastmod;
@@ -255,7 +255,7 @@ gline_add_record(const char *key, void *data, UNUSED_ARG(void *extra))
 {
     struct record_data *rd = data;
     const char *issuer, *reason, *dstr;
-    time_t issued, expiration, lastmod;
+    unsigned long issued, expiration, lastmod;
 
     if (!(reason = database_get_data(rd->d.object, KEY_REASON, RECDB_QSTRING))) {
         log_module(MAIN_LOG, LOG_ERROR, "Missing reason for gline %s", key);

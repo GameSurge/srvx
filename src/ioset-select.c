@@ -96,9 +96,9 @@ debug_fdsets(const char *msg, int nfds, fd_set *read_fds, fd_set *write_fds, fd_
     }
     gettimeofday(&now, NULL);
     if (select_timeout) {
-        log_module(MAIN_LOG, LOG_DEBUG, "%s, at "FMT_TIME_T".%06ld:%s (timeout "FMT_TIME_T".%06ld)", msg, now.tv_sec, now.tv_usec, buf, select_timeout->tv_sec, select_timeout->tv_usec);
+        log_module(MAIN_LOG, LOG_DEBUG, "%s, at %lu.%06lu:%s (timeout %lu.%06lu)", msg, (unsigned long)now.tv_sec, (unsigned long)now.tv_usec, buf, (unsigned long)select_timeout->tv_sec, (unsigned long)select_timeout->tv_usec);
     } else {
-        log_module(MAIN_LOG, LOG_DEBUG, "%s, at "FMT_TIME_T".%06ld:%s (no timeout)", msg, now.tv_sec, now.tv_usec, buf);
+        log_module(MAIN_LOG, LOG_DEBUG, "%s, at %lu.%06lu:%s (no timeout)", msg, (unsigned long)now.tv_sec, (unsigned long)now.tv_usec, buf);
     }
 }
 #endif

@@ -577,7 +577,7 @@ void
 ioset_run(void) {
     extern struct io_fd *socket_io_fd;
     struct timeval timeout;
-    time_t wakey;
+    unsigned long wakey;
 
     while (!quit_services) {
         while (!socket_io_fd)
@@ -585,7 +585,7 @@ ioset_run(void) {
 
         /* How long to sleep? (fill in select_timeout) */
         wakey = timeq_next();
-        if ((wakey - now) < 0)
+        if (wakey < now)
             timeout.tv_sec = 0;
         else
             timeout.tv_sec = wakey - now;

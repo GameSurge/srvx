@@ -115,9 +115,9 @@ struct userNode {
     irc_in_addr_t ip;             /* User's IP address */
     long modes;                   /* user flags +isw etc... */
 
-    time_t timestamp;             /* Time of last nick change */
-    time_t idle_since;
-    struct server *uplink;        /* Server that user is connected to */
+    unsigned long   timestamp;    /* Time of last nick change */
+    unsigned long   idle_since;   /* Last time user did something on or to a channel */
+    struct server   *uplink;      /* Server that user is connected to */
     struct modeList channels;     /* Vector of channels user is in */
 
     /* from nickserv */
@@ -128,15 +128,16 @@ struct userNode {
 
 struct chanNode {
     chan_mode_t modes;
-    unsigned int limit, locks;
+    unsigned int limit;
+    unsigned int locks;
     char key[KEYLEN + 1];
     char upass[KEYLEN + 1];
     char apass[KEYLEN + 1];
-    time_t timestamp; /* creation time */
+    unsigned long timestamp; /* creation time */
 
     char topic[TOPICLEN + 1];
     char topic_nick[NICKLEN + 1];
-    time_t topic_time;
+    unsigned long topic_time;
 
     struct modeList members;
     struct banList banlist;
@@ -152,7 +153,7 @@ struct chanNode {
 struct banNode {
     char ban[NICKLEN + USERLEN + HOSTLEN + 3]; /* 1 for '\0', 1 for ! and 1 for @ = 3 */
     char who[NICKLEN + 1]; /* who set ban */
-    time_t set; /* time ban was set */
+    unsigned long set; /* time ban was set */
 };
 
 struct modeNode {
@@ -160,7 +161,7 @@ struct modeNode {
     struct userNode *user;
     unsigned short modes;
     short oplevel;
-    time_t idle_since;
+    unsigned long idle_since;
 };
 
 #define SERVERNAMEMAX 64
@@ -168,8 +169,8 @@ struct modeNode {
 
 struct server {
     char name[SERVERNAMEMAX+1];
-    time_t boot;
-    time_t link;
+    unsigned long boot;
+    unsigned long link;
     char description[SERVERDESCRIPTMAX+1];
 #ifdef WITH_PROTOCOL_P10
     char numeric[COMBO_NUMERIC_LEN+1];
@@ -191,7 +192,7 @@ extern dict_t channels;
 extern dict_t clients;
 extern dict_t servers;
 extern unsigned int max_clients, invis_clients;
-extern time_t max_clients_time;
+extern unsigned long max_clients_time;
 extern struct userList curr_opers, curr_helpers;
 
 struct server* GetServerH(const char *name); /* using full name */
@@ -227,7 +228,7 @@ void reg_join_func(join_func_t handler);
 typedef void (*del_channel_func_t) (struct chanNode *chan);
 void reg_del_channel_func(del_channel_func_t handler);
 
-struct chanNode* AddChannel(const char *name, time_t time_, const char *modes, char *banlist);
+struct chanNode* AddChannel(const char *name, unsigned long time_, const char *modes, char *banlist);
 void LockChannel(struct chanNode *channel);
 void UnlockChannel(struct chanNode *channel);
 

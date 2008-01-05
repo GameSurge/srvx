@@ -135,7 +135,7 @@ void irc_fetchtopic(struct userNode *from, const char *to);
 
 /* network maintenance */
 void irc_gline(struct server *srv, struct gline *gline);
-void irc_settime(const char *srv_name_mask, time_t new_time);
+void irc_settime(const char *srv_name_mask, unsigned long new_time);
 void irc_ungline(const char *mask);
 void irc_error(const char *to, const char *message);
 void irc_kill(struct userNode *from, struct userNode *target, const char *message);
@@ -169,7 +169,7 @@ void irc_numeric(struct userNode *user, unsigned int num, const char *format, ..
 int IsChannelName(const char *name);
 int is_valid_nick(const char *nick);
 struct userNode *AddLocalUser(const char *nick, const char *ident, const char *hostname, const char *desc, const char *modes);
-struct server* AddServer(struct server* uplink, const char *name, int hops, time_t boot, time_t link, const char *numeric, const char *description);
+struct server* AddServer(struct server* uplink, const char *name, int hops, unsigned long boot, unsigned long link, const char *numeric, const char *description);
 void DelServer(struct server* serv, int announce, const char *message);
 void DelUser(struct userNode* user, struct userNode *killer, int announce, const char *why);
 /* Most protocols will want to make an AddUser helper function. */

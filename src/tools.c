@@ -855,12 +855,12 @@ unsplit_string(char *set[], unsigned int max, char *dest)
 }
 
 char *
-intervalString(char *output, time_t interval, struct handle_info *hi)
+intervalString(char *output, unsigned long interval, struct handle_info *hi)
 {
     static const struct {
         const char *msg_single;
         const char *msg_plural;
-        long length;
+        unsigned long length;
     } unit[] = {
         { "MSG_YEAR",   "MSG_YEARS", 365 * 24 * 60 * 60 },
         { "MSG_WEEK",   "MSG_WEEKS",   7 * 24 * 60 * 60 },

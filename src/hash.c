@@ -28,7 +28,7 @@ dict_t channels;
 dict_t clients;
 dict_t servers;
 unsigned int max_clients, invis_clients;
-time_t max_clients_time;
+unsigned long max_clients_time;
 struct userList curr_opers;
 
 static void hash_cleanup(void);
@@ -297,7 +297,7 @@ reg_join_func(join_func_t handler)
 int rel_age;
 
 static void
-wipeout_channel(struct chanNode *cNode, time_t new_time, char **modes, unsigned int modec) {
+wipeout_channel(struct chanNode *cNode, unsigned long new_time, char **modes, unsigned int modec) {
     unsigned int orig_limit;
     chan_mode_t orig_modes;
     char orig_key[KEYLEN+1];
@@ -357,7 +357,7 @@ wipeout_channel(struct chanNode *cNode, time_t new_time, char **modes, unsigned 
 }
 
 struct chanNode *
-AddChannel(const char *name, time_t time_, const char *modes, char *banlist)
+AddChannel(const char *name, unsigned long time_, const char *modes, char *banlist)
 {
     struct chanNode *cNode;
     char new_modes[MAXLEN], *argv[MAXNUMPARAMS];

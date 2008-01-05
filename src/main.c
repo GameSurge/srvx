@@ -193,10 +193,10 @@ int main(int argc, char *argv[])
          * mostly to get the right value of "now" for when we do the
          * irc_introduce. */
         replay_read_line();
-        boot_time = now;
     } else {
-        boot_time = time(&now);
+        now = time(NULL);
     }
+    boot_time = now;
 
     fprintf(stdout, "Initializing daemon...\n");
     if (!conf_read(services_config)) {
@@ -282,7 +282,8 @@ int main(int argc, char *argv[])
             free(msg);
         }
     } else {
-        srand(time(&now));
+        now = time(NULL);
+        srand(now);
         ioset_run();
     }
     return 0;

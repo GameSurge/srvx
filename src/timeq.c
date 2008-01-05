@@ -40,22 +40,22 @@ timeq_cleanup(void)
 static void
 timeq_init(void)
 {
-    timeq = heap_new(int_comparator);
+    timeq = heap_new(ulong_comparator);
     reg_exit_func(timeq_cleanup);
 }
 
-time_t
+unsigned long
 timeq_next(void)
 {
     void *time;
     if (!timeq)
         return ~0;
     heap_peek(timeq, &time, 0);
-    return (time_t)time;
+    return (unsigned long)time;
 }
 
 void
-timeq_add(time_t when, timeq_func func, void *data)
+timeq_add(unsigned long when, timeq_func func, void *data)
 {
     struct timeq_entry *ent;
     void *w;
@@ -69,7 +69,7 @@ timeq_add(time_t when, timeq_func func, void *data)
 }
 
 struct timeq_extra {
-    time_t when;
+    unsigned long when;
     timeq_func func;
     void *data;
     int mask;
@@ -80,7 +80,7 @@ timeq_del_matching(void *key, void *data, void *extra)
 {
     struct timeq_entry *a = data;
     struct timeq_extra *b = extra;
-    if (((b->mask & TIMEQ_IGNORE_WHEN) || ((time_t)key == b->when))
+    if (((b->mask & TIMEQ_IGNORE_WHEN) || ((unsigned long)key == b->when))
         && ((b->mask & TIMEQ_IGNORE_FUNC) || (a->func == b->func))
         && ((b->mask & TIMEQ_IGNORE_DATA) || (a->data == b->data))) {
         free(data);
@@ -91,7 +91,7 @@ timeq_del_matching(void *key, void *data, void *extra)
 }
 
 void
-timeq_del(time_t when, timeq_func func, void *data, int mask)
+timeq_del(unsigned long when, timeq_func func, void *data, int mask)
 {
     struct timeq_extra extra;
     extra.when = when;
@@ -115,7 +115,7 @@ timeq_run(void)
     struct timeq_entry *ent;
     while (heap_size(timeq) > 0) {
         heap_peek(timeq, &k, &d);
-        if ((time_t)k > now)
+        if ((unsigned long)k > now)
             break;
         ent = d;
         heap_pop(timeq);

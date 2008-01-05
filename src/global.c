@@ -69,7 +69,7 @@ struct globalMessage
     unsigned long   id;
     long            flags;
 
-    time_t          posted;
+    unsigned long   posted;
     char            posted_s[24];
     unsigned long   duration;
 
@@ -86,7 +86,7 @@ static struct module *global_module;
 static struct service *global_service;
 static struct globalMessage *messageList;
 static long messageCount;
-static time_t last_max_alert;
+static unsigned long last_max_alert;
 static struct log_type *G_LOG;
 
 static struct
@@ -99,10 +99,10 @@ static struct
 void message_expire(void *data);
 
 static struct globalMessage*
-message_add(long flags, time_t posted, unsigned long duration, char *from, const char *msg)
+message_add(long flags, unsigned long posted, unsigned long duration, char *from, const char *msg)
 {
     struct globalMessage *message;
-    struct tm tm;
+    time_t feh;
 
     message = malloc(sizeof(struct globalMessage));
     if(!message)
@@ -118,9 +118,9 @@ message_add(long flags, time_t posted, unsigned long duration, char *from, const
     message->message = strdup(msg);
 
     if ((flags & MESSAGE_OPTION_IMMEDIATE) == 0) {
-        localtime_r(&message->posted, &tm);
+        feh = message->posted;
         strftime(message->posted_s, sizeof(message->posted_s),
-                 "%I:%M %p, %m/%d/%Y", &tm);
+                 "%I:%M %p, %m/%d/%Y", localtime(&feh));
     }
 
     if(messageList)
@@ -599,7 +599,7 @@ static int
 global_saxdb_read(struct dict *db)
 {
     struct record_data *hir;
-    time_t posted;
+    unsigned long posted;
     long flags;
     unsigned long duration;
     char *str, *from, *message;

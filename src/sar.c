@@ -259,14 +259,14 @@ sar_request_fail(struct sar_request *req, unsigned int rcode)
     sar_request_abort(req);
 }
 
-static time_t next_sar_timeout;
+static unsigned long next_sar_timeout;
 
 static void
 sar_timeout_cb(void *data)
 {
     dict_iterator_t it;
     dict_iterator_t next;
-    time_t next_timeout = INT_MAX;
+    unsigned long next_timeout = INT_MAX;
 
     for (it = dict_first(sar_requests); it; it = next) {
         struct sar_request *req;
@@ -289,7 +289,7 @@ sar_timeout_cb(void *data)
 }
 
 static void
-sar_check_timeout(time_t when)
+sar_check_timeout(unsigned long when)
 {
     if (!next_sar_timeout || when < next_sar_timeout) {
         timeq_del(0, sar_timeout_cb, NULL, TIMEQ_IGNORE_WHEN | TIMEQ_IGNORE_DATA);

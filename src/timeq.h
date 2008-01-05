@@ -27,9 +27,9 @@ typedef void (*timeq_func)(void *data);
 #define TIMEQ_IGNORE_FUNC    0x02
 #define TIMEQ_IGNORE_DATA    0x04
 
-void timeq_add(time_t when, timeq_func func, void *data);
-void timeq_del(time_t when, timeq_func func, void *data, int mask);
-time_t timeq_next(void);
+void timeq_add(unsigned long when, timeq_func func, void *data);
+void timeq_del(unsigned long when, timeq_func func, void *data, int mask);
+unsigned long timeq_next(void);
 unsigned int timeq_size(void);
 void timeq_run(void);
 
