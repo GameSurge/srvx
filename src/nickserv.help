@@ -206,9 +206,16 @@
 "DELCOOKIE" {
         "/services/nickserv/email_enabled" (
         "/msg $N DELCOOKIE",
-        "Requests that $N cancel your authcookie or resetpass cookie.",
+        "Requests that $N cancels your authcookie or resetpass cookie.",
         "(Since set-email cookies and registration cookies send email to unverified addresses, to prevent mail flooding, they cannot be cancelled.)",
         "$uSee Also:$u authcookie, resetpass, cookie"
+        );
+};
+
+"ODELCOOKIE" {
+        "/services/nickserv/email_enabled" (
+        "/msg $N ODELCOOKIE <nick|*account>",
+        "Requests that $N cancels a cookie for the specified account."
         );
 };
 

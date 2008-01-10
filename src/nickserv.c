@@ -158,6 +158,7 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_COOKIE_LIVE", "Account $b%s$b already has a cookie active.  Please either finish using that cookie, wait for it to expire, or auth to the account and use the $bdelcookie$b command." },
     { "NSMSG_EMAIL_UNACTIVATED", "That email address already has an unused cookie outstanding.  Please use the cookie or wait for it to expire." },
     { "NSMSG_NO_COOKIE", "Your account does not have any cookie issued right now." },
+    { "NSMSG_NO_COOKIE_FOREIGN", "The account $b%s$b does not have any cookie issued right now." },
     { "NSMSG_CANNOT_COOKIE", "You cannot use that kind of cookie when you are logged in." },
     { "NSMSG_BAD_COOKIE", "That cookie is not the right one.  Please make sure you are copying it EXACTLY from the email; it is case-sensitive, so $bABC$b is different from $babc$b." },
     { "NSMSG_HANDLE_ACTIVATED", "Your account is now activated (with the password you entered when you registered).  You are now authenticated to your account." },
@@ -169,6 +170,7 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_BAD_COOKIE_TYPE", "Your account had bad cookie type %d; sorry.  I am confused.  Please report this bug." },
     { "NSMSG_MUST_TIME_OUT", "You must wait for cookies of that type to time out." },
     { "NSMSG_ATE_COOKIE", "I ate the cookie for your account.  You may now have another." },
+    { "NSMSG_ATE_COOKIE_FOREIGN", "I ate the cookie for account $b%s$b.  It may now have another." },
     { "NSMSG_USE_RENAME", "You are already authenticated to account $b%s$b -- contact the support staff to rename your account." },
     { "NSMSG_ALREADY_REGISTERING", "You have already used $bREGISTER$b once this session; you may not use it again." },
     { "NSMSG_REGISTER_BAD_NICKMASK", "Could not recognize $b%s$b as either a current nick or a hostmask." },
@@ -324,6 +326,9 @@ static const struct message_entry msgtab[] = {
     { "NSEMAIL_ALLOWAUTH_BODY", "This email has been sent to let you authenticate (auth) to account %5$s on %1$s.  Your cookie is %2$s.\nTo auth to that account, log on to %1$s and type the following command:\n    /msg %3$s@%4$s COOKIE %5$s %2$s\nIf you did NOT request this authorization, you do not need to do anything.  Please contact the %1$s staff if you have questions." },
     { "CHECKPASS_YES", "Yes." },
     { "CHECKPASS_NO", "No." },
+    { "CHECKEMAIL_NOT_SET", "No email set." },
+    { "CHECKEMAIL_YES", "Yes." },
+    { "CHECKEMAIL_NO", "No." },
     { NULL, NULL }
 };
 
@@ -1852,6 +1857,26 @@ static NICKSERV_FUNC(cmd_delcookie)
     }
     return 1;
 }
+
+static NICKSERV_FUNC(cmd_odelcookie)
+{
+    struct handle_info *hi;
+
+    NICKSERV_MIN_PARMS(2);
+
+    if (!(hi = get_victim_oper(user, argv[1])))
+        return 0;
+
+    if (!hi->cookie) {
+        reply("NSMSG_NO_COOKIE_FOREIGN", hi->handle);
+        return 0;
+    }
+
+    nickserv_eat_cookie(hi->cookie);
+    reply("NSMSG_ATE_COOKIE_FOREIGN", hi->handle);
+    return 1;
+}
+
 
 static NICKSERV_FUNC(cmd_resetpass)
 {
@@ -3453,6 +3478,25 @@ static MODCMD_FUNC(cmd_checkpass)
     return 1;
 }
 
+static MODCMD_FUNC(cmd_checkemail)
+{
+    struct handle_info *hi;
+
+    NICKSERV_MIN_PARMS(3);
+    if (!(hi = modcmd_get_handle_info(user, argv[1]))) {
+        reply("MSG_HANDLE_UNKNOWN", argv[1]);
+        return 0;
+    }
+    if (!hi->email_addr)
+        reply("CHECKEMAIL_NOT_SET");
+    else if (!irccasecmp(argv[2], hi->email_addr))
+        reply("CHECKEMAIL_YES");
+    else
+        reply("CHECKEMAIL_NO");
+    return 1;
+}
+
+
 static void
 nickserv_db_read_handle(const char *handle, dict_t obj)
 {
@@ -4098,6 +4142,7 @@ init_nickserv(const char *nick)
         nickserv_define_func("RESETPASS", cmd_resetpass, -1, 0, 1);
         nickserv_define_func("COOKIE", cmd_cookie, -1, 0, 1);
         nickserv_define_func("DELCOOKIE", cmd_delcookie, -1, 1, 0);
+        nickserv_define_func("ODELCOOKIE", cmd_odelcookie, 0, 1, 0);
         dict_insert(nickserv_opt_dict, "EMAIL", opt_email);
     }
     nickserv_define_func("GHOST", cmd_ghost, -1, 1, 0);
@@ -4107,6 +4152,7 @@ init_nickserv(const char *nick)
     nickserv_define_func("SEARCH UNREGISTER", NULL, 800, 1, 0);
     nickserv_define_func("MERGEDB", cmd_mergedb, 999, 1, 0);
     nickserv_define_func("CHECKPASS", cmd_checkpass, 601, 1, 0);
+    nickserv_define_func("CHECKEMAIL", cmd_checkemail, 0, 1, 0);
     /* other options */
     dict_insert(nickserv_opt_dict, "INFO", opt_info);
     dict_insert(nickserv_opt_dict, "WIDTH", opt_width);
