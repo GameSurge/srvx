@@ -215,8 +215,8 @@
         "The valid duration letters are $by$b (for year, or 365 days), $bM$b (for month, or 31 days), $bw$b (for week, or 7 days), $bd$b (for day, or 24 hours), $bh$b (for hour, or 60 minutes), $bm$b (for minute, or 60 seconds), and $bs$b (for second).  We know not all years are 365 days and not all months are 31 days, but we pretend they are for parsing durations.",
         "If the last duration part does not have any letter to indicate the units, seconds are assumed.",
         "$uExamples$u: 1y1M is 365 days plus 31 days; 1y1m is 365 days plus 1 minute; 1h30m45 is ninety minutes and forty-five seconds; and so forth.");
-"EMOTE" ("/msg $C EMOTE <#channel> <text>",
-        "Makes $b$C$b send a CTCP ACTION message to the specified channel.",
+"EMOTE" ("/msg $C EMOTE <#channel|nick|*account> <text>",
+        "Makes $b$C$b send a CTCP ACTION message to the specified channel/nick or all users on the account.",
         "$uSee Also:$u say");
 "EVENTS" ("/msg $C EVENTS <#channel> [limit [pattern]]",
         "Allows channel coowners to view a list of events related to their channel. If a pattern is provided, only events with a matching description will be displayed.",
@@ -312,8 +312,8 @@
         "$uSee Also:$u createnote");
 "RESYNC" ("/msg $S RESYNC <#channel>",
         "Synchronizes users in the channel with the userlist.  This means that if the user can normally get ops, $S makes sure the user has ops.  Otherwise, if the user normally gets voice, $S makes sure the user has voice but not ops.  Otherwise, $S makes sure the user has neither voice nor ops.");
-"SAY" ("/msg $C SAY <#channel> <text>",
-        "Makes $b$C$b send a message to the specified channel.",
+"SAY" ("/msg $C SAY <#channel|nick|*account> <text>",
+        "Makes $b$C$b send a message to the specified channel/nick or all users on the account.",
         "$uSee Also:$u emote");
 "SEARCH CRITERIA" ("$bSEARCH CRITERIA$b",
         "The following criteria may be used:",

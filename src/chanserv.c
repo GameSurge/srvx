@@ -4841,6 +4841,23 @@ static CHANSERV_FUNC(cmd_say)
         msg = unsplit_string(argv + 1, argc - 1, NULL);
         send_channel_message(channel, cmd->parent->bot, "%s", msg);
     }
+    else if(*argv[1] == '*' && argv[1][1] != '\0')
+    {
+        struct handle_info *hi;
+        struct userNode *authed;
+
+        REQUIRE_PARAMS(3);
+        msg = unsplit_string(argv + 2, argc - 2, NULL);
+
+        if (!(hi = get_handle_info(argv[1] + 1)))
+        {
+            reply("MSG_HANDLE_UNKNOWN", argv[1] + 1);
+            return 0;
+        }
+
+        for (authed = hi->users; authed; authed = authed->next_authed)
+            send_target_message(5, authed->nick, cmd->parent->bot, "%s", msg);
+    }
     else if(GetUserH(argv[1]))
     {
         REQUIRE_PARAMS(3);
@@ -4864,6 +4881,23 @@ static CHANSERV_FUNC(cmd_emote)
         /* CTCP is so annoying. */
         msg = unsplit_string(argv + 1, argc - 1, NULL);
         send_channel_message(channel, cmd->parent->bot, "\001ACTION %s\001", msg);
+    }
+    else if(*argv[1] == '*' && argv[1][1] != '\0')
+    {
+        struct handle_info *hi;
+        struct userNode *authed;
+
+        REQUIRE_PARAMS(3);
+        msg = unsplit_string(argv + 2, argc - 2, NULL);
+
+        if (!(hi = get_handle_info(argv[1] + 1)))
+        {
+            reply("MSG_HANDLE_UNKNOWN", argv[1] + 1);
+            return 0;
+        }
+
+        for (authed = hi->users; authed; authed = authed->next_authed)
+            send_target_message(5, authed->nick, cmd->parent->bot, "\001ACTION %s\001", msg);
     }
     else if(GetUserH(argv[1]))
     {
