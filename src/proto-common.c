@@ -442,8 +442,9 @@ privmsg_chan_helper(struct chanNode *cn, void *data)
 
     /* Never send a NOTICE to a channel to one of the services */
     cf = &chanmsg_funcs[(unsigned char)pd->text[0]];
-    if (!pd->is_notice && cf->func && GetUserMode(cn, cf->service) && !IsDeaf(cf->service))
-        cf->func(pd->user, cn, pd->text+1, cf->service);
+    if (cf->func && !pd->is_notice
+        && GetUserMode(cn, cf->service) && !IsDeaf(cf->service))
+        cf->func(pd->user, cn, pd->text+1, cf->service, pd->is_notice);
 
     /* This catches *all* text sent to the channel that the services server sees */
     for (x = 0; x < ALLCHANMSG_FUNCS_MAX; x++) {
@@ -451,7 +452,7 @@ privmsg_chan_helper(struct chanNode *cn, void *data)
        if (!cf->func)
            break; /* end of list */
        else
-           cf->func(pd->user, cn, pd->text, cf->service);
+           cf->func(pd->user, cn, pd->text, cf->service, pd->is_notice);
     }
 }
 

@@ -888,10 +888,12 @@ modcmd_privmsg(struct userNode *user, struct userNode *bot, const char *text, in
 }
 
 void
-modcmd_chanmsg(struct userNode *user, struct chanNode *chan, const char *text, struct userNode *bot) {
+modcmd_chanmsg(struct userNode *user, struct chanNode *chan, const char *text, struct userNode *bot, unsigned int is_notice) {
     struct service *service;
-    if (!(service = dict_find(services, bot->nick, NULL))) return;
+    if (!(service = dict_find(services, bot->nick, NULL)))
+        return;
     svccmd_invoke(user, service, chan, text, 0);
+    (void)is_notice;
 }
 
 struct service *

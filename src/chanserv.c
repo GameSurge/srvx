@@ -798,7 +798,7 @@ scan_user_presence(struct userData *uData, struct userNode *user)
 }
 
 static void
-chanserv_ctcp_check(struct userNode *user, struct chanNode *channel, const char *text, UNUSED_ARG(struct userNode *bot))
+chanserv_ctcp_check(struct userNode *user, struct chanNode *channel, const char *text, UNUSED_ARG(struct userNode *bot), UNUSED_ARG(unsigned int is_notice))
 {
     unsigned int eflags, argc;
     char *argv[4];

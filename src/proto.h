@@ -90,7 +90,7 @@ void init_parse(void);
 int parse_line(char *line, int recursive);
 
 /* Callback notifications for protocol support. */
-typedef void (*chanmsg_func_t) (struct userNode *user, struct chanNode *chan, const char *text, struct userNode *bot);
+typedef void (*chanmsg_func_t) (struct userNode *user, struct chanNode *chan, const char *text, struct userNode *bot, unsigned int is_notice);
 void reg_chanmsg_func(unsigned char prefix, struct userNode *service, chanmsg_func_t handler);
 void reg_allchanmsg_func(struct userNode *service, chanmsg_func_t handler);
 struct userNode *get_chanmsg_bot(unsigned char prefix);
