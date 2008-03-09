@@ -1511,7 +1511,7 @@ static NICKSERV_FUNC(cmd_handleinfo)
         }
     }
 
-    return 1;
+    return 1 | ((hi != user->handle_info) ? CMD_LOG_STAFF : 0);
 }
 
 static NICKSERV_FUNC(cmd_userinfo)
