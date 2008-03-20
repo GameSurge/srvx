@@ -73,7 +73,7 @@ static struct dict *log_types;
 static struct log_type *log_default;
 static int log_inited, log_debugged;
 
-DEFINE_LIST(logList, struct logDestination*);
+DEFINE_LIST(logList, struct logDestination*)
 static void log_format_audit(struct logEntry *entry);
 static const struct message_entry msgtab[] = {
     { "MSG_INVALID_FACILITY", "$b%s$b is an invalid log facility." },

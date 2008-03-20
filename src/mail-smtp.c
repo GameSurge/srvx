@@ -79,7 +79,7 @@ static struct {
     int enabled;
 } smtp_conf;
 
-DEFINE_LIST(mail_queue, struct pending_mail *);
+DEFINE_LIST(mail_queue, struct pending_mail *)
 
 static void mail_println(const char *fmt, ...)
 {

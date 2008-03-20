@@ -581,16 +581,16 @@ void STRUCTNAME##_free(void *data) {\
 }
 
 DECLARE_LIST(helpserv_botlist, struct helpserv_bot *);
-DEFINE_LIST(helpserv_botlist, struct helpserv_bot *);
-DEFINE_LIST_ALLOC(helpserv_botlist);
+DEFINE_LIST(helpserv_botlist, struct helpserv_bot *)
+DEFINE_LIST_ALLOC(helpserv_botlist)
 
 DECLARE_LIST(helpserv_reqlist, struct helpserv_request *);
-DEFINE_LIST(helpserv_reqlist, struct helpserv_request *);
-DEFINE_LIST_ALLOC(helpserv_reqlist);
+DEFINE_LIST(helpserv_reqlist, struct helpserv_request *)
+DEFINE_LIST_ALLOC(helpserv_reqlist)
 
 DECLARE_LIST(helpserv_userlist, struct helpserv_user *);
-DEFINE_LIST(helpserv_userlist, struct helpserv_user *);
-DEFINE_LIST_ALLOC(helpserv_userlist);
+DEFINE_LIST(helpserv_userlist, struct helpserv_user *)
+DEFINE_LIST_ALLOC(helpserv_userlist)
 
 struct helpfile *helpserv_helpfile;
 static struct module *helpserv_module;

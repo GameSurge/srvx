@@ -113,7 +113,7 @@
 #define OPTION_FUNC(NAME) int NAME(struct userNode *user, struct handle_info *hi, UNUSED_ARG(unsigned int override), unsigned int argc, char *argv[])
 typedef OPTION_FUNC(option_func_t);
 
-DEFINE_LIST(handle_info_list, struct handle_info*);
+DEFINE_LIST(handle_info_list, struct handle_info*)
 
 #define NICKSERV_MIN_PARMS(N) do { \
   if (argc < N) { \

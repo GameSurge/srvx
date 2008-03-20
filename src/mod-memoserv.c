@@ -96,7 +96,7 @@ struct memo {
 };
 
 DECLARE_LIST(memoList, struct memo*);
-DEFINE_LIST(memoList, struct memo*);
+DEFINE_LIST(memoList, struct memo*)
 
 /* memo_account.flags fields */
 #define MEMO_NOTIFY_NEW   1

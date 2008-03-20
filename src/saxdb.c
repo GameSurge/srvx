@@ -24,7 +24,7 @@
 #include "saxdb.h"
 #include "timeq.h"
 
-DEFINE_LIST(int_list, int);
+DEFINE_LIST(int_list, int)
 
 struct saxdb {
     char *name;

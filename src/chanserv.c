@@ -478,7 +478,7 @@ static const struct message_entry msgtab[] = {
         return 0; }
 
 DECLARE_LIST(dnrList, struct do_not_register *);
-DEFINE_LIST(dnrList, struct do_not_register *);
+DEFINE_LIST(dnrList, struct do_not_register *)
 
 static int eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, char *argv[], struct svccmd *cmd, int action);
 

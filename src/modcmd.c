@@ -173,8 +173,8 @@ flags_qsort(const void *a, const void *b) {
     return irccasecmp(fa->name, fb->name);
 }
 
-DEFINE_LIST(svccmd_list, struct svccmd*);
-DEFINE_LIST(module_list, struct module*);
+DEFINE_LIST(svccmd_list, struct svccmd*)
+DEFINE_LIST(module_list, struct module*)
 
 static void
 free_service_command(void *data) {
