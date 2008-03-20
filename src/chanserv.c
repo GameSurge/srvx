@@ -1646,6 +1646,7 @@ static unsigned int send_dnrs(struct userNode *user, dict_t dict)
 static CHANSERV_FUNC(cmd_noregister)
 {
     const char *target;
+    const char *reason;
     unsigned long expiry, duration;
     unsigned int matches;
 
@@ -1688,7 +1689,7 @@ static CHANSERV_FUNC(cmd_noregister)
             return 0;
         }
 
-        const char *reason = unsplit_string(argv + 3, argc - 3, NULL);
+        reason = unsplit_string(argv + 3, argc - 3, NULL);
         if((*target == '*') && !get_handle_info(target + 1))
         {
             reply("MSG_HANDLE_UNKNOWN", target + 1);
