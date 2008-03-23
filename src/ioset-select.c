@@ -80,9 +80,7 @@ ioset_select_cleanup(void)
     free(fds);
 }
 
-#if 0
-#define debug_fdsets(MSG, NFDS, READ_FDS, WRITE_FDS, EXCEPT_FDS, SELECT_TIMEOUT) (void)0
-#else
+#if DEBUG_FDSETS
 static void
 debug_fdsets(const char *msg, int nfds, fd_set *read_fds, fd_set *write_fds, fd_set *except_fds, struct timeval *select_timeout) {
     static const char *flag_text[8] = { "---", "r", "w", "rw", "e", "er", "ew", "erw" };
@@ -104,6 +102,8 @@ debug_fdsets(const char *msg, int nfds, fd_set *read_fds, fd_set *write_fds, fd_
         log_module(MAIN_LOG, LOG_DEBUG, "%s, at %lu.%06lu:%s (no timeout)", msg, (unsigned long)now.tv_sec, (unsigned long)now.tv_usec, buf);
     }
 }
+#else
+# define debug_fdsets(MSG, NFDS, READ_FDS, WRITE_FDS, EXCEPT_FDS, SELECT_TIMEOUT) (void)0
 #endif
 
 static int
