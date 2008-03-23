@@ -7716,7 +7716,11 @@ chanserv_db_cleanup(void) {
     }
 }
 
-#define DEFINE_COMMAND(NAME, MIN_ARGC, FLAGS, OPTIONS...) modcmd_register(chanserv_module, #NAME, cmd_##NAME, MIN_ARGC, FLAGS, ## OPTIONS)
+#if defined(GCC_VARMACROS)
+# define DEFINE_COMMAND(NAME, MIN_ARGC, FLAGS, ARGS...) modcmd_register(chanserv_module, #NAME, cmd_##NAME, MIN_ARGC, FLAGS, ARGS)
+#elif defined(C99_VARMACROS)
+# define DEFINE_COMMAND(NAME, MIN_ARGC, FLAGS, ...) modcmd_register(chanserv_module, #NAME, cmd_##NAME, MIN_ARGC, FLAGS, __VA_ARGS__)
+#endif
 #define DEFINE_CHANNEL_OPTION(NAME) modcmd_register(chanserv_module, "set "#NAME, chan_opt_##NAME, 1, 0, NULL)
 #define DEFINE_USER_OPTION(NAME) modcmd_register(chanserv_module, "uset "#NAME, user_opt_##NAME, 1, MODCMD_REQUIRE_REGCHAN, NULL)
 

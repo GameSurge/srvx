@@ -94,7 +94,11 @@ static struct
     unsigned long db_backup_frequency;
 } global_conf;
 
-#define global_notice(target, format...) send_message(target , global , ## format)
+#if defined(GCC_VARMACROS)
+# define global_notice(target, ARGS...) send_message(target, global, ARGS)
+#elif defined(C99_VARMACROS)
+# define global_notice(target, ...) send_message(target, global, __VA_ARGS__)
+#endif
 
 void message_expire(void *data);
 

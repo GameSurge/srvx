@@ -623,31 +623,37 @@ static HELPSERV_FUNC(cmd_help);
         return 0; }
 
 /* For messages going to users being helped */
-#define helpserv_msguser(target, format...) send_message_type((from_opserv ? 0 : hs->privmsg_only), (target), (from_opserv ? opserv : hs->helpserv) , ## format)
-#define helpserv_user_reply(format...) send_message_type(req->hs->privmsg_only, req->user, req->hs->helpserv , ## format)
+#if defined(GCC_VARMACROS)
+# define helpserv_msguser(target, ARGS...) send_message_type((from_opserv ? 0 : hs->privmsg_only), (target), (from_opserv ? opserv : hs->helpserv), ARGS)
+# define helpserv_user_reply(ARGS...) send_message_type(req->hs->privmsg_only, req->user, req->hs->helpserv, ARGS)
 /* For messages going to helpers */
-#define helpserv_notice(target, format...) send_message((target), (from_opserv ? opserv : hs->helpserv) , ## format)
-#define helpserv_notify(helper, format...) do { struct userNode *_target; for (_target = (helper)->handle->users; _target; _target = _target->next_authed) { \
-        send_message(_target, (helper)->hs->helpserv, ## format); \
+# define helpserv_notice(target, ARGS...) send_message((target), (from_opserv ? opserv : hs->helpserv), ARGS)
+# define helpserv_notify(helper, ARGS...) do { struct userNode *_target; for (_target = (helper)->handle->users; _target; _target = _target->next_authed) { \
+        send_message(_target, (helper)->hs->helpserv, ARGS); \
     } } while (0)
+# define helpserv_page(TYPE, ARGS...) do { \
+    int msg_type=0; struct chanNode *target=helpserv_get_page_type(hs, (TYPE), &msg_type); \
+    if (target) send_target_message(msg_type, target->name, hs->helpserv, ARGS); \
+    } while (0)
+#elif defined(C99_VARMACROS)
+# define helpserv_msguser(target, ...) send_message_type((from_opserv ? 0 : hs->privmsg_only), (target), (from_opserv ? opserv : hs->helpserv), __VA_ARGS__)
+# define helpserv_user_reply(...) send_message_type(req->hs->privmsg_only, req->user, req->hs->helpserv, __VA_ARGS__)
+/* For messages going to helpers */
+# define helpserv_notice(target, ...) send_message((target), (from_opserv ? opserv : hs->helpserv), __VA_ARGS__)
+# define helpserv_notify(helper, ...) do { struct userNode *_target; for (_target = (helper)->handle->users; _target; _target = _target->next_authed) { \
+        send_message(_target, (helper)->hs->helpserv, __VA_ARGS__); \
+    } } while (0)
+# define helpserv_page(TYPE, ...) do { \
+    int msg_type=0; struct chanNode *target=helpserv_get_page_type(hs, (TYPE), &msg_type); \
+    if (target) send_target_message(msg_type, target->name, hs->helpserv, __VA_ARGS__); \
+    } while (0)
+#endif
 #define helpserv_message(hs, target, id) do { if ((hs)->messages[id]) { \
     if (from_opserv) \
         send_message_type(4, (target), opserv, "%s", (hs)->messages[id]); \
     else \
         send_message_type(4 | hs->privmsg_only, (target), hs->helpserv, "%s", (hs)->messages[id]); \
     } } while (0)
-#define helpserv_page(TYPE, FORMAT...) do { \
-    struct chanNode *target=NULL; int msg_type=0; \
-    target = hs->page_targets[TYPE]; \
-    switch (hs->page_types[TYPE]) { \
-        case PAGE_NOTICE: msg_type = 0; break; \
-        case PAGE_PRIVMSG: msg_type = 1; break; \
-        case PAGE_ONOTICE: msg_type = 2; break; \
-        default: log_module(HS_LOG, LOG_ERROR, "helpserv_page() called but %s has an invalid page type %d.", hs->helpserv->nick, TYPE); \
-        case PAGE_NONE: target = NULL; break; \
-    } \
-    if (target) send_target_message(msg_type, target->name, hs->helpserv, ## FORMAT); \
-    } while (0)
 #define helpserv_get_handle_info(user, text) smart_get_handle_info((from_opserv ? opserv : hs->helpserv) , (user), (text))
 
 struct helpserv_cmd {
@@ -723,6 +729,27 @@ static void helpserv_log_request(struct helpserv_request *req, const char *reaso
         saxdb_close_context(ctx);
         fflush(reqlog_f);
     }
+}
+
+static struct chanNode *helpserv_get_page_type(struct helpserv_bot *hs, enum page_source type, int *msg_type)
+{
+    switch (hs->page_types[type]) {
+        case PAGE_NOTICE:
+            *msg_type = 0;
+            break;
+        case PAGE_PRIVMSG:
+            *msg_type = 1;
+            break;
+        case PAGE_ONOTICE:
+            *msg_type = 2;
+            break;
+        default:
+            log_module(HS_LOG, LOG_ERROR, "helpserv_page() called but %s has an invalid page type %d.", hs->helpserv->nick, type);
+            /* and fall through */
+        case PAGE_NONE:
+            return NULL;
+    }
+    return hs->page_targets[type];
 }
 
 /* Searches for a request by number, nick, or account (num|nick|*account).

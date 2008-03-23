@@ -86,9 +86,15 @@ int send_help(struct userNode *dest, struct userNode *src, struct helpfile *hf, 
  * irc_send is either irc_privmsg or irc_notice; NULL means figure it out. */
 void table_send(struct userNode *from, const char *to, unsigned int size, irc_send_func irc_send, struct helpfile_table table);
 
-#define send_channel_message(CHANNEL, ARGS...) send_target_message(5, (CHANNEL)->name, ARGS)
-#define send_channel_notice(CHANNEL, ARGS...) send_target_message(4, (CHANNEL)->name, ARGS)
-#define send_channel_wallchops(CHANNEL, ARGS...) send_target_message(6, (CHANNEL)->name, ARGS)
+#if defined(GCC_VARMACROS)
+# define send_channel_message(CHANNEL, ARGS...) send_target_message(5, (CHANNEL)->name, ARGS)
+# define send_channel_notice(CHANNEL, ARGS...) send_target_message(4, (CHANNEL)->name, ARGS)
+# define send_channel_wallchops(CHANNEL, ARGS...) send_target_message(6, (CHANNEL)->name, ARGS)
+#elif defined(C99_VARMACROS)
+# define send_channel_message(CHANNEL, ...) send_target_message(5, (CHANNEL)->name, __VA_ARGS__)
+# define send_channel_notice(CHANNEL, ...) send_target_message(4, (CHANNEL)->name, __VA_ARGS__)
+# define send_channel_wallchops(CHANNEL, ...) send_target_message(6, (CHANNEL)->name, __VA_ARGS__)
+#endif
 
 struct message_entry
 {

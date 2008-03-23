@@ -380,9 +380,15 @@ opserv_free_user_alert(void *data)
     free(alert);
 }
 
-#define opserv_debug(format...) do { if (opserv_conf.debug_channel) send_channel_notice(opserv_conf.debug_channel , opserv , ## format); } while (0)
-#define opserv_alert(format...) do { if (opserv_conf.alert_channel) send_channel_notice(opserv_conf.alert_channel , opserv , ## format); } while (0)
-#define opserv_custom_alert(chan, format...) do { if (chan) send_target_message(4 , chan , opserv , ## format); else if (opserv_conf.alert_channel) send_channel_notice(opserv_conf.alert_channel , opserv , ## format); } while (0)
+#if defined(GCC_VARMACROS)
+# define opserv_debug(ARGS...) do { if (opserv_conf.debug_channel) send_channel_notice(opserv_conf.debug_channel, opserv, ARGS); } while (0)
+# define opserv_alert(ARGS...) do { if (opserv_conf.alert_channel) send_channel_notice(opserv_conf.alert_channel, opserv, ARGS); } while (0)
+# define opserv_custom_alert(CHAN, ARGS...) do { if (CHAN) send_target_message(4, (CHAN), opserv, ARGS); else if (opserv_conf.alert_channel) send_channel_notice(opserv_conf.alert_channel, opserv, ARGS); } while (0)
+#elif defined(C99_VARMACROS)
+# define opserv_debug(...) do { if (opserv_conf.debug_channel) send_channel_notice(opserv_conf.debug_channel, opserv, __VA_ARGS__); } while (0)
+# define opserv_alert(...) do { if (opserv_conf.alert_channel) send_channel_notice(opserv_conf.alert_channel, opserv, __VA_ARGS__); } while (0)
+# define opserv_custom_alert(chan, ...) do { if (chan) send_target_message(4, chan, opserv, __VA_ARGS__); else if (opserv_conf.alert_channel) send_channel_notice(opserv_conf.alert_channel, opserv, __VA_ARGS__); } while (0)
+#endif
 
 /* A lot of these commands are very similar to what ChanServ can do,
  * but OpServ can do them even on channels that aren't registered.

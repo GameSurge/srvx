@@ -38,11 +38,12 @@ typedef SVCMSG_HOOK(svcmsg_hook_t);
 DECLARE_LIST(svccmd_list, struct svccmd*);
 DECLARE_LIST(module_list, struct module*);
 
-#if defined(__GNUC__) && (__GNUC__ < 3)
-#define reply(FMT...) send_message(user, cmd->parent->bot, FMT)
-#elif !defined(S_SPLINT_S) /* doesn't recognize C99 variadic macros */
-#define reply(...) send_message(user, cmd->parent->bot, __VA_ARGS__)
+#if defined(GCC_VARMACROS)
+# define reply(ARGS...) send_message(user, cmd->parent->bot, ARGS)
+#elif defined(C99_VARMACROS)
+# define reply(...) send_message(user, cmd->parent->bot, __VA_ARGS__)
 #endif
+
 #define modcmd_get_handle_info(USER, NAME) smart_get_handle_info(cmd->parent->bot, USER, NAME)
 #define modcmd_chanmode_announce(CHANGE) mod_chanmode_announce(cmd->parent->bot, channel, CHANGE)
 #define modcmd_chanmode(ARGV, ARGC, FLAGS) mod_chanmode(cmd->parent->bot, channel, ARGV, ARGC, FLAGS)

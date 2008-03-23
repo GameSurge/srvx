@@ -54,7 +54,11 @@ const char *snoop_module_deps[] = { NULL };
 static int finalized;
 int snoop_finalize(void);
 
-#define SNOOP(FORMAT, ARGS...) send_channel_message(snoop_cfg.channel, snoop_cfg.bot, "%s "FORMAT, timestamp , ## ARGS)
+#if defined(GCC_VARMACROS)
+# define SNOOP(FORMAT, ARGS...) send_channel_message(snoop_cfg.channel, snoop_cfg.bot, "%s "FORMAT, timestamp, ARGS)
+#elif defined(C99_VARMACROS)
+# define SNOOP(FORMAT, ...) send_channel_message(snoop_cfg.channel, snoop_cfg.bot, "%s "FORMAT, timestamp, __VA_ARGS__)
+#endif
 #define UPDATE_TIMESTAMP() do { time_t feh = now; strftime(timestamp, sizeof(timestamp), "[%H:%M:%S]", localtime(&feh)); } while (0)
 
 static void

@@ -52,7 +52,11 @@ static struct {
     unsigned long gline_duration;
 } conf;
 
-#define blacklist_debug(format...) do { if (conf.debug_bot && conf.debug_channel) send_channel_notice(conf.debug_channel , conf.debug_bot , ## format); } while (0)
+#if defined(GCC_VARMACROS)
+# define blacklist_debug(ARGS...) do { if (conf.debug_bot && conf.debug_channel) send_channel_notice(conf.debug_channel, conf.debug_bot, ARGS); } while (0)
+#elif defined(C99_VARMACROS)
+# define blacklist_debug(...) do { if (conf.debug_bot && conf.debug_channel) send_channel_notice(conf.debug_channel, conf.debug_bot, __VA_ARGS__); } while (0)
+#endif
 
 static void
 do_expandos(char *output, unsigned int out_len, const char *input, ...)

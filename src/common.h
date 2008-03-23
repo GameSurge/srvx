@@ -41,7 +41,7 @@ extern struct tm *localtime_r(const time_t *clock, struct tm *res);
 #define ArrayLength(x)      (sizeof(x)/sizeof(x[0]))
 #define safestrncpy(dest, src, len) do { char *d = (dest); const char *s = (src); size_t l = strlen(s)+1;  if ((len) < l) l = (len); memmove(d, s, l); d[l-1] = 0; } while (0)
 
-#ifdef __GNUC__
+#if __GNUC__
 #define PRINTF_LIKE(M,N) __attribute__((format (printf, M, N)))
 #else
 #define PRINTF_LIKE(M,N)
@@ -54,6 +54,12 @@ extern struct tm *localtime_r(const time_t *clock, struct tm *res);
 #define const /*@observer@*/ /*@temp@*/
 #else
 #define UNUSED_ARG(ARG) ARG
+#endif
+
+#if defined(__GNUC__) && (__GNUC__ < 3)
+# define GCC_VARMACROS 1
+#elif !defined(S_SPLINT_S)
+# define C99_VARMACROS 1
 #endif
 
 #if defined(WITH_MALLOC_DMALLOC)
