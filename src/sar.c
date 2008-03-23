@@ -632,7 +632,7 @@ sar_fd_readable(struct io_fd *fd)
 
     sprintf(id_text, "%d", hdr.id);
     req = dict_find(sar_requests, id_text, NULL);
-    log_module(sar_log, LOG_DEBUG, "sar_fd_readable(%p): hdr {id=%d, flags=0x%x, qdcount=%d, ancount=%d, nscount=%d, arcount=%d} -> req %p", fd, hdr.id, hdr.flags, hdr.qdcount, hdr.ancount, hdr.nscount, hdr.arcount, req);
+    log_module(sar_log, LOG_DEBUG, "sar_fd_readable(%p): hdr {id=%d, flags=0x%x, qdcount=%d, ancount=%d, nscount=%d, arcount=%d} -> req %p", (void*)fd, hdr.id, hdr.flags, hdr.qdcount, hdr.ancount, hdr.nscount, hdr.arcount, (void*)req);
     if (!req || !req->retries || !(hdr.flags & REQ_FLAG_QR)) {
         ns->resp_ignored++;
         return;
@@ -1137,7 +1137,7 @@ sar_getaddr_append(struct sar_getaddr_state *state, struct addrinfo *ai, int cop
 {
     unsigned int count;
 
-    log_module(sar_log, LOG_DEBUG, "sar_getaddr_append({full_name=%s}, ai=%p, copy=%d)", state->full_name, ai, copy);
+    log_module(sar_log, LOG_DEBUG, "sar_getaddr_append({full_name=%s}, ai=%p, copy=%d)", state->full_name, (void*)ai, copy);
 
     /* Set the appropriate pointer to the new element(s). */
     if (state->ai_tail)

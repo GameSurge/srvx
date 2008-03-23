@@ -227,7 +227,7 @@ static void
 sockcheck_free_client(struct sockcheck_client *client)
 {
     if (SOCKCHECK_DEBUG) {
-        log_module(PC_LOG, LOG_INFO, "Goodbye %s (%p)!  I set you free!", client->addr->hostname, client);
+        log_module(PC_LOG, LOG_INFO, "Goodbye %s (%p)!  I set you free!", client->addr->hostname, (void*)client);
     }
     verify(client);
     ioset_close(client->fd, 1);
@@ -260,15 +260,15 @@ sockcheck_print_client(const struct sockcheck_client *client)
     log_module(PC_LOG, LOG_INFO, "client %p: { addr = %p { decision = %s; last_touched = %lu; reason = %s; hostname = \"%s\" }; "
         "test_index = %d; state = %p { port = %d; type = %s; template = \"%s\"; ... }; "
         "fd = %p(%d); read = %p; read_size = %d; read_used = %d; read_pos = %d; }",
-        client, client->addr, decs[client->addr->decision],
+        (void*)client, (void*)client->addr, decs[client->addr->decision],
         client->addr->last_touched,
         client->addr->reason, client->addr->hostname,
-        client->test_index, client->state,
+        client->test_index, (void*)client->state,
         (client->state ? client->state->port : 0),
         (client->state ? decs[client->state->type] : "N/A"),
         (client->state ? client->state->template : "N/A"),
-        client->fd, (client->fd ? client->fd->fd : 0),
-        client->read, client->read_size, client->read_used, client->read_pos);
+        (void*)client->fd, (client->fd ? client->fd->fd : 0),
+        (void*)client->read, client->read_size, client->read_used, client->read_pos);
 }
 
 static char hexvals[256] = {
@@ -407,7 +407,7 @@ sockcheck_elaborate_state(struct sockcheck_client *client)
         /* If it doesn't require reading, take it now. */
         if (client->resp_state[nn] && !*client->resp_state[nn]) {
             if (SOCKCHECK_DEBUG) {
-                log_module(PC_LOG, LOG_INFO, "Skipping straight to easy option %d for %p.", nn, client);
+                log_module(PC_LOG, LOG_INFO, "Skipping straight to easy option %d for %p.", nn, (void*)client);
             }
             sockcheck_advance(client, nn);
             return;
@@ -510,7 +510,7 @@ sockcheck_advance(struct sockcheck_client *client, unsigned int next_state)
         }
         break;
     default:
-        log_module(PC_LOG, LOG_ERROR, "BUG: unknown next-state type %d (after %p).", ns->type, client->state);
+        log_module(PC_LOG, LOG_ERROR, "BUG: unknown next-state type %d (after %p).", ns->type, (void*)client->state);
         break;
     }
 }
@@ -672,7 +672,7 @@ sockcheck_begin_test(struct sockcheck_client *client)
         io_fd->readable_cb = sockcheck_readable;
         timeq_add(now + client->state->timeout, sockcheck_timeout_client, client);
         if (SOCKCHECK_DEBUG) {
-            log_module(PC_LOG, LOG_INFO, "Starting proxy check on %s:%d (test %d) with fd %d (%p).", client->addr->hostname, client->state->port, client->test_index, io_fd->fd, io_fd);
+            log_module(PC_LOG, LOG_INFO, "Starting proxy check on %s:%d (test %d) with fd %d (%p).", client->addr->hostname, client->state->port, client->test_index, io_fd->fd, (void*)io_fd);
         }
         return;
     } while (client->test_index < client->tests->used);
@@ -696,7 +696,7 @@ sockcheck_start_client(unsigned int idx)
     sockcheck_num_clients++;
     if (!tests) return;
     client = client_list[idx] = sockcheck_alloc_client(sci);
-    log_module(PC_LOG, LOG_INFO, "Proxy-checking client at %s as client %d (%p) of %d.", sci->hostname, idx, client, sockcheck_num_clients);
+    log_module(PC_LOG, LOG_INFO, "Proxy-checking client at %s as client %d (%p) of %d.", sci->hostname, idx, (void*)client, sockcheck_num_clients);
     client->test_rep = 0;
     client->client_index = idx;
     sockcheck_begin_test(client);

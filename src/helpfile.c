@@ -589,7 +589,7 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
                 break;
             default:
                 value = "";
-                log_module(MAIN_LOG, LOG_ERROR, "Invalid exp.type %d from expansion function %p.", exp.type, expand_f);
+                log_module(MAIN_LOG, LOG_ERROR, "Invalid exp.type %d from expansion function %p.", exp.type, (void*)expand_f);
                 break;
             }
             ipos = name_end - input.list;

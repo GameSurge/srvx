@@ -305,20 +305,20 @@ dict_sanity_check_node(struct dict_node *node, struct dict_sanity_struct *dss)
 {
     verify(node);
     if (!node->key) {
-        snprintf(dss->error, sizeof(dss->error), "Node %p had null key", node);
+        snprintf(dss->error, sizeof(dss->error), "Node %p had null key", (void*)node);
         return 1;
     }
     if (node->l) {
         if (dict_sanity_check_node(node->l, dss)) return 1;
         if (irccasecmp(node->l->key, node->key) >= 0) {
-            snprintf(dss->error, sizeof(dss->error), "Node %p's left child's key '%s' >= its key '%s'", node, node->l->key, node->key);
+            snprintf(dss->error, sizeof(dss->error), "Node %p's left child's key '%s' >= its key '%s'", (void*)node, node->l->key, node->key);
             return 1;
         }
     }
     if (node->r) {
         if (dict_sanity_check_node(node->r, dss)) return 1;
         if (irccasecmp(node->key, node->r->key) >= 0) {
-            snprintf(dss->error, sizeof(dss->error), "Node %p's right child's key '%s' <= its key '%s'", node, node->r->key, node->key);
+            snprintf(dss->error, sizeof(dss->error), "Node %p's right child's key '%s' <= its key '%s'", (void*)node, node->r->key, node->key);
             return 1;
         }
     }

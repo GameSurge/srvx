@@ -2064,17 +2064,17 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
     unsigned int n, ignore_user, dummy;
 
     if ((strlen(numeric) < 3) || (strlen(numeric) > 5)) {
-        log_module(MAIN_LOG, LOG_WARNING, "AddUser(%p, %s, ...): numeric %s wrong length!", uplink, nick, numeric);
+        log_module(MAIN_LOG, LOG_WARNING, "AddUser(%p, %s, ...): numeric %s wrong length!", (void*)uplink, nick, numeric);
         return NULL;
     }
 
     if (!uplink) {
-        log_module(MAIN_LOG, LOG_WARNING, "AddUser(%p, %s, ...): server for numeric %s doesn't exist!", uplink, nick, numeric);
+        log_module(MAIN_LOG, LOG_WARNING, "AddUser(%p, %s, ...): server for numeric %s doesn't exist!", (void*)uplink, nick, numeric);
         return NULL;
     }
 
     if (uplink != GetServerN(numeric)) {
-        log_module(MAIN_LOG, LOG_WARNING, "AddUser(%p, %s, ...): server for numeric %s differs from nominal uplink %s.", uplink, nick, numeric, uplink->name);
+        log_module(MAIN_LOG, LOG_WARNING, "AddUser(%p, %s, ...): server for numeric %s differs from nominal uplink %s.", (void*)uplink, nick, numeric, uplink->name);
         return NULL;
     }
 
@@ -2082,7 +2082,7 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
     if (dummy) {
         ++modes;
     } else if (!is_valid_nick(nick)) {
-        log_module(MAIN_LOG, LOG_WARNING, "AddUser(%p, %s, ...): invalid nickname detected.", uplink, nick);
+        log_module(MAIN_LOG, LOG_WARNING, "AddUser(%p, %s, ...): invalid nickname detected.", (void*)uplink, nick);
         return NULL;
     }
 
