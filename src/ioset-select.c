@@ -64,6 +64,7 @@ ioset_select_remove(struct io_fd *fd, int closed)
     FD_CLR(fd->fd, &read_fds);
     FD_CLR(fd->fd, &write_fds);
     FD_CLR(fd->fd, &except_fds);
+    fds[fd->fd] = NULL;
     (void)closed;
 }
 
