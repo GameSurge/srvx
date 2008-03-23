@@ -52,10 +52,6 @@
 #include <sys/wait.h>
 #endif
 
-#ifndef SIGCHLD
-#define SIGCHLD SIGCLD
-#endif
-
 #include "main-common.c"
 
 void sigaction_writedb(int x)

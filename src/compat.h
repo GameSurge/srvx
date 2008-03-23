@@ -151,4 +151,8 @@ const char *gai_strerror(int errcode);
 # endif
 #endif
 
+#ifndef SIGCHLD
+# define SIGCHLD SIGCLD
+#endif
+
 #endif /* COMPAT_H */
