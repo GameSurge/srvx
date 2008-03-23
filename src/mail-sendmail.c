@@ -68,9 +68,11 @@ send_flowed_text(FILE *where, const char *para)
 void
 mail_send(struct userNode *from, struct handle_info *to, const char *subject, const char *body, int first_time)
 {
+    struct sigaction sv;
     pid_t child;
     int infds[2], outfds[2];
-    const char *fromaddr, *str;
+    const char *fromaddr;
+    const char *str;
 
     /* Grab some config items first. */
     str = conf_get_data("mail/enable", RECDB_QSTRING);
@@ -92,6 +94,11 @@ mail_send(struct userNode *from, struct handle_info *to, const char *subject, co
     } else if (child > 0) {
         return;
     }
+    /* Replace the old SIGCHLD signal handler. */
+    memset(&sv, 0, sizeof(sv));
+    sigemptyset(&sv.sa_mask);
+    sv.sa_handler = SIG_IGN;
+    sigaction(SIGCHLD, &sv, NULL);
     /* We're in a child now; must _exit() to die properly. */
     if (pipe(infds) < 0) {
         log_module(MAIN_LOG, LOG_ERROR, "sendmail() child to %s couldn't pipe(infds): %s (%d)", to->email_addr, strerror(errno), errno);
