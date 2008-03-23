@@ -36,7 +36,9 @@
 extern int clock_skew;
 static struct io_fd **fds;
 static unsigned int fds_size;
-static fd_set read_fds, write_fds;
+static fd_set read_fds;
+static fd_set write_fds;
+static fd_set except_fds;
 
 static int
 ioset_select_init(void)
@@ -61,6 +63,7 @@ ioset_select_remove(struct io_fd *fd, int closed)
 {
     FD_CLR(fd->fd, &read_fds);
     FD_CLR(fd->fd, &write_fds);
+    FD_CLR(fd->fd, &except_fds);
     (void)closed;
 }
 
@@ -87,12 +90,11 @@ debug_fdsets(const char *msg, int nfds, fd_set *read_fds, fd_set *write_fds, fd_
     struct timeval now;
 
     for (pos=ii=0; ii<nfds; ++ii) {
-        flags  = (read_fds && FD_ISSET(ii, read_fds)) ? 1 : 0;
-        flags |= (write_fds && FD_ISSET(ii, write_fds)) ? 2 : 0;
-        flags |= (except_fds && FD_ISSET(ii, except_fds)) ? 4 : 0;
-        if (!flags)
-            continue;
-        pos += sprintf(buf+pos, " %d%s", ii, flag_text[flags]);
+        flags  = FD_ISSET(ii, read_fds) ? 1 : 0;
+        flags |= FD_ISSET(ii, write_fds) ? 2 : 0;
+        flags |= FD_ISSET(ii, except_fds) ? 4 : 0;
+        if (flags)
+            pos += sprintf(buf+pos, " %d%s", ii, flag_text[flags]);
     }
     gettimeofday(&now, NULL);
     if (select_timeout) {
@@ -114,20 +116,22 @@ ioset_select_loop(struct timeval *timeout)
     /* Set up read_fds and write_fds fdsets. */
     FD_ZERO(&read_fds);
     FD_ZERO(&write_fds);
+    FD_ZERO(&except_fds);
     max_fd = -1;
     for (nn=0; nn<fds_size; nn++) {
         if (!(fd = fds[nn]))
             continue;
         max_fd = nn;
         FD_SET(nn, &read_fds);
+        FD_SET(nn, &except_fds);
         if (fd_wants_writes(fd))
             FD_SET(nn, &write_fds);
     }
 
     /* Check for activity, update time. */
-    debug_fdsets("Entering select", max_fd+1, &read_fds, &write_fds, NULL, timeout);
+    debug_fdsets("Entering select", max_fd+1, &read_fds, &write_fds, &except_fds, timeout);
     select_result = select(max_fd + 1, &read_fds, &write_fds, NULL, timeout);
-    debug_fdsets("After select", max_fd+1, &read_fds, &write_fds, NULL, timeout);
+    debug_fdsets("After select", max_fd+1, &read_fds, &write_fds, &except_fds, timeout);
     now = time(NULL) + clock_skew;
     if (select_result < 0) {
         if (errno != EINTR) {
@@ -139,7 +143,7 @@ ioset_select_loop(struct timeval *timeout)
 
     /* Call back anybody that has connect or read activity and wants to know. */
     for (nn=0; nn<fds_size; nn++) {
-        ioset_events(fds[nn], FD_ISSET(nn, &read_fds), FD_ISSET(nn, &write_fds));
+        ioset_events(fds[nn], FD_ISSET(nn, &read_fds) | FD_ISSET(nn, &except_fds), FD_ISSET(nn, &write_fds));
     }
     return 0;
 }
