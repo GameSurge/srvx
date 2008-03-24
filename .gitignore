@@ -12,7 +12,12 @@ missing
 mkinstalldirs
 Makefile
 *.help
+*.log
+*.db
 config.log
 config.status
 libtool
 srvx
+srvx.conf
+srvx.pid
+sockcheck.conf

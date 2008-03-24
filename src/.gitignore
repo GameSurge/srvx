@@ -5,3 +5,4 @@ config.h
 git-version.c
 modules-list.h
 stamp-h1
+slab-read
