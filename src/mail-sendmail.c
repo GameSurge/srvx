@@ -94,10 +94,10 @@ mail_send(struct userNode *from, struct handle_info *to, const char *subject, co
     } else if (child > 0) {
         return;
     }
-    /* Replace the old SIGCHLD signal handler. */
+    /* Reset the SIGCHLD signal handler to the default. */
     memset(&sv, 0, sizeof(sv));
     sigemptyset(&sv.sa_mask);
-    sv.sa_handler = SIG_IGN;
+    sv.sa_handler = SIG_DFL;
     sigaction(SIGCHLD, &sv, NULL);
     /* We're in a child now; must _exit() to die properly. */
     if (pipe(infds) < 0) {
