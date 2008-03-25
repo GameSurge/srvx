@@ -134,7 +134,7 @@ ioq_grow(struct ioq *ioq) {
     return new_size - ioq->put;
 }
 
-extern struct io_engine io_engine_kqueue;
+extern struct io_engine io_engine_kevent;
 extern struct io_engine io_engine_epoll;
 extern struct io_engine io_engine_win32;
 extern struct io_engine io_engine_select;
@@ -145,9 +145,9 @@ ioset_init(void)
     if (engine) /* someone beat us to it */
         return;
 
-#if WITH_IOSET_KQUEUE
-    if (!engine && io_engine_kqueue.init())
-        engine = &io_engine_kqueue;
+#if WITH_IOSET_KEVENT
+    if (!engine && io_engine_kevent.init())
+        engine = &io_engine_kevent;
 #endif
 
 #if WITH_IOSET_EPOLL
