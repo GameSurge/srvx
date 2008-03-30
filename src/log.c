@@ -51,6 +51,7 @@ struct log_type {
     unsigned int log_count;
     unsigned int max_age;
     unsigned int max_count;
+    unsigned int depth;
     unsigned int default_set : 1;
 };
 
@@ -569,6 +570,9 @@ log_module(struct log_type *type, enum log_severity sev, const char *format, ...
 
     if (!type)
         return;
+    if (type->depth)
+        return;
+    ++type->depth;
     if (sev > LOG_FATAL) {
         log_module(MAIN_LOG, LOG_ERROR, "Illegal log_module severity %d", sev);
         return;
@@ -589,6 +593,7 @@ log_module(struct log_type *type, enum log_severity sev, const char *format, ...
         /* Special behavior before we start full operation */
         fprintf(stderr, "%s: %s\n", log_severity_names[sev], msgbuf);
     }
+    --type->depth;
     if (sev == LOG_FATAL) {
         assert(0 && "fatal message logged");
         _exit(1);
