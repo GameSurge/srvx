@@ -24,6 +24,10 @@
 #include "saxdb.h"
 #include "timeq.h"
 
+#if !defined(SAXDB_BUFFER_SIZE)
+# define SAXDB_BUFFER_SIZE (32 * 1024)
+#endif
+
 DEFINE_LIST(int_list, int)
 
 struct saxdb {
@@ -39,6 +43,7 @@ struct saxdb {
 };
 
 struct saxdb_context {
+    struct string_buffer obuf;
     FILE *output;
     unsigned int indent;
     struct int_list complex;
@@ -189,46 +194,77 @@ saxdb_write_all(void) {
     }
 }
 
-#define saxdb_put_char(DEST, CH) do { \
-    if (fputc(CH, (DEST)->output) == EOF) \
-        longjmp((DEST)->jbuf, errno); \
-    } while (0)
-#define saxdb_put_string(DEST, CH) do { \
-    if (fputs(CH, (DEST)->output) == EOF) \
-        longjmp((DEST)->jbuf, errno); \
-    } while (0)
+static void
+saxdb_flush(struct saxdb_context *dest) {
+    ssize_t nbw;
+    size_t ofs;
+    int fd;
 
-static inline void
-saxdb_put_nchars(struct saxdb_context *dest, const char *name, int len) {
-    while (len--)
-        if (fputc(*name++, dest->output) == EOF)
+    assert(dest->obuf.used <= dest->obuf.size);
+    fd = fileno(dest->output);
+    for (ofs = 0; ofs < dest->obuf.used; ofs += nbw) {
+        nbw = write(fd, dest->obuf.list + ofs, dest->obuf.used);
+        if (nbw < 0) {
             longjmp(dest->jbuf, errno);
+        }
+    }
+    dest->obuf.used = 0;
 }
 
 static void
+saxdb_put_char(struct saxdb_context *dest, char ch) {
+    dest->obuf.list[dest->obuf.used] = ch;
+    if (++dest->obuf.used == dest->obuf.size)
+        saxdb_flush(dest);
+}
+
+static void
+saxdb_put_nchars(struct saxdb_context *dest, const char *name, int len) {
+    int frag;
+    int ofs;
+
+    for (ofs = 0; ofs < len; ofs += frag) {
+        frag = dest->obuf.size - dest->obuf.used;
+        if (frag > len - ofs)
+            frag = len - ofs;
+        memcpy(dest->obuf.list + dest->obuf.used, name + ofs, frag);
+        dest->obuf.used += frag;
+        if (dest->obuf.used == dest->obuf.size)
+            saxdb_flush(dest);
+    }
+}
+
+#define saxdb_put_string(DEST, STR) do { \
+    saxdb_put_nchars((DEST), (STR), strlen(STR)); \
+    } while (0)
+
+static void
 saxdb_put_qstring(struct saxdb_context *dest, const char *str) {
-    const char *esc;
+    size_t ofs;
+    size_t span;
 
     assert(str);
     saxdb_put_char(dest, '"');
-    while ((esc = strpbrk(str, "\\\a\b\t\n\v\f\r\""))) {
-        if (esc != str)
-            saxdb_put_nchars(dest, str, esc-str);
-        saxdb_put_char(dest, '\\');
-        switch (*esc) {
-        case '\a': saxdb_put_char(dest, 'a'); break;
-        case '\b': saxdb_put_char(dest, 'b'); break;
-        case '\t': saxdb_put_char(dest, 't'); break;
-        case '\n': saxdb_put_char(dest, 'n'); break;
-        case '\v': saxdb_put_char(dest, 'v'); break;
-        case '\f': saxdb_put_char(dest, 'f'); break;
-        case '\r': saxdb_put_char(dest, 'r'); break;
-        case '\\': saxdb_put_char(dest, '\\'); break;
-        case '"': saxdb_put_char(dest, '"'); break;
+    for (ofs = 0; str[ofs] != '\0'; ) {
+        char stop;
+        span = strcspn(str + ofs, "\\\a\b\t\n\v\f\r\"");
+        saxdb_put_nchars(dest, str + ofs, span);
+        ofs += span;
+        stop = str[ofs];
+        switch (stop) {
+        case '\0': continue;
+        case '\a': stop = 'a'; break;
+        case '\b': stop = 'b'; break;
+        case '\t': stop = 't'; break;
+        case '\n': stop = 'n'; break;
+        case '\v': stop = 'v'; break;
+        case '\f': stop = 'f'; break;
+        case '\r': stop = 'r'; break;
         }
-        str = esc + 1;
+        saxdb_put_char(dest, '\\');
+        saxdb_put_char(dest, stop);
+        ofs++;
     }
-    saxdb_put_string(dest, str);
     saxdb_put_char(dest, '"');
 }
 
@@ -557,6 +593,8 @@ saxdb_open_context(FILE *file) {
     assert(file);
     ctx = calloc(1, sizeof(*ctx));
     ctx->output = file;
+    ctx->obuf.size = SAXDB_BUFFER_SIZE;
+    ctx->obuf.list = calloc(1, ctx->obuf.size);
     int_list_init(&ctx->complex);
 
     return ctx;
@@ -571,7 +609,9 @@ saxdb_jmp_buf(struct saxdb_context *ctx) {
 void
 saxdb_close_context(struct saxdb_context *ctx, int close_file) {
     assert(ctx->complex.used == 0);
+    saxdb_flush(ctx);
     int_list_clean(&ctx->complex);
+    free(ctx->obuf.list);
     if (close_file)
         fclose(ctx->output);
     else
