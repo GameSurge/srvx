@@ -1835,15 +1835,13 @@ static MODCMD_FUNC(cmd_dump_messages) {
         return 0;
     }
     if ((res = setjmp(*saxdb_jmp_buf(ctx))) != 0) {
-        saxdb_close_context(ctx);
-        fclose(pf);
+        saxdb_close_context(ctx, 1);
         reply("MCMSG_MESSAGE_DUMP_FAILED", strerror(res));
         return 0;
     } else {
         for (it = dict_first(lang_C->messages); it; it = iter_next(it))
             saxdb_write_string(ctx, iter_key(it), iter_data(it));
-        saxdb_close_context(ctx);
-        fclose(pf);
+        saxdb_close_context(ctx, 1);
         reply("MCMSG_MESSAGES_DUMPED", fname);
         return 1;
     }

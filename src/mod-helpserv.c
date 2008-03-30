@@ -726,8 +726,7 @@ static void helpserv_log_request(struct helpserv_request *req, const char *reaso
         saxdb_write_string(ctx, KEY_REQUEST_CLOSEREASON, reason);
         saxdb_write_string_list(ctx, KEY_REQUEST_TEXT, req->text);
         saxdb_end_record(ctx);
-        saxdb_close_context(ctx);
-        fflush(reqlog_f);
+        saxdb_close_context(ctx, 0);
     }
 }
 

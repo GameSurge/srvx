@@ -126,37 +126,34 @@ saxdb_register(const char *name, saxdb_reader_func_t *reader, saxdb_writer_func_
 
 static int
 saxdb_write_db(struct saxdb *db) {
-    struct saxdb_context ctx;
+    struct saxdb_context *ctx;
+    FILE *output;
     char tmp_fname[MAXLEN];
     int res, res2;
     unsigned long start, finish;
 
     assert(db->filename);
     sprintf(tmp_fname, "%s.new", db->filename);
-    memset(&ctx, 0, sizeof(ctx));
-    ctx.output = fopen(tmp_fname, "w+");
-    int_list_init(&ctx.complex);
-    if (!ctx.output) {
+    output = fopen(tmp_fname, "w+");
+    if (!output) {
         log_module(MAIN_LOG, LOG_ERROR, "Unable to write to %s: %s", tmp_fname, strerror(errno));
-        int_list_clean(&ctx.complex);
         return 1;
     }
+    ctx = saxdb_open_context(output);
     start = time(NULL);
-    if ((res = setjmp(*saxdb_jmp_buf(&ctx))) || (res2 = db->writer(&ctx))) {
+    if ((res = setjmp(*saxdb_jmp_buf(ctx))) || (res2 = db->writer(ctx))) {
         if (res) {
             log_module(MAIN_LOG, LOG_ERROR, "Error writing to %s: %s", tmp_fname, strerror(res));
         } else {
             log_module(MAIN_LOG, LOG_ERROR, "Internal error %d while writing to %s", res2, tmp_fname);
         }
-        int_list_clean(&ctx.complex);
-        fclose(ctx.output);
+        ctx->complex.used = 0; /* Squelch asserts about unbalanced output. */
+        saxdb_close_context(ctx, 1);
         remove(tmp_fname);
         return 2;
     }
     finish = time(NULL);
-    assert(ctx.complex.used == 0);
-    int_list_clean(&ctx.complex);
-    fclose(ctx.output);
+    saxdb_close_context(ctx, 1);
     if (rename(tmp_fname, db->filename) < 0) {
         log_module(MAIN_LOG, LOG_ERROR, "Unable to rename %s to %s: %s", tmp_fname, db->filename, strerror(errno));
     }
@@ -537,21 +534,19 @@ write_database_helper(struct saxdb_context *ctx, struct dict *db) {
 
 int
 write_database(FILE *out, struct dict *db) {
-    struct saxdb_context ctx;
+    struct saxdb_context *ctx;
     int res;
 
-    ctx.output = out;
-    ctx.indent = 0;
-    int_list_init(&ctx.complex);
-    if (!(res = setjmp(*saxdb_jmp_buf(&ctx)))) {
-        write_database_helper(&ctx, db);
+    ctx = saxdb_open_context(out);
+    if (!(res = setjmp(*saxdb_jmp_buf(ctx)))) {
+        write_database_helper(ctx, db);
     } else {
         log_module(MAIN_LOG, LOG_ERROR, "Exception %d caught while writing to stream", res);
-        int_list_clean(&ctx.complex);
+        ctx->complex.used = 0; /* Squelch asserts about unbalanced output. */
+        saxdb_close_context(ctx, 0);
         return 1;
     }
-    assert(ctx.complex.used == 0);
-    int_list_clean(&ctx.complex);
+    saxdb_close_context(ctx, 0);
     return 0;
 }
 
@@ -574,8 +569,12 @@ saxdb_jmp_buf(struct saxdb_context *ctx) {
 
 
 void
-saxdb_close_context(struct saxdb_context *ctx) {
+saxdb_close_context(struct saxdb_context *ctx, int close_file) {
     assert(ctx->complex.used == 0);
     int_list_clean(&ctx->complex);
+    if (close_file)
+        fclose(ctx->output);
+    else
+        fflush(ctx->output);
     free(ctx);
 }

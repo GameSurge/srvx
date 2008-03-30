@@ -52,6 +52,6 @@ void saxdb_write_sint(struct saxdb_context *dest, const char *name, long value);
 /* For doing db writing by hand */
 struct saxdb_context *saxdb_open_context(FILE *f);
 jmp_buf *saxdb_jmp_buf(struct saxdb_context *ctx);
-void saxdb_close_context(struct saxdb_context *ctx);
+void saxdb_close_context(struct saxdb_context *ctx, int close_file);
 
 #endif /* !defined(DBMGR_H) */
