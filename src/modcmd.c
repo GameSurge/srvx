@@ -1834,8 +1834,7 @@ static MODCMD_FUNC(cmd_dump_messages) {
         reply("MSG_INTERNAL_FAILURE");
         return 0;
     }
-    if ((res = setjmp(ctx->jbuf)) != 0) {
-        ctx->complex.used = 0; /* to avoid false assert()s in close */
+    if ((res = setjmp(*saxdb_jmp_buf(ctx))) != 0) {
         saxdb_close_context(ctx);
         fclose(pf);
         reply("MCMSG_MESSAGE_DUMP_FAILED", strerror(res));

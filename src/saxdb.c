@@ -38,6 +38,13 @@ struct saxdb {
     struct saxdb *prev;
 };
 
+struct saxdb_context {
+    FILE *output;
+    unsigned int indent;
+    struct int_list complex;
+    jmp_buf jbuf;
+};
+
 #define COMPLEX(CTX) ((CTX)->complex.used ? ((CTX)->complex.list[(CTX)->complex.used-1]) : 1)
 
 static struct saxdb *last_db;
@@ -135,7 +142,7 @@ saxdb_write_db(struct saxdb *db) {
         return 1;
     }
     start = time(NULL);
-    if ((res = setjmp(ctx.jbuf)) || (res2 = db->writer(&ctx))) {
+    if ((res = setjmp(*saxdb_jmp_buf(&ctx))) || (res2 = db->writer(&ctx))) {
         if (res) {
             log_module(MAIN_LOG, LOG_ERROR, "Error writing to %s: %s", tmp_fname, strerror(res));
         } else {
@@ -536,7 +543,7 @@ write_database(FILE *out, struct dict *db) {
     ctx.output = out;
     ctx.indent = 0;
     int_list_init(&ctx.complex);
-    if (!(res = setjmp(ctx.jbuf))) {
+    if (!(res = setjmp(*saxdb_jmp_buf(&ctx)))) {
         write_database_helper(&ctx, db);
     } else {
         log_module(MAIN_LOG, LOG_ERROR, "Exception %d caught while writing to stream", res);
@@ -559,6 +566,12 @@ saxdb_open_context(FILE *file) {
 
     return ctx;
 }
+
+jmp_buf *
+saxdb_jmp_buf(struct saxdb_context *ctx) {
+    return &ctx->jbuf;
+}
+
 
 void
 saxdb_close_context(struct saxdb_context *ctx) {

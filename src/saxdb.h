@@ -26,15 +26,7 @@
 DECLARE_LIST(int_list, int);
 
 struct saxdb;
-/* This definition should ONLY be used so callers of
- * saxdb_open_context() can initialize jbuf properly. */
-struct saxdb_context {
-    FILE *output;
-    unsigned int indent;
-    struct int_list complex;
-    jmp_buf jbuf;
-};
-
+struct saxdb_context;
 
 #define SAXDB_READER(NAME) int NAME(struct dict *db)
 typedef SAXDB_READER(saxdb_reader_func_t);
@@ -59,6 +51,7 @@ void saxdb_write_sint(struct saxdb_context *dest, const char *name, long value);
 
 /* For doing db writing by hand */
 struct saxdb_context *saxdb_open_context(FILE *f);
+jmp_buf *saxdb_jmp_buf(struct saxdb_context *ctx);
 void saxdb_close_context(struct saxdb_context *ctx);
 
 #endif /* !defined(DBMGR_H) */

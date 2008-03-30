@@ -705,7 +705,7 @@ static void helpserv_log_request(struct helpserv_request *req, const char *reaso
     if (!(ctx = saxdb_open_context(reqlog_f)))
         return;
     sprintf(key, "%s-%lu-%lu", req->hs->helpserv->nick, (unsigned long)req->opened, req->id);
-    if ((res = setjmp(ctx->jbuf)) != 0) {
+    if ((res = setjmp(*saxdb_jmp_buf(ctx))) != 0) {
         log_module(HS_LOG, LOG_ERROR, "Unable to log helpserv request: %s.", strerror(res));
     } else {
         saxdb_start_record(ctx, key, 1);
