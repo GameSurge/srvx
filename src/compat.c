@@ -16,7 +16,7 @@
 #endif
 
 #if !defined(HAVE_GETTIMEOFDAY) && defined(HAVE_FTIME)
-extern int gettimeofday(struct timeval * tv, struct timezone * tz)
+int gettimeofday(struct timeval * tv, struct timezone * tz)
 {
     if (!tv)
     {
@@ -35,8 +35,8 @@ extern int gettimeofday(struct timeval * tv, struct timezone * tz)
 }
 #endif
 
-#ifndef HAVE_GETLOCALTIME_R
-extern struct tm *localtime_r(const time_t *timep, struct tm *result)
+#if !defined(HAVE_GETLOCALTIME_R) && defined(HAVE_LOCALTIME)
+struct tm *localtime_r(const time_t *timep, struct tm *result)
 {
     memcpy(result, localtime(timep), sizeof(*result));
     return result;
@@ -44,7 +44,7 @@ extern struct tm *localtime_r(const time_t *timep, struct tm *result)
 #endif
 
 #ifndef HAVE_MEMCPY
-extern void * memcpy(void * dest, void const * src, unsigned long n)
+void * memcpy(void * dest, void const * src, unsigned long n)
 {
 /* very slow, your fault for not having memcpy()*/
     unsigned char * td=dest;
@@ -62,7 +62,7 @@ extern void * memcpy(void * dest, void const * src, unsigned long n)
 
 #ifndef HAVE_MEMSET
 /* very slow, deal with it */
-extern void * memset(void * dest, int c, unsigned long n)
+void * memset(void * dest, int c, unsigned long n)
 {
     unsigned char * temp=dest;
     unsigned long   i;
@@ -77,7 +77,7 @@ extern void * memset(void * dest, int c, unsigned long n)
 #endif
 
 #ifndef HAVE_STRDUP
-extern char * strdup(char const * str)
+char * strdup(char const * str)
 {
     char * out;
 
@@ -91,7 +91,7 @@ extern char * strdup(char const * str)
 #endif
 
 #ifndef HAVE_STRERROR
-extern char const * strerror(int errornum)
+char const * strerror(int errornum)
 {
     if (errornum==0)
         return "No error";
@@ -407,8 +407,6 @@ int getaddrinfo(const char *node, const char *service, const struct addrinfo *hi
     return 0;
 }
 
-/* TODO: implement fallback getnameinfo() */
-
 void freeaddrinfo(struct addrinfo *res)
 {
     struct addrinfo *next;
@@ -417,7 +415,6 @@ void freeaddrinfo(struct addrinfo *res)
         free(res);
     }
 }
-
 #endif
 
 #ifndef HAVE_GAI_STRERROR
@@ -462,5 +459,14 @@ const char *gai_strerror(int errcode)
 #endif
     }
     return "Unknown GAI_* error";
+}
+#endif
+
+#ifndef HAVE_GETNAMEINFO
+int getnameinfo(const struct sockaddr *sa, socklen_t salen,
+                char *host, size_t hostlen,
+                char *serv, size_t servlen, int flags)
+{
+    /* TODO: implement fallback getnameinfo() */
 }
 #endif

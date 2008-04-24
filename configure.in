@@ -69,7 +69,7 @@ AC_HEADER_TIME
 AC_STRUCT_TM
 
 dnl Would rather not bail on headers, BSD has alot of the functions elsewhere. -Jedi
-AC_CHECK_HEADERS(fcntl.h malloc.h netdb.h arpa/inet.h netinet/in.h sys/resource.h sys/timeb.h sys/times.h sys/param.h sys/socket.h sys/time.h sys/types.h sys/wait.h unistd.h getopt.h memory.h regex.h arpa/inet.h sys/mman.h sys/stat.h dirent.h sys/epoll.h sys/event.h,,)
+AC_CHECK_HEADERS(fcntl.h malloc.h netdb.h arpa/inet.h netinet/in.h sys/resource.h sys/timeb.h sys/times.h sys/param.h sys/socket.h sys/time.h sys/types.h sys/wait.h unistd.h getopt.h memory.h regex.h arpa/inet.h sys/mman.h sys/stat.h dirent.h sys/epoll.h sys/event.h stdint.h,,)
 
 dnl portability stuff, hurray! -Jedi
 AC_CHECK_MEMBER([struct sockaddr.sa_len],
@@ -83,7 +83,7 @@ AC_CHECK_MEMBER([struct addrinfo.ai_flags],
 #include <netdb.h>])
 
 dnl We have fallbacks in case these are missing, so just check for them.
-AC_CHECK_FUNCS(freeaddrinfo getaddrinfo gai_strerror getnameinfo getpagesize memcpy memset strdup strerror strsignal localtime_r setrlimit getopt getopt_long regcomp regexec regfree sysconf inet_aton epoll_create kqueue kevent select gettimeofday times GetProcessTimes mprotect,,)
+AC_CHECK_FUNCS(freeaddrinfo getaddrinfo gai_strerror getnameinfo getpagesize memcpy memset strdup strerror strsignal localtime localtime_r setrlimit getopt getopt_long regcomp regexec regfree sysconf inet_aton epoll_create kqueue kevent select gettimeofday times GetProcessTimes mprotect,,)
 
 dnl Check for the fallbacks for functions missing above.
 if test $ac_cv_func_gettimeofday = no; then
@@ -264,6 +264,16 @@ if test "x$withval" = xyes ; then
   AC_DEFINE(WITH_IOSET_KEVENT, 1, [Define if using the kevent I/O backend])
   MODULE_OBJS="$MODULE_OBJS ioset-kevent.\$(OBJEXT)"
   IOMUXES="$IOMUXES kevent"
+fi
+
+AC_ARG_WITH([win32],
+[  --with-win32             Enables the Win32 I/O backend],
+[],
+[withval="no"])
+if test "x$withval" = xyes ; then
+  AC_DEFINE(WITH_IOSET_WIN32, 1, [Define if using the Win32 I/O backend])
+  MODULE_OBJS="$MODULE_OBJS ioset-win32.\$(OBJEXT)"
+  IOMUXES="$IOMUXES win32"
 fi
 
 IOMUXES=`echo $IOMUXES | sed 's/^ +//'`

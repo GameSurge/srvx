@@ -57,6 +57,10 @@ char *alloca();
 #include <sys/socket.h>
 #endif
 
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
+
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif
@@ -73,6 +77,11 @@ char *alloca();
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+/* Cygwin (for example) doesn't define LINE_MAX, although mingw does. */
+#if !defined(LINE_MAX)
+# define LINE_MAX 2048
 #endif
 
 #ifdef HAVE_VA_COPY
@@ -130,15 +139,17 @@ struct addrinfo {
 #endif /* !defined(HAVE_STRUCT_ADDRINFO) */
 
 #ifndef HAVE_GETADDRINFO
-
 int getaddrinfo(const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res);
-int getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags);
 void freeaddrinfo(struct addrinfo *res);
-
 #endif
 
 #ifndef HAVE_GAI_STRERROR
 const char *gai_strerror(int errcode);
+#endif
+
+#ifndef HAVE_GETNAMEINFO
+#define NI_NUMERICHOST 1
+int getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags);
 #endif
 
 #ifndef EINPROGRESS

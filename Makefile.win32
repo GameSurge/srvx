@@ -6,6 +6,7 @@ VPATH=.
 # CC=i586-mingw32msvc-cc
 CPPFLAGS=-I$(VPATH) -Isrc
 CFLAGS=-mno-cygwin -W -Wall -O2
+LDFLAGS=-mno-cygwin
 EXE_EXT=.exe
 LIBS=-lws2_32
 
@@ -64,7 +65,7 @@ SRVX_OBJS = \
 	$(addsuffix .o,$(addprefix src/mod-,$(MODULES)))
 
 srvx$(EXE_EXT): src/config.h src/modules-list.h $(RX_OBJS) $(SRVX_OBJS)
-	$(CC) -o $@ $(RX_OBJS) $(SRVX_OBJS) $(LIBS)
+	$(CC) -o $@ $(LDFLAGS) $(RX_OBJS) $(SRVX_OBJS) $(LIBS)
 src/config.h: $(VPATH)/src/config.h.win32
 	cp $< $@
 src/modules-list.h:

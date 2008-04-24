@@ -55,6 +55,9 @@
 /* Define to 1 if you have the `ftime' function. */
 #define HAVE_FTIME 1
 
+/* Define to 1 if you have the `gai_strerror' function. */
+#define HAVE_GAI_STRERROR 1
+
 /* Define to 1 if you have the <gc/gc.h> header file. */
 #undef HAVE_GC_GC_H
 
@@ -63,9 +66,6 @@
 
 /* Define to 1 if you have the `getnameinfo' function. */
 #define HAVE_GETNAMEINFO 1
-
-/* Define to 1 if you have the `getnameinfo' function. */
-#define HAVE_GAI_STRERROR 1
 
 /* Define to 1 if you have the `getopt' function. */
 #undef HAVE_GETOPT
@@ -90,6 +90,12 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
+
+/* Define to 1 if you have the `kevent' function. */
+#undef HAVE_KEVENT
+
+/* Define to 1 if you have the `kqueue' function. */
+#undef HAVE_KQUEUE
 
 /* Define to 1 if you have the `dl' library (-ldl). */
 #undef HAVE_LIBDL
@@ -133,6 +139,9 @@
 /* Define to 1 if you have the <mpatrol.h> header file. */
 #undef HAVE_MPATROL_H
 
+/* Define to 1 if you have the `mprotect' function. */
+#undef HAVE_MPROTECT
+
 /* Define to 1 if you have the <netdb.h> header file. */
 #undef HAVE_NETDB_H
 
@@ -152,7 +161,7 @@
 #undef HAVE_REGFREE
 
 /* Define to 1 if you have the `select' function. */
-#undef HAVE_SELECT
+#define HAVE_SELECT 1
 
 /* Define to 1 if you have the `setrlimit' function. */
 #undef HAVE_SETRLIMIT
@@ -207,6 +216,9 @@
 
 /* Define to 1 if you have the <sys/epoll.h> header file. */
 #undef HAVE_SYS_EPOLL_H
+
+/* Define to 1 if you have the <sys/event.h> header file. */
+#undef HAVE_SYS_EVENT_H
 
 /* Define to 1 if you have the <sys/mman.h> header file. */
 #undef HAVE_SYS_MMAN_H
@@ -294,14 +306,17 @@
 /* Version number of package */
 #define VERSION 1.4
 
-/* Define if using the Win32 I/O backend */
-#define WITH_IOSET_WIN32 1
-
 /* Define if using the epoll I/O backend */
 #undef WITH_IOSET_EPOLL
 
+/* Define if using the kevent I/O backend */
+#undef WITH_IOSET_KEVENT
+
 /* Define if using the select() I/O backend */
-#undef WITH_IOSET_SELECT
+#define WITH_IOSET_SELECT 1
+
+/* Define if using the Win32 I/O backend */
+#define WITH_IOSET_WIN32 1
 
 /* Define if using the Boehm GC to garbage collect and check memory leaks */
 #undef WITH_MALLOC_BOEHM_GC
@@ -320,6 +335,12 @@
 
 /* Define if using the system's malloc */
 #undef WITH_MALLOC_SYSTEM
+
+/* Define if using the Bahamut dialect of IRC */
+#undef WITH_PROTOCOL_BAHAMUT
+
+/* Define if using the P10 dialect of IRC */
+#define WITH_PROTOCOL_P10 1
 
 /* Define to empty if `const' does not conform to ANSI C. */
 #undef const
