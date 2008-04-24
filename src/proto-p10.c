@@ -289,8 +289,8 @@ static unsigned int num_privmsg_funcs;
 static privmsg_func_t *notice_funcs;
 static unsigned int num_notice_funcs;
 static struct dict *unbursted_channels;
-static char *his_servername;
-static char *his_servercomment;
+static const char *his_servername;
+static const char *his_servercomment;
 
 static struct userNode *AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *numeric, const char *userinfo, unsigned long timestamp, const char *realip);
 
@@ -903,7 +903,7 @@ static CMD_FUNC(cmd_whois)
         log_module(MAIN_LOG, LOG_ERROR, "Could not find WHOIS origin user %s", origin);
         return 0;
     }
-    if(!(who = GetUserH(argv[2]))) {
+    if (!(who = GetUserH(argv[2]))) {
         irc_numeric(from, ERR_NOSUCHNICK, "%s@%s :No such nick", argv[2], self->name);
         return 1;
     }
@@ -1609,13 +1609,13 @@ parse_cleanup(void)
     for (nn=0; nn<dead_users.used; nn++)
         free_user(dead_users.list[nn]);
     userList_clean(&dead_users);
-    free(his_servername);
-    free(his_servercomment);
 }
 
 static void
 p10_conf_reload(void) {
     hidden_host_suffix = conf_get_data("server/hidden_host", RECDB_QSTRING);
+    his_servername = conf_get_data("server/his_servername", RECDB_QSTRING);
+    his_servercomment = conf_get_data("server/his_servercomment", RECDB_QSTRING);
 }
 
 static void
@@ -1652,11 +1652,6 @@ init_parse(void)
         inttobase64(numer, (numnick << 12) + (usermask & 0x00fff), 3);
     else
         inttobase64(numer, (numnick << 18) + (usermask & 0x3ffff), 5);
-
-    str = conf_get_data("server/his_servername", RECDB_QSTRING);
-    his_servername = str ? strdup(str) : NULL;
-    str = conf_get_data("server/his_servercomment", RECDB_QSTRING);
-    his_servercomment = str ? strdup(str) : NULL;
 
     str = conf_get_data("server/hostname", RECDB_QSTRING);
     desc = conf_get_data("server/description", RECDB_QSTRING);
