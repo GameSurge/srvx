@@ -24,12 +24,6 @@
 #include "compat.h"
 #include "proto.h"
 
-#if !defined(HAVE_LOCALTIME_R) && !defined(__CYGWIN__)
-extern struct tm *localtime_r(const time_t *clock, struct tm *res);
-#elif defined(__CYGWIN__)
-# define localtime_r(clock, res) memcpy(res, localtime(clock), sizeof(struct tm));
-#endif
-
 #ifndef true
 #define true 1
 #endif

@@ -363,7 +363,7 @@ int getaddrinfo(const char *node, const char *service, const struct addrinfo *hi
     struct sockaddr_in sin;
 
     if (hints && hints->ai_family != AF_INET)
-        return 1;
+        return EAI_FAMILY;
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
 
@@ -371,17 +371,17 @@ int getaddrinfo(const char *node, const char *service, const struct addrinfo *hi
         if (hints && hints->ai_flags & AI_NUMERICHOST) {
 #if HAVE_INET_ATON
             if (!inet_aton(node, &sin.sin_addr))
-                return 2;
+                return EAI_NONAME;
 #else
             sin.sin_addr.s_addr = inet_addr(node);
             if (sin.sin_addr.s_addr == INADDR_NONE)
-                return 2;
+                return EAI_NONAME;
 #endif
         } else {
             struct hostent *he;
             he = gethostbyname(node);
             if (!he)
-                return 3;
+                return EAI_NONAME;
             memcpy(&sin.sin_addr, he->h_addr, he->h_length);
         }
     } else if (hints && hints->ai_flags & AI_PASSIVE) {
@@ -393,7 +393,7 @@ int getaddrinfo(const char *node, const char *service, const struct addrinfo *hi
     if (!service)
         sin.sin_port = ntohs(0);
     else if (!(sin.sin_port = ntohs(atoi(service))))
-        return 4;
+        return EAI_NONAME;
 
     *res = calloc(1, sizeof(**res) + sizeof(sin));
     (*res)->ai_family = sin.sin_family;
@@ -467,6 +467,56 @@ int getnameinfo(const struct sockaddr *sa, socklen_t salen,
                 char *host, size_t hostlen,
                 char *serv, size_t servlen, int flags)
 {
-    /* TODO: implement fallback getnameinfo() */
+    if (sa->sa_family == AF_INET) {
+	const struct sockaddr_in *sin;
+	int tmp;
+
+	/* This comparison is a bit screwy looking, but socklen_t is
+	 * signed on some platforms and unsigned on others, so gcc
+	 * will complain if we use "salen < 0".
+	 */
+	if (salen < 1 || (size_t)salen < sizeof(*sin))
+	    return EAI_FAMILY;
+	sin = (const struct sockaddr_in *)sa;
+	tmp = snprintf(serv, servlen, "%d", ntohs(sin->sin_port));
+	if (tmp < 1 || (size_t)tmp >= servlen)
+	    return EAI_OVERFLOW;
+	if (0 == (flags & NI_NUMERICHOST)) {
+	    struct hostent *he;
+
+	    /* Try to get host entry by address.
+	     * The first argument should be void *, but Cygwin is
+	     * apparently wandering around the pre-C89 era.
+	     */
+	    he = gethostbyaddr((const char*)&sin->sin_addr, sa->sa_family, SOCK_STREAM);
+	    if (he != NULL) {
+		if (servlen <= strlen(he->h_name))
+		    return EAI_OVERFLOW;
+		safestrncpy(serv, he->h_name, servlen);
+		return 0;
+	    }
+
+	    /* If we couldn't, why did we fail, and what should we do? */
+	    switch (h_errno) {
+	    case NO_RECOVERY:
+		return EAI_FAIL;
+	    case TRY_AGAIN:
+		return EAI_AGAIN;
+	    default:
+		/* Fall through and out to inet_ntop() path. */
+		break;
+	    }
+	}
+
+	/* Try to get numeric representation of address. */
+	if (inet_ntop(sa->sa_family, &sin->sin_addr, host, hostlen) != NULL)
+	    return 0;
+	else if (errno == ENOSPC)
+	    return EAI_OVERFLOW;
+	else
+	    return EAI_FAIL;
+    }
+    else
+	return EAI_FAMILY;
 }
 #endif

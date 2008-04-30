@@ -97,7 +97,7 @@ struct timezone;
 extern int gettimeofday(struct timeval * tv, struct timezone * tz);
 #endif
 
-#ifndef HAVE_GETLOCALTIME_R
+#ifndef HAVE_LOCALTIME_R
 extern struct tm *localtime_r(const time_t *timep, struct tm *result);
 #endif
 
@@ -147,9 +147,20 @@ void freeaddrinfo(struct addrinfo *res);
 const char *gai_strerror(int errcode);
 #endif
 
+#ifndef EAI_FAMILY
+# define EAI_FAMILY -1
+# define EAI_NONAME -2
+# define EAI_OVERFLOW -3
+# define EAI_FAIL -4
+# define EAI_AGAIN -5
+#endif
+
 #ifndef HAVE_GETNAMEINFO
+
 #define NI_NUMERICHOST 1
+
 int getnameinfo(const struct sockaddr *sa, socklen_t salen, char *host, size_t hostlen, char *serv, size_t servlen, int flags);
+
 #endif
 
 #ifndef EINPROGRESS
