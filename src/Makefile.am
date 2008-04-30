@@ -39,7 +39,7 @@ EXTRA_srvx_SOURCES = \
 	alloc-srvx.c \
 	config.h.win32 \
 	ioset-epoll.c \
-	ioset-kqueue.c \
+	ioset-kevent.c \
 	ioset-select.c \
 	ioset-win32.c \
 	mail-common.c \
