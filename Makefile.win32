@@ -41,11 +41,13 @@ SRVX_OBJS = \
 	src/compat.o \
 	src/conf.o \
 	src/dict-splay.o \
+	src/git-version.o \
 	src/gline.o \
         src/global.o \
 	src/hash.o \
 	src/heap.o \
 	src/helpfile.o \
+	src/ioset-select.o \
 	src/ioset-win32.o \
 	src/ioset.o \
 	src/log.o \
