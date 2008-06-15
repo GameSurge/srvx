@@ -1982,7 +1982,7 @@ opserv_join_check(struct modeNode *mNode)
 
     dict_foreach(opserv_channel_alerts, alert_check_user, user);
 
-    if (channel->bad_channel) {
+    if (opserv && channel->bad_channel) {
         opserv_debug("Found $b%s$b in bad-word channel $b%s$b; removing the user.", user->nick, channel->name);
         if (channel->name[0] != '#')
             DelUser(user, opserv, 1, "OSMSG_ILLEGAL_KILL_REASON");
