@@ -250,6 +250,7 @@ void tools_cleanup(void);
 int irccasecmp(const char *stra, const char *strb);
 int ircncasecmp(const char *stra, const char *strb, unsigned int len);
 const char *irccasestr(const char *haystack, const char *needle);
+char *ircstrlower(char *str);
 
 DECLARE_LIST(string_buffer, char);
 void string_buffer_append_string(struct string_buffer *buf, const char *tail);

@@ -385,6 +385,14 @@ irccasestr(const char *haystack, const char *needle) {
     return NULL;
 }
 
+char *
+ircstrlower(char *str) {
+    size_t ii;
+    for (ii = 0; str[ii] != '\0'; ++ii)
+        str[ii] = tolower(str[ii]);
+    return str;
+}
+
 int
 split_line(char *line, int irc_colon, int argv_size, char *argv[])
 {
