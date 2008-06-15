@@ -39,6 +39,5 @@ int heap_remove_pred(heap_t heap, int (*pred)(void *key, void *data, void *extra
 
 /* int strcmp(const char *s1, const char *s2); from <string.h> can be used */
 int ulong_comparator(const void*, const void*);
-int timeval_comparator(const void*, const void*);
 
 #endif /* ndef HEAP_H */
