@@ -138,7 +138,7 @@ static void smtp_fill_name(char *namebuf, size_t buflen)
     }
     res = getnameinfo(sa, sa_len, namebuf, buflen, NULL, 0, NI_NUMERICHOST);
     if (res != 0) {
-        log_module(MAIL_LOG, LOG_ERROR, "Unable to get text form of socket name: %s", strerror(errno));
+        log_module(MAIL_LOG, LOG_ERROR, "Unable to get text form of socket name: %s", gai_strerror(res));
     }
 }
 

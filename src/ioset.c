@@ -267,8 +267,9 @@ ioset_connect(struct sockaddr *local, unsigned int sa_size, const char *peer, un
     hints.ai_family = local ? local->sa_family : 0;
     hints.ai_socktype = SOCK_STREAM;
     snprintf(portnum, sizeof(portnum), "%u", port);
-    if (getaddrinfo(peer, portnum, &hints, &ai)) {
-        log_module(MAIN_LOG, LOG_ERROR, "getaddrinfo(%s, %s) failed.", peer, portnum);
+    res = getaddrinfo(peer, portnum, &hints, &ai);
+    if (res != 0) {
+        log_module(MAIN_LOG, LOG_ERROR, "getaddrinfo(%s, %s) failed: %s.", peer, portnum, gai_strerror(res));
         return NULL;
     }
 
