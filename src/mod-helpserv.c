@@ -241,7 +241,7 @@ static const struct message_entry msgtab[] = {
     { "HSMSG_PAGE_HELPER_GONE_2", "Request ID#%lu from $b%s$b (Not authed) $bhas been unassigned$b, as its helper, %s has %s." },
     { "HSMSG_PAGE_HELPER_GONE_3", "Request ID#%lu from an offline user (Account %s) $bhas been unassigned$b, as its helper, %s has %s." },
     { "HSMSG_PAGE_HELPER_GONE_4", "Request ID#%lu from an offline user (No account) $bhas been unassigned$b, as its helper, %s has %s." },
-    { "HSMSG_PAGE_WHINE_HEADER", "$b%u unhandled request(s)$b waiting at least $b%s$b (%u total)" },
+    { "HSMSG_PAGE_WHINE_HEADER", "$b%u unhandled request(s)$b waiting at least $b%s$b (%u unhandled, %u total)" },
     { "HSMSG_PAGE_IDLE_HEADER", "$b%u users$b in %s $bidle at least %s$b:" },
     { "HSMSG_PAGE_EMPTYALERT", "$b%s has no helpers present (%u unhandled request(s))$b" },
     { "HSMSG_PAGE_ONLYTRIALALERT", "$b%s has no full helpers present (%d trial(s) present; %u unhandled request(s))$b" },
@@ -2454,7 +2454,7 @@ static void run_whine_interval(void *data) {
                 tbl.contents[i][3] = strdup(unh_time);
             }
 
-            helpserv_page(PGSRC_ALERT, "HSMSG_PAGE_WHINE_HEADER", reqlist.used, strwhinedelay, queuesize);
+            helpserv_page(PGSRC_ALERT, "HSMSG_PAGE_WHINE_HEADER", reqlist.used, strwhinedelay, queuesize, dict_size(hs->requests));
             table_send(hs->helpserv, hs->page_targets[PGSRC_ALERT]->name, 0, page_type_funcs[hs->page_types[PGSRC_ALERT]], tbl);
 
             for (i=1; i <= reqlist.used; i++) {
@@ -2462,7 +2462,7 @@ static void run_whine_interval(void *data) {
                 free((char *)tbl.contents[i][3]);
             }
 #else
-            helpserv_page(PGSRC_ALERT, "HSMSG_PAGE_WHINE_HEADER", reqlist.used, strwhinedelay, queuesize);
+            helpserv_page(PGSRC_ALERT, "HSMSG_PAGE_WHINE_HEADER", reqlist.used, strwhinedelay, queuesize, dict_size(hs->requests));
 #endif
         }
 
