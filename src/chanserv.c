@@ -23,6 +23,7 @@
 #include "global.h"
 #include "modcmd.h"
 #include "opserv.h" /* for opserv_bad_channel() */
+#include "nickserv.h" /* for oper_outranks() */
 #include "saxdb.h"
 #include "timeq.h"
 
@@ -3626,12 +3627,15 @@ static CHANSERV_FUNC(cmd_myaccess)
 
     if(argc < 2)
         target_handle = user->handle_info;
-    else if(!IsHelping(user))
+    else if(!IsStaff(user))
     {
         reply("CSMSG_MYACCESS_SELF_ONLY", argv[0]);
         return 0;
     }
     else if(!(target_handle = modcmd_get_handle_info(user, argv[1])))
+        return 0;
+
+    if(!oper_outranks(user, target_handle))
         return 0;
 
     if(!target_handle->channels)
