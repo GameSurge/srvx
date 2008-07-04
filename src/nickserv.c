@@ -3466,7 +3466,6 @@ static MODCMD_FUNC(cmd_checkemail)
 
     NICKSERV_MIN_PARMS(3);
     if (!(hi = modcmd_get_handle_info(user, argv[1]))) {
-        reply("MSG_HANDLE_UNKNOWN", argv[1]);
         return 0;
     }
     if (!hi->email_addr)
