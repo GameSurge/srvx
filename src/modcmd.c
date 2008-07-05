@@ -433,6 +433,7 @@ modcmd_register(struct module *module, const char *name, modcmd_func_t func, uns
  */
 int
 svccmd_can_invoke(struct userNode *user, struct userNode *bot, struct svccmd *cmd, struct chanNode *channel, int options) {
+    extern struct userNode *chanserv;
     unsigned int uData_checked = 0;
     struct userData *uData = NULL;
     int rflags = 0, flags = cmd->effective_flags;
@@ -466,15 +467,17 @@ svccmd_can_invoke(struct userNode *user, struct userNode *bot, struct svccmd *cm
             return 0;
         }
         if (flags & MODCMD_REQUIRE_REGCHAN) {
-            if (!channel->channel_info) {
+            if (!chanserv) {
+                /* Just use the inferred MODCMD_REQUIRE_CHANNEL. */
+            } else if (!channel->channel_info) {
                 if (options & SVCCMD_NOISY)
                     send_message(user, bot, "MCMSG_CHAN_NOT_REGISTERED", channel->name);
                 return 0;
             } else if (IsSuspended(channel->channel_info) && !(flags & MODCMD_IGNORE_CSUSPEND)) {
-                /* allow security-override users to always ignore channel suspensions, but flag it as a staff command */
-                if (!user->handle_info
-                    || !HANDLE_FLAGGED(user->handle_info, HELPING)
-                    || (flags & MODCMD_NEVER_CSUSPEND)) {
+                /* Allow security-override users to ignore most channel
+                 * suspensions, but flag that use as a staff command.
+                 */
+                if (!IsHelping(user) || (flags & MODCMD_NEVER_CSUSPEND)) {
                     if (options & SVCCMD_NOISY)
                         send_message(user, bot, "MCMSG_CHAN_SUSPENDED", channel->name, channel->channel_info->suspended->reason);
                     return 0;
@@ -485,7 +488,9 @@ svccmd_can_invoke(struct userNode *user, struct userNode *bot, struct svccmd *cm
         if (flags & MODCMD_REQUIRE_CHANUSER) {
             if (!uData_checked)
                 uData = _GetChannelUser(channel->channel_info, user->handle_info, 1, 0), uData_checked = 1;
-            if (!uData) {
+            if (!chanserv) {
+                /* Assume someone knows what they're doing. */
+            } else if (!uData) {
                 if (options & SVCCMD_NOISY)
                     send_message(user, bot, "MCMSG_NO_CHANNEL_ACCESS", channel->name);
                 return 0;
