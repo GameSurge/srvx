@@ -310,7 +310,7 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_INVITING_YOU", "$b%s$b invites you to join %s." },
     { "CSMSG_ALREADY_PRESENT", "%s is already in $b%s$b." },
     { "CSMSG_YOU_ALREADY_PRESENT", "You are already in $b%s$b." },
-    { "CSMSG_LOW_CHANNEL_ACCESS", "You lack sufficient access in %s to use this command." },
+    { "CSMSG_LOW_CHANNEL_ACCESS", "You lack sufficient access in %s for $S to invite you." },
     { "CSMSG_INFOLINE_TOO_LONG", "Your infoline may not exceed %u characters." },
     { "CSMSG_BAD_INFOLINE", "You may not use the character \\%03o in your infoline." },
 
@@ -5881,6 +5881,10 @@ static MODCMD_FUNC(user_opt_noautoop)
 
 static MODCMD_FUNC(user_opt_autoinvite)
 {
+    if(check_user_level(channel, user, lvlInviteMe, 1, 0))
+    {
+        reply("CSMSG_LOW_CHANNEL_ACCESS", channel->name);
+    }
     return user_binary_option("CSMSG_USET_AUTOINVITE", USER_AUTO_INVITE, CSFUNC_ARGS);
 }
 
