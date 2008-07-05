@@ -613,6 +613,8 @@ svccmd_expand_alias(struct svccmd *cmd, unsigned int old_argc, char *old_argv[],
                 log_module(MAIN_LOG, LOG_ERROR, "Alias expansion parse error in %s (near %s; %s.%s arg %d).", arg, end_num, cmd->parent->bot->nick, cmd->name, ii);
                 return 0;
             }
+            if (lbound >= old_argc)
+                return -1;
             if (ubound >= old_argc)
                 ubound = old_argc - 1;
             if (lbound < old_argc)
@@ -695,11 +697,17 @@ svccmd_invoke_argv(struct userNode *user, struct service *service, struct chanNo
     /* Expand the alias arguments, if there are any. */
     if (cmd->alias.used) {
         char *new_argv[MAXNUMPARAMS];
-        argc = svccmd_expand_alias(cmd, argc, argv, new_argv);
-        if (!argc) {
-            send_message(service->bot, user, "MCMSG_ALIAS_ERROR", cmd->name);
+        int res;
+
+        res = svccmd_expand_alias(cmd, argc, argv, new_argv);
+        if (res < 0) {
+            send_message(user, service->bot, "MSG_MISSING_PARAMS", cmd->name);
+            return 0;
+        } else if (res == 0) {
+            send_message(user, service->bot, "MCMSG_ALIAS_ERROR", cmd->name);
             return 0;
         }
+        argc = res;
         argv = new_argv;
 
         /* Try again to grab a handle to the channel after alias
