@@ -702,7 +702,7 @@ static void helpserv_log_request(struct helpserv_request *req, const char *reaso
 
     assert(req != NULL);
     assert(reason != NULL);
-    if (!(ctx = saxdb_open_context(reqlog_f)))
+    if (!reqlog_f || !(ctx = saxdb_open_context(reqlog_f)))
         return;
     sprintf(key, "%s-%lu-%lu", req->hs->helpserv->nick, (unsigned long)req->opened, req->id);
     if ((res = setjmp(*saxdb_jmp_buf(ctx))) != 0) {
