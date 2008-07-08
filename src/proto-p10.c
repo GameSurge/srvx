@@ -2084,17 +2084,17 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
     ignore_user = 0;
     if ((oldUser = GetUserH(nick))) {
         if (IsLocal(oldUser)
-            && (IsService(oldUser) || IsPersistent(oldUser))
-            && !uplink->burst) {
+            && (IsService(oldUser) || IsPersistent(oldUser))) {
             /* The service should collide the new user off - but not
              * if the new user is coming in during a burst.  (During a
              * burst, the bursting server will kill either our user --
              * triggering a ReintroduceUser() -- or its own.)
              */
             oldUser->timestamp = timestamp - 1;
-            irc_user(oldUser);
-        }
-        if (oldUser->timestamp > timestamp) {
+            ignore_user = 1;
+            if (!uplink->burst)
+                irc_user(oldUser);
+        } else if (oldUser->timestamp > timestamp) {
             /* "Old" user is really newer; remove them. */
             DelUser(oldUser, 0, 1, "Overruled by older nick");
         } else {
