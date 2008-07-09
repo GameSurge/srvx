@@ -144,7 +144,7 @@ void irc_stats(struct userNode *from, struct server *target, char type);
 void irc_svsnick(struct userNode *from, struct userNode *target, const char *newnick);
 
 /* account maintenance */
-void irc_account(struct userNode *user, const char *stamp);
+void irc_account(struct userNode *user, const char *stamp, unsigned long timestamp, unsigned long serial);
 void irc_regnick(struct userNode *user);
 void irc_fakehost(struct userNode *user, const char *host);
 

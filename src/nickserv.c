@@ -409,11 +409,10 @@ canonicalize_hostmask(char *mask)
 }
 
 static struct handle_info *
-register_handle(const char *handle, const char *passwd, UNUSED_ARG(unsigned long id))
+register_handle(const char *handle, const char *passwd, unsigned long id)
 {
     struct handle_info *hi;
 
-#ifdef WITH_PROTOCOL_BAHAMUT
     char id_base64[IDLEN + 1];
     do
     {
@@ -437,7 +436,6 @@ register_handle(const char *handle, const char *passwd, UNUSED_ARG(unsigned long
             id = 0;
         }
     } while(!id);
-#endif
 
     hi = calloc(1, sizeof(*hi));
     hi->userlist_style = HI_DEFAULT_STYLE;
@@ -446,10 +444,8 @@ register_handle(const char *handle, const char *passwd, UNUSED_ARG(unsigned long
     hi->infoline = NULL;
     dict_insert(nickserv_handle_dict, hi->handle, hi);
 
-#ifdef WITH_PROTOCOL_BAHAMUT
     hi->id = id;
     dict_insert(nickserv_id_dict, strdup(id_base64), hi);
-#endif
 
     return hi;
 }
@@ -522,13 +518,10 @@ static void
 free_handle_info(void *vhi)
 {
     struct handle_info *hi = vhi;
-
-#ifdef WITH_PROTOCOL_BAHAMUT
     char id[IDLEN + 1];
 
     inttobase64(id, hi->id, IDLEN);
     dict_remove(nickserv_id_dict, id);
-#endif
 
     free_string_list(hi->masks);
     assert(!hi->users);
@@ -956,16 +949,6 @@ set_user_handle_info(struct userNode *user, struct handle_info *hi, int stamp)
             apply_fakehost(hi);
 
         if (stamp) {
-#ifdef WITH_PROTOCOL_BAHAMUT
-            /* Stamp users with their account ID. */
-            char id[IDLEN + 1];
-            inttobase64(id, hi->id, IDLEN);
-#elif WITH_PROTOCOL_P10
-            /* Stamp users with their account name. */
-            char *id = hi->handle;
-#else
-            const char *id = "???";
-#endif
             if (!nickserv_conf.disable_nicks) {
                 struct nick_info *ni;
                 for (ni = hi->nicks; ni; ni = ni->next) {
@@ -975,7 +958,7 @@ set_user_handle_info(struct userNode *user, struct handle_info *hi, int stamp)
                     }
                 }
             }
-            StampUser(user, id);
+            StampUser(user, hi->handle, hi->registered, hi->id);
         }
 
         if ((ni = get_nick_info(user->nick)) && (ni->owner == hi))
@@ -1331,9 +1314,6 @@ static NICKSERV_FUNC(cmd_handleinfo)
 
     nsmsg_none = handle_find_message(hi, "MSG_NONE");
     reply("NSMSG_HANDLEINFO_ON", hi->handle);
-#ifdef WITH_PROTOCOL_BAHAMUT
-    reply("NSMSG_HANDLEINFO_ID", hi->id);
-#endif
     feh = hi->registered;
     reply("NSMSG_HANDLEINFO_REGGED", ctime(&feh));
 
@@ -1374,6 +1354,9 @@ static NICKSERV_FUNC(cmd_handleinfo)
         }
         reply(type);
     }
+
+    if (oper_has_access(user, cmd->parent->bot, 601, 1))
+        reply("NSMSG_HANDLEINFO_ID", hi->id);
 
     if (oper_has_access(user, cmd->parent->bot, 0, 1) || IsStaff(user)) {
         if (!hi->notes) {
@@ -2879,9 +2862,7 @@ nickserv_saxdb_write(struct saxdb_context *ctx) {
 
     for (it = dict_first(nickserv_handle_dict); it; it = iter_next(it)) {
         hi = iter_data(it);
-#ifdef WITH_PROTOCOL_BAHAMUT
-        assert(hi->id);
-#endif
+        assert(hi->id != 0);
         saxdb_start_record(ctx, iter_key(it), 0);
         if (hi->cookie) {
             struct handle_cookie *cookie = hi->cookie;
@@ -2934,9 +2915,7 @@ nickserv_saxdb_write(struct saxdb_context *ctx) {
             flags[flen] = 0;
             saxdb_write_string(ctx, KEY_FLAGS, flags);
         }
-#ifdef WITH_PROTOCOL_BAHAMUT
         saxdb_write_int(ctx, KEY_ID, hi->id);
-#endif
         if (hi->infoline)
             saxdb_write_string(ctx, KEY_INFO, hi->infoline);
         if (hi->last_quit_host[0])
@@ -3505,7 +3484,7 @@ nickserv_db_read_handle(const char *handle, dict_t obj)
     struct handle_info *hi;
     struct userNode *authed_users;
     struct userData *channels;
-    unsigned long int id;
+    unsigned long id;
     unsigned int ii;
     dict_t subdb;
 
@@ -3991,15 +3970,17 @@ handle_new_user(struct userNode *user)
 }
 
 void
-handle_account(struct userNode *user, const char *stamp)
+handle_account(struct userNode *user, const char *stamp, unsigned long timestamp, unsigned long serial)
 {
-    struct handle_info *hi;
+    struct handle_info *hi = NULL;
 
-#ifdef WITH_PROTOCOL_P10
-    hi = dict_find(nickserv_handle_dict, stamp, NULL);
-#else
-    hi = dict_find(nickserv_id_dict, stamp, NULL);
-#endif
+    if (stamp != NULL)
+        hi = dict_find(nickserv_handle_dict, stamp, NULL);
+    if ((hi == NULL) && (serial != 0)) {
+        char id[IDLEN + 1];
+        inttobase64(id, serial, IDLEN);
+        hi = dict_find(nickserv_id_dict, id, NULL);
+    }
 
     if (hi) {
         if (HANDLE_FLAGGED(hi, SUSPENDED)) {
@@ -4007,7 +3988,7 @@ handle_account(struct userNode *user, const char *stamp)
         }
         set_user_handle_info(user, hi, 0);
     } else {
-        log_module(MAIN_LOG, LOG_WARNING, "%s had unknown account stamp %s.", user->nick, stamp);
+        log_module(MAIN_LOG, LOG_WARNING, "%s had unknown account stamp %s:%lu:%lu.", user->nick, stamp, timestamp, serial);
     }
 }
 

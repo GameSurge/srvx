@@ -112,7 +112,7 @@ is_valid_nick(const char *nick) {
 }
 
 struct userNode *
-AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *userinfo, unsigned long timestamp, irc_in_addr_t realip, const char *stamp) {
+AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *userinfo, unsigned long timestamp, irc_in_addr_t realip, unsigned long stamp) {
     struct userNode *uNode, *oldUser;
     unsigned int nn, dummy;
 
@@ -166,7 +166,7 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
 
     mod_usermode(uNode, modes);
     if (dummy) uNode->modes |= FLAGS_DUMMY;
-    if (stamp) call_account_func(uNode, stamp);
+    if (stamp) call_account_func(uNode, NULL, 0, stamp);
     if (IsLocal(uNode)) irc_user(uNode);
     for (nn=0; nn<nuf_used; nn++) {
         if (nuf_list[nn](uNode)) break;
@@ -259,12 +259,12 @@ irc_user(struct userNode *user) {
 }
 
 void
-irc_account(struct userNode *user, const char *stamp)
+irc_account(struct userNode *user, UNUSED_ARG(const char *stamp), UNUSED_ARG(unsigned long timestamp), unsigned long serial)
 {
     if (IsReggedNick(user)) {
-        irc_svsmode(user, "+rd", base64toint(stamp, IDLEN));
+        irc_svsmode(user, "+rd", serial);
     } else {
-        irc_svsmode(user, "+d", base64toint(stamp, IDLEN));
+        irc_svsmode(user, "+d", serial);
     }
 }
 
@@ -805,16 +805,14 @@ static CMD_FUNC(cmd_nick) {
         NickChange(un, argv[1], 1);
     } else {
         /* new nick from a server */
-        char id[8];
         unsigned long stamp;
         irc_in_addr_t ip;
 
         if (argc < 10) return 0;
         stamp = strtoul(argv[8], NULL, 0);
-        if (stamp) inttobase64(id, stamp, IDLEN);
         if (argc > 10)
             ip.in6_32[3] = htonl(atoi(argv[9]));
-        un = AddUser(GetServerH(argv[7]), argv[1], argv[5], argv[6], argv[4], argv[argc-1], atoi(argv[3]), ip, (stamp ? id : 0));
+        un = AddUser(GetServerH(argv[7]), argv[1], argv[5], argv[6], argv[4], argv[argc-1], atoi(argv[3]), ip, stamp);
     }
     return 1;
 }

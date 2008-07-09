@@ -219,7 +219,7 @@ reg_account_func(account_func_t handler)
 }
 
 void
-call_account_func(struct userNode *user, const char *stamp)
+call_account_func(struct userNode *user, const char *stamp, unsigned long timestamp, unsigned long serial)
 {
     /* We've received an account stamp for a user; notify
        NickServ, which registers the sole account_func
@@ -228,7 +228,7 @@ call_account_func(struct userNode *user, const char *stamp)
        P10 Protocol violation if (user->modes & FLAGS_STAMPED) here.
     */
     if (account_func)
-        account_func(user, stamp);
+        account_func(user, stamp, timestamp, serial);
 
 #ifdef WITH_PROTOCOL_P10
     /* Mark the user so we don't stamp it again. */
@@ -237,7 +237,7 @@ call_account_func(struct userNode *user, const char *stamp)
 }
 
 void
-StampUser(struct userNode *user, const char *stamp)
+StampUser(struct userNode *user, const char *stamp, unsigned long timestamp, unsigned long serial)
 {
 #ifdef WITH_PROTOCOL_P10
     /* The P10 protocol says we can't stamp users who already
@@ -246,7 +246,7 @@ StampUser(struct userNode *user, const char *stamp)
         return;
 #endif
 
-    irc_account(user, stamp);
+    irc_account(user, stamp, timestamp, serial);
     user->modes |= FLAGS_STAMPED;
 }
 

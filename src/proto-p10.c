@@ -493,9 +493,9 @@ irc_user(struct userNode *user)
 }
 
 void
-irc_account(struct userNode *user, const char *stamp)
+irc_account(struct userNode *user, const char *stamp, unsigned long timestamp, unsigned long serial)
 {
-    putsock("%s " P10_ACCOUNT " %s %s", self->numeric, user->numeric, stamp);
+    putsock("%s " P10_ACCOUNT " %s %s %lu %lu", self->numeric, user->numeric, stamp, timestamp, serial);
 }
 
 void
@@ -1186,13 +1186,19 @@ static CMD_FUNC(cmd_nick)
 static CMD_FUNC(cmd_account)
 {
     struct userNode *user;
+    unsigned long timestamp = 0;
+    unsigned long serial = 0;
 
     if ((argc < 3) || !origin || !GetServerH(origin))
         return 0; /* Origin must be server. */
     user = GetUserN(argv[1]);
     if (!user)
         return 1; /* A QUIT probably passed the ACCOUNT. */
-    call_account_func(user, argv[2]);
+    if (argc > 3)
+        timestamp = strtoul(argv[3], NULL, 10);
+    if (argc > 4)
+        serial = strtoul(argv[4], NULL, 10);
+    call_account_func(user, argv[2], timestamp, serial);
     return 1;
 }
 
@@ -2239,13 +2245,25 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
         case 'r':
             if (*word) {
                 char tag[MAXLEN];
+                char *sep;
                 unsigned int ii;
-                for (ii=0; (*word != ' ') && (*word != '\0'); )
+                unsigned long ts = 0;
+                unsigned long id = 0;
+
+                for (ii=0; (*word != ' ') && (*word != '\0') && (*word != ':'); )
                     tag[ii++] = *word++;
-                tag[ii] = 0;
+                if (*word == ':') {
+                    ts = strtoul(word + 1, &sep, 10);
+                    if (*sep == ':') {
+                        id = strtoul(word + 1, &sep, 10);
+                    } else if (*sep != ' ' && *sep != '\0') {
+                        ts = 0;
+                    }
+                }
+                tag[ii] = '\0';
                 while (*word == ' ')
                     word++;
-                call_account_func(user, tag);
+                call_account_func(user, tag, ts, id);
             }
             break;
         case 'f':
