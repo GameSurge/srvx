@@ -1,3 +1,145 @@
+Upgrading from srvx-1.3
+-----------------------
+
+Core changes:
+
+ * There is a new mod-qserver module that allows direct connections to
+   srvx.  There is no documentation on the protocol, but the file is
+   under 250 lines long, so it shouldn't be hard to figure out.
+
+ * There is a new mod-blacklist module that allows a blacklist based
+   on DNSBLs and IP- and host-based text files.  See srvx.conf.example
+   for details on how to configure this module.
+
+ * Commands that use security overrides can be logged more easily.
+   This includes, among many other things, adding or removing users in
+   channels where the staff user would not normally have the necessary
+   access.  These can be selected with the "staff" and "override" log
+   levels.
+
+ * The database writing code has been rewritten because the previous
+   code performed much worse (for an unknown reason) on 64-bit
+   machines than on 32-bit machines.  Now it is faster than ever on
+   both types.
+
+ * There is now native mingw support for Win32 builds that do not use
+   the Cygwin libraries.  See Makefile.win32 for details.
+
+ * The logger now avoids recursive logging to the same destination.
+
+ * G-lines support the last-modification syntax introduced in
+   ircu2.10.12.11.
+
+ * srvx recognizes the +I (hide idle time) and +n (hide channel list)
+   user modes and uses them appropriately when generating WHOIS
+   responses.
+
+ * srvx now re-reads translations from its "languages" directory on a
+   ?rehash.
+
+ * srvx now re-reads its own server name and description on a ?rehash.
+
+ * srvx has several implementations of the ioset event loop
+   (ioset-epoll.c, ioset-kevent.c, ioset-select.c, ioset-win32.c).
+   The most efficient one supported by the OS should be selected
+   automatically.
+
+ * srvx has several implementations of its mail sending utility
+   (mail-sendmail.c, mail-smtp.c).  The sendmail implementation is
+   used on configure-based builds, and the SMTP implementation is used
+   on mingw/Win32 native builds.
+
+ChanServ changes:
+
+ * Do-not-register (DNR) entries now have an expiration time.  The
+   duration can be set to 0 to create a permanent entry; this is the
+   default for pre-1.4 DNRs.  There is also a DNR search command that
+   should be bound to ChanServ (/msg OpServ bind ChanServ dnrsearch
+   *ChanServ.dnrsearch; likewise for its actions: dnrsearch\ print,
+   dnrsearch\ remove and dnrsearch\ count).
+
+ * Kick, ban and unban commands will now accept arguments of the form
+   *ACCOUNT, affecting users with that account name.
+
+ * The default titles "IRCOp", "network helper" and "support helper"
+   can be localized using "CSMSG_OPERATOR_TITLE", "CSMSG_UC_H_TITLE"
+   and "CSMSG_LC_H_TITLE" respectively.
+
+ * The BANS command can search for users affected by a ban in addition
+   to searching for matching ban patterns.
+
+ * The SAY and EMOTE commands will now accept arguments of the form
+   *ACCOUNT.
+
+ * There is a new channel flag, Unreviewed, that can distinguish
+   between automatically registered channels that have been reviewed
+   against network policies by staff and those that have not.  The
+   "unreviewed" search criteria can select channels without this flag.
+   (/msg OpServ bind ChanServ set\ unreviewed *ChanServ.set\
+   unreviewed; likewise for its values: set\ unreviewed\ on and set\
+   unreviewed\ off.)
+
+ * Changing the AutoInvite user option will warn if the user does not
+   have enough access in the channel to be automatically invited.
+
+ * The GIVEOWNERSHIP command requires a confirmation code.
+
+ * ChanServ's event handling functions are only registered if it has a
+   nickname set.  This makes it easier to disable ChanServ in one
+   instance of srvx.  There are a few related changes in modcmd.c's
+   permission and flag checks.
+
+NickServ changes:
+
+ * Notes on an account are now supported.  (/msg OpServ bind NickServ
+   notes *NickServ.notes; likewise for the related addnote and delnote
+   commands.)
+
+ * The new command ODELCOOKIE has been added to do the hopefully
+   obvious thing.
+
+ * The new command CHECKEMAIL has been added to allow helpers to check
+   whether an account's email address matches one known to the helper.
+   This allows email visibility to remain limited.
+
+ * The OUNREGISTER command now has two configuration options that may
+   require a "force" parameter to be used: "ounregister_inactive" and
+   "ounregister_flags".  See srvx.conf.example for details.
+
+ * If you are using ircu2.10.12.x (you are, aren't you?), snircd, or
+   any other ircd that supports account creation timestamps, you
+   should consider the value of the NickServ "account_timestamp_mode"
+   parameter in srvx.conf.  It can have these values:
+    "ignore" (or anything unrecognized): Send the account registration
+      timestamp but ignore the received value.
+    "ircu": Send the account registration timestamp and require that
+      it match for users from the network.
+   The default is "ignore".
+
+OpServ changes:
+
+ * IPs with trusts or with active opers are protected from being
+   accidentally affected by G-lines, TRACE KILL and TRACE GAG.  The
+   "abuse" pseudo-criterion for TRACE now has a "trusted" option to
+   override trusted IP protection (in addition to the previous, and
+   independent, "opers" option).
+
+ * The BLOCK command takes an optional duration after the target.
+   Using this requires the same access level as the GLINE command.
+
+ * There is a new FORCEKICK command that will allow opers to kick
+   anyone (including remote +k users) from a channel.
+
+ * The STATS GLINE command now accepts an optional target, to have it
+   show the first known G-line matching that target.
+
+ * srvx will no longer crash in OpServ's join checks if no OpServ bot
+   is instantiated.
+
+ * The TRACE command will now allow more than one "channel" criterion
+   to be specified.  It also accepts a "target" pseudo-criterion that
+   contains the name of a channel to receive the output.
+
 Upgrading from srvx-1.2
 -----------------------
 
