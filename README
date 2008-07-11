@@ -2,8 +2,8 @@
 
 Description:
 ----------
-srvx is a complete set of services for ircu/Universal or ircu/Undernet
-P10 protocol networks. It aims to be highly efficient, flexible, and
+srvx is a complete set of services for ircu/Undernet P10 protocol
+networks. It aims to be highly efficient, flexible, and
 extensible. Features include advanced proxy detection and all the
 standard services users expect e.g. ChanServ, NickServ, OpServ,
 HelpServ, and Global.
@@ -20,27 +20,17 @@ Please read the INSTALL file for installation instructions.
 
 Support:
 ----------
-There are several conditions under which we WILL NOT support your use
-of these services. (The license may permit such uses, but we do not
-wish to encourage them.)
+Please read the documentation included in the srvx distribution before
+you ask us for support. The answers to many common questions related
+to installation are in the FAQ file. Other important documentation
+files have names in all upper case.  It saves both your time and our
+time, so please read the documentation.
 
-Specifically:
-
- - Use under Windows. srvx can work to some extent under the Cygwin
- (http://www.cygwin.com/) environment, but Windows as a whole departs
- significantly from standard APIs and is difficult to support.
-
- - Alteration of credits. If you change the credits in your version of
- the code so as to obscure the original authorship of the program, we
- will not support you.  If you want to use our code -- especially if
- you want us to answer your questions about it -- do the decent thing
- and preserve the credits that are in the code we distribute.
-
-In addition, please read the documentation included in the srvx
-distribution before you ask us for support. The answers to many common
-questions related to installation are in the INSTALL file, for
-example. It saves both our time and your time, so please read the
-documentation.
+If you change the credits in your version of the code so as to obscure
+the original authorship of the program, we will not support you.  If
+you want to use our code -- especially if you want us to answer your
+questions about it -- do the decent thing and preserve the credits
+that are in the code we distribute.
 
 Contacts:
 ----------
