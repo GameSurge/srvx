@@ -73,6 +73,7 @@
 #define KEY_EMAIL_SEARCH_LEVEL "email_search_level"
 #define KEY_OUNREGISTER_INACTIVE "ounregister_inactive"
 #define KEY_OUNREGISTER_FLAGS "ounregister_flags"
+#define KEY_HANDLE_TS_MODE "account_timestamp_mode"
 
 #define KEY_ID "id"
 #define KEY_PASSWD "passwd"
@@ -342,6 +343,11 @@ static void nickserv_reclaim(struct userNode *user, struct nick_info *ni, enum r
 static void nickserv_reclaim_p(void *data);
 static int nickserv_addmask(struct userNode *user, struct handle_info *hi, const char *mask);
 
+enum handle_ts_mode {
+    TS_IGNORE,
+    TS_IRCU
+};
+
 static struct {
     unsigned int disable_nicks : 1;
     unsigned int valid_handle_regex_set : 1;
@@ -378,6 +384,7 @@ static struct {
     struct policer_params *auth_policer_params;
     enum reclaim_action reclaim_action;
     enum reclaim_action auto_reclaim_action;
+    enum handle_ts_mode handle_ts_mode;
     unsigned long auto_reclaim_delay;
     unsigned char default_maxlogins;
     unsigned char hard_maxlogins;
@@ -3836,6 +3843,13 @@ nickserv_conf_read(void)
         if(pos)
             nickserv_conf.ounregister_flags |= 1 << (pos - 1);
     }
+    str = database_get_data(conf_node, KEY_HANDLE_TS_MODE, RECDB_QSTRING);
+    if (!str)
+        nickserv_conf.handle_ts_mode = TS_IGNORE;
+    else if (!irccasecmp(str, "ircu"))
+        nickserv_conf.handle_ts_mode = TS_IRCU;
+    else
+        nickserv_conf.handle_ts_mode = TS_IGNORE;
     if (!nickserv_conf.disable_nicks) {
         str = database_get_data(conf_node, "reclaim_action", RECDB_QSTRING);
         nickserv_conf.reclaim_action = str ? reclaim_action_from_string(str) : RECLAIM_NONE;
@@ -3983,6 +3997,10 @@ handle_account(struct userNode *user, const char *stamp, unsigned long timestamp
     }
 
     if (hi) {
+        if ((nickserv_conf.handle_ts_mode == TS_IRCU)
+            && (timestamp != hi->registered)) {
+            return;
+        }
         if (HANDLE_FLAGGED(hi, SUSPENDED)) {
             return;
         }

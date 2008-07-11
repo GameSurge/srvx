@@ -57,6 +57,8 @@
         "default_maxlogins" "2";
         // what is the absolute maxlogins value?
         "hard_maxlogins" "10";
+        // Which mode should we use for account timestamps?
+        "account_timestamp_mode" "ignore";
         // This names a file that contains easily guessed passwords.
         // It always contains "password", "<password>" and the user's
         // account name.
