@@ -1,5 +1,5 @@
 /* proto-p10.c - IRC protocol output
- * Copyright 2000-2006 srvx Development Team
+ * Copyright 2000-2008 srvx Development Team
  *
  * This file is part of srvx.
  *

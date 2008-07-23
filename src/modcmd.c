@@ -1866,7 +1866,7 @@ static MODCMD_FUNC(cmd_version) {
      * command or its accessibility to normal IRC users, except to add
      * copyright information pertaining to changes you make to srvx.
      */
-    send_message_type(4, user, cmd->parent->bot, "$b"PACKAGE_STRING"$b ("CODENAME"), Built: "__DATE__", "__TIME__".  Copyright 2000-2007 srvx Development Team.");
+    send_message_type(4, user, cmd->parent->bot, "$b"PACKAGE_STRING"$b ("CODENAME"), Built: "__DATE__", "__TIME__".  Copyright 2000-2008 srvx Development Team.");
     if (argc > 1)
         send_message_type(4, user, cmd->parent->bot, "%s", git_version);
     else

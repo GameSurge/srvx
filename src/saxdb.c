@@ -1,5 +1,5 @@
 /* saxdb.c - srvx database manager
- * Copyright 2002-2004 srvx Development Team
+ * Copyright 2002-2004,2007-2008 srvx Development Team
  *
  * This file is part of srvx.
  *
