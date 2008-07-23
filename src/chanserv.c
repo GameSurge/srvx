@@ -1,5 +1,5 @@
 /* chanserv.c - Channel service bot
- * Copyright 2000-2006 srvx Development Team
+ * Copyright 2000-2007 srvx Development Team
  *
  * This file is part of srvx.
  *
@@ -5881,7 +5881,7 @@ static MODCMD_FUNC(user_opt_noautoop)
 
 static MODCMD_FUNC(user_opt_autoinvite)
 {
-    if(check_user_level(channel, user, lvlInviteMe, 1, 0))
+    if((argc > 1) && !check_user_level(channel, user, lvlInviteMe, 1, 0))
     {
         reply("CSMSG_LOW_CHANNEL_ACCESS", channel->name);
     }
