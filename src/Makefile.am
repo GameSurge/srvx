@@ -13,6 +13,8 @@ noinst_DATA = \
 	mail.help \
 	mod-helpserv.help \
 	mod-memoserv.help \
+	mod-qserver.help \
+	mod-snoop.help \
 	mod-sockcheck.help
 EXTRA_DIST = $(noinst_DATA)
 
@@ -49,10 +51,10 @@ EXTRA_srvx_SOURCES = \
 	proto-bahamut.c \
 	proto-common.c \
 	proto-p10.c \
-	mod-snoop.c \
-	mod-memoserv.c \
 	mod-helpserv.c \
+	mod-memoserv.c \
 	mod-qserver.c \
+	mod-snoop.c \
 	mod-sockcheck.c
 srvx_LDADD = @MODULE_OBJS@
 srvx_DEPENDENCIES = @MODULE_OBJS@
