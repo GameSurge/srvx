@@ -227,7 +227,7 @@ fi
 AC_MSG_CHECKING(how to send mail)
 AC_ARG_WITH(mail,
 [  --with-mail=name        How to send mail; one of:
-                          sendmail (the default)],
+                          sendmail (the default), smtp],
 [],
 [withval="sendmail"])
 if test -r "${srcdir}/src/mail-${withval}.c" ; then

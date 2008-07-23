@@ -399,6 +399,10 @@
     "body_prefix" ("This goes before the mail text.", "Each string here is treated as a separate \"paragraph\" for line wrapping.");
     "body_suffix_first" ("We care a lot about spam.  If you did not request this email, bitch and moan loudly at our opers, and tell our ISP to gank our connection.");
     "body_suffix" ("PLEASE DO NOT BE ALARMED.  CALMLY BOARD THE AIRCRAFT, STRAP YOUR ARMS ACROSS YOUR BODY, AND JUMP THE HELL OUT OF THE PLANE.", "Yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaatta!");
+    // If you are using the smtp mail back-end, you may need to set these:
+    "smtp_server" "localhost";
+    "smtp_service" "smtp";
+    // "smtp_myname" "localhost.domain";
 };
 
 // New section in srvx-1.2 to control database locations, etc.
