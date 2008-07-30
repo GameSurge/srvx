@@ -106,6 +106,7 @@ ioset_kevent_loop(struct timeval *timeout)
 	log_module(MAIN_LOG, LOG_ERROR, "kevent() poll failed: %s", strerror(errno));
 	return 1;
     }
+    now = time(NULL) + clock_skew;
 
     /* Process the events we got. */
     for (ii = 0; ii < res; ++ii) {
