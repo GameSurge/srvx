@@ -218,6 +218,7 @@ static const struct message_entry msgtab[] = {
     { "HSMSG_REQ_PERSIST_PART", "Everything you tell me until you are helped (or you leave %s) will be recorded. If you part %s, your request will be lost." },
     { "HSMSG_REQ_PERSIST_HANDLE", "Everything you tell me until you are helped will be recorded." },
     { "HSMSG_REQ_MAXLEN", "Sorry, but your request has reached the maximum number of lines. Please wait to be assigned to a helper and continue explaining your request to them." },
+    { "HSMSQ_REQ_TEXT_ADDED", "Message from $b%s:$b %s" },
     { "HSMSG_REQ_FOUND_ANOTHER", "Request ID#%lu has been closed. $S detected that you also have request ID#%lu open. If you send $S a message, it will be associated with that request." },
 
 /* Messages that are inserted into request text */
@@ -1112,9 +1113,23 @@ static void helpserv_usermsg(struct userNode *user, struct helpserv_bot *hs, con
     }
 
     req->updated = now;
-    if (!hs->req_maxlen || req->text->used < hs->req_maxlen)
+    if (!hs->req_maxlen || req->text->used < hs->req_maxlen) {
+        struct userNode *likely_helper;
+
         string_list_append(req->text, strdup(text));
-    else
+        /* Find somebody likely to be the helper */
+        if (!req->helper)
+            likely_helper = NULL;
+        else if ((likely_helper = req->helper->handle->users) && !likely_helper->next_authed) {
+            /* only one user it could be :> */
+        } else for (likely_helper = req->helper->handle->users; likely_helper; likely_helper = likely_helper->next_authed)
+            if (GetUserMode(hs->helpchan, likely_helper))
+                break;
+
+        if(likely_helper)
+            send_target_message(1, likely_helper->nick, hs->helpserv, "HSMSQ_REQ_TEXT_ADDED", user->nick, text);
+
+    } else
         helpserv_msguser(user, "HSMSG_REQ_MAXLEN");
 }
 
