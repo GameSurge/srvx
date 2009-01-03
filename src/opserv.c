@@ -1815,7 +1815,7 @@ opserv_part_channel(void *data)
 
 static int alert_check_user(const char *key, void *data, void *extra);
 
-static int
+static void
 opserv_new_user_check(struct userNode *user)
 {
     struct opserv_hostinfo *ohi;
@@ -1824,11 +1824,11 @@ opserv_new_user_check(struct userNode *user)
 
     /* Check to see if we should ignore them entirely. */
     if (IsLocal(user) || IsService(user))
-        return 0;
+        return;
 
     /* Check for alerts, and stop if we find one that kills them. */
     if (dict_foreach(opserv_user_alerts, alert_check_user, user))
-        return 1;
+        return;
 
     /* Gag them if appropriate. */
     for (gag = gagList; gag; gag = gag->next) {
@@ -1877,8 +1877,6 @@ opserv_new_user_check(struct userNode *user)
             gline_add(opserv->nick, target, opserv_conf.clone_gline_duration, "AUTO Excessive connections from a single host.", now, now, 1);
         }
     }
-
-    return 0;
 }
 
 static void

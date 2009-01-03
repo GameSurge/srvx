@@ -98,13 +98,12 @@ snoop_kick(struct userNode *kicker, struct userNode *victim, struct chanNode *ch
     SNOOP("$bKICK$b %s from %s by %s", victim->nick, chan->name, (kicker ? kicker->nick : "some server"));
 }
 
-static int
+static void
 snoop_new_user(struct userNode *user) {
-    if (!snoop_cfg.enabled) return 0;
-    if (user->uplink->burst && !snoop_cfg.show_bursts) return 0;
+    if (!snoop_cfg.enabled) return;
+    if (user->uplink->burst && !snoop_cfg.show_bursts) return;
     UPDATE_TIMESTAMP();
     SNOOP("$bNICK$b %s %s@%s [%s] on %s", user->nick, user->ident, user->hostname, irc_ntoa(&user->ip), user->uplink->name);
-    return 0;
 }
 
 static void

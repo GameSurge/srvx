@@ -1099,14 +1099,13 @@ static MODCMD_FUNC(cmd_stats_proxycheck)
     }
 }
 
-static int
+static void
 sockcheck_new_user(struct userNode *user) {
     /* If they have a bum IP, or are bursting in, don't proxy-check or G-line them. */
     if (irc_in_addr_is_valid(user->ip)
         && !irc_in_addr_is_loopback(user->ip)
         && !user->uplink->burst)
         sockcheck_queue_address(user->ip);
-    return 0;
 }
 
 static void

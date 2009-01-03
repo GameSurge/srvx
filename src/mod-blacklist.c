@@ -158,7 +158,7 @@ dnsbl_hit(struct sar_request *req, struct dns_header *hdr, struct dns_rr *rr, un
     free(txt);
 }
 
-static int
+static void
 blacklist_check_user(struct userNode *user)
 {
     static const char *hexdigits = "0123456789abcdef";
@@ -172,11 +172,11 @@ blacklist_check_user(struct userNode *user)
 
     /* Users added during burst should not be checked. */
     if (user->uplink->burst)
-        return 0;
+        return;
 
     /* Users with bogus IPs are probably service bots. */
     if (!irc_in_addr_is_valid(user->ip))
-        return 0;
+        return;
 
     /* Check local file-based blacklist. */
     irc_ntop(ip, sizeof(ip), &user->ip);
@@ -205,7 +205,7 @@ blacklist_check_user(struct userNode *user)
         }
         dnsbl_len = 48;
     } else {
-        return 0;
+        return;
     }
 
     /* Start a lookup for the appropriate hostname in each DNSBL. */
@@ -223,7 +223,6 @@ blacklist_check_user(struct userNode *user)
             strcpy(data->zone_name, zone);
         }
     }
-    return 0;
 }
 
 static void

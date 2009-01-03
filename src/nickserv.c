@@ -3954,32 +3954,25 @@ nickserv_reclaim_p(void *data) {
         nickserv_reclaim(user, ni, nickserv_conf.auto_reclaim_action);
 }
 
-static int
+static void
 check_user_nick(struct userNode *user) {
     struct nick_info *ni;
     user->modes &= ~FLAGS_REGNICK;
     if (!(ni = get_nick_info(user->nick)))
-        return 0;
+        return;
     if (user->handle_info == ni->owner) {
         user->modes |= FLAGS_REGNICK;
         irc_regnick(user);
-        return 0;
+        return;
     }
     if (nickserv_conf.warn_nick_owned)
         send_message(user, nickserv, "NSMSG_RECLAIM_WARN", ni->nick, ni->owner->handle);
     if (nickserv_conf.auto_reclaim_action == RECLAIM_NONE)
-        return 0;
+        return;
     if (nickserv_conf.auto_reclaim_delay)
         timeq_add(now + nickserv_conf.auto_reclaim_delay, nickserv_reclaim_p, user);
     else
         nickserv_reclaim(user, ni, nickserv_conf.auto_reclaim_action);
-    return 0;
-}
-
-int
-handle_new_user(struct userNode *user)
-{
-    return check_user_nick(user);
 }
 
 void
@@ -4086,7 +4079,7 @@ init_nickserv(const char *nick)
 {
     unsigned int i;
     NS_LOG = log_register_type("NickServ", "file:nickserv.log");
-    reg_new_user_func(handle_new_user);
+    reg_new_user_func(check_user_nick);
     reg_nick_change_func(handle_nick_change);
     reg_del_user_func(nickserv_remove_user);
     reg_account_func(handle_account);

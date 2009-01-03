@@ -543,11 +543,11 @@ static GLOBAL_FUNC(cmd_messages)
     return 1;
 }
 
-static int
+static void
 global_process_user(struct userNode *user)
 {
     if(IsLocal(user) || self->uplink->burst || user->uplink->burst)
-        return 0;
+        return;
     send_messages(user, MESSAGE_RECIPIENT_LUSERS, 1);
 
     /* only alert on new usercount if the record was broken in the last
@@ -561,8 +561,6 @@ global_process_user(struct userNode *user)
         global_message(MESSAGE_RECIPIENT_OPERS, message);
         last_max_alert = now;
     }
-
-    return 0;
 }
 
 static void

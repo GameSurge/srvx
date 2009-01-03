@@ -2139,8 +2139,7 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
     if (IsLocal(uNode))
         irc_user(uNode);
     for (n=0; (n<nuf_used) && !uNode->dead; n++)
-        if (nuf_list[n](uNode))
-            break;
+        nuf_list[n](uNode);
     return uNode;
 }
 

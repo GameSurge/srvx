@@ -168,9 +168,8 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
     if (dummy) uNode->modes |= FLAGS_DUMMY;
     if (stamp) call_account_func(uNode, NULL, 0, stamp);
     if (IsLocal(uNode)) irc_user(uNode);
-    for (nn=0; (nn<nuf_used) && !uNode->dead; nn++) {
-        if (nuf_list[nn](uNode)) break;
-    }
+    for (nn=0; (nn<nuf_used) && !uNode->dead; nn++)
+        nuf_list[nn](uNode);
     return uNode;
 }
 

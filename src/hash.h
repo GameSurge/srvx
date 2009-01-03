@@ -205,7 +205,7 @@ int userList_contains(struct userList *list, struct userNode *user);
 typedef void (*server_link_func_t) (struct server *server);
 void reg_server_link_func(server_link_func_t handler);
 
-typedef int (*new_user_func_t) (struct userNode *user);
+typedef void (*new_user_func_t) (struct userNode *user);
 void reg_new_user_func(new_user_func_t handler);
 typedef void (*del_user_func_t) (struct userNode *user, struct userNode *killer, const char *why);
 void reg_del_user_func(del_user_func_t handler);
