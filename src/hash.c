@@ -702,6 +702,10 @@ SetChannelTopic(struct chanNode *channel, struct userNode *user, const char *top
         irc_topic(user, channel, topic);
     } else {
         for (n=0; n<tf_used; n++)
+            /* A topic change handler can return non-zero to indicate
+             * that it has reverted the topic change, and that further
+             * hooks should not be called.
+             */
             if (tf_list[n](user, channel, old_topic))
                 break;
     }
