@@ -955,7 +955,7 @@ static struct helpserv_request * create_request(struct userNode *user, struct he
         sprintf(lbuf[1], fmt, unh);
     } else {
         fmt = user_find_message(user, "HSMSG_REQ_NO_UNHANDLED");
-        sprintf(lbuf[1], fmt);
+        sprintf(lbuf[1], "%s", fmt);
     }
     switch (hs->persist_types[PERSIST_T_REQUEST]) {
         case PERSIST_PART:
@@ -964,18 +964,17 @@ static struct helpserv_request * create_request(struct userNode *user, struct he
             break;
         case PERSIST_QUIT:
             fmt = user_find_message(user, "HSMSG_REQ_PERSIST_QUIT");
-            sprintf(lbuf[2], fmt);
+            sprintf(lbuf[2], "%s", fmt);
             break;
         default:
             log_module(HS_LOG, LOG_ERROR, "%s has an invalid req_persist.", hs->helpserv->nick);
         case PERSIST_CLOSE:
             if (user->handle_info) {
                 fmt = user_find_message(user, "HSMSG_REQ_PERSIST_HANDLE");
-                sprintf(lbuf[2], fmt);
             } else {
                 fmt = user_find_message(user, "HSMSG_REQ_PERSIST_QUIT");
-                sprintf(lbuf[2], fmt);
             }
+            sprintf(lbuf[2], "%s", fmt);
             break;
     }
     helpserv_message(hs, user, MSGTYPE_REQ_OPENED);

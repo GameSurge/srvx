@@ -3728,8 +3728,7 @@ nickserv_load_dict(const char *fname)
         log_module(NS_LOG, LOG_ERROR, "Unable to open dictionary file %s: %s", fname, strerror(errno));
         return;
     }
-    while (!feof(file)) {
-        fgets(line, sizeof(line), file);
+    while (fgets(line, sizeof(line), file)) {
         if (!line[0])
             continue;
         if (line[strlen(line)-1] == '\n')
