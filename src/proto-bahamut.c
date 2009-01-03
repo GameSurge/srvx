@@ -168,7 +168,7 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
     if (dummy) uNode->modes |= FLAGS_DUMMY;
     if (stamp) call_account_func(uNode, NULL, 0, stamp);
     if (IsLocal(uNode)) irc_user(uNode);
-    for (nn=0; nn<nuf_used; nn++) {
+    for (nn=0; (nn<nuf_used) && !uNode->dead; nn++) {
         if (nuf_list[nn](uNode)) break;
     }
     return uNode;
@@ -1043,12 +1043,9 @@ static CMD_FUNC(cmd_svsnick)
     return 1;
 }
 
-static oper_func_t *of_list;
-static unsigned int of_size = 0, of_used = 0;
-
 void parse_cleanup(void) {
     unsigned int nn;
-    if (of_list) free(of_list);
+    free(of_list);
     dict_delete(irc_func_dict);
     dict_delete(service_msginfo_dict);
     free(mcf_list);
@@ -1203,32 +1200,6 @@ unreg_notice_func(struct userNode *user) {
         if (info->on_privmsg == NULL) {
             dict_remove(service_msginfo_dict, user->nick);
         }
-    }
-}
-
-void
-reg_oper_func(oper_func_t handler)
-{
-    if (of_used == of_size) {
-        if (of_size) {
-            of_size <<= 1;
-            of_list = realloc(of_list, of_size*sizeof(oper_func_t));
-        } else {
-            of_size = 8;
-            of_list = malloc(of_size*sizeof(oper_func_t));
-        }
-    }
-    of_list[of_used++] = handler;
-}
-
-static void
-call_oper_funcs(struct userNode *user)
-{
-    unsigned int n;
-    if (IsLocal(user)) return;
-    for (n=0; n<of_used; n++)
-    {
-        of_list[n](user);
     }
 }
 

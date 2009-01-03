@@ -538,6 +538,36 @@ reg_mode_change_func(mode_change_func_t handler)
     mcf_list[mcf_used++] = handler;
 }
 
+static oper_func_t *of_list;
+static unsigned int of_size = 0, of_used = 0;
+
+void
+reg_oper_func(oper_func_t handler)
+{
+    if (of_used == of_size) {
+        if (of_size) {
+            of_size <<= 1;
+            of_list = realloc(of_list, of_size*sizeof(oper_func_t));
+        } else {
+            of_size = 8;
+            of_list = malloc(of_size*sizeof(oper_func_t));
+        }
+    }
+    of_list[of_used++] = handler;
+}
+
+static void
+call_oper_funcs(struct userNode *user)
+{
+    unsigned int n;
+    if (IsLocal(user))
+        return;
+    for (n=0; (n<of_used) && !user->dead; n++)
+    {
+        of_list[n](user);
+    }
+}
+
 struct mod_chanmode *
 mod_chanmode_alloc(unsigned int argc)
 {

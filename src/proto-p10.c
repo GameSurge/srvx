@@ -1591,9 +1591,6 @@ static CMD_FUNC(cmd_svsnick)
     return 1;
 }
 
-static oper_func_t *of_list;
-static unsigned int of_size = 0, of_used = 0;
-
 void
 free_user(struct userNode *user)
 {
@@ -2141,7 +2138,7 @@ AddUser(struct server* uplink, const char *nick, const char *ident, const char *
     }
     if (IsLocal(uNode))
         irc_user(uNode);
-    for (n=0; n<nuf_used; n++)
+    for (n=0; (n<nuf_used) && !uNode->dead; n++)
         if (nuf_list[n](uNode))
             break;
     return uNode;
@@ -2819,31 +2816,6 @@ unreg_notice_func(struct userNode *user)
         return; /* this really only works with users */
 
     notice_funcs[user->num_local] = NULL;
-}
-
-void
-reg_oper_func(oper_func_t handler)
-{
-    if (of_used == of_size) {
-        if (of_size) {
-            of_size <<= 1;
-            of_list = realloc(of_list, of_size*sizeof(oper_func_t));
-        } else {
-            of_size = 8;
-            of_list = malloc(of_size*sizeof(oper_func_t));
-        }
-    }
-    of_list[of_used++] = handler;
-}
-
-static void
-call_oper_funcs(struct userNode *user)
-{
-    unsigned int n;
-    if (IsLocal(user))
-        return;
-    for (n=0; n<of_used; n++)
-        of_list[n](user);
 }
 
 static void

@@ -191,9 +191,11 @@ NickChange(struct userNode* user, const char *new_nick, int no_announce)
 #endif
 
     /* Make callbacks for nick changes.  Do this with new nick in
-     * place because that is slightly more useful.
+     * place because that is slightly more useful.  Stop if the user
+     * gets killed by any of the hooks, so that later hooks do not get
+     * confused by the user having disappeared.
      */
-    for (nn=0; nn<ncf2_used; nn++)
+    for (nn=0; (nn<ncf2_used) && !user->dead; nn++)
         ncf2_list[nn](user, old_nick);
     user->timestamp = now;
     if (IsLocal(user) && !no_announce)
@@ -502,7 +504,7 @@ AddChannelUser(struct userNode *user, struct chanNode* channel)
             irc_join(user, channel);
         }
 
-        for (n=0; n<jf_used; n++) {
+        for (n=0; (n<jf_used) && !user->dead; n++) {
             /* Callbacks return true if they kick or kill the user,
              * and we can continue without removing mNode. */
             if (jf_list[n](mNode))

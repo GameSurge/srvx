@@ -935,7 +935,7 @@ set_user_handle_info(struct userNode *user, struct handle_info *hi, int stamp)
     user->handle_info = hi;
     if (hi && !hi->users && !hi->opserv_level)
         HANDLE_CLEAR_FLAG(hi, HELPING);
-    for (n=0; n<auth_func_used; n++)
+    for (n=0; (n<auth_func_used) && !user->dead; n++)
         auth_func_list[n](user, old_info);
     if (hi) {
         struct nick_info *ni;
