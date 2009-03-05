@@ -2171,14 +2171,10 @@ nickserv_apply_flags(struct userNode *user, struct handle_info *hi, const char *
         struct channelList *schannels;
         unsigned int ii;
         schannels = chanserv_support_channels();
-        for (uNode = hi->users; uNode; uNode = uNode->next_authed) {
-            for (ii = 0; ii < schannels->used; ++ii)
-                if (GetUserMode(schannels->list[ii], uNode))
-                    break;
-            if (ii < schannels->used)
+        for (ii = 0; ii < schannels->used; ++ii)
+            if (find_handle_in_channel(schannels->list[ii], hi, NULL))
                 break;
-        }
-        if (!uNode)
+        if (ii == schannels->used)
             HANDLE_CLEAR_FLAG(hi, HELPING);
     }
 

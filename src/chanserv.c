@@ -6695,16 +6695,11 @@ handle_part(struct modeNode *mn, UNUSED_ARG(const char *reason))
 
     if(IsHelping(mn->user) && IsSupportHelper(mn->user))
     {
-        unsigned int ii, jj;
+        unsigned int ii;
         for(ii = 0; ii < chanserv_conf.support_channels.used; ++ii)
-        {
-            for(jj = 0; jj < mn->user->channels.used; ++jj)
-                if(mn->user->channels.list[jj]->channel == chanserv_conf.support_channels.list[ii])
-                    break;
-            if(jj < mn->user->channels.used)
+             if(find_handle_in_channel(chanserv_conf.support_channels.list[ii], mn->user->handle_info, mn->user))
                 break;
-        }
-        if(ii == chanserv_conf.support_channels.used)
+         if(ii == chanserv_conf.support_channels.used)
             HANDLE_CLEAR_FLAG(mn->user->handle_info, HELPING);
     }
 }
