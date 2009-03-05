@@ -2279,6 +2279,26 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
     }
 }
 
+static int
+keyncpy(char output[], char input[], size_t output_size)
+{
+    size_t ii;
+
+    if (input[0] == ':')
+    {
+        output[0] = '\0';
+        return 1;
+    }
+
+    for (ii = 0; (ii + 1 < output_size) && (input[ii] != '\0'); ++ii)
+    {
+        output[ii] = input[ii];
+    }
+
+    output[ii] = '\0';
+    return 0;
+}
+
 struct mod_chanmode *
 mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, unsigned int flags, short base_oplevel)
 {
@@ -2313,10 +2333,10 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
         case 't': do_chan_mode(MODE_TOPICLIMIT); break;
         case 'z':
           if (!(flags & MCP_REGISTERED)) {
-           do_chan_mode(MODE_REGISTERED);
+              do_chan_mode(MODE_REGISTERED);
           } else {
-           mod_chanmode_free(change);
-           return NULL;
+              mod_chanmode_free(change);
+              return NULL;
           }
           break;
 #undef do_chan_mode
@@ -2333,10 +2353,10 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
             break;
         case 'k':
             if (add) {
-                if (in_arg >= argc)
+                if ((in_arg >= argc)
+                    || keyncpy(change->new_key, modes[in_arg++], sizeof(change->new_key)))
                     goto error;
                 change->modes_set |= MODE_KEY;
-                safestrncpy(change->new_key, modes[in_arg++], sizeof(change->new_key));
             } else {
                 change->modes_clear |= MODE_KEY;
                 if (!(flags & MCP_KEY_FREE)) {
@@ -2349,10 +2369,10 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
         case 'U':
             if (add)
             {
-              if (in_arg >= argc)
-                  goto error;
-              change->modes_set |= MODE_UPASS;
-              safestrncpy(change->new_upass, modes[in_arg++], sizeof(change->new_upass));
+                if ((in_arg >= argc)
+                    || keyncpy(change->new_upass, modes[in_arg++], sizeof(change->new_upass)))
+                    goto error;
+                change->modes_set |= MODE_UPASS;
             } else {
                 change->modes_clear |= MODE_UPASS;
                 if (!(flags & MCP_UPASS_FREE)) {
@@ -2364,10 +2384,10 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
             break;
         case 'A':
             if (add) {
-                if (in_arg >= argc)
+                if ((in_arg >= argc)
+                    || keyncpy(change->new_upass, modes[in_arg++], sizeof(change->new_upass)))
                     goto error;
                 change->modes_set |= MODE_APASS;
-                safestrncpy(change->new_apass, modes[in_arg++], sizeof(change->new_apass));
             } else {
                 change->modes_clear |= MODE_APASS;
                 if (!(flags & MCP_APASS_FREE)) {
