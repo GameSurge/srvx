@@ -2049,7 +2049,6 @@ opserv_add_bad_word(struct svccmd *cmd, struct userNode *user, const char *new_b
                     reply("OSMSG_BAD_NUKING", orig_bad);
                 string_list_delete(opserv_bad_words, bad_idx);
                 bad_idx--;
-                free(orig_bad);
             }
             return 1;
         }
