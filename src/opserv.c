@@ -3968,8 +3968,13 @@ opserv_staff_alert(struct userNode *user, UNUSED_ARG(struct handle_info *old_han
         send_channel_notice(opserv_conf.staff_auth_channel, opserv, IDENT_FORMAT" authed to %s account %s", IDENT_DATA(user), type, user->handle_info->handle);
     else
         send_channel_notice(opserv_conf.staff_auth_channel, opserv, "%s [%s@%s] authed to %s account %s", user->nick, user->ident, user->hostname, type, user->handle_info->handle);
+}
 
-    dict_foreach(opserv_account_alerts, alert_check_user, user);
+static void
+opserv_auth_alert(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
+{
+    if (!user->uplink->burst && user->handle_info)
+        dict_foreach(opserv_account_alerts, alert_check_user, user);
 }
 
 static MODCMD_FUNC(cmd_log)
@@ -4370,6 +4375,7 @@ init_opserv(const char *nick)
     reg_del_channel_func(opserv_channel_delete);
     reg_join_func(opserv_join_check);
     reg_auth_func(opserv_staff_alert);
+    reg_auth_func(opserv_auth_alert);
 
     opserv_db_init();
     saxdb_register("OpServ", opserv_saxdb_read, opserv_saxdb_write);
