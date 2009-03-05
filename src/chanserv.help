@@ -220,8 +220,7 @@
         "$uSee Also:$u say");
 "EVENTS" ("/msg $C EVENTS <#channel> [limit [pattern]]",
         "Allows channel coowners to view a list of events related to their channel. If a pattern is provided, only events with a matching description will be displayed.",
-	"$bNote:$b You must specify a limit if you want to use a pattern to match against.",
-        "$uSee Also:$u last");
+	"$bNote:$b You must specify a limit if you want to use a pattern to match against.");
 "EXPIRE" ("/msg $C EXPIRE",
         "Expires any channels that have not been visited within the configured duration. Channel registrations are automatically expired, so you only need to use this command if the duration has been changed.",
         "$uSee Also:$u unvisited");
