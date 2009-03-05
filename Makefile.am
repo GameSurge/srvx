@@ -1,4 +1,4 @@
-EXTRA_DIST = FAQ UPGRADE srvx.conf.example sockcheck.conf.example autogen.sh Makefile.win32
+EXTRA_DIST = FAQ UPGRADE srvx.conf.example sockcheck.conf.example Makefile.win32
 SUBDIRS = @MY_SUBDIRS@
 DIST_SUBDIRS = src rx
 
