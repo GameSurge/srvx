@@ -118,7 +118,9 @@ static struct {
 const char *memoserv_module_deps[] = { NULL };
 static struct module *memoserv_module;
 static struct log_type *MS_LOG;
-static unsigned long memosSent, memosExpired;
+static unsigned long memoCount;
+static unsigned long memosSent;
+static unsigned long memosExpired;
 static struct dict *memos; /* memo_account->handle->handle -> memo_account */
 
 static struct memo_account *
@@ -146,6 +148,7 @@ delete_memo(struct memo *memo)
     memoList_remove(&memo->sender->sent, memo);
     free(memo->message);
     free(memo);
+    memoCount--;
 }
 
 static void
@@ -205,6 +208,7 @@ add_memo(unsigned long sent, struct memo_account *recipient, struct memo_account
     memo->sent = sent;
     memo->message = strdup(message);
     memosSent++;
+    memoCount++;
     return memo;
 }
 
@@ -436,7 +440,7 @@ static MODCMD_FUNC(cmd_set_private)
 
 static MODCMD_FUNC(cmd_status)
 {
-    reply("MSMSG_STATUS_TOTAL", dict_size(memos));
+    reply("MSMSG_STATUS_TOTAL", memoCount);
     reply("MSMSG_STATUS_EXPIRED", memosExpired);
     reply("MSMSG_STATUS_SENT", memosSent);
     return 1;
