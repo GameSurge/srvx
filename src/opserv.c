@@ -2264,7 +2264,7 @@ static MODCMD_FUNC(cmd_edittrust)
         return 0;
     }
     count = strtoul(argv[2], &tmp, 10);
-    if (!count || *tmp) {
+    if (*tmp != '\0') {
         reply("OSMSG_BAD_NUMBER", argv[2]);
         return 0;
     }

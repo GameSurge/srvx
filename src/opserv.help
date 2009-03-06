@@ -23,6 +23,7 @@
         "  ADDTRUST [${level/addtrust}]",
         "  DELALERT [${level/delalert}]",
         "  DELTRUST [${level/deltrust}]",
+        "  EDITTRUST [${level/edittrust}]",
         "  INVITEME [${level/inviteme}]",
         "  TRACE    [${level/trace}]",
         "  WHOIS    [${level/whois}]");
@@ -34,7 +35,7 @@
 "ADDTRUST" ("/msg $O ADDTRUST <ip> <count> <duration> <reason>",
         "Allows the specified IP address to have the specified amount of clones before being removed (rather than the usual limit).",
         "You may use 0 as the duration if you do not wish the trust to ever expire, and 0 as the count for unlimited connections.",
-        "$uSee Also:$u deltrust, stats trusted");
+        "$uSee Also:$u deltrust, edittrust, stats trusted");
 "ALERT REACTION" ("$bALERT REACTION$b",
         "Valid alert actions (to be taken when an alert is hit) are:",
         "$bNOTICE$b:       Send a notice to the $b$O$b alert channel",
@@ -46,7 +47,11 @@
         "$uSee Also:$u addalert, stats");
 "DELTRUST" ("/msg $O DELTRUST <ip>",
         "Deletes a trusted IP from $b$O's$b trusted hosts list. A trusted IP address is exempted from normal client limits. A list of currently trusted IPs is displayed by $bstats trusted$b.",
-        "$uSee Also:$u addtrust, stats");
+        "$uSee Also:$u addtrust, edittrust, stats");
+"EDITTRUST" ("/msg $O EDITTRUST <ip> <count> <duration> <reason>",
+        "Edits the 'trust' for the specified IP, changing the count, duration and/or reason.",
+        "You may use 0 as the duration if you do not wish the trust to ever expire, and 0 as the count for unlimited connections.",
+        "$uSee Also:$u addtrust, deltrust, stats trusted");
 "INVITEME" ("/msg $O INVITEME [nick]",
         "Invites the specified user (if omitted, you) to $O's debug channel.",
         "This is currently pointless, since no output is sent to the debug channel.");
