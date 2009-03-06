@@ -260,12 +260,12 @@
         "$uSee also:$u set, set reqpersist");
 "SET NOTIFICATION" ("$bSET NOTIFICATION$b",
         "/msg $S SET NOTIFICATION <notification-type>",
-        "This sets the \"notification level\" for all requests. It determines which messages are sent to helpers when something happens with their request, or the user/handle the request is associated with.",
+        "This sets the \"notification level\" for all requests. It determines which messages are sent to helpers when something happens with their request, or the user/account the request is associated with.",
         "The following notification levels may be used:",
         "None             No notifications are sent",
         "ReqDrop          Send a notification if a request is dropped",
         "UserChanges      Above, and also notify of the user changing nick, disconnecting, or coming online",
-        "AccountChanges   Above, and also notify when the user authenticates to a handle or unregisters a handle ($bcan only be set by an IRCOP$b)",
+        "AccountChanges   Above, and also notify when the user authenticates to an account or unregisters an account ($bcan only be set by an IRCOP$b)",
         "$uSee also:$u set");
 "SET PRIVMSGONLY" ("$bSET PRIVMSGONLY$b",
         "/msg $S SET PRIVMSGONLY <Yes|No>",
