@@ -4942,12 +4942,16 @@ chanserv_expire_suspension(void *data)
 {
     struct suspended *suspended = data;
     struct chanNode *channel;
+    unsigned int ii;
 
+    /* Update the channel registration data structure. */
     if(!suspended->expires || (now < suspended->expires))
         suspended->revoked = now;
     channel = suspended->cData->channel;
     suspended->cData->channel = channel;
     suspended->cData->flags &= ~CHANNEL_SUSPENDED;
+
+    /* If appropriate, re-join ChanServ to the channel. */
     if(!IsOffChannel(suspended->cData))
     {
         struct mod_chanmode change;
@@ -4956,6 +4960,17 @@ chanserv_expire_suspension(void *data)
         change.args[0].mode = MODE_CHANOP;
         change.args[0].u.member = AddChannelUser(chanserv, channel);
         mod_chanmode_announce(chanserv, channel, &change);
+    }
+
+    /* Mark everyone currently in the channel as present. */
+    for(ii = 0; ii < channel->members.used; ++ii)
+    {
+        struct userData *uData = GetChannelAccess(suspended->cData, channel->members.list[ii]->user->handle_info);
+        if(uData)
+        {
+            uData->present = 1;
+            uData->seen = now;
+        }
     }
 }
 
