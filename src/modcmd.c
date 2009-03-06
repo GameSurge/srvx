@@ -137,7 +137,7 @@ struct userData *_GetChannelUser(struct chanData *channel, struct handle_info *h
 static struct modcmd_flag {
     const char *name;
     unsigned int flag;
-} flags[] = {
+} modcmd_flags[] = {
     { "acceptchan", MODCMD_ACCEPT_CHANNEL },
     { "acceptpluschan", MODCMD_ACCEPT_PCHANNEL },
     { "authed", MODCMD_REQUIRE_AUTHED },
@@ -323,7 +323,7 @@ svccmd_configure(struct svccmd *cmd, struct userNode *user, struct userNode *bot
                 return 0;
             }
             value++;
-            flag = bsearch(value, flags, ArrayLength(flags)-1, sizeof(flags[0]), flags_bsearch);
+            flag = bsearch(value, modcmd_flags, ArrayLength(modcmd_flags)-1, sizeof(modcmd_flags[0]), flags_bsearch);
             if (!flag) {
                 if (user)
                     send_message(user, bot, "MCMSG_UNKNOWN_FLAG", end, value);
@@ -990,9 +990,9 @@ check_alias_args(char *argv[], unsigned int argc) {
             continue;
         } else if (isdigit(argv[arg][1])) {
             char *end_num;
-            unsigned long arg;
+            unsigned long tmp;
 
-            arg = strtoul(argv[arg]+1, &end_num, 10);
+            tmp = strtoul(argv[arg]+1, &end_num, 10);
             switch (end_num[0]) {
             case 0:
                 continue;
@@ -1385,18 +1385,19 @@ modcmd_describe_command(struct userNode *user, struct svccmd *cmd, struct svccmd
         snprintf(buf1, sizeof(buf1), "%s.%s", target->command->parent->name, target->command->name);
         reply("MCMSG_COMMAND_BINDING", target->name, buf1);
     }
-    for (ii = buf1_used = buf2_used = 0; flags[ii].name; ++ii) {
-        if (target->flags & flags[ii].flag) {
+    for (ii = buf1_used = buf2_used = 0; modcmd_flags[ii].name; ++ii) {
+        const struct modcmd_flag *flag = &modcmd_flags[ii];
+        if (target->flags & flag->flag) {
             if (buf1_used)
                 buf1[buf1_used++] = ',';
-            len = strlen(flags[ii].name);
-            memcpy(buf1 + buf1_used, flags[ii].name, len);
+            len = strlen(flag->name);
+            memcpy(buf1 + buf1_used, flag->name, len);
             buf1_used += len;
-        } else if (target->effective_flags & flags[ii].flag) {
+        } else if (target->effective_flags & flag->flag) {
             if (buf2_used)
                 buf2[buf2_used++] = ',';
-            len = strlen(flags[ii].name);
-            memcpy(buf2 + buf2_used, flags[ii].name, len);
+            len = strlen(flag->name);
+            memcpy(buf2 + buf2_used, flag->name, len);
             buf2_used += len;
         }
     }
@@ -1685,20 +1686,20 @@ static MODCMD_FUNC(cmd_showcommands) {
         if (show_opserv_level)
             tbl.contents[ii+1][1] = strtab(svccmd->min_opserv_level);
         if (show_channel_access) {
-            const char *access;
+            const char *access_name;
             int flags = svccmd->effective_flags;
             if (flags & MODCMD_REQUIRE_HELPING)
-                access = "helping";
+                access_name = "helping";
             else if (flags & MODCMD_REQUIRE_STAFF) {
                 if (flags & MODCMD_REQUIRE_OPER)
-                    access = "oper";
+                    access_name = "oper";
                 else if (flags & MODCMD_REQUIRE_NETWORK_HELPER)
-                    access = "net.helper";
+                    access_name = "net.helper";
                 else
-                    access = "staff";
+                    access_name = "staff";
             } else
-                access = strtab(svccmd->min_channel_access);
-            tbl.contents[ii+1][1+show_opserv_level] = access;
+                access_name = strtab(svccmd->min_channel_access);
+            tbl.contents[ii+1][1+show_opserv_level] = access_name;
         }
     }
     svccmd_list_clean(&commands);
@@ -1923,11 +1924,12 @@ modcmd_saxdb_write_command(struct saxdb_context *ctx, struct svccmd *cmd) {
         saxdb_write_int(ctx, "channel_access", cmd->min_channel_access);
     if (cmd->flags != template->flags) {
         if (cmd->flags) {
-            for (nn=pos=0; flags[nn].name; ++nn) {
-                if (cmd->flags & flags[nn].flag) {
+            for (nn=pos=0; modcmd_flags[nn].name; ++nn) {
+                const struct modcmd_flag *flag = &modcmd_flags[nn];
+                if (cmd->flags & flag->flag) {
                     buf[pos++] = '+';
-                    len = strlen(flags[nn].name);
-                    memcpy(buf+pos, flags[nn].name, len);
+                    len = strlen(flag->name);
+                    memcpy(buf+pos, flag->name, len);
                     pos += len;
                     buf[pos++] = ',';
                 }
@@ -2101,7 +2103,7 @@ modcmd_conf_read(void) {
 
 void
 modcmd_init(void) {
-    qsort(flags, ArrayLength(flags)-1, sizeof(flags[0]), flags_qsort);
+    qsort(modcmd_flags, ArrayLength(modcmd_flags)-1, sizeof(modcmd_flags[0]), flags_qsort);
     modules = dict_new();
     dict_set_free_data(modules, free_module);
     services = dict_new();

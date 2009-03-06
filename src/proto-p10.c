@@ -369,10 +369,10 @@ irc_server(struct server *srv)
     if (srv == self) {
         /* The +s, ignored by Run's ircu, means "service" to Undernet's ircu */
         putsock(P10_SERVER " %s %d %lu %lu J10 %s%s +s6 :%s",
-                srv->name, srv->hops+1, srv->boot, srv->link, srv->numeric, extranum, srv->description);
+                srv->name, srv->hops+1, srv->boot, srv->link_time, srv->numeric, extranum, srv->description);
     } else {
         putsock("%s " P10_SERVER " %s %d %lu %lu %c10 %s%s +s6 :%s",
-                self->numeric, srv->name, srv->hops+1, srv->boot, srv->link, (srv->self_burst ? 'J' : 'P'), srv->numeric, extranum, srv->description);
+                self->numeric, srv->name, srv->hops+1, srv->boot, srv->link_time, (srv->self_burst ? 'J' : 'P'), srv->numeric, extranum, srv->description);
     }
 }
 
@@ -631,14 +631,14 @@ irc_pong_asll(const char *who, const char *orig_ts)
 {
     char *delim;
     struct timeval orig;
-    struct timeval now;
+    struct timeval sys_now;
     int diff;
 
     orig.tv_sec = strtoul(orig_ts, &delim, 10);
     orig.tv_usec = (*delim == '.') ? strtoul(delim + 1, NULL, 10) : 0;
-    gettimeofday(&now, NULL);
-    diff = (now.tv_sec - orig.tv_sec) * 1000 + (now.tv_usec - orig.tv_usec) / 1000;
-    putsock("%s " P10_PONG " %s %s %d %lu.%06lu", self->numeric, who, orig_ts, diff, (unsigned long)now.tv_sec, (unsigned long)now.tv_usec);
+    gettimeofday(&sys_now, NULL);
+    diff = (sys_now.tv_sec - orig.tv_sec) * 1000 + (sys_now.tv_usec - orig.tv_usec) / 1000;
+    putsock("%s " P10_PONG " %s %s %d %lu.%06lu", self->numeric, who, orig_ts, diff, (unsigned long)sys_now.tv_sec, (unsigned long)sys_now.tv_usec);
 }
 
 void
@@ -1016,7 +1016,7 @@ static CMD_FUNC(cmd_server)
              * Alternately, we are same age, but we accept their time
              * since we are linking to them. */
             self->boot = srv->boot;
-            ioset_set_time(srv->link);
+            ioset_set_time(srv->link_time);
         }
     }
     if (srv == self->uplink) {
@@ -1912,7 +1912,7 @@ make_numeric(struct server *svr, int local_num, char *outbuf)
 }
 
 struct server *
-AddServer(struct server *uplink, const char *name, int hops, unsigned long boot, unsigned long link, const char *numeric, const char *description)
+AddServer(struct server *uplink, const char *name, int hops, unsigned long boot, unsigned long link_time, const char *numeric, const char *description)
 {
     struct server* sNode;
     int slen, mlen;
@@ -1944,7 +1944,7 @@ AddServer(struct server *uplink, const char *name, int hops, unsigned long boot,
     sNode->num_mask = base64toint(numeric+slen, mlen);
     sNode->hops = hops;
     sNode->boot = boot;
-    sNode->link = link;
+    sNode->link_time = link_time;
     strncpy(sNode->numeric, numeric, slen);
     safestrncpy(sNode->description, description, sizeof(sNode->description));
     sNode->users = calloc(sNode->num_mask+1, sizeof(*sNode->users));
@@ -2723,51 +2723,51 @@ mod_chanmode_format(struct mod_chanmode *change, char *outbuff)
 static int
 clear_chanmode(struct chanNode *channel, const char *modes)
 {
-    unsigned int remove;
+    unsigned int cleared;
 
-    for (remove = 0; *modes; modes++) {
+    for (cleared = 0; *modes; modes++) {
         switch (*modes) {
-        case 'o': remove |= MODE_CHANOP; break;
-        case 'v': remove |= MODE_VOICE; break;
-        case 'p': remove |= MODE_PRIVATE; break;
-        case 's': remove |= MODE_SECRET; break;
-        case 'm': remove |= MODE_MODERATED; break;
-        case 't': remove |= MODE_TOPICLIMIT; break;
-        case 'i': remove |= MODE_INVITEONLY; break;
-        case 'n': remove |= MODE_NOPRIVMSGS; break;
+        case 'o': cleared |= MODE_CHANOP; break;
+        case 'v': cleared |= MODE_VOICE; break;
+        case 'p': cleared |= MODE_PRIVATE; break;
+        case 's': cleared |= MODE_SECRET; break;
+        case 'm': cleared |= MODE_MODERATED; break;
+        case 't': cleared |= MODE_TOPICLIMIT; break;
+        case 'i': cleared |= MODE_INVITEONLY; break;
+        case 'n': cleared |= MODE_NOPRIVMSGS; break;
         case 'k':
-            remove |= MODE_KEY;
+            cleared |= MODE_KEY;
             channel->key[0] = '\0';
             break;
         case 'A':
-            remove |= MODE_APASS;
+            cleared |= MODE_APASS;
             channel->apass[0] = '\0';
             break;
         case 'U':
-            remove |= MODE_UPASS;
+            cleared |= MODE_UPASS;
             channel->upass[0] = '\0';
             break;
         case 'l':
-            remove |= MODE_LIMIT;
+            cleared |= MODE_LIMIT;
             channel->limit = 0;
             break;
-        case 'b': remove |= MODE_BAN; break;
-        case 'D': remove |= MODE_DELAYJOINS; break;
-        case 'r': remove |= MODE_REGONLY; break;
-        case 'c': remove |= MODE_NOCOLORS; break;
-        case 'C': remove |= MODE_NOCTCPS; break;
-        case 'z': remove |= MODE_REGISTERED; break;
+        case 'b': cleared |= MODE_BAN; break;
+        case 'D': cleared |= MODE_DELAYJOINS; break;
+        case 'r': cleared |= MODE_REGONLY; break;
+        case 'c': cleared |= MODE_NOCOLORS; break;
+        case 'C': cleared |= MODE_NOCTCPS; break;
+        case 'z': cleared |= MODE_REGISTERED; break;
         }
     }
 
-    if (!remove)
+    if (!cleared)
         return 1;
 
     /* Remove simple modes. */
-    channel->modes &= ~remove;
+    channel->modes &= ~cleared;
 
     /* If removing bans, kill 'em all. */
-    if ((remove & MODE_BAN) && channel->banlist.used) {
+    if ((cleared & MODE_BAN) && channel->banlist.used) {
         unsigned int i;
         for (i=0; i<channel->banlist.used; i++)
             free(channel->banlist.list[i]);
@@ -2775,8 +2775,8 @@ clear_chanmode(struct chanNode *channel, const char *modes)
     }
 
     /* Remove member modes. */
-    if ((remove & (MODE_CHANOP | MODE_VOICE)) && channel->members.used) {
-        int mask = ~(remove & (MODE_CHANOP | MODE_VOICE));
+    if ((cleared & (MODE_CHANOP | MODE_VOICE)) && channel->members.used) {
+        int mask = ~(cleared & (MODE_CHANOP | MODE_VOICE));
         unsigned int i;
 
         for (i = 0; i < channel->members.used; i++)

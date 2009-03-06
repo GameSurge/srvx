@@ -357,7 +357,7 @@ fi
 MY_SUBDIRS="$MY_SUBDIRS src"
 CFLAGS="$CFLAGS $ANSI_SRC -W -Wall"
 if test "z$USE_MAINTAINER_MODE" = zyes ; then
-  CFLAGS="$CFLAGS -Werror -ansi"
+  CFLAGS="$CFLAGS -Werror -Wshadow -ansi"
 fi
 
 AC_DEFINE_UNQUOTED(CODENAME, "${CODENAME}", [Code name for this release])

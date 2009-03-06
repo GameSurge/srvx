@@ -848,7 +848,7 @@ static struct helpserv_request * smart_get_request(struct helpserv_bot *hs, stru
 
 static struct helpserv_request * create_request(struct userNode *user, struct helpserv_bot *hs, int from_join) {
     struct helpserv_request *req = calloc(1, sizeof(struct helpserv_request));
-    char lbuf[3][MAX_LINE_SIZE], unh[INTERVALLEN];
+    char lbuf[3][MAX_LINE_SIZE], req_id[INTERVALLEN];
     struct helpserv_reqlist *reqlist, *hand_reqlist;
     const unsigned int from_opserv = 0;
     const char *fmt;
@@ -856,8 +856,8 @@ static struct helpserv_request * create_request(struct userNode *user, struct he
     assert(req);
 
     req->id = ++hs->last_requestid;
-    sprintf(unh, "%lu", req->id);
-    dict_insert(hs->requests, strdup(unh), req);
+    sprintf(req_id, "%lu", req->id);
+    dict_insert(hs->requests, strdup(req_id), req);
 
     if (hs->id_wrap) {
         unsigned long i;
@@ -951,9 +951,9 @@ static struct helpserv_request * create_request(struct userNode *user, struct he
         sprintf(lbuf[0], fmt, req->id);
     }
     if (req != hs->unhandled) {
-        intervalString(unh, now - hs->unhandled->opened, user->handle_info);
+        intervalString(req_id, now - hs->unhandled->opened, user->handle_info);
         fmt = user_find_message(user, "HSMSG_REQ_UNHANDLED_TIME");
-        sprintf(lbuf[1], fmt, unh);
+        sprintf(lbuf[1], fmt, req_id);
     } else {
         fmt = user_find_message(user, "HSMSG_REQ_NO_UNHANDLED");
         sprintf(lbuf[1], "%s", fmt);
@@ -3721,10 +3721,10 @@ static void helpserv_conf_read(void) {
 }
 
 static struct helpserv_cmd *
-helpserv_define_func(const char *name, helpserv_func_t *func, enum helpserv_level access, long flags) {
+helpserv_define_func(const char *name, helpserv_func_t *func, enum helpserv_level level, long flags) {
     struct helpserv_cmd *cmd = calloc(1, sizeof(struct helpserv_cmd));
 
-    cmd->access = access;
+    cmd->access = level;
     cmd->weight = 1.0;
     cmd->func = func;
     cmd->flags = flags;
@@ -3793,9 +3793,9 @@ static void handle_part(struct modeNode *mn, UNUSED_ARG(const char *reason)) {
 
                 if ((hs->persist_types[PERSIST_T_HELPER] == PERSIST_PART)
                     && (req->helper == hs_user)) {
-                    char reason[CHANNELLEN + 8];
-                    sprintf(reason, "parted %s", mn->channel->name);
-                    helpserv_page_helper_gone(hs, req, reason);
+                    char our_reason[CHANNELLEN + 8];
+                    sprintf(our_reason, "parted %s", mn->channel->name);
+                    helpserv_page_helper_gone(hs, req, our_reason);
                 }
             }
 

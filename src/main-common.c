@@ -532,7 +532,7 @@ conf_rlimits(void)
 #endif
 
 static void
-usage(char *self)
+usage(char *exe_name)
 {
     /* We can assume we have getopt_long(). */
     printf("Usage: %s [-c config] [-r log] [-d] [-f] [-v|-h]\n"
@@ -543,7 +543,7 @@ usage(char *self)
            " -k, --check          checks the configuration file's syntax.\n"
            " -r, --replay         replay a log file (for debugging).\n"
            " -v, --version        prints this program's version.\n"
-           , self);
+           , exe_name);
 }
 
 static void

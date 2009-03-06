@@ -148,14 +148,14 @@ logList_join(struct logList *target, const struct logList *source)
     target->size += source->used;
     target->list = realloc(target->list, target->size * sizeof(target->list[0]));
     for (ii = 0; ii < source->used; ++ii, ++jj) {
-        int dup;
-        for (dup = 0, kk = 0; kk < jj; kk++) {
+        int is_duplicate;
+        for (is_duplicate = 0, kk = 0; kk < jj; kk++) {
             if (target->list[kk] == source->list[ii]) {
-                dup = 1;
+                is_duplicate = 1;
                 break;
             }
         }
-        if (dup) {
+        if (is_duplicate) {
             jj--;
             target->used--;
             continue;
@@ -319,14 +319,14 @@ log_parse_sevset(char *buffer, char targets[LOG_NUM_SEVERITIES])
 static void
 log_parse_cross(const char *buffer, struct string_list *types, char sevset[LOG_NUM_SEVERITIES])
 {
-    char *dup, *sep;
+    char *buffer_copy, *sep;
 
-    dup = strdup(buffer);
-    sep = strchr(dup, '.');
+    buffer_copy = strdup(buffer);
+    sep = strchr(buffer_copy, '.');
     *sep++ = 0;
-    log_parse_logset(dup, types);
+    log_parse_logset(buffer_copy, types);
     log_parse_sevset(sep, sevset);
-    free(dup);
+    free(buffer_copy);
 }
 
 static void
@@ -832,51 +832,51 @@ ldFile_open(const char *args) {
 }
 
 static void
-ldFile_reopen(struct logDestination *self_) {
-    struct logDest_file *self = (struct logDest_file*)self_;
-    fclose(self->output);
-    self->output = fopen(self->fname, "a");
+ldFile_reopen(struct logDestination *dest_) {
+    struct logDest_file *dest = (struct logDest_file*)dest_;
+    fclose(dest->output);
+    dest->output = fopen(dest->fname, "a");
 }
 
 static void
-ldFile_close(struct logDestination *self_) {
-    struct logDest_file *self = (struct logDest_file*)self_;
-    fclose(self->output);
-    free(self->fname);
-    free(self);
+ldFile_close(struct logDestination *dest_) {
+    struct logDest_file *dest = (struct logDest_file*)dest_;
+    fclose(dest->output);
+    free(dest->fname);
+    free(dest);
 }
 
 static void
-ldFile_audit(struct logDestination *self_, UNUSED_ARG(struct log_type *type), struct logEntry *entry) {
-    struct logDest_file *self = (struct logDest_file*)self_;
-    fputs(entry->default_desc, self->output);
-    fputc('\n', self->output);
-    fflush(self->output);
+ldFile_audit(struct logDestination *dest_, UNUSED_ARG(struct log_type *type), struct logEntry *entry) {
+    struct logDest_file *dest = (struct logDest_file*)dest_;
+    fputs(entry->default_desc, dest->output);
+    fputc('\n', dest->output);
+    fflush(dest->output);
 }
 
 static void
-ldFile_replay(struct logDestination *self_, UNUSED_ARG(struct log_type *type), int is_write, const char *line) {
-    struct logDest_file *self = (struct logDest_file*)self_;
+ldFile_replay(struct logDestination *dest_, UNUSED_ARG(struct log_type *type), int is_write, const char *line) {
+    struct logDest_file *dest = (struct logDest_file*)dest_;
     struct string_buffer sbuf;
     memset(&sbuf, 0, sizeof(sbuf));
     log_format_timestamp(now, &sbuf);
     string_buffer_append_string(&sbuf, is_write ? "W: " : "   ");
     string_buffer_append_string(&sbuf, line);
-    fputs(sbuf.list, self->output);
-    fputc('\n', self->output);
+    fputs(sbuf.list, dest->output);
+    fputc('\n', dest->output);
     free(sbuf.list);
-    fflush(self->output);
+    fflush(dest->output);
 }
 
 static void
-ldFile_module(struct logDestination *self_, struct log_type *type, enum log_severity sev, const char *message) {
-    struct logDest_file *self = (struct logDest_file*)self_;
+ldFile_module(struct logDestination *dest_, struct log_type *type, enum log_severity sev, const char *message) {
+    struct logDest_file *dest = (struct logDest_file*)dest_;
     struct string_buffer sbuf;
     memset(&sbuf, 0, sizeof(sbuf));
     log_format_timestamp(now, &sbuf);
-    fprintf(self->output, "%s (%s:%s) %s\n", sbuf.list, type->name, log_severity_names[sev], message);
+    fprintf(dest->output, "%s (%s:%s) %s\n", sbuf.list, type->name, log_severity_names[sev], message);
     free(sbuf.list);
-    fflush(self->output);
+    fflush(dest->output);
 }
 
 static struct logDest_vtable ldFile_vtbl = {
@@ -912,22 +912,22 @@ ldStd_open(const char *args) {
 }
 
 static void
-ldStd_close(struct logDestination *self_) {
-    struct logDest_file *self = (struct logDest_file*)self_;
-    free(self->fname);
-    free(self);
+ldStd_close(struct logDestination *dest_) {
+    struct logDest_file *dest = (struct logDest_file*)dest_;
+    free(dest->fname);
+    free(dest);
 }
 
 static void
-ldStd_replay(struct logDestination *self_, UNUSED_ARG(struct log_type *type), int is_write, const char *line) {
-    struct logDest_file *self = (struct logDest_file*)self_;
-    fprintf(self->output, "%s%s\n", is_write ? "W: " : "   ", line);
+ldStd_replay(struct logDestination *dest_, UNUSED_ARG(struct log_type *type), int is_write, const char *line) {
+    struct logDest_file *dest = (struct logDest_file*)dest_;
+    fprintf(dest->output, "%s%s\n", is_write ? "W: " : "   ", line);
 }
 
 static void
-ldStd_module(struct logDestination *self_, UNUSED_ARG(struct log_type *type), enum log_severity sev, const char *message) {
-    struct logDest_file *self = (struct logDest_file*)self_;
-    fprintf(self->output, "%s: %s\n", log_severity_names[sev], message);
+ldStd_module(struct logDestination *dest_, UNUSED_ARG(struct log_type *type), enum log_severity sev, const char *message) {
+    struct logDest_file *dest = (struct logDest_file*)dest_;
+    fprintf(dest->output, "%s: %s\n", log_severity_names[sev], message);
 }
 
 static struct logDest_vtable ldStd_vtbl = {
@@ -958,29 +958,29 @@ ldIrc_open(const char *args) {
 }
 
 static void
-ldIrc_close(struct logDestination *self_) {
-    struct logDest_irc *self = (struct logDest_irc*)self_;
-    free(self->target);
-    free(self);
+ldIrc_close(struct logDestination *dest_) {
+    struct logDest_irc *dest = (struct logDest_irc*)dest_;
+    free(dest->target);
+    free(dest);
 }
 
 static void
-ldIrc_audit(struct logDestination *self_, UNUSED_ARG(struct log_type *type), struct logEntry *entry) {
-    struct logDest_irc *self = (struct logDest_irc*)self_;
+ldIrc_audit(struct logDestination *dest_, UNUSED_ARG(struct log_type *type), struct logEntry *entry) {
+    struct logDest_irc *dest = (struct logDest_irc*)dest_;
 
     if (entry->channel_name) {
-        send_target_message(4, self->target, entry->bot, "(%s", strchr(strchr(entry->default_desc, ' '), ':')+1);
+        send_target_message(4, dest->target, entry->bot, "(%s", strchr(strchr(entry->default_desc, ' '), ':')+1);
     } else {
-        send_target_message(4, self->target, entry->bot, "%s", strchr(entry->default_desc, ')')+2);
+        send_target_message(4, dest->target, entry->bot, "%s", strchr(entry->default_desc, ')')+2);
     }
 }
 
 static void
-ldIrc_module(struct logDestination *self_, struct log_type *type, enum log_severity sev, const char *message) {
-    struct logDest_irc *self = (struct logDest_irc*)self_;
+ldIrc_module(struct logDestination *dest_, struct log_type *type, enum log_severity sev, const char *message) {
+    struct logDest_irc *dest = (struct logDest_irc*)dest_;
     extern struct userNode *opserv;
 
-    send_target_message(4, self->target, opserv, "%s %s: %s\n", type->name, log_severity_names[sev], message);
+    send_target_message(4, dest->target, opserv, "%s %s: %s\n", type->name, log_severity_names[sev], message);
 }
 
 static struct logDest_vtable ldIrc_vtbl = {

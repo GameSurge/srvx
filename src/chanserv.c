@@ -1117,18 +1117,18 @@ register_channel(struct chanNode *cNode, char *registrar)
 }
 
 static struct userData*
-add_channel_user(struct chanData *channel, struct handle_info *handle, unsigned short access, unsigned long seen, const char *info)
+add_channel_user(struct chanData *channel, struct handle_info *handle, unsigned short access_level, unsigned long seen, const char *info)
 {
     struct userData *ud;
 
-    if(access > UL_OWNER)
+    if(access_level > UL_OWNER)
         return NULL;
 
     ud = calloc(1, sizeof(*ud));
     ud->channel = channel;
     ud->handle = handle;
     ud->seen = seen;
-    ud->access = access;
+    ud->access = access_level;
     ud->info = info ? strdup(info) : NULL;
 
     ud->prev = NULL;
@@ -2544,7 +2544,7 @@ static CHANSERV_FUNC(cmd_adduser)
     struct userData *actee;
     struct userData *actor, *real_actor;
     struct handle_info *handle;
-    unsigned short access, override = 0;
+    unsigned short access_level, override = 0;
 
     REQUIRE_PARAMS(3);
 
@@ -2554,8 +2554,8 @@ static CHANSERV_FUNC(cmd_adduser)
         return 0;
     }
 
-    access = user_level_from_name(argv[2], UL_OWNER);
-    if(!access)
+    access_level = user_level_from_name(argv[2], UL_OWNER);
+    if(!access_level)
     {
         reply("CSMSG_INVALID_ACCESS", argv[2]);
         return 0;
@@ -2564,14 +2564,14 @@ static CHANSERV_FUNC(cmd_adduser)
     actor = GetChannelUser(channel->channel_info, user->handle_info);
     real_actor = GetChannelAccess(channel->channel_info, user->handle_info);
 
-    if(actor->access <= access)
+    if(actor->access <= access_level)
     {
         reply("CSMSG_NO_BUMP_ACCESS");
         return 0;
     }
 
     /* Trying to add someone with equal/more access? */
-    if (!real_actor || real_actor->access <= access)
+    if (!real_actor || real_actor->access <= access_level)
         override = CMD_LOG_OVERRIDE;
 
     if(!(handle = modcmd_get_handle_info(user, argv[1])))
@@ -2583,9 +2583,9 @@ static CHANSERV_FUNC(cmd_adduser)
         return 0;
     }
 
-    actee = add_channel_user(channel->channel_info, handle, access, 0, NULL);
+    actee = add_channel_user(channel->channel_info, handle, access_level, 0, NULL);
     scan_user_presence(actee, NULL);
-    reply("CSMSG_ADDED_USER", handle->handle, channel->name, access);
+    reply("CSMSG_ADDED_USER", handle->handle, channel->name, access_level);
     return 1 | override;
 }
 
@@ -2657,7 +2657,7 @@ static CHANSERV_FUNC(cmd_deluser)
     struct handle_info *handle;
     struct userData *victim;
     struct userData *actor, *real_actor;
-    unsigned short access, override = 0;
+    unsigned short access_level, override = 0;
     char *chan_name;
 
     REQUIRE_PARAMS(2);
@@ -2676,13 +2676,13 @@ static CHANSERV_FUNC(cmd_deluser)
 
     if(argc > 2)
     {
-        access = user_level_from_name(argv[1], UL_OWNER);
-        if(!access)
+        access_level = user_level_from_name(argv[1], UL_OWNER);
+        if(!access_level)
         {
             reply("CSMSG_INVALID_ACCESS", argv[1]);
             return 0;
         }
-        if(access != victim->access)
+        if(access_level != victim->access)
         {
             reply("CSMSG_INCORRECT_ACCESS", handle->handle, victim->access, argv[1]);
             return 0;
@@ -2690,7 +2690,7 @@ static CHANSERV_FUNC(cmd_deluser)
     }
     else
     {
-        access = victim->access;
+        access_level = victim->access;
     }
 
     if((actor->access <= victim->access) && !IsHelping(user))
@@ -2707,7 +2707,7 @@ static CHANSERV_FUNC(cmd_deluser)
 
     chan_name = strdup(channel->name);
     del_channel_user(victim, 1);
-    reply("CSMSG_DELETED_USER", handle->handle, access, chan_name);
+    reply("CSMSG_DELETED_USER", handle->handle, access_level, chan_name);
     free(chan_name);
     return 1 | override;
 }
@@ -3933,9 +3933,9 @@ cmd_list_users(struct userNode *user, struct chanNode *channel, unsigned int arg
     ary[3] = "Status";
     for(matches = 1; matches < lData.table.length; ++matches)
     {
-        struct userData *uData = lData.users[matches-1];
         char seen[INTERVALLEN];
 
+        uData = lData.users[matches-1];
         ary = malloc(lData.table.width*sizeof(**lData.table.contents));
         lData.table.contents[matches] = ary;
         ary[0] = strtab(uData->access);
@@ -5716,31 +5716,31 @@ static int
 channel_multiple_option(enum charOption option, struct userNode *user, struct chanNode *channel, int argc, char *argv[], struct svccmd *cmd)
 {
     struct chanData *cData = channel->channel_info;
-    int count = charOptions[option].count, index;
+    int count = charOptions[option].count, idx;
 
     if(argc > 1)
     {
-        index = atoi(argv[1]);
+        idx = atoi(argv[1]);
 
-        if(!isdigit(argv[1][0]) || (index < 0) || (index >= count))
+        if(!isdigit(argv[1][0]) || (idx < 0) || (idx >= count))
         {
-            reply("CSMSG_INVALID_NUMERIC", index);
+            reply("CSMSG_INVALID_NUMERIC", idx);
             /* Show possible values. */
-            for(index = 0; index < count; index++)
-                reply(charOptions[option].format_name, index, user_find_message(user, charOptions[option].values[index].format_name));
+            for(idx = 0; idx < count; idx++)
+                reply(charOptions[option].format_name, idx, user_find_message(user, charOptions[option].values[idx].format_name));
             return 0;
         }
 
-        cData->chOpts[option] = charOptions[option].values[index].value;
+        cData->chOpts[option] = charOptions[option].values[idx].value;
     }
     else
     {
         /* Find current option value. */
       find_value:
-        for(index = 0;
-            (index < count) && (cData->chOpts[option] != charOptions[option].values[index].value);
-            index++);
-        if(index == count)
+        for(idx = 0;
+            (idx < count) && (cData->chOpts[option] != charOptions[option].values[idx].value);
+            idx++);
+        if(idx == count)
         {
             /* Somehow, the option value is corrupt; reset it to the default. */
             cData->chOpts[option] = charOptions[option].default_value;
@@ -5748,7 +5748,7 @@ channel_multiple_option(enum charOption option, struct userNode *user, struct ch
         }
     }
 
-    reply(charOptions[option].format_name, index, user_find_message(user, charOptions[option].values[index].format_name));
+    reply(charOptions[option].format_name, idx, user_find_message(user, charOptions[option].values[idx].format_name));
     return 1;
 }
 
@@ -6098,19 +6098,19 @@ static CHANSERV_FUNC(cmd_giveownership)
 static CHANSERV_FUNC(cmd_suspend)
 {
     struct handle_info *hi;
-    struct userData *self, *real_self, *target;
+    struct userData *actor, *real_actor, *target;
     unsigned int override = 0;
 
     REQUIRE_PARAMS(2);
     if(!(hi = modcmd_get_handle_info(user, argv[1]))) return 0;
-    self = GetChannelUser(channel->channel_info, user->handle_info);
-    real_self = GetChannelAccess(channel->channel_info, user->handle_info);
+    actor = GetChannelUser(channel->channel_info, user->handle_info);
+    real_actor = GetChannelAccess(channel->channel_info, user->handle_info);
     if(!(target = GetTrueChannelAccess(channel->channel_info, hi)))
     {
         reply("CSMSG_NO_CHAN_USER", hi->handle, channel->name);
         return 0;
     }
-    if(target->access >= self->access)
+    if(target->access >= actor->access)
     {
         reply("MSG_USER_OUTRANKED", hi->handle);
         return 0;
@@ -6125,7 +6125,7 @@ static CHANSERV_FUNC(cmd_suspend)
         target->present = 0;
         target->seen = now;
     }
-    if(!real_self || target->access >= real_self->access)
+    if(!real_actor || target->access >= real_actor->access)
         override = CMD_LOG_OVERRIDE;
     target->flags |= USER_SUSPENDED;
     reply("CSMSG_USER_SUSPENDED", hi->handle, channel->name);
@@ -6135,19 +6135,19 @@ static CHANSERV_FUNC(cmd_suspend)
 static CHANSERV_FUNC(cmd_unsuspend)
 {
     struct handle_info *hi;
-    struct userData *self, *real_self, *target;
+    struct userData *actor, *real_actor, *target;
     unsigned int override = 0;
 
     REQUIRE_PARAMS(2);
     if(!(hi = modcmd_get_handle_info(user, argv[1]))) return 0;
-    self = GetChannelUser(channel->channel_info, user->handle_info);
-    real_self = GetChannelAccess(channel->channel_info, user->handle_info);
+    actor = GetChannelUser(channel->channel_info, user->handle_info);
+    real_actor = GetChannelAccess(channel->channel_info, user->handle_info);
     if(!(target = GetTrueChannelAccess(channel->channel_info, hi)))
     {
         reply("CSMSG_NO_CHAN_USER", hi->handle, channel->name);
         return 0;
     }
-    if(target->access >= self->access)
+    if(target->access >= actor->access)
     {
         reply("MSG_USER_OUTRANKED", hi->handle);
         return 0;
@@ -6157,7 +6157,7 @@ static CHANSERV_FUNC(cmd_unsuspend)
         reply("CSMSG_NOT_SUSPENDED", hi->handle);
         return 0;
     }
-    if(!real_self || target->access >= real_self->access)
+    if(!real_actor || target->access >= real_actor->access)
         override = CMD_LOG_OVERRIDE;
     target->flags &= ~USER_SUSPENDED;
     scan_user_presence(target, NULL);
@@ -6170,7 +6170,7 @@ static MODCMD_FUNC(cmd_deleteme)
     struct handle_info *hi;
     struct userData *target;
     const char *confirm_string;
-    unsigned short access;
+    unsigned short access_level;
     char *channel_name;
 
     hi = user->handle_info;
@@ -6190,10 +6190,10 @@ static MODCMD_FUNC(cmd_deleteme)
         reply("CSMSG_CONFIRM_DELETEME", confirm_string);
         return 0;
     }
-    access = target->access;
+    access_level = target->access;
     channel_name = strdup(channel->name);
     del_channel_user(target, 1);
-    reply("CSMSG_DELETED_YOU", access, channel_name);
+    reply("CSMSG_DELETED_YOU", access_level, channel_name);
     free(channel_name);
     return 1;
 }
@@ -6201,7 +6201,7 @@ static MODCMD_FUNC(cmd_deleteme)
 static void
 chanserv_refresh_topics(UNUSED_ARG(void *data))
 {
-    unsigned int refresh_num = (now - self->link) / chanserv_conf.refresh_period;
+    unsigned int refresh_num = (now - self->link_time) / chanserv_conf.refresh_period;
     struct chanData *cData;
     char opt;
 
@@ -6628,28 +6628,28 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
 
     for(ii = 0; ii < user->channels.used; ++ii)
     {
-        struct chanNode *channel = user->channels.list[ii]->channel;
+        struct chanNode *chan = user->channels.list[ii]->channel;
         struct banData *ban;
 
         if((user->channels.list[ii]->modes & (MODE_CHANOP|MODE_VOICE))
-           || !channel->channel_info
-           || IsSuspended(channel->channel_info))
+           || !chan->channel_info
+           || IsSuspended(chan->channel_info))
             continue;
-        for(jj = 0; jj < channel->banlist.used; ++jj)
-            if(user_matches_glob(user, channel->banlist.list[jj]->ban, MATCH_USENICK))
+        for(jj = 0; jj < chan->banlist.used; ++jj)
+            if(user_matches_glob(user, chan->banlist.list[jj]->ban, MATCH_USENICK))
                 break;
-        if(jj < channel->banlist.used)
+        if(jj < chan->banlist.used)
             continue;
-        for(ban = channel->channel_info->bans; ban; ban = ban->next)
+        for(ban = chan->channel_info->bans; ban; ban = ban->next)
         {
             char kick_reason[MAXLEN];
             if(!user_matches_glob(user, ban->mask, MATCH_USENICK | MATCH_VISIBLE))
                 continue;
             change.args[0].mode = MODE_BAN;
             change.args[0].u.hostmask = ban->mask;
-            mod_chanmode_announce(chanserv, channel, &change);
+            mod_chanmode_announce(chanserv, chan, &change);
             sprintf(kick_reason, "(%s) %s", ban->owner, ban->reason);
-            KickChannelUser(user, channel, chanserv, kick_reason);
+            KickChannelUser(user, chan, chanserv, kick_reason);
             ban->triggered = now;
             break;
         }
@@ -7034,7 +7034,6 @@ chanserv_conf_read(void)
             /* delimiter */
             NULL
         };
-        unsigned int ii;
         strlist = alloc_string_list(ArrayLength(list)-1);
         for(ii=0; list[ii]; ii++)
             string_list_append(strlist, strdup(list[ii]));
@@ -7133,7 +7132,7 @@ user_read_helper(const char *key, struct record_data *rd, struct chanData *chan)
     struct userData *uData;
     char *seen, *inf, *flags;
     unsigned long last_seen;
-    unsigned short access;
+    unsigned short access_level;
 
     if(rd->type != RECDB_OBJECT || !dict_size(rd->d.object))
     {
@@ -7141,8 +7140,8 @@ user_read_helper(const char *key, struct record_data *rd, struct chanData *chan)
         return;
     }
 
-    access = atoi(database_get_data(rd->d.object, KEY_LEVEL, RECDB_QSTRING));
-    if(access > UL_OWNER)
+    access_level = atoi(database_get_data(rd->d.object, KEY_LEVEL, RECDB_QSTRING));
+    if(access_level > UL_OWNER)
     {
         log_module(CS_LOG, LOG_ERROR, "Invalid access level for %s in %s.", key, chan->channel->name);
         return;
@@ -7159,7 +7158,7 @@ user_read_helper(const char *key, struct record_data *rd, struct chanData *chan)
         return;
     }
 
-    uData = add_channel_user(chan, handle, access, last_seen, inf);
+    uData = add_channel_user(chan, handle, access_level, last_seen, inf);
     uData->flags = flags ? strtoul(flags, NULL, 0) : 0;
 }
 

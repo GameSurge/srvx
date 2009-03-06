@@ -957,9 +957,9 @@ set_user_handle_info(struct userNode *user, struct handle_info *hi, int stamp)
 
         if (stamp) {
             if (!nickserv_conf.disable_nicks) {
-                struct nick_info *ni;
-                for (ni = hi->nicks; ni; ni = ni->next) {
-                    if (!irccasecmp(user->nick, ni->nick)) {
+                struct nick_info *ni2;
+                for (ni2 = hi->nicks; ni2; ni2 = ni2->next) {
+                    if (!irccasecmp(user->nick, ni2->nick)) {
                         user->modes |= FLAGS_REGNICK;
                         break;
                     }
@@ -1458,20 +1458,20 @@ static NICKSERV_FUNC(cmd_handleinfo)
     }
 
     if (hi->channels) {
-        struct userData *channel, *next;
+        struct userData *chan, *next;
         char *name;
 
-        for (channel = hi->channels; channel; channel = next) {
-            next = channel->u_next;
-            name = channel->channel->channel->name;
+        for (chan = hi->channels; chan; chan = next) {
+            next = chan->u_next;
+            name = chan->channel->channel->name;
             herelen = strlen(name);
             if (pos + herelen + 7 > ArrayLength(buff)) {
-                next = channel;
+                next = chan;
                 goto print_chans_buff;
             }
-            if (IsUserSuspended(channel))
+            if (IsUserSuspended(chan))
                 buff[pos++] = '-';
-            pos += sprintf(buff+pos, "%d:%s ", channel->access, name);
+            pos += sprintf(buff+pos, "%d:%s ", chan->access, name);
             if (next == NULL) {
               print_chans_buff:
                 buff[pos-1] = 0;
@@ -3485,7 +3485,7 @@ nickserv_db_read_handle(const char *handle, dict_t obj)
     struct string_list *masks, *slist;
     struct handle_info *hi;
     struct userNode *authed_users;
-    struct userData *channels;
+    struct userData *channel_list;
     unsigned long id;
     unsigned int ii;
     dict_t subdb;
@@ -3499,13 +3499,13 @@ nickserv_db_read_handle(const char *handle, dict_t obj)
     }
     if ((hi = get_handle_info(handle))) {
         authed_users = hi->users;
-        channels = hi->channels;
+        channel_list = hi->channels;
         hi->users = NULL;
         hi->channels = NULL;
         dict_remove(nickserv_handle_dict, hi->handle);
     } else {
         authed_users = NULL;
-        channels = NULL;
+        channel_list = NULL;
     }
     hi = register_handle(handle, str, id);
     if (authed_users) {
@@ -3515,7 +3515,7 @@ nickserv_db_read_handle(const char *handle, dict_t obj)
             authed_users = authed_users->next_authed;
         }
     }
-    hi->channels = channels;
+    hi->channels = channel_list;
     masks = database_get_data(obj, KEY_MASKS, RECDB_STRING_LIST);
     hi->masks = masks ? string_list_copy(masks) : alloc_string_list(1);
     str = database_get_data(obj, KEY_MAXLOGINS, RECDB_QSTRING);
@@ -3618,13 +3618,13 @@ nickserv_db_read_handle(const char *handle, dict_t obj)
             const char *setter;
             const char *text;
             const char *set;
-            const char *id;
+            const char *note_id;
             dict_t notedb;
 
-            id = iter_key(it);
+            note_id = iter_key(it);
             notedb = GET_RECORD_OBJECT((struct record_data*)iter_data(it));
             if (!notedb) {
-                log_module(NS_LOG, LOG_ERROR, "Malformed note %s for account %s; ignoring note.", id, hi->handle);
+                log_module(NS_LOG, LOG_ERROR, "Malformed note %s for account %s; ignoring note.", note_id, hi->handle);
                 continue;
             }
             expires = database_get_data(notedb, KEY_NOTE_EXPIRES, RECDB_QSTRING);
@@ -3632,14 +3632,14 @@ nickserv_db_read_handle(const char *handle, dict_t obj)
             text = database_get_data(notedb, KEY_NOTE_NOTE, RECDB_QSTRING);
             set = database_get_data(notedb, KEY_NOTE_SET, RECDB_QSTRING);
             if (!setter || !text || !set) {
-                log_module(NS_LOG, LOG_ERROR, "Missing field(s) from note %s for account %s; ignoring note.", id, hi->handle);
+                log_module(NS_LOG, LOG_ERROR, "Missing field(s) from note %s for account %s; ignoring note.", note_id, hi->handle);
                 continue;
             }
             note = calloc(1, sizeof(*note) + strlen(text));
             note->next = NULL;
             note->expires = expires ? strtoul(expires, NULL, 10) : 0;
             note->set = strtoul(set, NULL, 10);
-            note->id = strtoul(id, NULL, 10);
+            note->id = strtoul(note_id, NULL, 10);
             safestrncpy(note->setter, setter, sizeof(note->setter));
             strcpy(note->note, text);
             if (last_note)

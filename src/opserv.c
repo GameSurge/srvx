@@ -1478,7 +1478,7 @@ static MODCMD_FUNC(cmd_stats_network2) {
 #endif
         tbl.contents[nn][1] = buffer;
         ofs = strlen(buffer) + 1;
-        intervalString(buffer + ofs, now - server->link, user->handle_info);
+        intervalString(buffer + ofs, now - server->link_time, user->handle_info);
         if (server->self_burst)
             strcat(buffer + ofs, " Bursting");
         tbl.contents[nn][2] = buffer + ofs;
@@ -2093,18 +2093,18 @@ static MODCMD_FUNC(cmd_addbad)
     /* Scan for existing channels that match the new bad word. */
     if (!bad_found) {
         for (it = dict_first(channels); it; it = iter_next(it)) {
-            struct chanNode *channel = iter_data(it);
+            struct chanNode *chan = iter_data(it);
 
-            if (!opserv_bad_channel(channel->name))
+            if (!opserv_bad_channel(chan->name))
                 continue;
-            channel->bad_channel = 1;
-            if (channel->name[0] == '#')
-                opserv_shutdown_channel(channel, "OSMSG_ILLEGAL_REASON");
+            chan->bad_channel = 1;
+            if (chan->name[0] == '#')
+                opserv_shutdown_channel(chan, "OSMSG_ILLEGAL_REASON");
             else {
                 unsigned int nn;
-                for (nn=0; nn<channel->members.used; nn++) {
-                    struct userNode *user = channel->members.list[nn]->user;
-                    DelUser(user, cmd->parent->bot, 1, "OSMSG_ILLEGAL_KILL_REASON");
+                for (nn = 0; nn < chan->members.used; nn++) {
+                    struct userNode *victim = chan->members.list[nn]->user;
+                    DelUser(victim, cmd->parent->bot, 1, "OSMSG_ILLEGAL_KILL_REASON");
                 }
             }
         }
@@ -3207,7 +3207,7 @@ opserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[], in
 static int
 discrim_match(discrim_t discrim, struct userNode *user)
 {
-    unsigned int access, i;
+    unsigned int level, i;
 
     if ((user->timestamp < discrim->min_ts)
         || (user->timestamp > discrim->max_ts)
@@ -3229,9 +3229,9 @@ discrim_match(discrim_t discrim, struct userNode *user)
     for(i = 0; i < discrim->channel_count; i++)
         if (!GetUserMode(discrim->channels[i], user))
             return 0;
-    access = user->handle_info ? user->handle_info->opserv_level : 0;
-    if ((access < discrim->min_level)
-        || (access > discrim->max_level)) {
+    level = user->handle_info ? user->handle_info->opserv_level : 0;
+    if ((level < discrim->min_level)
+        || (level > discrim->max_level)) {
         return 0;
     }
     if (discrim->min_clones > 1) {

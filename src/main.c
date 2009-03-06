@@ -101,7 +101,8 @@ gc_warn_proc(char *msg, GC_word arg)
 
 int main(int argc, char *argv[])
 {
-    int daemon, debug;
+    int run_as_daemon;
+    int debug;
     pid_t pid = 0;
     FILE *file_out;
     struct sigaction sv;
@@ -112,7 +113,7 @@ int main(int argc, char *argv[])
     GC_enable_incremental();
 #endif
 
-    daemon = 1;
+    run_as_daemon = 1;
     debug = 0;
     tools_init();
 
@@ -168,7 +169,7 @@ int main(int argc, char *argv[])
                 debug = 1;
                 break;
             case 'f':
-                daemon = 0;
+                run_as_daemon = 0;
                 break;
             case 'v':
                 version();
@@ -202,7 +203,7 @@ int main(int argc, char *argv[])
 
     conf_register_reload(uplink_compile);
 
-    if (daemon) {
+    if (run_as_daemon) {
         /* Attempt to fork into the background if daemon mode is on. */
         pid = fork();
         if (pid < 0) {
@@ -223,7 +224,7 @@ int main(int argc, char *argv[])
         fclose(file_out);
     }
 
-    if (daemon) {
+    if (run_as_daemon) {
         /* Close these since we should not use them from now on. */
         fclose(stdin);
         fclose(stdout);

@@ -47,11 +47,11 @@ timeq_init(void)
 unsigned long
 timeq_next(void)
 {
-    void *time;
+    void *timep;
     if (!timeq)
         return ~0;
-    heap_peek(timeq, &time, 0);
-    return (unsigned long)time;
+    heap_peek(timeq, &timep, 0);
+    return (unsigned long)timep;
 }
 
 void

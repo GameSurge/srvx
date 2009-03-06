@@ -55,23 +55,24 @@ heap_new(comparator_f comparator)
  *  its value).
  */
 static void
-heap_heapify_up(heap_t heap, unsigned int index)
+heap_heapify_up(heap_t heap, unsigned int idx)
 {
     int res;
     unsigned int parent;
     void *last_key, *last_data;
-    last_key = heap->data[index*2];
-    last_data = heap->data[index*2+1];
-    while (index > 0) {
-        parent = (index - 1) >> 1;
+
+    last_key = heap->data[idx*2];
+    last_data = heap->data[idx*2+1];
+    while (idx > 0) {
+        parent = (idx - 1) >> 1;
         res = heap->comparator(last_key, heap->data[parent*2]);
         if (res > 0) break;
-        heap->data[index*2] = heap->data[parent*2];
-        heap->data[index*2+1] = heap->data[parent*2+1];
-        index = parent;
+        heap->data[idx*2] = heap->data[parent*2];
+        heap->data[idx*2+1] = heap->data[parent*2+1];
+        idx = parent;
     }
-    heap->data[index*2] = last_key;
-    heap->data[index*2+1] = last_data;
+    heap->data[idx*2] = last_key;
+    heap->data[idx*2+1] = last_data;
 }
 
 /*
@@ -131,20 +132,20 @@ heap_heapify_down(heap_t heap, int pos)
 }
 
 /*
- * Remove the element at "index" from the heap (preserving the heap ordering).
+ * Remove the element at "idx" from the heap (preserving the heap ordering).
  */
 static void
-heap_remove(heap_t heap, unsigned int index)
+heap_remove(heap_t heap, unsigned int idx)
 {
     /* sanity check */
-    if (heap->data_used <= index) return;
-    /* swap index with last element */
+    if (heap->data_used <= idx) return;
+    /* swap idx with last element */
     heap->data_used--;
-    heap->data[index*2] = heap->data[heap->data_used*2];
-    heap->data[index*2+1] = heap->data[heap->data_used*2+1];
-    /* heapify down if index has children */
-    if (heap->data_used >= 2*index+1) heap_heapify_down(heap, index);
-    if ((index > 0) && (index < heap->data_used)) heap_heapify_up(heap, index);
+    heap->data[idx*2] = heap->data[heap->data_used*2];
+    heap->data[idx*2+1] = heap->data[heap->data_used*2+1];
+    /* heapify down if idx has children */
+    if (heap->data_used >= 2*idx+1) heap_heapify_down(heap, idx);
+    if ((idx > 0) && (idx < heap->data_used)) heap_heapify_up(heap, idx);
 }
 
 /*

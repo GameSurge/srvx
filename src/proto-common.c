@@ -105,7 +105,7 @@ void replay_event_loop(void)
     while (!quit_services) {
         if (!replay_connected) {
             /* this time fudging is to get some of the logging right */
-            self->link = self->boot = now;
+            self->link_time = self->boot = now;
             cManager.uplink->state = AUTHENTICATING;
             irc_introduce(cManager.uplink->password);
             replay_connected = 1;

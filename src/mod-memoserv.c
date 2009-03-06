@@ -167,10 +167,10 @@ do_expire(void)
 {
     dict_iterator_t it;
     for (it = dict_first(memos); it; it = iter_next(it)) {
-        struct memo_account *acct = iter_data(it);
+        struct memo_account *account = iter_data(it);
         unsigned int ii;
-        for (ii = 0; ii < acct->sent.used; ++ii) {
-            struct memo *memo = acct->sent.list[ii];
+        for (ii = 0; ii < account->sent.used; ++ii) {
+            struct memo *memo = account->sent.list[ii];
             if ((now - memo->sent) > memoserv_conf.message_expiry) {
                 delete_memo(memo);
                 memosExpired++;
@@ -209,19 +209,19 @@ add_memo(unsigned long sent, struct memo_account *recipient, struct memo_account
 }
 
 static int
-memoserv_can_send(struct userNode *bot, struct userNode *user, struct memo_account *acct)
+memoserv_can_send(struct userNode *bot, struct userNode *user, struct memo_account *account)
 {
     extern struct userData *_GetChannelUser(struct chanData *channel, struct handle_info *handle, int override, int allow_suspended);
     struct userData *dest;
 
     if (!user->handle_info)
         return 0;
-    if (!(acct->flags & MEMO_DENY_NONCHANNEL))
+    if (!(account->flags & MEMO_DENY_NONCHANNEL))
         return 1;
-    for (dest = acct->handle->channels; dest; dest = dest->u_next)
+    for (dest = account->handle->channels; dest; dest = dest->u_next)
         if (_GetChannelUser(dest->channel, user->handle_info, 1, 0))
             return 1;
-    send_message(user, bot, "MSMSG_CANNOT_SEND", acct->handle->handle);
+    send_message(user, bot, "MSMSG_CANNOT_SEND", account->handle->handle);
     return 0;
 }
 

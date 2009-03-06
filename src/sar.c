@@ -1576,7 +1576,6 @@ sar_getname(const struct sockaddr *sa, unsigned int salen, int flags, sar_name_c
 
     if (flags & SNI_NUMERICHOST) {
         const char *servname;
-        unsigned int len;
         char host[SAR_NTOP_MAX], servbuf[16];
 
         /* If appropriate, try to look up service name. */

@@ -316,6 +316,8 @@ irc_pton(irc_in_addr_t *addr, unsigned char *bits, const char *input)
         uint32_t ip4;
         pos = irc_pton_ip4(input, bits, &ip4);
         if (pos) {
+/* glibc's htons() macro is not -Wshadow-safe. */
+#undef htons
             addr->in6[5] = htons(65535);
             addr->in6[6] = htons(ntohl(ip4) >> 16);
             addr->in6[7] = htons(ntohl(ip4) & 65535);

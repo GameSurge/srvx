@@ -170,7 +170,7 @@ struct modeNode {
 struct server {
     char name[SERVERNAMEMAX+1];
     unsigned long boot;
-    unsigned long link;
+    unsigned long link_time;
     char description[SERVERDESCRIPTMAX+1];
 #ifdef WITH_PROTOCOL_P10
     char numeric[COMBO_NUMERIC_LEN+1];

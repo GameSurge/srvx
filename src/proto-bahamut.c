@@ -41,7 +41,7 @@ static void privmsg_user_helper(struct userNode *un, void *data);
 void irc_svsmode(struct userNode *target, char *modes, unsigned long stamp);
 
 struct server *
-AddServer(struct server *uplink, const char *name, int hops, unsigned long boot, unsigned long link, UNUSED_ARG(const char *numeric), const char *description) {
+AddServer(struct server *uplink, const char *name, int hops, unsigned long boot, unsigned long link_time, UNUSED_ARG(const char *numeric), const char *description) {
     struct server* sNode;
 
     sNode = calloc(1, sizeof(*sNode));
@@ -49,7 +49,7 @@ AddServer(struct server *uplink, const char *name, int hops, unsigned long boot,
     safestrncpy(sNode->name, name, sizeof(sNode->name));
     sNode->hops = hops;
     sNode->boot = boot;
-    sNode->link = link;
+    sNode->link_time = link_time;
     sNode->users = dict_new();
     safestrncpy(sNode->description, description, sizeof(sNode->description));
     serverList_init(&sNode->children);
