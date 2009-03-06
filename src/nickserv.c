@@ -917,11 +917,14 @@ set_user_handle_info(struct userNode *user, struct handle_info *hi, int stamp)
         /* remove from next_authed linked list */
         if (user->handle_info->users == user) {
             user->handle_info->users = user->next_authed;
-        } else {
+        } else if (user->handle_info->users != NULL) {
             for (other = user->handle_info->users;
                  other->next_authed != user;
                  other = other->next_authed) ;
             other->next_authed = user->next_authed;
+        } else {
+            /* No users authed to the account - can happen if they get
+             * killed for authing. */
         }
         /* if nobody left on old handle, and they're not an oper, remove !god */
         if (!user->handle_info->users && !user->handle_info->opserv_level)
@@ -935,8 +938,11 @@ set_user_handle_info(struct userNode *user, struct handle_info *hi, int stamp)
     user->handle_info = hi;
     if (hi && !hi->users && !hi->opserv_level)
         HANDLE_CLEAR_FLAG(hi, HELPING);
-    for (n=0; (n<auth_func_used) && !user->dead; n++)
+    for (n=0; n<auth_func_used; n++) {
         auth_func_list[n](user, old_info);
+        if (user->dead)
+            return;
+    }
     if (hi) {
         struct nick_info *ni;
 
