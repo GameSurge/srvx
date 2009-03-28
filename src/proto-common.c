@@ -430,6 +430,7 @@ struct privmsg_desc {
 static void
 privmsg_chan_helper(struct chanNode *cn, void *data)
 {
+    extern unsigned short offchannel_allowed[256];
     struct privmsg_desc *pd = data;
     struct modeNode *mn;
     struct chanmsg_func *cf;
@@ -443,7 +444,8 @@ privmsg_chan_helper(struct chanNode *cn, void *data)
     /* Never send a NOTICE to a channel to one of the services */
     cf = &chanmsg_funcs[(unsigned char)pd->text[0]];
     if (cf->func && !pd->is_notice
-        && GetUserMode(cn, cf->service) && !IsDeaf(cf->service))
+        && (offchannel_allowed[(unsigned char)pd->text[0]]
+            || (GetUserMode(cn, cf->service) && !IsDeaf(cf->service))))
         cf->func(pd->user, cn, pd->text+1, cf->service, pd->is_notice);
 
     /* This catches *all* text sent to the channel that the services server sees */

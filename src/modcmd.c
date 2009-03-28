@@ -34,6 +34,7 @@ static struct dict *services;
 static struct pending_template *pending_templates;
 static struct module *modcmd_module;
 static struct modcmd *bind_command, *help_command, *version_command;
+unsigned short offchannel_allowed[256] = { 0 };
 static const struct message_entry msgtab[] = {
     { "MCMSG_BARE_FLAG", "Flag %.*s must be preceded by a + or -." },
     { "MCMSG_UNKNOWN_FLAG", "Unknown module flag %.*s." },
@@ -115,6 +116,10 @@ static const struct message_entry msgtab[] = {
     { "MCMSG_CURRENT_TRIGGER", "Trigger for $b%s$b is $b%c$b." },
     { "MCMSG_NEW_TRIGGER", "Changed trigger for $b%s$b to $b%c$b." },
     { "MCMSG_SERVICE_PRIVILEGED", "Service $b%s$b privileged: $b%s$b." },
+    { "MCMSG_OFFCHANNEL_IS_ON", "Off-channel use for $b%s$b (trigger $b%c$b) is enabled" },
+    { "MCMSG_OFFCHANNEL_IS_OFF", "Off-channel use for $b%s$b (trigger $b%c$b) is disabled" },
+    { "MCMSG_OFFCHANNEL_ON", "Enabled off-channel use for $b%s$b (trigger $b%c$b)" },
+    { "MCMSG_OFFCHANNEL_OFF", "Disabled off-channel use for $b%s$b (trigger $b%c$b)" },
     { "MCMSG_SERVICE_REMOVED", "Service $b%s$b has been deleted." },
     { "MCMSG_FILE_NOT_OPENED", "Unable to open file $b%s$b for writing." },
     { "MCMSG_MESSAGES_DUMPED", "Messages written to $b%s$b." },
@@ -1772,6 +1777,7 @@ static MODCMD_FUNC(cmd_service_rename) {
 static MODCMD_FUNC(cmd_service_trigger) {
     struct userNode *bogon;
     struct service *service;
+    int old_oc = 0;
 
     if (!(service = service_find(argv[1]))) {
         reply("MCMSG_UNKNOWN_SERVICE", argv[1]);
@@ -1784,9 +1790,13 @@ static MODCMD_FUNC(cmd_service_trigger) {
             reply("MCMSG_NO_TRIGGER", service->bot->nick);
         return 1;
     }
-    if (service->trigger)
+    if (service->trigger) {
+        old_oc = offchannel_allowed[(unsigned char)service->trigger];
+        offchannel_allowed[(unsigned char)service->trigger] = 0;
         reg_chanmsg_func(service->trigger, NULL, NULL);
+    }
     if (!irccasecmp(argv[2], "none") || !irccasecmp(argv[2], "remove")) {
+        offchannel_allowed[(unsigned char)service->trigger] = 0;
         service->trigger = 0;
         reply("MCMSG_REMOVED_TRIGGER", service->bot->nick);
     } else if ((bogon = get_chanmsg_bot(argv[2][0]))) {
@@ -1794,9 +1804,45 @@ static MODCMD_FUNC(cmd_service_trigger) {
         return 1;
     } else {
         service->trigger = argv[2][0];
+        offchannel_allowed[(unsigned char)service->trigger] = old_oc;
         reg_chanmsg_func(service->trigger, service->bot, modcmd_chanmsg);
         reply("MCMSG_NEW_TRIGGER", service->bot->nick, service->trigger);
     }
+    return 1;
+}
+
+static MODCMD_FUNC(cmd_service_offchannel) {
+    struct service *service;
+
+    if (!(service = service_find(argv[1]))) {
+        reply("MCMSG_UNKNOWN_SERVICE", argv[1]);
+        return 0;
+    }
+
+    if(!service->trigger) {
+        reply("MCMSG_NO_TRIGGER", service->bot->nick);
+        return 0;
+    }
+
+    if(argc < 3) {
+        if(offchannel_allowed[(unsigned char)service->trigger])
+            reply("MCMSG_OFFCHANNEL_IS_ON", service->bot->nick, service->trigger);
+        else
+            reply("MCMSG_OFFCHANNEL_IS_OFF", service->bot->nick, service->trigger);
+        return 1;
+    }
+
+    if(enabled_string(argv[2])) {
+        offchannel_allowed[(unsigned char)service->trigger] = 1;
+        reply("MCMSG_OFFCHANNEL_ON", service->bot->nick, service->trigger);
+    } else if(disabled_string(argv[2])) {
+        offchannel_allowed[(unsigned char)service->trigger] = 0;
+        reply("MCMSG_OFFCHANNEL_OFF", service->bot->nick, service->trigger);
+    } else {
+        reply("MSG_INVALID_BINARY", argv[2]);
+        return 0;
+    }
+
     return 1;
 }
 
@@ -1979,6 +2025,8 @@ modcmd_saxdb_write(struct saxdb_context *ctx) {
             buff[0] = service->trigger;
             buff[1] = '\0';
             saxdb_write_string(ctx, "trigger", buff);
+            if(offchannel_allowed[(unsigned char)service->trigger])
+                saxdb_write_int(ctx, "offchannel", 1);
         }
         saxdb_write_string(ctx, "description", service->bot->info);
         saxdb_write_string(ctx, "hostname", service->bot->hostname);
@@ -2094,8 +2142,12 @@ modcmd_load_bots(struct dict *db, int default_nick) {
             else if (hostname)
                 strcpy(svc->bot->hostname, hostname);
             desc = database_get_data(rd->d.object, "trigger", RECDB_QSTRING);
-            if (desc)
+            if (desc) {
                 svc->trigger = desc[0];
+                desc = database_get_data(rd->d.object, "offchannel", RECDB_QSTRING);
+                if(desc)
+                    offchannel_allowed[(unsigned char)svc->trigger] = atoi(desc);
+            }
             desc = database_get_data(rd->d.object, "privileged", RECDB_QSTRING);
             if (desc && (true_string(desc) || enabled_string(desc)))
                 svc->privileged = 1;
@@ -2136,6 +2188,7 @@ modcmd_init(void) {
     modcmd_register(modcmd_module, "service add", cmd_service_add, 4, 0, "flags", "+oper", NULL);
     modcmd_register(modcmd_module, "service rename", cmd_service_rename, 3, 0, "flags", "+oper", NULL);
     modcmd_register(modcmd_module, "service trigger", cmd_service_trigger, 2, 0, "flags", "+oper", NULL);
+    modcmd_register(modcmd_module, "service offchannel", cmd_service_offchannel, 2, 0, "flags", "+oper", NULL);
     modcmd_register(modcmd_module, "service privileged", cmd_service_privileged, 2, 0, "flags", "+oper", NULL);
     modcmd_register(modcmd_module, "service remove", cmd_service_remove, 2, 0, "flags", "+oper", NULL);
     modcmd_register(modcmd_module, "dumpmessages", cmd_dump_messages, 1, 0, "oper_level", "1000", NULL);
