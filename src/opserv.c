@@ -116,17 +116,18 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_OP_DONE", "Opped the requested lusers." },
     { "OSMSG_OPALL_DONE", "Opped everyone on $b%s$b." },
     { "OSMSG_WHOIS_IDENT", "%s (%s@%s) from %d.%d.%d.%d" },
-    { "OSMSG_WHOIS_NICK", "Nick    : %s" },
-    { "OSMSG_WHOIS_HOST", "Host    : %s@%s" },
-    { "OSMSG_WHOIS_FAKEHOST", "Fakehost: %s" },
-    { "OSMSG_WHOIS_IP",   "Real IP : %s" },
-    { "OSMSG_WHOIS_MODES", "Modes   : +%s " },
-    { "OSMSG_WHOIS_INFO", "Info    : %s" },
-    { "OSMSG_WHOIS_NUMERIC", "Numnick : %s" },
-    { "OSMSG_WHOIS_SERVER", "Server  : %s" },
-    { "OSMSG_WHOIS_NICK_AGE", "Nick Age: %s" },
-    { "OSMSG_WHOIS_ACCOUNT", "Account : %s" },
-    { "OSMSG_WHOIS_CHANNELS", "Channels: %s" },
+    { "OSMSG_WHOIS_NICK", "Nick     : %s" },
+    { "OSMSG_WHOIS_HOST", "Host     : %s@%s" },
+    { "OSMSG_WHOIS_FAKEHOST", "Fakehost : %s" },
+    { "OSMSG_WHOIS_FAKEIDENT", "Fakeident: %s" },
+    { "OSMSG_WHOIS_IP",   "Real IP  : %s" },
+    { "OSMSG_WHOIS_MODES", "Modes    : +%s " },
+    { "OSMSG_WHOIS_INFO", "Info     : %s" },
+    { "OSMSG_WHOIS_NUMERIC", "Numnick  : %s" },
+    { "OSMSG_WHOIS_SERVER", "Server   : %s" },
+    { "OSMSG_WHOIS_NICK_AGE", "Nick Age : %s" },
+    { "OSMSG_WHOIS_ACCOUNT", "Account  : %s" },
+    { "OSMSG_WHOIS_CHANNELS", "Channels : %s" },
     { "OSMSG_WHOIS_HIDECHANS", "Channel list omitted for your sanity." },
     { "OSMSG_UNBAN_DONE", "Ban(s) removed from channel %s." },
     { "OSMSG_CHANNEL_VOICED", "All users on %s voiced." },
@@ -1252,6 +1253,8 @@ static MODCMD_FUNC(cmd_whois)
     }
     reply("OSMSG_WHOIS_NICK", target->nick);
     reply("OSMSG_WHOIS_HOST", target->ident, target->hostname);
+    if (IsFakeIdent(target))
+        reply("OSMSG_WHOIS_FAKEIDENT", target->fakeident);
     if (IsFakeHost(target))
         reply("OSMSG_WHOIS_FAKEHOST", target->fakehost);
     reply("OSMSG_WHOIS_IP", irc_ntoa(&target->ip));

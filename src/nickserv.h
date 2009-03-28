@@ -97,6 +97,7 @@ struct handle_info {
     char *infoline;
     char *handle;
     char *fakehost;
+    char *fakeident;
     unsigned long id;
     unsigned long registered;
     unsigned long lastseen;

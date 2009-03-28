@@ -490,9 +490,9 @@ irc_account(struct userNode *user, const char *stamp, unsigned long timestamp, u
 }
 
 void
-irc_fakehost(struct userNode *user, const char *host)
+irc_fakehost(struct userNode *user, const char *host, const char *ident, int force)
 {
-    putsock("%s " P10_FAKEHOST " %s %s", self->numeric, user->numeric, host);
+    putsock("%s " P10_FAKEHOST " %s %s %s%s", self->numeric, user->numeric, ident, host, force ? " FORCE" : "");
 }
 
 void
@@ -1242,12 +1242,22 @@ static CMD_FUNC(cmd_account)
 static CMD_FUNC(cmd_fakehost)
 {
     struct userNode *user;
+    const char *host, *ident;
 
     if ((argc < 3) || !origin || !GetServerH(origin))
         return 0;
     if (!(user = GetUserN(argv[1])))
         return 1;
-    assign_fakehost(user, argv[2], 0);
+
+    if (argc > 3) {
+        ident = argv[2];
+        host = argv[3];
+    } else {
+        ident = NULL;
+        host = argv[2];
+    }
+
+    assign_fakehost(user, host, ident, 0, 0);
     return 1;
 }
 
@@ -2297,16 +2307,25 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
                 call_account_func(user, tag, ts, id);
             }
             break;
-        case 'f':
+        case 'h':
             if (*word) {
-                char host[MAXLEN];
+                char mask[MAXLEN];
+                char *host, *ident;
                 unsigned int ii;
                 for (ii=0; (*word != ' ') && (*word != '\0'); )
-                    host[ii++] = *word++;
-                host[ii] = 0;
+                    mask[ii++] = *word++;
+                mask[ii] = 0;
                 while (*word == ' ')
                     word++;
-                assign_fakehost(user, host, 0);
+
+                if ((host = strrchr(mask, '@'))) {
+                    ident = mask;
+                    *host++ = '\0';
+                } else {
+                    ident = NULL;
+                    host = mask;
+                }
+                assign_fakehost(user, host, ident, 0, 0);
             }
             break;
         }

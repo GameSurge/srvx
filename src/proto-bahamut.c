@@ -263,7 +263,7 @@ irc_account(struct userNode *user, UNUSED_ARG(const char *stamp), UNUSED_ARG(uns
 }
 
 void
-irc_fakehost(UNUSED_ARG(struct userNode *user), UNUSED_ARG(const char *host))
+irc_fakehost(UNUSED_ARG(struct userNode *user), UNUSED_ARG(const char *host), UNUSED_ARG(const char *ident), UNUSED_ARG(int force))
 {
     /* not supported in bahamut */
 }

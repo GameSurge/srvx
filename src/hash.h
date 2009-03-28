@@ -79,6 +79,7 @@
 #define IsDummy(x)              ((x)->modes & FLAGS_DUMMY)
 #define IsNoIdle(x)             ((x)->modes & FLAGS_NOIDLE)
 #define IsFakeHost(x)           ((x)->fakehost[0] != '\0')
+#define IsFakeIdent(x)          ((x)->fakeident[0] != '\0')
 #define IsLocal(x)              ((x)->uplink == self)
 
 #define NICKLEN         30
@@ -107,6 +108,7 @@ struct userNode {
     char info[REALLEN + 1];       /* Free form additional client information */
     char hostname[HOSTLEN + 1];   /* DNS name or IP address */
     char fakehost[HOSTLEN + 1];   /* Assigned fake host */
+    char fakeident[USERLEN + 1];  /* Assigned fake ident */
 #ifdef WITH_PROTOCOL_P10
     char numeric[COMBO_NUMERIC_LEN+1];
     unsigned int num_local : 18;
@@ -219,7 +221,7 @@ typedef void (*account_func_t) (struct userNode *user, const char *stamp, unsign
 void reg_account_func(account_func_t handler);
 void call_account_func(struct userNode *user, const char *stamp, unsigned long timestamp, unsigned long serial);
 void StampUser(struct userNode *user, const char *stamp, unsigned long timestamp, unsigned long serial);
-void assign_fakehost(struct userNode *user, const char *host, int announce);
+void assign_fakehost(struct userNode *user, const char *host, const char *ident, int force, int announce);
 
 typedef void (*new_channel_func_t) (struct chanNode *chan);
 void reg_new_channel_func(new_channel_func_t handler);

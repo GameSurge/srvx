@@ -253,11 +253,14 @@ StampUser(struct userNode *user, const char *stamp, unsigned long timestamp, uns
 }
 
 void
-assign_fakehost(struct userNode *user, const char *host, int announce)
+assign_fakehost(struct userNode *user, const char *host, const char *ident, int force, int announce)
 {
-    safestrncpy(user->fakehost, host, sizeof(user->fakehost));
+    if (host)
+        safestrncpy(user->fakehost, host, sizeof(user->fakehost));
+    if (ident)
+        safestrncpy(user->fakeident, ident, sizeof(user->ident));
     if (announce)
-        irc_fakehost(user, host);
+        irc_fakehost(user, host, ident, force);
 }
 
 static new_channel_func_t *ncf_list;

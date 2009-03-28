@@ -51,6 +51,7 @@
 #define KEY_SET_EPITHET_LEVEL "set_epithet_level"
 #define KEY_SET_TITLE_LEVEL "set_title_level"
 #define KEY_SET_FAKEHOST_LEVEL "set_fakehost_level"
+#define KEY_SET_FAKEIDENT_LEVEL "set_fakeident_level"
 #define KEY_TITLEHOST_SUFFIX "titlehost_suffix"
 #define KEY_FLAG_LEVELS "flag_levels"
 #define KEY_HANDLE_EXPIRE_FREQ "handle_expire_freq"
@@ -101,6 +102,7 @@
 #define KEY_TABLE_WIDTH "table_width"
 #define KEY_MAXLOGINS "maxlogins"
 #define KEY_FAKEHOST "fakehost"
+#define KEY_FAKEIDENT "fakeident"
 #define KEY_NOTES "notes"
 #define KEY_NOTE_EXPIRES "expires"
 #define KEY_NOTE_SET "set"
@@ -193,6 +195,7 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_TITLE_INVALID", "Titles cannot contain any dots; please choose another." },
     { "NSMSG_TITLE_TRUNCATED", "That title combined with the user's account name would result in a truncated host; please choose a shorter title." },
     { "NSMSG_FAKEHOST_INVALID", "Fake hosts must be shorter than %d characters and cannot start with a dot." },
+    { "NSMSG_FAKEIDENT_INVALID", "Fake idents must be shorter than %d characters." },
     { "NSMSG_HANDLEINFO_ON", "Account information for $b%s$b:" },
     { "NSMSG_HANDLEINFO_ID", "  Account ID: %lu" },
     { "NSMSG_HANDLEINFO_REGGED", "  Registered on: %s" },
@@ -209,6 +212,7 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_HANDLEINFO_INFOLINE", "  Infoline: %s" },
     { "NSMSG_HANDLEINFO_FLAGS", "  Flags: %s" },
     { "NSMSG_HANDLEINFO_EPITHET", "  Epithet: %s" },
+    { "NSMSG_HANDLEINFO_FAKEIDENT", "  Fake ident: %s" },
     { "NSMSG_HANDLEINFO_FAKEHOST", "  Fake host: %s" },
     { "NSMSG_HANDLEINFO_LAST_HOST", "  Last quit hostmask: %s" },
     { "NSMSG_HANDLEINFO_NO_NOTES", "  Notes: None" },
@@ -312,6 +316,7 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_SET_EPITHET", "$bEPITHET:      $b%s" },
     { "NSMSG_SET_TITLE", "$bTITLE:        $b%s" },
     { "NSMSG_SET_FAKEHOST", "$bFAKEHOST:    $b%s" },
+    { "NSMSG_SET_FAKEIDENT", "$bFAKEIDENT:   $b%s" },
     { "NSMSG_INVALID_KARMA", "$b%s$b is not a valid karma modifier." },
     { "NSMSG_SET_KARMA", "$bKARMA:       $b%d$b" },
     { "NSEMAIL_ACTIVATION_SUBJECT", "Account verification for %s" },
@@ -374,6 +379,7 @@ static struct {
     unsigned long set_epithet_level;
     unsigned long set_title_level;
     unsigned long set_fakehost_level;
+    unsigned long set_fakeident_level;
     unsigned long handles_per_email;
     unsigned long email_search_level;
     const char *network_name;
@@ -538,6 +544,7 @@ free_handle_info(void *vhi)
     free(hi->infoline);
     free(hi->epithet);
     free(hi->fakehost);
+    free(hi->fakeident);
     if (hi->cookie) {
         timeq_del(hi->cookie->expires, nickserv_free_cookie, hi->cookie, 0);
         nickserv_free_cookie(hi->cookie);
@@ -883,17 +890,41 @@ generate_fakehost(struct handle_info *handle)
     return handle->fakehost;
 }
 
+static char *
+generate_fakeident(struct handle_info *handle, struct userNode *user)
+{
+    static char buffer[USERLEN+1];
+
+    if (!handle->fakeident) {
+        if (!user)
+            return NULL;
+        safestrncpy(buffer, user->ident, sizeof(buffer));
+        return buffer;
+    }
+    return handle->fakeident;
+}
+
 static void
-apply_fakehost(struct handle_info *handle)
+apply_fakehost(struct handle_info *handle, struct userNode *user)
 {
     struct userNode *target;
-    char *fake;
+    char *fakehost, *fakeident;
 
     if (!handle->users)
         return;
-    fake = generate_fakehost(handle);
-    for (target = handle->users; target; target = target->next_authed)
-        assign_fakehost(target, fake, 1);
+
+    fakehost = generate_fakehost(handle);
+
+    if (user) {
+        fakeident = generate_fakeident(handle, user);
+        assign_fakehost(user, fakehost, fakeident, 0, 1);
+        return;
+    }
+
+    for (target = handle->users; target; target = target->next_authed) {
+        fakeident = generate_fakeident(handle, target);
+        assign_fakehost(target, fakehost, fakeident, 0, 1);
+    }
 }
 
 static void
@@ -958,8 +989,8 @@ set_user_handle_info(struct userNode *user, struct handle_info *hi, int stamp)
         if (IsHelper(user) && !userList_contains(&curr_helpers, user))
             userList_append(&curr_helpers, user);
 
-        if (hi->fakehost || old_info)
-            apply_fakehost(hi);
+        if (hi->fakehost || hi->fakeident || old_info)
+            apply_fakehost(hi, user);
 
         if (stamp) {
             if (!nickserv_conf.disable_nicks) {
@@ -1409,6 +1440,9 @@ static NICKSERV_FUNC(cmd_handleinfo)
         || (hi->opserv_level > 0)) {
         reply("NSMSG_HANDLEINFO_EPITHET", (hi->epithet ? hi->epithet : nsmsg_none));
     }
+
+    if (hi->fakeident)
+        reply("NSMSG_HANDLEINFO_FAKEIDENT", (hi->fakeident ? hi->fakeident : handle_find_message(hi, "MSG_NONE")));
 
     if (hi->fakehost)
         reply("NSMSG_HANDLEINFO_FAKEHOST", (hi->fakehost ? hi->fakehost : handle_find_message(hi, "MSG_NONE")));
@@ -2575,7 +2609,7 @@ static OPTION_FUNC(opt_title)
             hi->fakehost[0] = '.';
             strcpy(hi->fakehost+1, title);
         }
-        apply_fakehost(hi);
+        apply_fakehost(hi, NULL);
     } else if (hi->fakehost && (hi->fakehost[0] == '.'))
         title = hi->fakehost + 1;
     else
@@ -2588,7 +2622,8 @@ static OPTION_FUNC(opt_title)
 
 static OPTION_FUNC(opt_fakehost)
 {
-    const char *fake;
+    char mask[USERLEN + HOSTLEN + 2];
+    char *host, *ident;
 
     if (!override) {
         send_message(user, nickserv, "MSG_SETTING_PRIVILEGED", argv[0]);
@@ -2596,23 +2631,83 @@ static OPTION_FUNC(opt_fakehost)
     }
 
     if ((argc > 1) && oper_has_access(user, nickserv, nickserv_conf.set_fakehost_level, 0)) {
-        fake = argv[1];
-        if ((strlen(fake) > HOSTLEN) || (fake[0] == '.')) {
+        safestrncpy(mask, argv[1], sizeof(mask));
+
+        if ((host = strrchr(mask, '@')) && host != mask &&
+            oper_has_access(user, nickserv, nickserv_conf.set_fakeident_level, 0)) {
+            ident = mask;
+            *host++ = '\0';
+        } else {
+            ident = NULL;
+            host = mask;
+        }
+
+        if ((strlen(host) > HOSTLEN) || (host[0] == '.')) {
             send_message(user, nickserv, "NSMSG_FAKEHOST_INVALID", HOSTLEN);
             return 0;
         }
+
+        if (ident && strlen(ident) > USERLEN) {
+            send_message(user, nickserv, "NSMSG_FAKEIDENT_INVALID", USERLEN);
+            return 0;
+        }
+
         free(hi->fakehost);
-        if (!strcmp(fake, "*"))
+        if (!strcmp(host, "*"))
             hi->fakehost = NULL;
         else
-            hi->fakehost = strdup(fake);
-        fake = hi->fakehost;
-        apply_fakehost(hi);
+            hi->fakehost = strdup(host);
+        host = hi->fakehost;
+
+        if (ident) {
+            free(hi->fakeident);
+            if (!strcmp(ident, "*"))
+                hi->fakeident = NULL;
+            else
+                hi->fakeident = strdup(ident);
+            ident = hi->fakeident;
+        }
+
+        apply_fakehost(hi, NULL);
+    } else {
+        host = generate_fakehost(hi);
+        ident = generate_fakeident(hi, NULL);
+    }
+    if (!host)
+        host = (char *) user_find_message(user, "MSG_NONE");
+    send_message(user, nickserv, "NSMSG_SET_FAKEHOST", host);
+    if (ident)
+        send_message(user, nickserv, "NSMSG_SET_FAKEIDENT", ident);
+    return 1;
+}
+
+static OPTION_FUNC(opt_fakeident)
+{
+    const char *ident;
+
+    if (!override) {
+        send_message(user, nickserv, "MSG_SETTING_PRIVILEGED", argv[0]);
+        return 0;
+    }
+
+    if ((argc > 1) && oper_has_access(user, nickserv, nickserv_conf.set_fakeident_level, 0)) {
+        ident = argv[1];
+        if (strlen(ident) > USERLEN) {
+            send_message(user, nickserv, "NSMSG_FAKEIDENT_INVALID", USERLEN);
+            return 0;
+        }
+        free(hi->fakeident);
+        if (!strcmp(ident, "*"))
+            hi->fakeident = NULL;
+        else
+            hi->fakeident = strdup(ident);
+        ident = hi->fakeident;
+        apply_fakehost(hi, NULL);
     } else
-        fake = generate_fakehost(hi);
-    if (!fake)
-        fake = user_find_message(user, "MSG_NONE");
-    send_message(user, nickserv, "NSMSG_SET_FAKEHOST", fake);
+        ident = generate_fakeident(hi, NULL); /* NULL if no fake ident set */
+    if (!ident)
+        ident = user_find_message(user, "MSG_NONE");
+    send_message(user, nickserv, "NSMSG_SET_FAKEIDENT", ident);
     return 1;
 }
 
@@ -2915,6 +3010,8 @@ nickserv_saxdb_write(struct saxdb_context *ctx) {
             saxdb_write_string(ctx, KEY_EPITHET, hi->epithet);
         if (hi->fakehost)
             saxdb_write_string(ctx, KEY_FAKEHOST, hi->fakehost);
+        if (hi->fakeident)
+            saxdb_write_string(ctx, KEY_FAKEIDENT, hi->fakeident);
         if (hi->flags) {
             int ii, flen;
 
@@ -3090,6 +3187,8 @@ static NICKSERV_FUNC(cmd_merge)
      */
     if (hi_from->fakehost && !hi_to->fakehost)
         hi_to->fakehost = strdup(hi_from->fakehost);
+    if (hi_from->fakeident && !hi_to->fakeident)
+        hi_to->fakeident = strdup(hi_from->fakeident);
 
     /* Notify of success. */
     sprintf(buffer, "%s (%s) merged account %s into %s.", user->nick, user->handle_info->handle, hi_from->handle, hi_to->handle);
@@ -3113,6 +3212,7 @@ struct nickserv_discrim {
     const char *nickmask;
     const char *hostmask;
     const char *fakehostmask;
+    const char *fakeidentmask;
     const char *handlemask;
     const char *emailmask;
 };
@@ -3212,6 +3312,12 @@ nickserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[])
             } else {
                 discrim->fakehostmask = argv[i];
             }
+        } else if (!irccasecmp(argv[i], "fakeident")) {
+            if (!irccasecmp(argv[++i], "*")) {
+                discrim->fakeidentmask = 0;
+            } else {
+                discrim->fakeidentmask = argv[i];
+            }
         } else if (!irccasecmp(argv[i], "handlemask") || !irccasecmp(argv[i], "accountmask")) {
             if (!irccasecmp(argv[++i], "*")) {
                 discrim->handlemask = 0;
@@ -3287,6 +3393,7 @@ nickserv_discrim_match(struct nickserv_discrim *discrim, struct handle_info *hi)
         || (discrim->lastseen < (hi->users?now:hi->lastseen))
         || (discrim->handlemask && !match_ircglob(hi->handle, discrim->handlemask))
         || (discrim->fakehostmask && (!hi->fakehost || !match_ircglob(hi->fakehost, discrim->fakehostmask)))
+        || (discrim->fakeidentmask && (!hi->fakeident || !match_ircglob(hi->fakeident, discrim->fakeidentmask)))
         || (discrim->emailmask && (!hi->email_addr || !match_ircglob(hi->email_addr, discrim->emailmask)))
         || (discrim->min_level > hi->opserv_level)
         || (discrim->max_level < hi->opserv_level)
@@ -3571,6 +3678,9 @@ nickserv_db_read_handle(const char *handle, dict_t obj)
     str = database_get_data(obj, KEY_FAKEHOST, RECDB_QSTRING);
     if (str)
         hi->fakehost = strdup(str);
+    str = database_get_data(obj, KEY_FAKEIDENT, RECDB_QSTRING);
+    if (str)
+        hi->fakeident = strdup(str);
     /* Read the "cookie" sub-database (if it exists). */
     subdb = database_get_data(obj, KEY_COOKIE, RECDB_OBJECT);
     if (subdb) {
@@ -3813,6 +3923,8 @@ nickserv_conf_read(void)
     nickserv_conf.set_title_level = str ? strtoul(str, NULL, 0) : 900;
     str = database_get_data(conf_node, KEY_SET_FAKEHOST_LEVEL, RECDB_QSTRING);
     nickserv_conf.set_fakehost_level = str ? strtoul(str, NULL, 0) : 1000;
+    str = database_get_data(conf_node, KEY_SET_FAKEIDENT_LEVEL, RECDB_QSTRING);
+    nickserv_conf.set_fakeident_level = str ? strtoul(str, NULL, 0) : 1000;
     str = database_get_data(conf_node, KEY_HANDLE_EXPIRE_FREQ, RECDB_QSTRING);
     if (!str)
         str = database_get_data(conf_node, KEY_ACCOUNT_EXPIRE_FREQ, RECDB_QSTRING);
@@ -4161,6 +4273,7 @@ init_nickserv(const char *nick)
     if (nickserv_conf.titlehost_suffix) {
         dict_insert(nickserv_opt_dict, "TITLE", opt_title);
         dict_insert(nickserv_opt_dict, "FAKEHOST", opt_fakehost);
+        dict_insert(nickserv_opt_dict, "FAKEIDENT", opt_fakeident);
     }
     dict_insert(nickserv_opt_dict, "MAXLOGINS", opt_maxlogins);
     dict_insert(nickserv_opt_dict, "LANGUAGE", opt_language);
