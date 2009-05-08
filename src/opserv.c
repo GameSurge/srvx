@@ -120,6 +120,7 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_WHOIS_HOST", "Host     : %s@%s" },
     { "OSMSG_WHOIS_FAKEHOST", "Fakehost : %s" },
     { "OSMSG_WHOIS_FAKEIDENT", "Fakeident: %s" },
+    { "OSMSG_WHOIS_FAKEIDENTHOST", "Fakehost : %s@%s" },
     { "OSMSG_WHOIS_IP",   "Real IP  : %s" },
     { "OSMSG_WHOIS_MODES", "Modes    : +%s " },
     { "OSMSG_WHOIS_INFO", "Info     : %s" },
@@ -1253,9 +1254,11 @@ static MODCMD_FUNC(cmd_whois)
     }
     reply("OSMSG_WHOIS_NICK", target->nick);
     reply("OSMSG_WHOIS_HOST", target->ident, target->hostname);
-    if (IsFakeIdent(target))
+    if (IsFakeIdent(target) && IsFakeHost(target))
+        reply("OSMSG_WHOIS_FAKEIDENTHOST", target->fakeident, target->fakehost);
+    else if (IsFakeIdent(target))
         reply("OSMSG_WHOIS_FAKEIDENT", target->fakeident);
-    if (IsFakeHost(target))
+    else if (IsFakeHost(target))
         reply("OSMSG_WHOIS_FAKEHOST", target->fakehost);
     reply("OSMSG_WHOIS_IP", irc_ntoa(&target->ip));
     if (target->modes) {

@@ -214,6 +214,7 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_HANDLEINFO_EPITHET", "  Epithet: %s" },
     { "NSMSG_HANDLEINFO_FAKEIDENT", "  Fake ident: %s" },
     { "NSMSG_HANDLEINFO_FAKEHOST", "  Fake host: %s" },
+    { "NSMSG_HANDLEINFO_FAKEIDENTHOST", "  Fake host: %s@%s" },
     { "NSMSG_HANDLEINFO_LAST_HOST", "  Last quit hostmask: %s" },
     { "NSMSG_HANDLEINFO_NO_NOTES", "  Notes: None" },
     { "NSMSG_HANDLEINFO_NOTE_EXPIRES", "  Note %d (%s ago by %s, expires %s): %s" },
@@ -317,6 +318,7 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_SET_TITLE", "$bTITLE:        $b%s" },
     { "NSMSG_SET_FAKEHOST", "$bFAKEHOST:    $b%s" },
     { "NSMSG_SET_FAKEIDENT", "$bFAKEIDENT:   $b%s" },
+    { "NSMSG_SET_FAKEIDENTHOST", "$bFAKEHOST:    $b%s@%s" },
     { "NSMSG_INVALID_KARMA", "$b%s$b is not a valid karma modifier." },
     { "NSMSG_SET_KARMA", "$bKARMA:       $b%d$b" },
     { "NSEMAIL_ACTIVATION_SUBJECT", "Account verification for %s" },
@@ -1441,11 +1443,12 @@ static NICKSERV_FUNC(cmd_handleinfo)
         reply("NSMSG_HANDLEINFO_EPITHET", (hi->epithet ? hi->epithet : nsmsg_none));
     }
 
-    if (hi->fakeident)
-        reply("NSMSG_HANDLEINFO_FAKEIDENT", (hi->fakeident ? hi->fakeident : handle_find_message(hi, "MSG_NONE")));
-
-    if (hi->fakehost)
-        reply("NSMSG_HANDLEINFO_FAKEHOST", (hi->fakehost ? hi->fakehost : handle_find_message(hi, "MSG_NONE")));
+    if (hi->fakeident && hi->fakehost)
+        reply("NSMSG_HANDLEINFO_FAKEIDENTHOST", hi->fakeident, hi->fakehost);
+    else if (hi->fakeident)
+        reply("NSMSG_HANDLEINFO_FAKEIDENT", hi->fakeident);
+    else if (hi->fakehost)
+        reply("NSMSG_HANDLEINFO_FAKEHOST", hi->fakehost);
 
     if (hi->last_quit_host[0])
         reply("NSMSG_HANDLEINFO_LAST_HOST", hi->last_quit_host);
@@ -2652,12 +2655,16 @@ static OPTION_FUNC(opt_fakehost)
             return 0;
         }
 
-        free(hi->fakehost);
-        if (!strcmp(host, "*"))
-            hi->fakehost = NULL;
+        if (host[0]) {
+            free(hi->fakehost);
+            if (!strcmp(host, "*"))
+                hi->fakehost = NULL;
+            else
+                hi->fakehost = strdup(host);
+            host = hi->fakehost;
+        }
         else
-            hi->fakehost = strdup(host);
-        host = hi->fakehost;
+            host = generate_fakehost(hi);
 
         if (ident) {
             free(hi->fakeident);
@@ -2667,6 +2674,8 @@ static OPTION_FUNC(opt_fakehost)
                 hi->fakeident = strdup(ident);
             ident = hi->fakeident;
         }
+        else
+            ident = generate_fakeident(hi, NULL);
 
         apply_fakehost(hi, NULL);
     } else {
@@ -2675,9 +2684,10 @@ static OPTION_FUNC(opt_fakehost)
     }
     if (!host)
         host = (char *) user_find_message(user, "MSG_NONE");
-    send_message(user, nickserv, "NSMSG_SET_FAKEHOST", host);
-    if (ident)
-        send_message(user, nickserv, "NSMSG_SET_FAKEIDENT", ident);
+    if(ident)
+        send_message(user, nickserv, "NSMSG_SET_FAKEIDENTHOST", ident, host);
+    else
+        send_message(user, nickserv, "NSMSG_SET_FAKEHOST", host);
     return 1;
 }
 
