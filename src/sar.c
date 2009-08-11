@@ -1669,6 +1669,9 @@ ipv4_pton(struct sockaddr *sa, UNUSED_ARG(unsigned int socklen), unsigned int *b
     if (!pos)
         return 0;
     sa->sa_family = AF_INET;
+#if defined(HAVE_SOCKADDR_SA_LEN)
+    sa->sa_len = sizeof(struct sockaddr_in);
+#endif
     return pos;
 }
 
@@ -1902,6 +1905,9 @@ ipv6_pton(struct sockaddr *sa, UNUSED_ARG(unsigned int socklen), unsigned int *b
             sin6->sin6_addr.s6_addr[cpos + jj] = 0;
     }
     sa->sa_family = AF_INET6;
+#if defined(HAVE_SOCKADDR_SA_LEN)
+    sa->sa_len = sizeof(struct sockaddr_in6);
+#endif
     return pos;
 }
 
