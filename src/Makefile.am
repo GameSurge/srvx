@@ -51,6 +51,7 @@ EXTRA_srvx_SOURCES = \
 	proto-bahamut.c \
 	proto-common.c \
 	proto-p10.c \
+	mod-blacklist.c \
 	mod-helpserv.c \
 	mod-memoserv.c \
 	mod-qserver.c \
