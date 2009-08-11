@@ -46,7 +46,9 @@ ioset_kevent_add(struct io_fd *fd)
     int res;
 
     EV_SET(&changes[nchanges++], fd->fd, EVFILT_READ, EV_ADD, 0, 0, fd);
-    EV_SET(&changes[nchanges++], fd->fd, EVFILT_WRITE, fd_wants_writes(fd) ? EV_ADD : EV_DELETE, 0, 0, fd);
+    if (fd_wants_writes(fd)) {
+	EV_SET(&changes[nchanges++], fd->fd, EVFILT_WRITE, EV_ADD, 0, 0, fd);
+    }
     res = kevent(kq_fd, changes, nchanges, NULL, 0, NULL);
     if (res < 0) {
 	log_module(MAIN_LOG, LOG_ERROR, "kevent() add failed: %s", strerror(errno));
@@ -73,7 +75,16 @@ ioset_kevent_remove(struct io_fd *fd, int closed)
 static void
 ioset_kevent_update(struct io_fd *fd)
 {
-    ioset_kevent_add(fd);
+    struct kevent changes[2];
+    int nchanges = 0;
+    int res;
+
+    EV_SET(&changes[nchanges++], fd->fd, EVFILT_READ, EV_ADD, 0, 0, fd);
+    EV_SET(&changes[nchanges++], fd->fd, EVFILT_WRITE, fd_wants_writes(fd) ? EV_ADD : EV_DELETE, 0, 0, fd);
+    res = kevent(kq_fd, changes, nchanges, NULL, 0, NULL);
+    if (res < 0) {
+	log_module(MAIN_LOG, LOG_ERROR, "kevent() add failed: %s", strerror(errno));
+    }
 }
 
 static void
@@ -102,7 +113,7 @@ ioset_kevent_loop(struct timeval *timeout)
 	pts = NULL;
     }
     res = kevent(kq_fd, NULL, 0, events, MAX_EVENTS, pts);
-    if (res < 0) {
+    if ((res < 0) && (errno != EINTR)) {
 	log_module(MAIN_LOG, LOG_ERROR, "kevent() poll failed: %s", strerror(errno));
 	return 1;
     }
