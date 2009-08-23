@@ -175,7 +175,7 @@
 "CSMSG_PEEK_NO_OPS" "$bOps:            $bkeine";
 "CSMSG_PEEK_OPS" "$bOps:$b";
 "CSMSG_PEEK_TOPIC" "$bTopic:          $b%s";
-"CSMSG_PEEK_USERS" "$bUser Anzahl:    $b%d";
+"CSMSG_PEEK_USERS" "$bUser Anzahl:    $b%d (%d Ops, %d Voices, %d normale)";
 "CSMSG_PING_RESPONSE" "Pong!";
 "CSMSG_PROCESS_FAILED" "$b$C$b konnte die angegebenen Nicknamen nicht finden.";
 "CSMSG_PROTECT_ALL" "Channel Besucher und User, die Access im Channel haben, werden vor Usern mit gleichem oder weniger Access geschützt.";

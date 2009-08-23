@@ -404,7 +404,7 @@ static const struct message_entry msgtab[] = {
     { "CSMSG_PEEK_INFO", "$b%s$b Status:" },
     { "CSMSG_PEEK_TOPIC", "$bTopic:          $b%s" },
     { "CSMSG_PEEK_MODES", "$bModes:          $b%s" },
-    { "CSMSG_PEEK_USERS", "$bTotal users:    $b%d" },
+    { "CSMSG_PEEK_USERS", "$bTotal users:    $b%d (%d ops, %d voices, %d regulars)" },
     { "CSMSG_PEEK_OPS", "$bOps:$b" },
     { "CSMSG_PEEK_NO_OPS", "$bOps:            $bNone present" },
 
@@ -4509,13 +4509,13 @@ static CHANSERV_FUNC(cmd_peek)
     char modes[MODELEN];
     unsigned int n;
     struct helpfile_table table;
+    int opcount = 0, voicecount = 0, srvcount = 0;
 
     irc_make_chanmode(channel, modes);
 
     reply("CSMSG_PEEK_INFO", channel->name);
     reply("CSMSG_PEEK_TOPIC", channel->topic);
     reply("CSMSG_PEEK_MODES", modes);
-    reply("CSMSG_PEEK_USERS", channel->members.used);
 
     table.length = 0;
     table.width = 1;
@@ -4524,12 +4524,23 @@ static CHANSERV_FUNC(cmd_peek)
     for(n = 0; n < channel->members.used; n++)
     {
         mn = channel->members.list[n];
+        if(IsLocal(mn->user))
+            srvcount++;
+        else if(mn->modes & MODE_CHANOP)
+            opcount++;
+        else if(mn->modes & MODE_VOICE)
+            voicecount++;
+
         if(!(mn->modes & MODE_CHANOP) || IsLocal(mn->user))
             continue;
         table.contents[table.length] = alloca(sizeof(**table.contents));
         table.contents[table.length][0] = mn->user->nick;
         table.length++;
     }
+
+    reply("CSMSG_PEEK_USERS", channel->members.used, opcount, voicecount,
+          (channel->members.used - opcount - voicecount - srvcount));
+
     if(table.length)
     {
         reply("CSMSG_PEEK_OPS");
