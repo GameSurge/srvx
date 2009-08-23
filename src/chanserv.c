@@ -1382,7 +1382,7 @@ expire_channels(UNUSED_ARG(void *data))
 
         /* Make sure there are no high-ranking users still in the channel. */
         for(user=channel->users; user; user=user->next)
-            if(user->present && (user->access >= UL_PRESENT))
+            if(user->present && (user->access >= UL_PRESENT) && !HANDLE_FLAGGED(user->handle, BOT))
                 break;
         if(user)
             continue;
@@ -3964,6 +3964,8 @@ cmd_list_users(struct userNode *user, struct chanNode *channel, unsigned int arg
             ary[3] = "Suspended";
         else if(HANDLE_FLAGGED(uData->handle, FROZEN))
             ary[3] = "Vacation";
+        else if(HANDLE_FLAGGED(uData->handle, BOT))
+            ary[3] = "Bot";
         else
             ary[3] = "Normal";
     }
@@ -6564,7 +6566,7 @@ handle_join(struct modeNode *mNode)
                 else if(uData->access >= cData->lvlOpts[lvlGiveVoice])
                     modes |= MODE_VOICE;
             }
-            if(uData->access >= UL_PRESENT)
+            if(uData->access >= UL_PRESENT && !HANDLE_FLAGGED(uData->handle, BOT))
                 cData->visited = now;
             if(cData->user_greeting)
                 greeting = cData->user_greeting;
@@ -6632,7 +6634,7 @@ handle_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle))
             continue;
         }
 
-        if(channel->access >= UL_PRESENT)
+        if(channel->access >= UL_PRESENT && !HANDLE_FLAGGED(channel->handle, BOT))
             channel->channel->visited = now;
 
         if(IsUserAutoOp(channel))
@@ -6719,7 +6721,7 @@ handle_part(struct modeNode *mn, UNUSED_ARG(const char *reason))
     {
         scan_user_presence(uData, mn->user);
         uData->seen = now;
-        if (uData->access >= UL_PRESENT)
+        if (uData->access >= UL_PRESENT && !HANDLE_FLAGGED(uData->handle, BOT))
             cData->visited = now;
     }
 
@@ -7527,7 +7529,7 @@ chanserv_write_users(struct saxdb_context *ctx, struct userData *uData)
     saxdb_start_record(ctx, KEY_USERS, 1);
     for(; uData; uData = uData->next)
     {
-        if((uData->access >= UL_PRESENT) && uData->present)
+        if((uData->access >= UL_PRESENT) && uData->present && !HANDLE_FLAGGED(uData->handle, BOT))
             high_present = 1;
         saxdb_start_record(ctx, uData->handle->handle, 0);
         saxdb_write_int(ctx, KEY_LEVEL, uData->access);
