@@ -2636,8 +2636,9 @@ static OPTION_FUNC(opt_fakehost)
     if ((argc > 1) && oper_has_access(user, nickserv, nickserv_conf.set_fakehost_level, 0)) {
         safestrncpy(mask, argv[1], sizeof(mask));
 
-        if ((host = strrchr(mask, '@')) && host != mask &&
-            oper_has_access(user, nickserv, nickserv_conf.set_fakeident_level, 0)) {
+        if ((host = strrchr(mask, '@')) && host != mask) {
+            if(!oper_has_access(user, nickserv, nickserv_conf.set_fakeident_level, 0))
+                goto no_access;
             ident = mask;
             *host++ = '\0';
         } else {
@@ -2679,6 +2680,7 @@ static OPTION_FUNC(opt_fakehost)
 
         apply_fakehost(hi, NULL);
     } else {
+no_access:
         host = generate_fakehost(hi);
         ident = generate_fakeident(hi, NULL);
     }
