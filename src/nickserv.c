@@ -194,8 +194,10 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_STAMPED_AUTHCOOKIE",  "You have already authenticated to an account once this session; you may not use a cookie to authenticate to another account." },
     { "NSMSG_TITLE_INVALID", "Titles cannot contain any dots; please choose another." },
     { "NSMSG_TITLE_TRUNCATED", "That title combined with the user's account name would result in a truncated host; please choose a shorter title." },
+    { "NSMSG_TITLE_TRUNCATED_RENAME", "That account name combined with the user's title would result in a truncated host; please choose a shorter account name." },
     { "NSMSG_FAKEHOST_INVALID", "Fake hosts must be shorter than %d characters and cannot start with a dot." },
     { "NSMSG_FAKEIDENT_INVALID", "Fake idents must be shorter than %d characters." },
+    { "NSMSG_FAKEMASK_INVALID", "Fake ident@hosts must be shorter than %d characters." },
     { "NSMSG_HANDLEINFO_ON", "Account information for $b%s$b:" },
     { "NSMSG_HANDLEINFO_ID", "  Account ID: %lu" },
     { "NSMSG_HANDLEINFO_REGGED", "  Registered on: %s" },
@@ -1619,6 +1621,12 @@ static NICKSERV_FUNC(cmd_rename_handle)
         reply("NSMSG_HANDLE_EXISTS", argv[2]);
         return 0;
     }
+    if (hi->fakehost && hi->fakehost[0] == '.' &&
+        (strlen(argv[2]) + strlen(hi->fakehost+1) +
+         strlen(nickserv_conf.titlehost_suffix) + 2) > HOSTLEN) {
+        send_message(user, nickserv, "NSMSG_TITLE_TRUNCATED_RENAME");
+        return 0;
+    }
 
     dict_remove2(nickserv_handle_dict, old_handle = hi->handle, 1);
     hi->handle = strdup(argv[2]);
@@ -2634,6 +2642,11 @@ static OPTION_FUNC(opt_fakehost)
     }
 
     if ((argc > 1) && oper_has_access(user, nickserv, nickserv_conf.set_fakehost_level, 0)) {
+        if(strlen(argv[1]) >= sizeof(mask)) {
+            send_message(user, nickserv, "NSMSG_FAKEMASK_INVALID", USERLEN + HOSTLEN + 1);
+            return 0;
+        }
+
         safestrncpy(mask, argv[1], sizeof(mask));
 
         if ((host = strrchr(mask, '@')) && host != mask) {
@@ -2646,13 +2659,13 @@ static OPTION_FUNC(opt_fakehost)
             host = mask;
         }
 
-        if ((strlen(host) > HOSTLEN) || (host[0] == '.')) {
-            send_message(user, nickserv, "NSMSG_FAKEHOST_INVALID", HOSTLEN);
+        if (ident && strlen(ident) > USERLEN) {
+            send_message(user, nickserv, "NSMSG_FAKEIDENT_INVALID", USERLEN);
             return 0;
         }
 
-        if (ident && strlen(ident) > USERLEN) {
-            send_message(user, nickserv, "NSMSG_FAKEIDENT_INVALID", USERLEN);
+        if ((strlen(host) > HOSTLEN) || (host[0] == '.')) {
+            send_message(user, nickserv, "NSMSG_FAKEHOST_INVALID", HOSTLEN);
             return 0;
         }
 
