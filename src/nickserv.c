@@ -2650,10 +2650,14 @@ static OPTION_FUNC(opt_fakehost)
         safestrncpy(mask, argv[1], sizeof(mask));
 
         if ((host = strrchr(mask, '@')) && host != mask) {
-            if(!oper_has_access(user, nickserv, nickserv_conf.set_fakeident_level, 0))
-                goto no_access;
-            ident = mask;
-            *host++ = '\0';
+            // If ident@host was used and the user doesn't have access to set idents, do not change anything.
+            if (!oper_has_access(user, nickserv, nickserv_conf.set_fakeident_level, 0)) {
+                host = NULL;
+                ident = NULL;
+            } else {
+                ident = mask;
+                *host++ = '\0';
+            }
         } else {
             ident = NULL;
             host = mask;
@@ -2664,12 +2668,12 @@ static OPTION_FUNC(opt_fakehost)
             return 0;
         }
 
-        if ((strlen(host) > HOSTLEN) || (host[0] == '.')) {
+        if (host && ((strlen(host) > HOSTLEN) || (host[0] == '.'))) {
             send_message(user, nickserv, "NSMSG_FAKEHOST_INVALID", HOSTLEN);
             return 0;
         }
 
-        if (host[0]) {
+        if (host && host[0]) {
             free(hi->fakehost);
             if (!strcmp(host, "*"))
                 hi->fakehost = NULL;
@@ -2693,7 +2697,6 @@ static OPTION_FUNC(opt_fakehost)
 
         apply_fakehost(hi, NULL);
     } else {
-no_access:
         host = generate_fakehost(hi);
         ident = generate_fakeident(hi, NULL);
     }
