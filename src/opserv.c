@@ -1256,17 +1256,8 @@ static MODCMD_FUNC(cmd_whois)
         reply("OSMSG_WHOIS_FAKEHOST", target->fakehost);
     reply("OSMSG_WHOIS_IP", irc_ntoa(&target->ip));
     if (target->modes) {
-        bpos = 0;
+        bpos = irc_user_modes(target, buffer, sizeof(buffer));
 #define buffer_cat(str) (herelen = strlen(str), memcpy(buffer+bpos, str, herelen), bpos += herelen)
-        if (IsInvisible(target)) buffer[bpos++] = 'i';
-        if (IsWallOp(target)) buffer[bpos++] = 'w';
-        if (IsOper(target)) buffer[bpos++] = 'o';
-        if (IsGlobal(target)) buffer[bpos++] = 'g';
-        if (IsService(target)) buffer[bpos++] = 'k';
-        if (IsDeaf(target)) buffer[bpos++] = 'd';
-        if (IsNoChan(target)) buffer[bpos++] = 'n';
-        if (IsHiddenHost(target)) buffer[bpos++] = 'x';
-        if (IsNoIdle(target)) buffer[bpos++] = 'I';
         if (IsGagged(target)) buffer_cat(" (gagged)");
         if (IsRegistering(target)) buffer_cat(" (registered account)");
         buffer[bpos] = 0;

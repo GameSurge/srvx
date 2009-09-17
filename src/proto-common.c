@@ -816,3 +816,20 @@ IsChannelName(const char *name) {
     }
     return 1;
 }
+
+unsigned int
+irc_user_modes(const struct userNode *user, char modes[], size_t length)
+{
+    unsigned int ii, jj;
+
+    for (ii = jj = 0; (jj < length) && (irc_user_mode_chars[ii] != '\0'); ++ii) {
+        if ((user->modes & (1 << ii)) && (irc_user_mode_chars[ii] != ' '))
+            modes[jj++] = irc_user_mode_chars[ii];
+    }
+
+    ii = jj;
+    while (jj < length)
+        modes[jj++] = '\0';
+
+    return ii;
+}

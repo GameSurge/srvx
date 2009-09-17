@@ -175,7 +175,9 @@ void DelUser(struct userNode* user, struct userNode *killer, int announce, const
 /* Most protocols will want to make an AddUser helper function. */
 
 /* User modes */
+extern const char irc_user_mode_chars[];
 void mod_usermode(struct userNode *user, const char *modes);
+unsigned int irc_user_modes(const struct userNode *user, char modes[], size_t length);
 
 /* Channel mode manipulation */
 #define KEYLEN          23

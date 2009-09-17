@@ -292,6 +292,9 @@ static struct dict *unbursted_channels;
 static const char *his_servername;
 static const char *his_servercomment;
 
+/* These correspond to 1 << X:      012345678901234567 */
+const char irc_user_mode_chars[] = "o iw dkgn        I";
+
 static struct userNode *AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *numeric, const char *userinfo, unsigned long timestamp, const char *realip);
 
 extern int off_channel;
@@ -459,31 +462,8 @@ irc_user(struct userNode *user)
         return;
     irc_p10_ntop(b64ip, &user->ip);
     if (user->modes) {
-        int modelen;
         char modes[32];
-
-        modelen = 0;
-        if (IsOper(user))
-            modes[modelen++] = 'o';
-        if (IsInvisible(user))
-            modes[modelen++] = 'i';
-        if (IsWallOp(user))
-            modes[modelen++] = 'w';
-        if (IsService(user))
-            modes[modelen++] = 'k';
-        if (IsDeaf(user))
-            modes[modelen++] = 'd';
-        if (IsGlobal(user))
-            modes[modelen++] = 'g';
-        if (IsNoChan(user))
-            modes[modelen++] = 'n';
-        if (IsHiddenHost(user))
-            modes[modelen++] = 'x';
-        if (IsNoIdle(user))
-            modes[modelen++] = 'I';
-        modes[modelen] = 0;
-
-        /* we don't need to put the + in modes because it's in the format string. */
+        irc_user_modes(user, modes, sizeof(modes));
         putsock("%s " P10_NICK " %s %d %lu %s %s +%s %s %s :%s",
                 user->uplink->numeric, user->nick, user->uplink->hops+1, (unsigned long)user->timestamp, user->ident, user->hostname, modes, b64ip, user->numeric, user->info);
     } else {

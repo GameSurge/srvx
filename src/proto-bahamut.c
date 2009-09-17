@@ -38,6 +38,9 @@ static dict_t service_msginfo_dict; /* holds service_message_info structs */
 static int uplink_capab;
 static void privmsg_user_helper(struct userNode *un, void *data);
 
+/* These correspond to 1 << X:      012345678901234567 */
+const char irc_user_mode_chars[] = "o iw dkg      r   ";
+
 void irc_svsmode(struct userNode *target, char *modes, unsigned long stamp);
 
 struct server *
@@ -241,16 +244,8 @@ irc_server(struct server *srv) {
 void
 irc_user(struct userNode *user) {
     char modes[32];
-    int modelen = 0;
     if (!user || user->nick[0] != ' ') return;
-    if (IsOper(user)) modes[modelen++] = 'o';
-    if (IsInvisible(user)) modes[modelen++] = 'i';
-    if (IsWallOp(user)) modes[modelen++] = 'w';
-    if (IsService(user)) modes[modelen++] = 'k';
-    if (IsDeaf(user)) modes[modelen++] = 'd';
-    if (IsReggedNick(user)) modes[modelen++] = 'r';
-    if (IsGlobal(user)) modes[modelen++] = 'g';
-    modes[modelen] = 0;
+    irc_user_modes(user, modes, sizeof(modes));
     putsock("NICK %s %d %lu +%s %s %s %s %d %u :%s",
             user->nick, user->uplink->hops+2, (unsigned long)user->timestamp,
             modes, user->ident, user->hostname, user->uplink->name, 0,
