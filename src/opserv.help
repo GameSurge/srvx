@@ -52,6 +52,8 @@
         "Edits the 'trust' for the specified IP, changing the count, duration and/or reason.",
         "You may use 0 as the duration if you do not wish the trust to ever expire, and 0 as the count for unlimited connections.",
         "$uSee Also:$u addtrust, deltrust, stats trusted");
+"INVITE" ("/msg $O INVITE #channel",
+	"Invites you to the specified channel.");
 "INVITEME" ("/msg $O INVITEME [nick]",
         "Invites the specified user (if omitted, you) to $O's debug channel.",
         "This is currently pointless, since no output is sent to the debug channel.");

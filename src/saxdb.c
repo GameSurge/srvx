@@ -290,11 +290,13 @@ void
 saxdb_start_record(struct saxdb_context *dest, const char *name, int complex) {
     saxdb_pre_object(dest);
     saxdb_put_qstring(dest, name);
-    saxdb_put_string(dest, " { ");
+    saxdb_put_string(dest, " {");
     int_list_append(&dest->complex, complex);
     if (complex) {
         dest->indent++;
         saxdb_put_char(dest, '\n');
+    } else {
+        saxdb_put_char(dest, ' ');
     }
 }
 
