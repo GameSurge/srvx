@@ -1,41 +1,170 @@
-News for srvx release 0.9.5
-[March 21, 2001 - Present]
----------------------------
-- 0.9.5 released March 21, 2001.
-- This is the LAST release before 1.0 goes out.
-- We came across a (large) memory leak in FreeBSD's libc and worked
-  around it.  We also submitted a bug report to the FreeBSD team.
-- As far as we know, no more serious bugs are present in srvx. Most
-  development before 1.0 will be tweaking and minor fixups.
-- Helpfiles should be up to date before the release of 1.0.
-- Just showing off srvx's speed:
-    <@Jedi> ?timecmd trace count host *
-    -OpServX(OpServX@Services.GamesNET.net)- Found 4593 matches.
-    -OpServX(OpServX@Services.GamesNET.net)- Command `trace' finished in 0.003037 seconds.
+Upgrading from srvx-1.3
+-----------------------
 
+Core changes:
 
-News for everything prior to 0.9.5
-[April 16, 2000 - March 20, 2001]
-----------------------------------
-- Coding began about 1 year prior to the 0.9.5 release.
-- Documentation up to 0.9.5 is virtually non-existant.
-- PRE01 released April 16, 2000.
-- PRE02 released April 18, 2000.
-- After the main parts were completed, it all came down to bug fixing.
-- 0.1 released June 13, 2000.
-- srvx was setup on a machine and linked to GamesNET for its initial beta
-  tests.  Many many many bugs were fixed in the first week, fewer as time
-  went along.
-- 0.2 released July 5, 2000.
-- Between 0.2 and 0.7 code for the services themselves was put in.  Prior
-  to this was mainly core coding.
-- Using dmalloc, bounds-checking and new log replaying code, we were able
-  to hammer out alot bugs, some of which were severe enough to cause a
-  segfault.
-- 0.7 released December 15, 2000.  [0.3 through 0.6 never released]
-- 0.9 released January 17, 2001.   [0.8 never released]
-- Just prior to the 0.9.5 release, numerous memory leaks were fixed,
-  prompting the release of 0.9.5.
-- srvx is still running smoothly on GamesNET.  If we didn't take it down
-  every 2 days to be updated with new patches, its uptime would be quite
-  high.
+ * There is a new mod-qserver module that allows direct connections to
+   srvx.  There is no documentation on the protocol, but the file is
+   under 250 lines long, so it shouldn't be hard to figure out.
+
+ * There is a new mod-blacklist module that allows a blacklist based
+   on DNSBLs and IP- and host-based text files.  See srvx.conf.example
+   for details on how to configure this module.
+
+ * Commands that use security overrides can be logged more easily.
+   This includes, among many other things, adding or removing users in
+   channels where the staff user would not normally have the necessary
+   access.  These can be selected with the "staff" and "override" log
+   levels.
+
+ * The database writing code has been rewritten because the previous
+   code performed much worse (for an unknown reason) on 64-bit
+   machines than on 32-bit machines.  Now it is faster than ever on
+   both types.
+
+ * There is now native mingw support for Win32 builds that do not use
+   the Cygwin libraries.  See Makefile.win32 for details.
+
+ * The logger now avoids recursive logging to the same destination.
+
+ * G-lines support the last-modification syntax introduced in
+   ircu2.10.12.11.
+
+ * srvx recognizes the +I (hide idle time) and +n (hide channel list)
+   user modes and uses them appropriately when generating WHOIS
+   responses.
+
+ * srvx now re-reads translations from its "languages" directory on a
+   ?rehash.
+
+ * srvx now re-reads its own server name and description on a ?rehash.
+
+ * srvx has several implementations of the ioset event loop
+   (ioset-epoll.c, ioset-kevent.c, ioset-select.c, ioset-win32.c).
+   The most efficient one supported by the OS should be selected
+   automatically.
+
+ * srvx has several implementations of its mail sending utility
+   (mail-sendmail.c, mail-smtp.c).  The sendmail implementation is
+   used on configure-based builds, and the SMTP implementation is used
+   on mingw/Win32 native builds.
+
+ChanServ changes:
+
+ * Do-not-register (DNR) entries now have an expiration time.  The
+   duration can be set to 0 to create a permanent entry; this is the
+   default for pre-1.4 DNRs.  There is also a DNR search command that
+   should be bound to ChanServ (/msg OpServ bind ChanServ dnrsearch
+   *ChanServ.dnrsearch; likewise for its actions: dnrsearch\ print,
+   dnrsearch\ remove and dnrsearch\ count).
+
+ * Kick, ban and unban commands will now accept arguments of the form
+   *ACCOUNT, affecting users with that account name.
+
+ * The default titles "IRCOp", "network helper" and "support helper"
+   can be localized using "CSMSG_OPERATOR_TITLE", "CSMSG_UC_H_TITLE"
+   and "CSMSG_LC_H_TITLE" respectively.
+
+ * The BANS command can search for users affected by a ban in addition
+   to searching for matching ban patterns.
+
+ * The SAY and EMOTE commands will now accept arguments of the form
+   *ACCOUNT.
+
+ * There is a new channel flag, Unreviewed, that can distinguish
+   between automatically registered channels that have been reviewed
+   against network policies by staff and those that have not.  The
+   "unreviewed" search criteria can select channels without this flag.
+   (/msg OpServ bind ChanServ set\ unreviewed *ChanServ.set\
+   unreviewed; likewise for its values: set\ unreviewed\ on and set\
+   unreviewed\ off.)
+
+ * Changing the AutoInvite user option will warn if the user does not
+   have enough access in the channel to be automatically invited.
+
+ * The GIVEOWNERSHIP command requires a confirmation code.
+
+ * ChanServ's event handling functions are only registered if it has a
+   nickname set.  This makes it easier to disable ChanServ in one
+   instance of srvx.  There are a few related changes in modcmd.c's
+   permission and flag checks.
+
+NickServ changes:
+
+ * Notes on an account are now supported.  (/msg OpServ bind NickServ
+   notes *NickServ.notes; likewise for the related addnote and delnote
+   commands.)
+
+ * The new command ODELCOOKIE has been added to do the hopefully
+   obvious thing.
+
+ * The new command CHECKEMAIL has been added to allow helpers to check
+   whether an account's email address matches one known to the helper.
+   This allows email visibility to remain limited.
+
+ * The OUNREGISTER command now has two configuration options that may
+   require a "force" parameter to be used: "ounregister_inactive" and
+   "ounregister_flags".  See srvx.conf.example for details.
+
+ * If you are using ircu2.10.12.x (you are, aren't you?), snircd, or
+   any other ircd that supports account creation timestamps, you
+   should consider the value of the NickServ "account_timestamp_mode"
+   parameter in srvx.conf.  It can have these values:
+    "ignore" (or anything unrecognized): Send the account registration
+      timestamp but ignore the received value.
+    "ircu": Send the account registration timestamp and require that
+      it match for users from the network.
+   The default is "ignore".
+
+OpServ changes:
+
+ * IPs with trusts or with active opers are protected from being
+   accidentally affected by G-lines, TRACE KILL and TRACE GAG.  The
+   "abuse" pseudo-criterion for TRACE now has a "trusted" option to
+   override trusted IP protection (in addition to the previous, and
+   independent, "opers" option).
+
+ * The BLOCK command takes an optional duration after the target.
+   Using this requires the same access level as the GLINE command.
+
+ * There is a new FORCEKICK command that will allow opers to kick
+   anyone (including remote +k users) from a channel.
+
+ * The STATS GLINE command now accepts an optional target, to have it
+   show the first known G-line matching that target.
+
+ * srvx will no longer crash in OpServ's join checks if no OpServ bot
+   is instantiated.
+
+ * The TRACE command will now allow more than one "channel" criterion
+   to be specified.  It also accepts a "target" pseudo-criterion that
+   contains the name of a channel to receive the output.
+
+Upgrading from srvx-1.2
+-----------------------
+
+Copy srvx.conf and your database files from your srvx-1.2 directory to
+your srvx-1.3 directory.
+
+Look over your srvx.conf and compare it to srvx.conf.example from
+srvx-1.3.  Add any new settings you want to.
+
+If you are using HelpServ, move the "helpserv" subsection from the
+"services" section to the "modules" section.  Make sure you enable
+the HelpServ module; see Q6 and Q8 in the FAQ.
+
+You must update command bindings, because several common commands
+moved in srvx-1.3.  If you have not added many custom bindings, the
+easiest way to do this is to delete the "modcmd" section of srvx.db
+(if you are using the "mondo" database layout) or delete modcmd.db (if
+you are not using "mondo"); when you start srvx after doing that, it
+will set up all the standard bindings.
+
+If you have added many custom bindings, the following commands should
+be bound to services:
+        Service Name	Suggested Name	Binding
+        ------------    --------------  -------
+        NickServ
+        ChanServ
+        OpServ
+(The above list is known to be incomplete.)
