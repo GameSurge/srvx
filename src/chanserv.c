@@ -6715,10 +6715,19 @@ handle_part(struct modeNode *mn, UNUSED_ARG(const char *reason))
     if(IsHelping(mn->user) && IsSupportHelper(mn->user))
     {
         unsigned int ii;
-        for(ii = 0; ii < chanserv_conf.support_channels.used; ++ii)
-             if(find_handle_in_channel(chanserv_conf.support_channels.list[ii], mn->user->handle_info, mn->user))
+        for(ii = 0; ii < chanserv_conf.support_channels.used; ++ii) {
+            struct chanNode *channel;
+            struct userNode *exclude;
+            /* When looking at the channel that is being /part'ed, we
+             * have to skip over the client that is leaving.  For
+             * other channels, we must not do that.
+             */
+            channel = chanserv_conf.support_channels.list[ii];
+            exclude = (channel == mn->channel) ? mn->user : NULL;
+            if(find_handle_in_channel(channel, mn->user->handle_info, exclude))
                 break;
-         if(ii == chanserv_conf.support_channels.used)
+        }
+        if(ii == chanserv_conf.support_channels.used)
             HANDLE_CLEAR_FLAG(mn->user->handle_info, HELPING);
     }
 }
