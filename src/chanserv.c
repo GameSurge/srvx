@@ -438,7 +438,7 @@ static const struct message_entry msgtab[] = {
 
 /* User settings */
     { "CSMSG_USER_OPTIONS", "User Options:" },
-    { "CSMSG_USER_PROTECTED", "That user is protected." },
+    { "CSMSG_USER_PROTECTED_2", "That user is protected." },
 
 /* Toys */
     { "CSMSG_UNF_RESPONSE", "I don't want to be part of your sick fantasies!" },
@@ -6744,7 +6744,7 @@ handle_kick(struct userNode *kicker, struct userNode *victim, struct chanNode *c
 
     if(protect_user(victim, kicker, channel->channel_info))
     {
-        const char *reason = user_find_message(kicker, "CSMSG_USER_PROTECTED");
+        const char *reason = user_find_message(kicker, "CSMSG_USER_PROTECTED_2");
         KickChannelUser(kicker, channel, chanserv, reason);
     }
 
