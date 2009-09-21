@@ -2366,7 +2366,7 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
         case 'A':
             if (add) {
                 if ((in_arg >= argc)
-                    || keyncpy(change->new_upass, modes[in_arg++], sizeof(change->new_upass)))
+                    || keyncpy(change->new_apass, modes[in_arg++], sizeof(change->new_apass)))
                     goto error;
                 change->modes_set |= MODE_APASS;
             } else {
