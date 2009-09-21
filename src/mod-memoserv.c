@@ -58,8 +58,11 @@
 #define KEY_MESSAGE "msg"
 #undef KEY_READ /* thanks microsoft! */
 #define KEY_READ "read"
+#define KEY_ACCOUNTS "accounts"
+#define KEY_MESSAGES "messages"
 
 static const struct message_entry msgtab[] = {
+    { "MSMSG_CANNOT_SEND_SELF", "You cannot send to yourself." },
     { "MSMSG_CANNOT_SEND", "You cannot send to account $b%s$b." },
     { "MSMSG_MEMO_SENT", "Message sent to $b%s$b." },
     { "MSMSG_NO_MESSAGES", "You have no messages." },
@@ -75,7 +78,7 @@ static const struct message_entry msgtab[] = {
     { "MSMSG_EXPIRY", "Messages will be expired when they are %s old (%d seconds)." },
     { "MSMSG_MESSAGES_EXPIRED", "$b%lu$b message(s) expired." },
     { "MSMSG_MEMOS_INBOX", "You have $b%d$b new message(s) in your inbox and %d old messages.  Use /msg $S LIST to list them." },
-    { "MSMSG_NEW_MESSAGE", "You have a new message from $b%s$b." },
+    { "MSMSG_NEW_MESSAGE", "You have a new message from $b%s$b (ID $b%d$b)." },
     { "MSMSG_DELETED_ALL", "Deleted all of your messages." },
     { "MSMSG_USE_CONFIRM", "Please use /msg $S DELETE * $bCONFIRM$b to delete $uall$u of your messages." },
     { "MSMSG_STATUS_TOTAL", "I have $b%u$b memos in my database." },
@@ -220,11 +223,17 @@ memoserv_can_send(struct userNode *bot, struct userNode *user, struct memo_accou
 
     if (!user->handle_info)
         return 0;
+    if (user->handle_info == account->handle) {
+        send_message(user, bot, "MSMSG_CANNOT_SEND_SELF");
+        return 0;
+    }
     if (!(account->flags & MEMO_DENY_NONCHANNEL))
         return 1;
-    for (dest = account->handle->channels; dest; dest = dest->u_next)
-        if (_GetChannelUser(dest->channel, user->handle_info, 1, 0))
+    for (dest = account->handle->channels; dest; dest = dest->u_next) {
+        struct userData *recip = _GetChannelUser(dest->channel, user->handle_info, 1, 0);
+        if (recip != NULL && recip->seen != 0)
             return 1;
+    }
     send_message(user, bot, "MSMSG_CANNOT_SEND", account->handle->handle);
     return 0;
 }
@@ -267,7 +276,7 @@ static MODCMD_FUNC(cmd_send)
     if (ma->flags & MEMO_NOTIFY_NEW) {
         struct userNode *other;
         for (other = ma->handle->users; other; other = other->next_authed)
-            send_message(other, cmd->parent->bot, "MSMSG_NEW_MESSAGE", user->nick);
+            send_message(other, cmd->parent->bot, "MSMSG_NEW_MESSAGE", user->nick, ma->recvd.used - 1);
     }
     reply("MSMSG_MEMO_SENT", ma->handle->handle);
     return 1;
@@ -305,13 +314,14 @@ static MODCMD_FUNC(cmd_read)
     unsigned int memoid;
     struct memo *memo;
     char posted[24];
-    time_t feh;
+    time_t memo_sent;
 
     if (!(ma = memoserv_get_account(user->handle_info)))
         return 0;
     if (!(memo = find_memo(user, cmd, ma, argv[1], &memoid)))
         return 0;
-    strftime(posted, sizeof(posted), "%I:%M %p, %m/%d/%Y", localtime(&feh));
+    memo_sent = memo->sent;
+    strftime(posted, sizeof(posted), "%I:%M %p, %m/%d/%Y", localtime(&memo_sent));
     reply("MSMSG_MEMO_HEAD", memoid, memo->sender->handle->handle, posted);
     send_message_type(4, user, cmd->parent->bot, "%s", memo->message);
     memo->is_read = 1;
@@ -463,7 +473,7 @@ memoserv_conf_read(void)
 }
 
 static int
-memoserv_saxdb_read(struct dict *db)
+memoserv_saxdb_read_messages(struct dict *db)
 {
     char *str;
     struct handle_info *sender, *recipient;
@@ -513,20 +523,79 @@ memoserv_saxdb_read(struct dict *db)
     return 0;
 }
 
+static void
+memoserv_saxdb_read_accounts(struct dict *db)
+{
+    struct memo_account *ma;
+    struct handle_info *hi;
+    struct record_data *rd;
+    dict_iterator_t it;
+    const char *str;
+
+    for (it = dict_first(db); it; it = iter_next(it)) {
+        hi = get_handle_info(iter_key(it));
+        if (hi == NULL) {
+            log_module(MS_LOG, LOG_WARNING, "No account known for %s.", iter_key(it));
+            continue;
+        }
+
+        ma = memoserv_get_account(hi);
+        if (ma == NULL) {
+            log_module(MS_LOG, LOG_WARNING, "Unable to allocate memory for account %s.", iter_key(it));
+            continue;
+        }
+
+        rd = iter_data(it);
+        if (rd->type == RECDB_QSTRING) {
+            str = rd->d.qstring;
+        } else {
+            log_module(MS_LOG, LOG_WARNING, "Unexpected rectype %d for accounts/%s.", rd->type, iter_key(it));
+            continue;
+        }
+
+        if (str != NULL)
+            ma->flags = strtol(str, NULL, 0);
+    }
+}
+
+static int
+memoserv_saxdb_read(struct dict *db)
+{
+    struct dict *obj;
+
+    obj = database_get_data(db, KEY_ACCOUNTS, RECDB_OBJECT);
+    if (obj == NULL) {
+        return memoserv_saxdb_read_messages(db);
+    } else {
+        memoserv_saxdb_read_accounts(obj);
+        obj = database_get_data(db, KEY_MESSAGES, RECDB_OBJECT);
+        return memoserv_saxdb_read_messages(obj);
+    }
+}
+
 static int
 memoserv_saxdb_write(struct saxdb_context *ctx)
 {
     dict_iterator_t it;
     struct memo_account *ma;
     struct memo *memo;
-    char str[7];
+    char str[17];
     unsigned int id = 0, ii;
 
+    saxdb_start_record(ctx, "accounts", 1);
+    for (it = dict_first(memos); it; it = iter_next(it)) {
+        ma = iter_data(it);
+        saxdb_write_int(ctx, ma->handle->handle, ma->flags);
+    }
+    saxdb_end_record(ctx);
+
+    saxdb_start_record(ctx, "messages", 1);
     for (it = dict_first(memos); it; it = iter_next(it)) {
         ma = iter_data(it);
         for (ii = 0; ii < ma->recvd.used; ++ii) {
             memo = ma->recvd.list[ii];
-            saxdb_start_record(ctx, inttobase64(str, id++, sizeof(str)), 0);
+            snprintf(str, sizeof(str), "%x", id++);
+            saxdb_start_record(ctx, str, 0);
             saxdb_write_int(ctx, KEY_SENT, memo->sent);
             saxdb_write_string(ctx, KEY_RECIPIENT, memo->recipient->handle->handle);
             saxdb_write_string(ctx, KEY_FROM, memo->sender->handle->handle);
@@ -536,6 +605,8 @@ memoserv_saxdb_write(struct saxdb_context *ctx)
             saxdb_end_record(ctx);
         }
     }
+    saxdb_end_record(ctx);
+
     return 0;
 }
 
