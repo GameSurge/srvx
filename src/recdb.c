@@ -568,9 +568,16 @@ failure_reason(int code)
 void
 explain_failure(RECDB *recdb, int code)
 {
-    log_module(MAIN_LOG, LOG_ERROR, "%s (got '%c') at %s line %d column %d.",
-               failure_reason(code), code & 255,
-               recdb->source, recdb->ctx.line, recdb->ctx.col);
+    static char msg[1024];
+    snprintf(msg, sizeof(msg), "%s (got '%c') at %s line %d column %d.",
+             failure_reason(code), code & 255,
+             recdb->source, recdb->ctx.line, recdb->ctx.col);
+    if (MAIN_LOG == NULL) {
+        fputs(msg, stderr);
+        fputc('\n', stderr);
+        fflush(stderr);
+    } else
+        log_module(MAIN_LOG, LOG_ERROR, "%s", msg);
 }
 
 const char *
