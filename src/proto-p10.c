@@ -2231,10 +2231,11 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
                 if (*word == ':') {
                     ts = strtoul(word + 1, &sep, 10);
                     if (*sep == ':') {
-                        id = strtoul(word + 1, &sep, 10);
+                        id = strtoul(sep + 1, &sep, 10);
                     } else if (*sep != ' ' && *sep != '\0') {
                         ts = 0;
                     }
+                    word = sep;
                 }
                 tag[ii] = '\0';
                 while (*word == ' ')
