@@ -395,7 +395,7 @@ irc_p10_pton(irc_in_addr_t *ip, const char *input)
         do {
             if (*input == '_') {
                 unsigned int left;
-                for (left = (25 - strlen(input)) / 3; left; left--)
+                for (left = (25 - strlen(input)) / 3 - pos; left; left--)
                     ip->in6[pos++] = 0;
                 input++;
             } else {
@@ -446,6 +446,7 @@ irc_p10_ntop(char *output, const irc_in_addr_t *ip)
             } else {
                 inttobase64(output, ntohs(ip->in6[ii]), 3);
                 output += 3;
+                ii += 1;
             }
         }
         *output = '\0';
