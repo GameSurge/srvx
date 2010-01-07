@@ -485,7 +485,7 @@ AddChannelUser(struct userNode *user, struct chanNode* channel)
         mNode->channel = channel;
         mNode->user = user;
         mNode->modes = 0;
-        mNode->oplevel = -1;
+        mNode->oplevel = MAXOPLEVEL;
         mNode->idle_since = now;
 
         /* Add modeNode to channel and to user.

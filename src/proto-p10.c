@@ -299,7 +299,17 @@ static struct userNode *AddUser(struct server* uplink, const char *nick, const c
 
 extern int off_channel;
 
-static int parse_oplevel(char *str);
+/*
+ * Oplevel parsing
+ */
+static int
+parse_oplevel(char *str)
+{
+    int oplevel = 0;
+    while (isdigit(*str))
+        oplevel = oplevel * 10 + *str++ - '0';
+    return oplevel;
+}
 
 /* Numerics can be XYY, XYYY, or XXYYY; with X's identifying the
  * server and Y's indentifying the client on that server. */
@@ -666,6 +676,32 @@ irc_ungline(const char *mask)
     putsock("%s " P10_GLINE " * -%s", self->numeric, mask);
 }
 
+/* Return negative if *(struct modeNode**)pa is "less than" pb,
+ * positive if pa is "larger than" pb.  Comparison is based on sorting
+ * so that non-voiced/non-opped users are first, voiced-only users are
+ * next, and the "strongest" oplevels are before "weaker" oplevels.
+ * Within those sets, ordering is arbitrary.
+ */
+static int
+modeNode_sort(const void *pa, const void *pb)
+{
+        struct modeNode *a = *(struct modeNode**)pa;
+        struct modeNode *b = *(struct modeNode**)pb;
+
+        if (a->modes & MODE_CHANOP) {
+            if (!(b->modes & MODE_CHANOP))
+                return 1;
+            else if ((a->modes & MODE_VOICE) != (b->modes & MODE_VOICE))
+                return (a->modes & MODE_VOICE) - (b->modes & MODE_VOICE);
+            else if (a->oplevel != b->oplevel)
+                return a->oplevel - b->oplevel;
+        } else if (b->modes & MODE_CHANOP)
+            return -1;
+        else if ((a->modes & MODE_VOICE) != (b->modes & MODE_VOICE))
+            return (a->modes & MODE_VOICE) - (b->modes & MODE_VOICE);
+        return (a < b) ? -1 : 1;
+}
+
 static void
 irc_burst(struct chanNode *chan)
 {
@@ -673,7 +709,9 @@ irc_burst(struct chanNode *chan)
     int pos, base_len, len;
     struct modeNode *mn;
     struct banNode *bn;
-    long last_mode=-1;
+    int last_oplevel = 0;
+    int last_mode = 0;
+    int new_modes;
     unsigned int first_ban;
     unsigned int n;
 
@@ -685,6 +723,9 @@ irc_burst(struct chanNode *chan)
     if (len > 0 && chan->members.used > 0)
         burst_line[pos++] = ' ';
 
+    /* sort the users for oplevel-sending purposes */
+    qsort(chan->members.list, chan->members.used, sizeof(chan->members.list[0]), modeNode_sort);
+
     /* dump the users */
     for (n=0; n<chan->members.used; n++) {
         mn = chan->members.list[n];
@@ -692,17 +733,32 @@ irc_burst(struct chanNode *chan)
             burst_line[pos-1] = 0; /* -1 to back up over the space or comma */
             putsock("%s", burst_line);
             pos = base_len;
-            last_mode = -1;
+            last_mode = 0;
+            last_oplevel = 0;
         }
         memcpy(burst_line+pos, mn->user->numeric, strlen(mn->user->numeric));
         pos += strlen(mn->user->numeric);
-        if (mn->modes && (mn->modes != last_mode)) {
-            last_mode = mn->modes;
+        new_modes = mn->modes & (MODE_CHANOP | MODE_VOICE);
+        if (new_modes != last_mode) {
+            last_mode = new_modes;
             burst_line[pos++] = ':';
-            if (last_mode & MODE_CHANOP)
-                burst_line[pos++] = 'o';
-            if (last_mode & MODE_VOICE)
+            if (new_modes & MODE_VOICE)
                 burst_line[pos++] = 'v';
+            /* Note: :vNNN (oplevel NNN with voice) resets the
+             * implicit oplevel back to zero, so we always use the raw
+             * oplevel value here.  Read ircu's m_burst.c for more
+             * examples.
+             */
+            if (new_modes & MODE_CHANOP) {
+                last_oplevel = mn->oplevel;
+                if (mn->oplevel < MAXOPLEVEL)
+                    pos += sprintf(burst_line + pos, "%u", mn->oplevel);
+                else
+                    burst_line[pos++] = 'o';
+            }
+        } else if ((last_mode & MODE_CHANOP) && (mn->oplevel != last_oplevel)) {
+            pos += sprintf(burst_line + pos, ":%u", mn->oplevel - last_oplevel);
+            last_oplevel = mn->oplevel;
         }
         if ((n+1)<chan->members.used)
             burst_line[pos++] = ',';
@@ -1204,7 +1260,7 @@ static CMD_FUNC(cmd_burst)
     struct userNode *un;
     struct modeNode *mNode;
     long mode;
-    int oplevel = -1;
+    int oplevel = 0;
     char *user, *end, sep;
     unsigned long in_timestamp;
 
@@ -1248,16 +1304,13 @@ static CMD_FUNC(cmd_burst)
             while ((sep = *end++)) {
                 if (sep == 'o') {
                     mode |= MODE_CHANOP;
-                    oplevel = -1;
+                    oplevel = MAXOPLEVEL;
                 } else if (sep == 'v') {
                     mode |= MODE_VOICE;
-                    oplevel = -1;
+                    oplevel = 0;
                 } else if (isdigit(sep)) {
                     mode |= MODE_CHANOP;
-                    if (oplevel >= 0)
-                        oplevel += parse_oplevel(end);
-                    else
-                        oplevel = parse_oplevel(end);
+                    oplevel += parse_oplevel(end - 1);
                     while (isdigit(*end)) end++;
                 } else
                     break;
@@ -2409,7 +2462,7 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
             else if (channel->modes & MODE_UPASS)
                 oplevel = base_oplevel + 1;
             else
-                oplevel = -1;
+                oplevel = MAXOPLEVEL;
 
             /* Check that oplevel is within bounds. */
             if (oplevel > MAXOPLEVEL)
@@ -2430,8 +2483,9 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
                 continue;
             if ((change->args[ch_arg].u.member = GetUserMode(channel, victim)))
             {
-                /* Apply the oplevel change */
-                change->args[ch_arg].u.member->oplevel = oplevel;
+                /* Apply the oplevel change if the user is being (de-)opped */
+                if (modes[0][ii] == 'o')
+                    change->args[ch_arg].u.member->oplevel = oplevel;
                 ch_arg++;
             }
             break;
@@ -2847,16 +2901,4 @@ send_burst(void)
     unbursted_channels = dict_new();
     for (it = dict_first(channels); it; it = iter_next(it))
         dict_insert(unbursted_channels, iter_key(it), iter_data(it));
-}
-
-/*
- * Oplevel parsing
- */
-static int
-parse_oplevel(char *str)
-{
-    int oplevel = 0;
-    while (isdigit(*str))
-        oplevel = oplevel * 10 + *str++ - '0';
-    return oplevel;
 }
