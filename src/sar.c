@@ -166,7 +166,7 @@ static struct {
     char sar_localdomain[MAXLEN];
     struct string_list *sar_search;
     struct string_list *sar_nslist;
-    struct sockaddr_storage sar_bind_address;
+    void *sar_bind_address;
 } conf;
 static struct log_type *sar_log;
 
@@ -202,7 +202,7 @@ struct sar_nameserver {
     unsigned int resp_failures;
     unsigned int resp_scrambled;
     unsigned int ss_len;
-    struct sockaddr_storage ss;
+    void *ss;
 };
 
 /* EDNS0 uses 12 bit RCODEs, TSIG/TKEY use 16 bit RCODEs.
@@ -415,10 +415,10 @@ sar_dns_init(const char *resolv_conf_path)
             free_string_list(ns_sv);
             ns_sv = string_list_copy(slist);
         }
-        sa = (struct sockaddr*)&conf.sar_bind_address;
-        memset(sa, 0, sizeof(conf.sar_bind_address));
+        sa = (struct sockaddr*)conf.sar_bind_address;
+        memset(sa, 0, sizeof(struct sockaddr_storage));
         str = database_get_data(node, "bind_address", RECDB_QSTRING);
-        if (str) sar_pton(sa, sizeof(conf.sar_bind_address), NULL, str);
+        if (str) sar_pton(sa, sizeof(struct sockaddr_storage), NULL, str);
         str = database_get_data(node, "bind_port", RECDB_QSTRING);
         if (str != NULL) {
             if (sa->sa_family == AF_INET) {
@@ -462,7 +462,7 @@ sar_our_server(const struct sockaddr_storage *ss, unsigned int ss_len)
         struct sar_nameserver *ns;
 
         ns = iter_data(it);
-        if (ns->ss_len == ss_len && !memcmp(ss, &ns->ss, ss_len))
+        if (ns->ss_len == ss_len && !memcmp(ss, ns->ss, ss_len))
             return ns;
     }
     return NULL;
@@ -605,10 +605,10 @@ sar_extract_rdata(struct dns_rr *rr, unsigned int len, unsigned char *raw, unsig
 static void
 sar_fd_readable(struct io_fd *fd)
 {
-    struct sockaddr_storage ss;
     struct dns_header hdr;
     struct sar_nameserver *ns;
     struct sar_request *req;
+    void *ss;
     unsigned char *buf;
     socklen_t ss_len;
     int res, rcode, buf_len;
@@ -619,9 +619,10 @@ sar_fd_readable(struct io_fd *fd)
     if (!buf_len)
         buf_len = 512;
     buf = alloca(buf_len);
-    ss_len = sizeof(ss);
-    res = recvfrom(sar_fd_fd, buf, buf_len, 0, (struct sockaddr*)&ss, &ss_len);
-    if (res < 12 || !(ns = sar_our_server(&ss, ss_len)))
+    ss_len = sizeof(struct sockaddr_storage);
+    ss = alloca(ss_len);
+    res = recvfrom(sar_fd_fd, buf, buf_len, 0, (struct sockaddr*)ss, &ss_len);
+    if (res < 12 || !(ns = sar_our_server((struct sockaddr_storage*)ss, ss_len)))
         return;
     hdr.id = buf[0] << 8 | buf[1];
     hdr.flags = buf[2] << 8 | buf[3];
@@ -664,16 +665,19 @@ sar_build_nslist(struct string_list *nslist)
         name = nslist->list[ii];
         ns = dict_find(sar_nameservers, name, NULL);
         if (!ns) {
+            struct sockaddr *sa;
             ns = calloc(1, sizeof(*ns) + strlen(name) + 1);
             ns->name = (char*)(ns + 1);
             strcpy(ns->name, name);
-            ns->ss_len = sizeof(ns->ss);
-            if (!sar_pton((struct sockaddr*)&ns->ss, sizeof(ns->ss), NULL, name)) {
+            ns->ss_len = sizeof(struct sockaddr_storage);
+            ns->ss = calloc(1, ns->ss_len);
+            sa = (struct sockaddr*)ns->ss;
+            if (!sar_pton(sa, ns->ss_len, NULL, name)) {
                 free(it);
                 continue;
             }
-            sar_set_port((struct sockaddr*)&ns->ss, sizeof(ns->ss), 53);
-            ns->ss_len = sar_helpers[ns->ss.ss_family]->socklen;
+            sar_set_port(sa, ns->ss_len, 53);
+            ns->ss_len = sar_helpers[sa->sa_family]->socklen;
             dict_insert(sar_nameservers, ns->name, ns);
         }
         ns->valid = 1;
@@ -687,25 +691,39 @@ sar_build_nslist(struct string_list *nslist)
     }
 }
 
+static void
+sar_free_nameserver(void *obj)
+{
+        struct sar_nameserver *ns = obj;
+        free(ns->ss);
+        free(ns);
+}
+
+static unsigned int
+sar_addrlen(const struct sockaddr *sa, UNUSED_ARG(unsigned int size))
+{
+    return sa->sa_family <= MAX_FAMILY && sar_helpers[sa->sa_family]
+        ? sar_helpers[sa->sa_family]->socklen : 0;
+}
+
 static int
 sar_open_fd(void)
 {
+    struct sockaddr *sa;
     int res;
 
     /* Build list of nameservers. */
     sar_build_nslist(conf.sar_nslist);
 
-    if (conf.sar_bind_address.ss_family != 0) {
-        struct addrinfo *ai;
-
-        ai = (struct addrinfo*)&conf.sar_bind_address;
-        sar_fd_fd = socket(ai->ai_family, SOCK_DGRAM, 0);
+    sa = (struct sockaddr*)conf.sar_bind_address;
+    if (sa->sa_family != 0) {
+        sar_fd_fd = socket(sa->sa_family, SOCK_DGRAM, 0);
         if (sar_fd_fd < 0) {
             log_module(sar_log, LOG_FATAL, "Unable to create resolver socket: %s", strerror(errno));
             return 1;
         }
 
-        res = bind(sar_fd_fd, ai->ai_addr, ai->ai_addrlen);
+        res = bind(sar_fd_fd, sa, sar_addrlen(sa, sizeof(struct sockaddr_storage)));
         if (res < 0)
             log_module(sar_log, LOG_ERROR, "Unable to bind resolver socket to address [%s]:%s: %s", (char*)conf_get_data("modules/sar/bind_address", RECDB_QSTRING), (char*)conf_get_data("modules/sar/bind_port", RECDB_QSTRING), strerror(errno));
     } else {
@@ -714,7 +732,7 @@ sar_open_fd(void)
 
         it = dict_first(sar_nameservers);
         ns = iter_data(it);
-        sar_fd_fd = socket(ns->ss.ss_family, SOCK_DGRAM, 0);
+        sar_fd_fd = socket(((struct sockaddr*)ns->ss)->sa_family, SOCK_DGRAM, 0);
         if (sar_fd_fd < 0) {
             log_module(sar_log, LOG_FATAL, "Unable to create resolver socket: %s", strerror(errno));
             return 1;
@@ -891,7 +909,7 @@ sar_request_send(struct sar_request *req)
         int res;
 
         ns = iter_data(it);
-        res = sendto(sar_fd_fd, req->body, req->body_len, 0, (struct sockaddr*)&ns->ss, ns->ss_len);
+        res = sendto(sar_fd_fd, req->body, req->body_len, 0, (struct sockaddr*)ns->ss, ns->ss_len);
         if (res > 0) {
             ns->req_sent++;
             log_module(sar_log, LOG_DEBUG, "Sent %u bytes to %s.", res, ns->name);
@@ -1113,13 +1131,6 @@ sar_register_helper(struct sar_family_helper *helper)
     sar_first_helper = helper;
 }
 
-static unsigned int
-sar_addrlen(const struct sockaddr *sa, UNUSED_ARG(unsigned int size))
-{
-    return sa->sa_family <= MAX_FAMILY && sar_helpers[sa->sa_family]
-        ? sar_helpers[sa->sa_family]->socklen : 0;
-}
-
 struct sar_getaddr_state {
     struct sar_family_helper *helper;
     struct addrinfo *ai_head;
@@ -1300,11 +1311,12 @@ sar_getaddr_fail(struct sar_request *req, UNUSED_ARG(unsigned int rcode))
 struct sar_request *
 sar_getaddr(const char *node, const char *service, const struct addrinfo *hints_, sar_addr_cb cb, void *cb_ctx)
 {
-    struct sockaddr_storage ss;
     struct addrinfo hints;
     struct sar_family_helper *helper;
     struct service_byname *svc;
     char *end;
+    void *ss;
+    size_t ss_len;
     unsigned int portnum;
     unsigned int pos;
     enum service_proto proto;
@@ -1359,27 +1371,29 @@ sar_getaddr(const char *node, const char *service, const struct addrinfo *hints_
     }
 
     /* Try to parse \a node as a numeric hostname.*/
-    pos = sar_pton((struct sockaddr*)&ss, sizeof(ss), NULL, node);
+    ss_len = sizeof(struct sockaddr_storage);
+    ss = alloca(ss_len);
+    pos = sar_pton((struct sockaddr*)ss, ss_len, NULL, node);
     if (pos && node[pos] == '\0') {
         struct addrinfo *ai;
         char canonname[SAR_NTOP_MAX];
 
         /* we have a valid address; use it */
-        sar_set_port((struct sockaddr*)&ss, sizeof(ss), portnum);
-        hints.ai_addrlen = sar_addrlen((struct sockaddr*)&ss, sizeof(ss));
+        sar_set_port((struct sockaddr*)ss, ss_len, portnum);
+        hints.ai_addrlen = sar_addrlen((struct sockaddr*)ss, ss_len);
         if (!hints.ai_addrlen) {
             cb(cb_ctx, NULL, SAI_FAMILY);
             return NULL;
         }
-        pos = sar_ntop(canonname, sizeof(canonname), (struct sockaddr*)&ss, hints.ai_addrlen);
+        pos = sar_ntop(canonname, sizeof(canonname), (struct sockaddr*)ss, hints.ai_addrlen);
 
         /* allocate and fill in the addrinfo response */
         ai = calloc(1, sizeof(*ai) + hints.ai_addrlen + pos + 1);
-        ai->ai_family = ss.ss_family;
+        ai->ai_family = ((struct sockaddr*)ss)->sa_family;
         ai->ai_socktype = hints.ai_socktype;
         ai->ai_protocol = hints.ai_protocol;
         ai->ai_addrlen = hints.ai_addrlen;
-        ai->ai_addr = memcpy(ai + 1, &ss, ai->ai_addrlen);
+        ai->ai_addr = memcpy(ai + 1, ss, ai->ai_addrlen);
         ai->ai_canonname = strcpy((char*)ai->ai_addr + ai->ai_addrlen, canonname);
         cb(cb_ctx, ai, SAI_SUCCESS);
         return NULL;
@@ -2041,6 +2055,7 @@ sar_conf_reload(void)
 void
 sar_init(void)
 {
+    conf.sar_bind_address = calloc(1, sizeof(struct sockaddr_storage));
     reg_exit_func(sar_cleanup);
     sar_log = log_register_type("sar", NULL);
 
@@ -2048,7 +2063,7 @@ sar_init(void)
     dict_set_free_data(sar_requests, sar_request_cleanup);
 
     sar_nameservers = dict_new();
-    dict_set_free_data(sar_nameservers, free);
+    dict_set_free_data(sar_nameservers, sar_free_nameserver);
 
     sar_register_helper(&sar_ipv4_helper);
 #if defined(AF_INET6)

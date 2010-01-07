@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to create a configure script.
 
 dnl General initialization.
-AC_PREREQ(2.59)
+AC_PREREQ(2.64)
 AC_INIT([srvx],[1.4.0-rc3],[srvx-bugs@lists.sourceforge.net])
 CODENAME=surge
 AC_CONFIG_HEADERS(src/config.h)
@@ -10,9 +10,9 @@ dnl AM_CANONICAL_TARGET must be before AM_INIT_AUTOMAKE() or autoconf whines
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([gnu 1.6])
 AM_MAINTAINER_MODE
+LT_INIT
 
 dnl Compiler/runtime feature checks.
-AC_TYPE_SIGNAL
 AC_C_CONST
 dnl "const" *should* be in the -Werror section, but that breaks Linux. gg gcc.
 
@@ -20,7 +20,6 @@ dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_CC
 AC_PROG_INSTALL
-AC_PROG_LIBTOOL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_GCC_TRADITIONAL
@@ -257,7 +256,7 @@ if test "x$withval" = xyes ; then
 fi
 
 AC_ARG_WITH([kevent],
-[  --without-kevent         Disables the kevent() I/O backend],
+[  --without-kevent        Disables the kevent() I/O backend],
 [],
 [withval="$ac_cv_func_kevent"])
 if test "x$withval" = xyes ; then
@@ -267,7 +266,7 @@ if test "x$withval" = xyes ; then
 fi
 
 AC_ARG_WITH([win32],
-[  --with-win32             Enables the Win32 I/O backend],
+[  --with-win32            Enables the Win32 I/O backend],
 [],
 [withval="no"])
 if test "x$withval" = xyes ; then
