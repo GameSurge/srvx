@@ -220,17 +220,17 @@ struct io_fd *ioset_listen(struct sockaddr *local, unsigned int sa_size, void *d
     }
 
     if (local && sa_size) {
+        opt = 1;
+        res = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+        if (res < 0) {
+            log_module(MAIN_LOG, LOG_WARNING, "Unable to mark listener address as re-usable: %s", strerror(errno));
+        }
+
         res = bind(fd, local, sa_size);
         if (res < 0) {
             log_module(MAIN_LOG, LOG_ERROR, "Unable to bind listening socket %d: %s", fd, strerror(errno));
             close(fd);
             return NULL;
-        }
-
-        opt = 1;
-        res = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
-        if (res < 0) {
-            log_module(MAIN_LOG, LOG_WARNING, "Unable to mark listener address as re-usable: %s", strerror(errno));
         }
     }
 
