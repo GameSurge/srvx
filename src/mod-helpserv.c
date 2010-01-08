@@ -630,7 +630,10 @@ static HELPSERV_FUNC(cmd_help);
 /* For messages going to helpers */
 # define helpserv_notice(target, ARGS...) send_message((target), (from_opserv ? opserv : hs->helpserv), ARGS)
 # define helpserv_notify(helper, ARGS...) do { struct userNode *_target; for (_target = (helper)->handle->users; _target; _target = _target->next_authed) { \
-        send_message(_target, (helper)->hs->helpserv, ARGS); \
+        if(!_target->next_authed || GetUserMode(helper->hs->helpchan, _target)) {\
+          send_message(_target, (helper)->hs->helpserv, ARGS); \
+          break; \
+        } \
     } } while (0)
 # define helpserv_page(TYPE, ARGS...) do { \
     int msg_type=0; struct chanNode *target=helpserv_get_page_type(hs, (TYPE), &msg_type); \
@@ -642,7 +645,10 @@ static HELPSERV_FUNC(cmd_help);
 /* For messages going to helpers */
 # define helpserv_notice(target, ...) send_message((target), (from_opserv ? opserv : hs->helpserv), __VA_ARGS__)
 # define helpserv_notify(helper, ...) do { struct userNode *_target; for (_target = (helper)->handle->users; _target; _target = _target->next_authed) { \
-        send_message(_target, (helper)->hs->helpserv, __VA_ARGS__); \
+        if(!_target->next_authed || GetUserMode(helper->hs->helpchan, _target)) {\
+          send_message(_target, (helper)->hs->helpserv, __VA_ARGS__); \
+          break; \
+        } \
     } } while (0)
 # define helpserv_page(TYPE, ...) do { \
     int msg_type=0; struct chanNode *target=helpserv_get_page_type(hs, (TYPE), &msg_type); \
