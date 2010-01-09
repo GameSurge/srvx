@@ -123,6 +123,10 @@ static const struct message_entry msgtab[] = {
     { "HSMSG_EXPIRATION_DONE", "%d eligible HelpServ bots have retired." },
     { "HSMSG_BAD_WEEKDAY", "I do not know which day of the week $b%s$b is." },
     { "HSMSG_WEEK_STARTS", "$b%s$b's weeks start on $b%s$b." },
+    { "HSMSG_MODSTATS_BAD_FIELD", "The specified field does not exist." },
+    { "HSMSG_MODSTATS_BAD_WEEK", "The specified week is invalid." },
+    { "HSMSG_MODSTATS_NEGATIVE", "This modification would result in a negative value." },
+    { "HSMSG_MODSTATS_SUCCESS", "$b%s$b's stats have been modified successfully." },
 
 /* Registration */
     { "HSMSG_ILLEGAL_NICK", "$b%s$b is an illegal nick; cannot use it." },
@@ -477,6 +481,7 @@ static struct {
     const char *reqlogfile;
     unsigned long db_backup_frequency;
     unsigned int expire_age;
+    unsigned long modstats_level;
     char user_escape;
 } helpserv_conf;
 
@@ -2899,6 +2904,75 @@ static HELPSERV_FUNC(cmd_weekstart) {
     return changed;
 }
 
+static HELPSERV_FUNC(cmd_modstats) {
+    struct handle_info *hi;
+    struct helpserv_user *victim;
+    const char *field_name;
+    int week, mod;
+    unsigned int *field = NULL;
+    char *errptr;
+
+    REQUIRE_PARMS(5);
+    if (!oper_has_access(user, (from_opserv ? opserv : hs->helpserv), helpserv_conf.modstats_level, 0))
+        return 0;
+    if (!(hi = helpserv_get_handle_info(user, argv[1])))
+        return 0;
+    if (!(victim = GetHSUser(hs, hi))) {
+        helpserv_notice(user, "HSMSG_NOT_IN_USERLIST", hi->handle, hs->helpserv->nick);
+        return 0;
+    }
+
+    field_name = argv[2];
+    if (!strcasecmp(argv[3], "total"))
+        week = 4;
+    else if(!strcasecmp(argv[3], "current"))
+        week = 0;
+    else {
+        week = strtoul(argv[3], &errptr, 0);
+        if (*errptr != '\0') {
+            helpserv_notice(user, "HSMSG_MODSTATS_BAD_WEEK");
+            return 0;
+        }
+    }
+    mod = strtol(argv[4], NULL, 0);
+
+    if (week < 0 || week > 4) {
+        helpserv_notice(user, "HSMSG_MODSTATS_BAD_WEEK");
+        return 0;
+    }
+
+    if (!strcasecmp(field_name, "time")) {
+        if (victim->join_time && (week == 0 || week == 4)) {
+            victim->time_per_week[0] += now - victim->join_time;
+            victim->time_per_week[4] += now - victim->join_time;
+            victim->join_time = now;
+        }
+        field = victim->time_per_week;
+    }
+    else if (!strcasecmp(field_name, "picked") || !strcasecmp(field_name, "picked_up") || !strcasecmp(field_name, "reqs"))
+        field = victim->picked_up;
+    else if (!strcasecmp(field_name, "closed"))
+        field = victim->closed;
+    else if (!strcasecmp(field_name, "ra_from") || !strcasecmp(field_name, "reassigned_from"))
+        field = victim->reassigned_from;
+    else if (!strcasecmp(field_name, "ra_to") || !strcasecmp(field_name, "reassigned_to"))
+        field = victim->reassigned_to;
+    else {
+        helpserv_notice(user, "HSMSG_MODSTATS_BAD_FIELD");
+        return 0;
+    }
+
+    if (mod < 0 && abs(mod) > field[week]) {
+        helpserv_notice(user, "HSMSG_MODSTATS_NEGATIVE");
+        return 0;
+    }
+
+    field[week] += mod;
+    helpserv_notice(user, "HSMSG_MODSTATS_SUCCESS", victim->handle->handle);
+
+    return (mod != 0);
+}
+
 static void set_page_target(struct helpserv_bot *hs, enum page_source idx, const char *target) {
     struct chanNode *new_target, *old_target;
 
@@ -3713,6 +3787,8 @@ static void helpserv_conf_read(void) {
 
     str = database_get_data(conf_node, "expiration", RECDB_QSTRING);
     helpserv_conf.expire_age = ParseInterval(str ? str : "60d");
+    str = database_get_data(conf_node, "modstats_level", RECDB_QSTRING);
+    helpserv_conf.modstats_level = str ? strtoul(str, NULL, 0) : 850;
     str = database_get_data(conf_node, "user_escape", RECDB_QSTRING);
     helpserv_conf.user_escape = str ? str[0] : '@';
 
@@ -4555,6 +4631,7 @@ int helpserv_init() {
     helpserv_define_func("BOTS", cmd_bots, HlOper, CMD_FROM_OPSERV_ONLY|CMD_IGNORE_EVENT);
     helpserv_define_func("EXPIRE", cmd_expire, HlOper, CMD_FROM_OPSERV_ONLY);
     helpserv_define_func("WEEKSTART", cmd_weekstart, HlTrial, CMD_NEED_BOT);
+    helpserv_define_func("MODSTATS", cmd_modstats, HlOwner, CMD_NEED_BOT);
 
     helpserv_option_dict = dict_new();
     helpserv_define_option("PAGETARGET", opt_pagetarget_command);

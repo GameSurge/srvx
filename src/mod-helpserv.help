@@ -39,6 +39,7 @@
         "  UNREGISTER  Unregister a HelpServ bot",
         "  BOTS        List registered HelpServ instances",
         "  EXPIRE      Expire inactive channels",
+        "  MODSTATS    Modify the stats of a user",
         "  READHELP    Re-read help file");
 "COMMANDS" "${index}";
 
@@ -77,7 +78,7 @@
         "/msg $S CLOSE <reqid|nick|*account> [reason]",
         "Closes out the specified request. The optional [reason] is included in the request log file.");
 "CLVL" ("$bCLVL$b",
-        "/msg $S CLVL <user|*nick> <new-level>",
+        "/msg $S CLVL <nick|*account> <new-level>",
         "Allows an owner or manager to change a user's access with $S.",
         "$uSee also:$u addtrial, addhelper, addmanager, deluser, helpers");
 "DELOWNER" ("$bDELOWNER$b",
@@ -119,6 +120,14 @@
         "\"assigned\" means that a helper has picked up the request or been assigned to handle it.",
         "\"me\" means to only show requests assigned to you.",
         "$uSee also:$u next, pickup");
+"MODSTATS" ("$bMODSTATS$b",
+        "/msg $S MODSTATS <user|*nick> <field> <week> <mod>",
+        "Allows an oper to modify a user's $S stats.",
+        "<field> can be one of $btime$b, $bpicked_up$b, $bclosed$b, $breassigned_from$b, $breassigned_to$b",
+        "<week> can be a number from $b0$b to $b4$b with 0 being the current week and 4 being the total.",
+        "Instead of 0 and 4, $bcurrent$b and $btotal$b may also be used.",
+        "<mod> can be any positive/negative number.",
+        "Note that the total is not automatically changed if you update another week.");
 "MOVE" ("$bMOVE$b",
         "/msg $O HELPSERV MOVE <bot-nick> <new-nick|#new-channel>",
         "Makes the HelpServ bot use a different nick or channel.");
