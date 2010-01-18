@@ -3151,6 +3151,7 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
     else if(!is_ircmask(argv[1]) && (*argv[1] == '*'))
     {
         struct handle_info *hi;
+        extern const char *titlehost_suffix;
         char banmask[NICKLEN + USERLEN + HOSTLEN + 3];
         const char *accountname = argv[1] + 1;
 
@@ -3160,7 +3161,7 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
             return 0;
         }
 
-        snprintf(banmask, sizeof(banmask), "*!*@%s.*", hi->handle);
+        snprintf(banmask, sizeof(banmask), "*!*@%s.*.%s", hi->handle, titlehost_suffix);
         victims = alloca(sizeof(victims[0]) * channel->members.used);
 
         if(bad_channel_ban(channel, user, banmask, &victimCount, victims))

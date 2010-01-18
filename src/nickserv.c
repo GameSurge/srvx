@@ -387,7 +387,6 @@ static struct {
     unsigned long handles_per_email;
     unsigned long email_search_level;
     const char *network_name;
-    const char *titlehost_suffix;
     regex_t valid_handle_regex;
     regex_t valid_nick_regex;
     dict_t weak_password_dict;
@@ -401,6 +400,8 @@ static struct {
     unsigned long ounregister_inactive;
     unsigned long ounregister_flags;
 } nickserv_conf;
+
+const char *titlehost_suffix = NULL;
 
 /* We have 2^32 unique account IDs to use. */
 unsigned long int highest_id = 0;
@@ -888,7 +889,7 @@ generate_fakehost(struct handle_info *handle)
         return buffer;
     } else if (handle->fakehost[0] == '.') {
         /* A leading dot indicates the stored value is actually a title. */
-        snprintf(buffer, sizeof(buffer), "%s.%s.%s", handle->handle, handle->fakehost+1, nickserv_conf.titlehost_suffix);
+        snprintf(buffer, sizeof(buffer), "%s.%s.%s", handle->handle, handle->fakehost+1, titlehost_suffix);
         return buffer;
     }
     return handle->fakehost;
@@ -1623,7 +1624,7 @@ static NICKSERV_FUNC(cmd_rename_handle)
     }
     if (hi->fakehost && hi->fakehost[0] == '.' &&
         (strlen(argv[2]) + strlen(hi->fakehost+1) +
-         strlen(nickserv_conf.titlehost_suffix) + 2) > HOSTLEN) {
+         strlen(titlehost_suffix) + 2) > HOSTLEN) {
         send_message(user, nickserv, "NSMSG_TITLE_TRUNCATED_RENAME");
         return 0;
     }
@@ -2607,7 +2608,7 @@ static OPTION_FUNC(opt_title)
             return 0;
         }
         if ((strlen(user->handle_info->handle) + strlen(title) +
-             strlen(nickserv_conf.titlehost_suffix) + 2) > HOSTLEN) {
+             strlen(titlehost_suffix) + 2) > HOSTLEN) {
             send_message(user, nickserv, "NSMSG_TITLE_TRUNCATED");
             return 0;
         }
@@ -4047,7 +4048,7 @@ nickserv_conf_read(void)
     str = database_get_data(conf_node, KEY_EMAIL_SEARCH_LEVEL, RECDB_QSTRING);
     nickserv_conf.email_search_level = str ? strtoul(str, NULL, 0) : 600;
     str = database_get_data(conf_node, KEY_TITLEHOST_SUFFIX, RECDB_QSTRING);
-    nickserv_conf.titlehost_suffix = str ? str : "example.net";
+    titlehost_suffix = str ? str : "example.net";
     str = conf_get_data("server/network", RECDB_QSTRING);
     nickserv_conf.network_name = str ? str : "some IRC network";
     if (!nickserv_conf.auth_policer_params) {
@@ -4298,7 +4299,7 @@ init_nickserv(const char *nick)
     dict_insert(nickserv_opt_dict, "ACCESS", opt_level);
     dict_insert(nickserv_opt_dict, "LEVEL", opt_level);
     dict_insert(nickserv_opt_dict, "EPITHET", opt_epithet);
-    if (nickserv_conf.titlehost_suffix) {
+    if (titlehost_suffix) {
         dict_insert(nickserv_opt_dict, "TITLE", opt_title);
         dict_insert(nickserv_opt_dict, "FAKEHOST", opt_fakehost);
         dict_insert(nickserv_opt_dict, "FAKEIDENT", opt_fakeident);
