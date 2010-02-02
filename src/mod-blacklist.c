@@ -142,8 +142,11 @@ dnsbl_hit(struct sar_request *req, struct dns_header *hdr, struct dns_rr *rr, un
                 message = "client is blacklisted";
         }
 
+        /* Prepend "AUTO " prefix so the g-lined are put in a different snomask */
+        strcpy(reason, "AUTO ");
+
         /* Expand elements of the message as necessary. */
-        do_expandos(reason, sizeof(reason), message, "%txt%", (txt ? txt : "(no-txt)"), "%ip%", data->client_ip, NULL);
+        do_expandos(reason + 5, sizeof(reason) - 5, message, "%txt%", (txt ? txt : "(no-txt)"), "%ip%", data->client_ip, NULL);
 
         if (zone->debug) {
             blacklist_debug("DNSBL match: [%s] %s (%s)", zone->zone, data->client_ip, reason);
@@ -190,6 +193,7 @@ blacklist_check_user(struct userNode *user)
         target[0] = '*';
         target[1] = '@';
         strcpy(target + 2, host);
+        /* We do not prepend AUTO here so it can be done in the blacklist file. */
         gline_add(self->name, target, conf.gline_duration, reason, now, now, 1);
     }
 
