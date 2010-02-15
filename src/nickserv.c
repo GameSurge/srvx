@@ -1300,15 +1300,34 @@ static NICKSERV_FUNC(cmd_oregister)
     char *mask;
     struct userNode *settee;
     struct handle_info *hi;
+    const char *pass, *email;
 
     NICKSERV_MIN_PARMS(3);
+
+    pass = argv[2];
+    argv[2] = "****";
 
     if (!is_valid_handle(argv[1])) {
         reply("NSMSG_BAD_HANDLE", argv[1]);
         return 0;
     }
 
-    if (argc < 4) {
+    if (argc < 5 || !nickserv_conf.email_enabled) {
+        email = NULL;
+    } else {
+        const char *str;
+        email = argv[4];
+        if (!is_valid_email_addr(email)) {
+            send_message(user, nickserv, "NSMSG_BAD_EMAIL_ADDR");
+            return 0;
+        }
+        if ((str = mail_prohibited_address(email))) {
+            send_message(user, nickserv, "NSMSG_EMAIL_PROHIBITED", email, str);
+            return 0;
+        }
+    }
+
+    if (argc < 4 || !strcmp(argv[3], "*")) {
         mask = NULL;
         settee = NULL;
     } else if (strchr(argv[3], '@')) {
@@ -1334,12 +1353,14 @@ static NICKSERV_FUNC(cmd_oregister)
         free(mask);
         return 0;
     }
-    if (!(hi = nickserv_register(user, settee, argv[1], argv[2], 0))) {
+    if (!(hi = nickserv_register(user, settee, argv[1], pass, 0))) {
         free(mask);
         return 0;
     }
     if (mask)
         string_list_append(hi->masks, mask);
+    if (email)
+        nickserv_set_email_addr(hi, email);
     return 1;
 }
 

@@ -309,13 +309,25 @@
         "You may use *Account instead of Nick as the name argument; the * makes $N use the name of an account directly (useful if the user is not online).",
         "$uSee Also:$u oaddmask");
 "OREGISTER" {
-        "/services/nickserv/disable_nicks" (
-        "/msg $N@$s OREGISTER <account> <password> <user@host|nick>",
+        "/services/nickserv/email_enabled && /services/nickserv/disable_nicks" (
+        "/msg $N@$s OREGISTER <account> <password> [user@host|nick|*] [email]",
+        "Registers an account with $b$N$b using the specified account, password, and user@host. If the nick of an online user is specified, then that user's user@host is used.  If no nickname or hostmask is used, it uses a default hostmask the first time the user authenticates.",
+        "If an email is specified, the account will only be registered if the email is valid and not blacklisted and after registering, the email will be set on the account.",
+        "$uSee Also:$u ounregister"
+        );
+        "/services/nickserv/email_enabled && !/services/nickserv/disable_nicks" (
+        "/msg $N@$s OREGISTER <account> <password> [user@host|nick|*] [email]",
+        "Registers an account with $b$N$b using the specified account, password, and user@host. If the nick of an online user is specified, then that user's user@host is used.  If no nickname or hostmask is used, it uses a default hostmask the first time the user authenticates.",
+        "If an email is specified, the account will only be registered if the email is valid and not blacklisted and after registering, the email will be set on the account.",
+        "$uSee Also:$u oregnick, ounregister, ounregnick"
+        );
+        "!/services/nickserv/email_enabled && /services/nickserv/disable_nicks" (
+        "/msg $N@$s OREGISTER <account> <password> [user@host|nick|*]",
         "Registers an account with $b$N$b using the specified account, password, and user@host. If the nick of an online user is specified, then that user's user@host is used.  If no nickname or hostmask is used, it uses a default hostmask the first time the user authenticates.",
         "$uSee Also:$u ounregister"
         );
-        "!/services/nickserv/disable_nicks" (
-        "/msg $N@$s OREGISTER <account> <password> <user@host|nick>",
+        "!/services/nickserv/email_enabled && !/services/nickserv/disable_nicks" (
+        "/msg $N@$s OREGISTER <account> <password> [user@host|nick|*]",
         "Registers an account with $b$N$b using the specified account, password, and user@host. If the nick of an online user is specified, then that user's user@host is used.  If no nickname or hostmask is used, it uses a default hostmask the first time the user authenticates.",
         "$uSee Also:$u oregnick, ounregister, ounregnick"
         );
