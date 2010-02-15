@@ -2265,6 +2265,10 @@ static CHANSERV_FUNC(cmd_move)
     target->channel_info->channel = target;
     channel->channel_info = NULL;
 
+    /* Check whether users are present in the new channel. */
+    for(uData = target->channel_info->users; uData; uData = uData->next)
+        scan_user_presence(uData, NULL);
+
     reply("CSMSG_MOVE_SUCCESS", target->name);
 
     sprintf(reason, "%s moved to %s by %s.", channel->name, target->name, user->handle_info->handle);
@@ -2315,6 +2319,11 @@ merge_users(struct chanData *source, struct chanData *target)
             choice = (suData->seen > tuData->seen) ? suData : tuData;
         else /* Otherwise, keep the higher access level. */
             choice = (suData->access > tuData->access) ? suData : tuData;
+        /* Use the later seen time. */
+        if(suData->seen < tuData->seen)
+            suData->seen = tuData->seen;
+        else
+            tuData->seen = suData->seen;
 
         /* Remove the user that wasn't picked. */
         if(choice == tuData)
@@ -2343,6 +2352,9 @@ merge_users(struct chanData *source, struct chanData *target)
         /* Update the user counts for the target channel; the
            source counts are left alone. */
         target->userCount++;
+
+        /* Check whether the user is in the target channel. */
+        scan_user_presence(suData, NULL);
     }
 
     /* Possible to assert (source->users == NULL) here. */
@@ -2727,7 +2739,7 @@ cmd_mdel_user(struct userNode *user, struct chanNode *channel, unsigned short mi
         return 0;
     }
 
-    if((actor->access <= max_access) && !IsHelping(user))
+    if(actor->access <= max_access)
     {
         reply("CSMSG_NO_ACCESS");
         return 0;
@@ -6498,11 +6510,9 @@ handle_join(struct modeNode *mNode)
         }
     }
 
-    /* ChanServ will not modify the limits in join-flooded channels.
-       It will also skip DynLimit processing when the user (or srvx)
-       is bursting in, because there are likely more incoming. */
+    /* ChanServ will not modify the limits in join-flooded channels,
+       or when there are enough slots left below the limit. */
     if((cData->flags & CHANNEL_DYNAMIC_LIMIT)
-       && !user->uplink->burst
        && !channel->join_flooded
        && (channel->limit - channel->members.used) < chanserv_conf.adjust_threshold)
     {

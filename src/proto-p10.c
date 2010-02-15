@@ -818,8 +818,8 @@ void
 irc_kill(struct userNode *from, struct userNode *target, const char *message)
 {
     if (from) {
-        putsock("%s " P10_KILL " %s :%s!%s (%s)",
-                from->numeric, target->numeric, self->name, from->nick, message);
+        putsock("%s " P10_KILL " %s :%s (%s)",
+                from->numeric, target->numeric, from->nick, message);
     } else {
         putsock("%s " P10_KILL " %s :%s (%s)",
                 self->numeric, target->numeric, self->name, message);

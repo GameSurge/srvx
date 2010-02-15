@@ -4024,7 +4024,7 @@ static int handle_join(struct modeNode *mNode) {
 
             if ((reqlist = dict_find(helpserv_reqs_bynick_dict, user->nick, NULL))) {
                 for (j=0; j < reqlist->used; j++)
-                    if (reqlist->list[i]->hs == hs)
+                    if (reqlist->list[j]->hs == hs)
                         break;
                 if (j < reqlist->used)
                     continue;
