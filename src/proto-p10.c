@@ -945,7 +945,11 @@ static CMD_FUNC(cmd_whois)
         return 1;
     }
 
-    if (IsFakeHost(who) && IsHiddenHost(who))
+    if (IsFakeHost(who) && IsFakeIdent(who) && IsHiddenHost(who))
+        irc_numeric(from, RPL_WHOISUSER, "%s %s %s * :%s", who->nick, who->fakeident, who->fakehost, who->info);
+    else if (IsFakeIdent(who) && IsHiddenHost(who))
+        irc_numeric(from, RPL_WHOISUSER, "%s %s %s * :%s", who->nick, who->fakeident, who->hostname, who->info);
+    else if (IsFakeHost(who) && IsHiddenHost(who))
         irc_numeric(from, RPL_WHOISUSER, "%s %s %s * :%s", who->nick, who->ident, who->fakehost, who->info);
     else if (IsHiddenHost(who) && who->handle_info && hidden_host_suffix)
         irc_numeric(from, RPL_WHOISUSER, "%s %s %s.%s * :%s", who->nick, who->ident, who->handle_info->handle, hidden_host_suffix, who->info);

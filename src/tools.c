@@ -612,7 +612,8 @@ user_matches_glob(struct userNode *user, const char *orig_glob, int flags)
         return 0;
     }
     *marker = 0;
-    if (!match_ircglob(user->ident, glob))
+    if (((IsFakeIdent(user) && IsHiddenHost(user) && (flags & MATCH_VISIBLE)) || !match_ircglob(user->ident, glob)) &&
+        !(IsFakeIdent(user) && match_ircglob(user->fakeident, glob)))
         return 0;
     glob = marker + 1;
     /* Check for a fakehost match. */

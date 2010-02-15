@@ -737,6 +737,8 @@ generate_hostmask(struct userNode *user, int options)
         ident = user->ident;
     else if (options & GENMASK_ANY_IDENT)
         ident = "*";
+    else if (IsFakeIdent(user) && IsHiddenHost(user) && !(options & GENMASK_NO_HIDING))
+        ident = user->fakeident;
     else {
         ident = alloca(strlen(user->ident)+2);
         ident[0] = '*';
