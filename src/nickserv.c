@@ -2672,7 +2672,7 @@ static OPTION_FUNC(opt_fakehost)
         safestrncpy(mask, argv[1], sizeof(mask));
 
         if ((host = strrchr(mask, '@')) && host != mask) {
-            // If ident@host was used and the user doesn't have access to set idents, do not change anything.
+            /* If ident@host was used and the user doesn't have access to set idents, do not change anything. */
             if (!oper_has_access(user, nickserv, nickserv_conf.set_fakeident_level, 0)) {
                 host = NULL;
                 ident = NULL;
