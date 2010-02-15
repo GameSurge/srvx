@@ -517,6 +517,33 @@ AddChannelUser(struct userNode *user, struct chanNode* channel)
         return mNode;
 }
 
+/* Return negative if *(struct modeNode**)pa is "less than" pb,
+ * positive if pa is "larger than" pb.  Comparison is based on sorting
+ * so that non-voiced/non-opped users are first, voiced-only users are
+ * next, and the "strongest" oplevels are before "weaker" oplevels.
+ * Within those sets, ordering is arbitrary.
+ */
+int
+modeNode_sort(const void *pa, const void *pb)
+{
+        struct modeNode *a = *(struct modeNode**)pa;
+        struct modeNode *b = *(struct modeNode**)pb;
+
+        if (a->modes & MODE_CHANOP) {
+            if (!(b->modes & MODE_CHANOP))
+                return -1;
+            else if ((b->modes & MODE_VOICE) != (a->modes & MODE_VOICE))
+                return (b->modes & MODE_VOICE) - (a->modes & MODE_VOICE);
+            else if (a->oplevel != b->oplevel)
+                return a->oplevel - b->oplevel;
+        } else if (b->modes & MODE_CHANOP)
+            return 1;
+        else if ((b->modes & MODE_VOICE) != (a->modes & MODE_VOICE))
+            return (b->modes & MODE_VOICE) - (a->modes & MODE_VOICE);
+
+        return irccasecmp(a->user->nick, b->user->nick);
+}
+
 static part_func_t *pf_list;
 static unsigned int pf_size = 0, pf_used = 0;
 

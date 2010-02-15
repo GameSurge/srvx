@@ -442,8 +442,10 @@ static MODCMD_FUNC(cmd_chaninfo)
     const char *fmt;
     struct banNode *ban;
     struct modeNode *moden;
+    struct modeNode **members;
     time_t feh;
     unsigned int n;
+    int show_oplevels;
 
     reply("OSMSG_CHANINFO_HEADER", channel->name);
     fmt = user_find_message(user, "OSMSG_CHANINFO_TIMESTAMP");
@@ -480,25 +482,28 @@ static MODCMD_FUNC(cmd_chaninfo)
         return 1;
     }
     reply("OSMSG_CHANINFO_USER_COUNT", channel->members.used);
+
+    /* Create and sort the members array. */
+    members = alloca(channel->members.used * sizeof(members[0]));
+    for (n=0; n<channel->members.used; n++)
+        members[n] = channel->members.list[n];
+    qsort(members, channel->members.used, sizeof(members[0]), modeNode_sort);
+
+    /* Display the array. */
+    show_oplevels = (members[0]->modes & MODE_CHANOP) && (members[0]->oplevel < MAXOPLEVEL);
     for (n=0; n<channel->members.used; n++) {
-        moden = channel->members.list[n];
+        moden = members[n];
         if (moden->modes & MODE_CHANOP) {
-            if (moden->oplevel >= 0)
+            if (show_oplevels)
                 send_message_type(4, user, cmd->parent->bot, " @%s:%d (%s@%s)", moden->user->nick, moden->oplevel, moden->user->ident, moden->user->hostname);
             else
                 send_message_type(4, user, cmd->parent->bot, " @%s (%s@%s)", moden->user->nick, moden->user->ident, moden->user->hostname);
-        }
-    }
-    for (n=0; n<channel->members.used; n++) {
-        moden = channel->members.list[n];
-        if ((moden->modes & (MODE_CHANOP|MODE_VOICE)) == MODE_VOICE)
+        } else if (moden->modes & MODE_VOICE)
             send_message_type(4, user, cmd->parent->bot, " +%s (%s@%s)", moden->user->nick, moden->user->ident, moden->user->hostname);
-    }
-    for (n=0; n<channel->members.used; n++) {
-        moden = channel->members.list[n];
-        if ((moden->modes & (MODE_CHANOP|MODE_VOICE)) == 0)
+        else
             send_message_type(4, user, cmd->parent->bot, "  %s (%s@%s)", moden->user->nick, moden->user->ident, moden->user->hostname);
     }
+
     return 1;
 }
 

@@ -236,6 +236,7 @@ void UnlockChannel(struct chanNode *channel);
 
 struct modeNode* AddChannelUser(struct userNode* user, struct chanNode* channel);
 
+int modeNode_sort(const void *pa, const void *pb);
 typedef void (*part_func_t) (struct modeNode *mn, const char *reason);
 void reg_part_func(part_func_t handler);
 void unreg_part_func(part_func_t handler);

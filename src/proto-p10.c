@@ -683,7 +683,7 @@ irc_ungline(const char *mask)
  * Within those sets, ordering is arbitrary.
  */
 static int
-modeNode_sort(const void *pa, const void *pb)
+modeNode_sort_p10(const void *pa, const void *pb)
 {
         struct modeNode *a = *(struct modeNode**)pa;
         struct modeNode *b = *(struct modeNode**)pb;
@@ -724,7 +724,7 @@ irc_burst(struct chanNode *chan)
         burst_line[pos++] = ' ';
 
     /* sort the users for oplevel-sending purposes */
-    qsort(chan->members.list, chan->members.used, sizeof(chan->members.list[0]), modeNode_sort);
+    qsort(chan->members.list, chan->members.used, sizeof(chan->members.list[0]), modeNode_sort_p10);
 
     /* dump the users */
     for (n=0; n<chan->members.used; n++) {
