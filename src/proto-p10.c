@@ -2878,8 +2878,8 @@ reg_notice_func(struct userNode *user, privmsg_func_t handler)
     if (numeric >= num_notice_funcs) {
         int newnum = numeric + 8, ii;
         notice_funcs = realloc(notice_funcs, newnum*sizeof(privmsg_func_t));
-        for (ii = num_privmsg_funcs; ii < newnum; ++ii)
-            privmsg_funcs[ii] = NULL;
+        for (ii = num_notice_funcs; ii < newnum; ++ii)
+            notice_funcs[ii] = NULL;
         num_notice_funcs = newnum;
     }
     if (notice_funcs[numeric])

@@ -2962,7 +2962,7 @@ static HELPSERV_FUNC(cmd_modstats) {
         return 0;
     }
 
-    if (mod < 0 && abs(mod) > field[week]) {
+    if (mod < 0 && mod < -(int)field[week]) {
         helpserv_notice(user, "HSMSG_MODSTATS_NEGATIVE");
         return 0;
     }

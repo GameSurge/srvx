@@ -213,5 +213,5 @@ heap_size(heap_t heap)
 int
 ulong_comparator(const void *a, const void *b)
 {
-    return (unsigned long)a-(unsigned long)b;
+    return (a < b) ? -1 : (a > b) ? 1 : 0;
 }
