@@ -490,7 +490,9 @@ static MODCMD_FUNC(cmd_chaninfo)
     qsort(members, channel->members.used, sizeof(members[0]), modeNode_sort);
 
     /* Display the array. */
-    show_oplevels = (members[0]->modes & MODE_CHANOP) && (members[0]->oplevel < MAXOPLEVEL);
+    show_oplevels = (channel->members.used != 0)
+        && (members[0]->modes & MODE_CHANOP)
+        && (members[0]->oplevel < MAXOPLEVEL);
     for (n=0; n<channel->members.used; n++) {
         moden = members[n];
         if (moden->modes & MODE_CHANOP) {
