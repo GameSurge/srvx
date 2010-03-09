@@ -6606,7 +6606,7 @@ handle_join(struct modeNode *mNode)
         }
         if(greeting)
             send_message_type(4, user, chanserv, "(%s) %s", channel->name, greeting);
-        if(uData && info)
+        if(uData && info && (modes || !(channel->modes & MODE_DELAYJOINS)))
             send_target_message(5, channel->name, chanserv, "[%s] %s", user->nick, uData->info);
     }
     return 0;
