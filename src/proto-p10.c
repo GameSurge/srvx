@@ -291,6 +291,7 @@ static unsigned int num_notice_funcs;
 static struct dict *unbursted_channels;
 static const char *his_servername;
 static const char *his_servercomment;
+static struct channelList dead_channels;
 
 /* These correspond to 1 << X:      012345678901234567 */
 const char irc_user_mode_chars[] = "o iw dkgn        I";
@@ -1832,6 +1833,7 @@ init_parse(void)
     memset(notice_funcs, 0, sizeof(privmsg_func_t)*num_notice_funcs);
 
     userList_init(&dead_users);
+    channelList_init(&dead_channels);
     reg_del_channel_func(remove_unbursted_channel);
     reg_exit_func(parse_cleanup);
 }
@@ -1868,6 +1870,9 @@ parse_line(char *line, int recursive)
         for (i=0; i<dead_users.used; i++)
             free_user(dead_users.list[i]);
         dead_users.used = 0;
+        for (i=0; i<dead_channels.used; i++)
+            UnlockChannel(dead_channels.list[i]);
+        dead_channels.used = 0;
     }
     return res;
 }
@@ -2526,6 +2531,11 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
     } else if (change->modes_set & MODE_PRIVATE) {
         change->modes_set &= ~(MODE_SECRET);
         change->modes_clear |= MODE_SECRET;
+    }
+    if (change->modes_clear & MODE_REGISTERED) {
+        /* Horribly cheat by using the lock/unlock semantics. */
+        LockChannel(channel);
+        channelList_append(&dead_channels, channel);
     }
     return change;
   error:
