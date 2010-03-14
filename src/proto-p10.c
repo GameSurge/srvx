@@ -1359,6 +1359,7 @@ static CMD_FUNC(cmd_mode)
             log_module(MAIN_LOG, LOG_ERROR, "Unable to find user %s whose mode is changing.", argv[1]);
             return 0;
         }
+        argv[2] = unsplit_string(argv + 2, argc - 2, NULL);
         mod_usermode(un, argv[2]);
         return 1;
     }
