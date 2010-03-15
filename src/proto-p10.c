@@ -294,7 +294,7 @@ static const char *his_servercomment;
 static struct channelList dead_channels;
 
 /* These correspond to 1 << X:      012345678901234567 */
-const char irc_user_mode_chars[] = "o iw dkgn        I";
+const char irc_user_mode_chars[] = "o iw dkgn    x   I";
 
 static struct userNode *AddUser(struct server* uplink, const char *nick, const char *ident, const char *hostname, const char *modes, const char *numeric, const char *userinfo, unsigned long timestamp, const char *realip);
 
@@ -2322,6 +2322,7 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
                 char mask[MAXLEN];
                 char *host, *ident;
                 unsigned int ii;
+
                 for (ii=0; (*word != ' ') && (*word != '\0'); )
                     mask[ii++] = *word++;
                 mask[ii] = 0;
@@ -2335,6 +2336,7 @@ void mod_usermode(struct userNode *user, const char *mode_change) {
                     ident = NULL;
                     host = mask;
                 }
+                user->modes |= FLAGS_HIDDEN_HOST;
                 assign_fakehost(user, host, ident, 0, 0);
             }
             break;
@@ -2431,6 +2433,8 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
             }
             break;
         case 'U':
+            if (flags & MCP_NO_APASS)
+                goto error;
             if (add)
             {
                 if ((in_arg >= argc)
@@ -2447,6 +2451,8 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
             }
             break;
         case 'A':
+            if (flags & MCP_NO_APASS)
+                goto error;
             if (add) {
                 if ((in_arg >= argc)
                     || keyncpy(change->new_apass, modes[in_arg++], sizeof(change->new_apass)))

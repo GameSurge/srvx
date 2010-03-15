@@ -1022,6 +1022,10 @@ static MODCMD_FUNC(cmd_kick)
         reply("OSMSG_NOT_ON_CHANNEL", target->nick, channel->name);
         return 0;
     }
+    if (IsService(target)) {
+        reply("MSG_SERVICE_IMMUNE", target->nick);
+        return 0;
+    }
     KickChannelUser(target, channel, cmd->parent->bot, reason);
     return 1;
 }
