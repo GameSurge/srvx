@@ -206,7 +206,7 @@ sockcheck_issue_gline(sockcheck_cache_info sci)
     char addr[IRC_NTOP_MAX_SIZE + 2] = {'*', '@', '\0'};
     irc_ntop(addr + 2, sizeof(addr) - 2, &sci->addr);
     log_module(PC_LOG, LOG_INFO, "Issuing gline for client at %s: %s", addr + 2, sci->reason);
-    gline_add("ProxyCheck", addr, sockcheck_conf.gline_duration, sci->reason, now, now, 1);
+    gline_add("ProxyCheck", addr, sockcheck_conf.gline_duration, sci->reason, now, now, 0, 1);
 }
 
 static struct sockcheck_client *

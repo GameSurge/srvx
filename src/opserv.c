@@ -201,7 +201,7 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_GLINE_SEARCH_RESULTS", "The following glines were found:" },
     { "OSMSG_LOG_SEARCH_RESULTS", "The following log entries were found:" },
     { "OSMSG_GSYNC_RUNNING", "Synchronizing glines from %s." },
-    { "OSMSG_GTRACE_FORMAT", "%s (issued %s by %s, lastmod %s, expires %s): %s" },
+    { "OSMSG_GTRACE_FORMAT", "%1$s (issued %2$s ago by %3$s, lastmod %4$s ago, expires %5$s, lifetime %7$s): %6$s" },
     { "OSMSG_GAG_APPLIED", "Gagged $b%s$b, affecting %d users." },
     { "OSMSG_GAG_ADDED", "Gagged $b%s$b." },
     { "OSMSG_REDUNDANT_GAG", "Gag $b%s$b is redundant." },
@@ -789,7 +789,7 @@ opserv_block(struct userNode *target, char *src_handle, char *reason, unsigned l
                  "G-line requested by %s.", src_handle);
     if (!duration)
         duration = opserv_conf.block_gline_duration;
-    return gline_add(src_handle, mask, duration, reason, now, now, 1);
+    return gline_add(src_handle, mask, duration, reason, now, now, 0, 1);
 }
 
 static MODCMD_FUNC(cmd_block)
@@ -863,7 +863,7 @@ static MODCMD_FUNC(cmd_gline)
         reply("MSG_INVALID_DURATION", argv[2]);
         return 0;
     }
-    gline = gline_add(user->handle_info->handle, argv[1], duration, reason, now, now, 1);
+    gline = gline_add(user->handle_info->handle, argv[1], duration, reason, now, now, 0, 1);
     reply("OSMSG_GLINE_ISSUED", gline->target);
     return 1;
 }
@@ -1882,7 +1882,7 @@ opserv_new_user_check(struct userNode *user)
         } else if (ohi->clients.used > limit) {
             char target[IRC_NTOP_MAX_SIZE + 3] = { '*', '@', '\0' };
             strcpy(target + 2, addr);
-            gline_add(opserv->nick, target, opserv_conf.clone_gline_duration, "AUTO Excessive connections from a single host.", now, now, 1);
+            gline_add(opserv->nick, target, opserv_conf.clone_gline_duration, "AUTO Excessive connections from a single host.", now, now, 0, 1);
         }
     }
 }
@@ -3801,6 +3801,7 @@ gtrace_print_func(struct gline *gline, void *extra)
     char issued[INTERVALLEN];
     char lastmod[INTERVALLEN];
     char expires[INTERVALLEN];
+    char lifetime[INTERVALLEN];
 
     intervalString(issued, now - gline->issued, xtra->user->handle_info);
     if (gline->lastmod)
@@ -3811,7 +3812,8 @@ gtrace_print_func(struct gline *gline, void *extra)
         intervalString(expires, gline->expires - now, xtra->user->handle_info);
     else
         strcpy(expires, "never");
-    send_message(xtra->user, opserv, "OSMSG_GTRACE_FORMAT", gline->target, issued, gline->issuer, lastmod, expires, gline->reason);
+    intervalString(lifetime, gline->lifetime - now, xtra->user->handle_info);
+    send_message(xtra->user, opserv, "OSMSG_GTRACE_FORMAT", gline->target, issued, gline->issuer, lastmod, expires, gline->reason, lifetime);
 }
 
 static MODCMD_FUNC(cmd_stats_glines) {

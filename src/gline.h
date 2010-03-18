@@ -24,11 +24,21 @@
 #include "hash.h"
 
 struct gline {
+    /** When the G-line was first created. */
     unsigned long issued;
+    /** When the G-line was last modified. */
     unsigned long lastmod;
+    /** When the G-line becomes ineffective. */
     unsigned long expires;
+    /** When the G-line may be forgotten (the maximum "expires" value
+     * from any modification period).
+     */
+    unsigned long lifetime;
+    /** Account or nick name of the person creating the G-line. */
     char *issuer;
+    /** user@host mask covered by the G-line. */
     char *target;
+    /** What to tell affected users. */
     char *reason;
 };
 
@@ -43,10 +53,12 @@ struct gline_discrim {
     unsigned long min_expire;
     unsigned long min_lastmod;
     unsigned long max_lastmod;
+    unsigned long min_lifetime;
+    unsigned long max_lifetime;
 };
 
 void gline_init(void);
-struct gline *gline_add(const char *issuer, const char *target, unsigned long duration, const char *reason, unsigned long issued, unsigned long lastmod, int announce);
+struct gline *gline_add(const char *issuer, const char *target, unsigned long duration, const char *reason, unsigned long issued, unsigned long lastmod, unsigned long lifetime, int announce);
 struct gline *gline_find(const char *target);
 int gline_remove(const char *target, int announce);
 void gline_refresh_server(struct server *srv);

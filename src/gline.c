@@ -43,6 +43,7 @@
 #define KEY_LASTMOD "lastmod"
 #define KEY_ISSUER "issuer"
 #define KEY_ISSUED "issued"
+#define KEY_LIFETIME "lifetime"
 
 static heap_t gline_heap; /* key: expiry time, data: struct gline_entry* */
 static dict_t gline_dict; /* key: target, data: struct gline_entry* */
@@ -77,19 +78,6 @@ gline_for_p(UNUSED_ARG(void *key), void *data, void *extra)
     return !irccasecmp(ge->target, extra);
 }
 
-static int
-delete_gline_for_p(UNUSED_ARG(void *key), void *data, void *extra)
-{
-    struct gline *ge = data;
-
-    if (!irccasecmp(ge->target, extra)) {
-        free_gline(ge);
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
 static void
 gline_expire(UNUSED_ARG(void *data))
 {
@@ -99,7 +87,7 @@ gline_expire(UNUSED_ARG(void *data))
     stopped = 0;
     while (heap_size(gline_heap)) {
         heap_peek(gline_heap, 0, &wraa);
-        stopped = ((struct gline*)wraa)->expires;
+        stopped = ((struct gline*)wraa)->lifetime;
         if (stopped > now)
             break;
         heap_pop(gline_heap);
@@ -112,58 +100,61 @@ gline_expire(UNUSED_ARG(void *data))
 int
 gline_remove(const char *target, int announce)
 {
-    int res = dict_find(gline_dict, target, NULL) ? 1 : 0;
-    if (heap_remove_pred(gline_heap, delete_gline_for_p, (char*)target)) {
-        void *argh;
-        struct gline *new_first;
-        heap_peek(gline_heap, 0, &argh);
-        if (argh) {
-            new_first = argh;
-            timeq_del(0, gline_expire, 0, TIMEQ_IGNORE_WHEN|TIMEQ_IGNORE_DATA);
-            timeq_add(new_first->expires, gline_expire, 0);
-        }
-    }
-#ifdef WITH_PROTOCOL_BAHAMUT
-    /* Bahamut is sort of lame: It permanently remembers any AKILLs
-     * with durations longer than a day, and will never auto-expire
-     * them.  So when the time comes, we'd better remind it.  */
-    announce = 1;
-#endif
+    struct gline *gl;
+
+    gl = dict_find(gline_dict, target, NULL);
+    if (gl != NULL)
+        gl->expires = now;
     if (announce)
         irc_ungline(target);
-    return res;
+    return gl != NULL;
 }
 
 struct gline *
-gline_add(const char *issuer, const char *target, unsigned long duration, const char *reason, unsigned long issued, unsigned long lastmod, int announce)
+gline_add(const char *issuer, const char *target, unsigned long duration, const char *reason, unsigned long issued, unsigned long lastmod, unsigned long lifetime, int announce)
 {
     struct gline *ent;
     struct gline *prev_first;
     void *argh;
+    unsigned long expires;
 
     heap_peek(gline_heap, 0, &argh);
     prev_first = argh;
+    expires = now + duration;
+    if (lifetime < expires)
+        lifetime = expires;
     ent = dict_find(gline_dict, target, NULL);
     if (ent) {
         heap_remove_pred(gline_heap, gline_for_p, (char*)target);
-        if (ent->expires < now + duration)
-            ent->expires = now + duration;
+        if (ent->expires != expires)
+            ent->expires = expires;
+        if (ent->lifetime < lifetime)
+            ent->lifetime = lifetime;
         if (ent->lastmod < lastmod)
             ent->lastmod = lastmod;
+        if (strcmp(ent->issuer, issuer)) {
+            free(ent->issuer);
+            ent->issuer = strdup(issuer);
+        }
+        if (strcmp(ent->reason, reason)) {
+            free(ent->reason);
+            ent->reason = strdup(reason);
+        }
     } else {
         ent = malloc(sizeof(*ent));
         ent->issued = issued;
         ent->lastmod = lastmod;
         ent->issuer = strdup(issuer);
         ent->target = strdup(target);
-        ent->expires = now + duration;
+        ent->expires = expires;
+        ent->lifetime = lifetime;
         ent->reason = strdup(reason);
         dict_insert(gline_dict, ent->target, ent);
     }
     heap_insert(gline_heap, ent, ent);
-    if (!prev_first || (ent->expires < prev_first->expires)) {
+    if (!prev_first || (ent->lifetime < prev_first->lifetime)) {
         timeq_del(0, gline_expire, 0, TIMEQ_IGNORE_WHEN|TIMEQ_IGNORE_DATA);
-        timeq_add(ent->expires, gline_expire, 0);
+        timeq_add(ent->lifetime, gline_expire, 0);
     }
     if (announce)
         irc_gline(NULL, ent);
@@ -255,7 +246,7 @@ gline_add_record(const char *key, void *data, UNUSED_ARG(void *extra))
 {
     struct record_data *rd = data;
     const char *issuer, *reason, *dstr;
-    unsigned long issued, expiration, lastmod;
+    unsigned long issued, expiration, lastmod, lifetime;
 
     if (!(reason = database_get_data(rd->d.object, KEY_REASON, RECDB_QSTRING))) {
         log_module(MAIN_LOG, LOG_ERROR, "Missing reason for gline %s", key);
@@ -266,18 +257,16 @@ gline_add_record(const char *key, void *data, UNUSED_ARG(void *extra))
         return 0;
     }
     expiration = strtoul(dstr, NULL, 0);
+    dstr = database_get_data(rd->d.object, KEY_LIFETIME, RECDB_QSTRING);
+    lifetime = dstr ? strtoul(dstr, NULL, 0) : expiration;
     dstr = database_get_data(rd->d.object, KEY_LASTMOD, RECDB_QSTRING);
     lastmod = dstr ? strtoul(dstr, NULL, 0) : 0;
-    if ((dstr = database_get_data(rd->d.object, KEY_ISSUED, RECDB_QSTRING))) {
-        issued = strtoul(dstr, NULL, 0);
-    } else {
-        issued = now;
-    }
-    if (!(issuer = database_get_data(rd->d.object, KEY_ISSUER, RECDB_QSTRING))) {
+    dstr = database_get_data(rd->d.object, KEY_ISSUED, RECDB_QSTRING);
+    issued = dstr ? strtoul(dstr, NULL, 0) : now;
+    if (!(issuer = database_get_data(rd->d.object, KEY_ISSUER, RECDB_QSTRING)))
         issuer = "<unknown>";
-    }
-    if (expiration > now)
-        gline_add(issuer, key, expiration - now, reason, issued, lastmod, 0);
+    if (lifetime > now)
+        gline_add(issuer, key, expiration - now, reason, issued, lastmod, lifetime, 0);
     return 0;
 }
 
@@ -296,6 +285,7 @@ gline_write_entry(UNUSED_ARG(void *key), void *data, void *extra)
     saxdb_start_record(ctx, ent->target, 0);
     saxdb_write_int(ctx, KEY_EXPIRES, ent->expires);
     saxdb_write_int(ctx, KEY_ISSUED, ent->issued);
+    saxdb_write_int(ctx, KEY_LIFETIME, ent->lifetime);
     if (ent->lastmod)
         saxdb_write_int(ctx, KEY_LASTMOD, ent->lastmod);
     saxdb_write_string(ctx, KEY_REASON, ent->reason);
@@ -336,8 +326,9 @@ gline_discrim_create(struct userNode *user, struct userNode *src, unsigned int a
 
     discrim = calloc(1, sizeof(*discrim));
     discrim->limit = 50;
-    discrim->max_issued = INT_MAX;
-    discrim->max_lastmod = INT_MAX;
+    discrim->max_issued = ULONG_MAX;
+    discrim->max_lastmod = ULONG_MAX;
+    discrim->max_lifetime = ULONG_MAX;
 
     for (i=0; i<argc; i++) {
         if (i + 2 > argc) {
@@ -389,6 +380,23 @@ gline_discrim_create(struct userNode *user, struct userNode *src, unsigned int a
             } else {
                 discrim->min_lastmod = now - ParseInterval(cmp + 2);
             }
+        } else if (!irccasecmp(argv[i], "lifetime")) {
+            const char *cmp = argv[++i];
+            if (cmp[0] == '<') {
+                if (cmp[1] == '=') {
+                    discrim->min_lifetime = now - ParseInterval(cmp + 2);
+                } else {
+                    discrim->min_lifetime = now - (ParseInterval(cmp + 1) - 1);
+                }
+            } else if (cmp[0] == '>') {
+                if (cmp[1] == '=') {
+                    discrim->max_lifetime = now - ParseInterval(cmp + 2);
+                } else {
+                    discrim->max_lifetime = now - (ParseInterval(cmp + 1) - 1);
+                }
+            } else {
+                discrim->min_lifetime = now - ParseInterval(cmp + 2);
+            }
         } else {
             send_message(user, src, "MSG_INVALID_CRITERIA", argv[i]);
             goto fail;
@@ -429,7 +437,9 @@ gline_discrim_match(struct gline *gline, struct gline_discrim *discrim)
         || (discrim->max_issued < gline->issued)
         || (discrim->min_expire > gline->expires)
         || (discrim->min_lastmod > gline->lastmod)
-        || (discrim->max_lastmod < gline->lastmod)) {
+        || (discrim->max_lastmod < gline->lastmod)
+        || (discrim->min_lifetime > gline->lifetime)
+        || (discrim->max_lifetime < gline->lifetime)) {
         return 0;
     }
     return 1;

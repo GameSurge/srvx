@@ -655,11 +655,11 @@ void
 irc_gline(struct server *srv, struct gline *gline)
 {
     if (gline->lastmod)
-        putsock("%s " P10_GLINE " %s +%s %lu %lu :%s",
-                self->numeric, (srv ? srv->numeric : "*"), gline->target, (unsigned long)(gline->expires-now), (unsigned long)gline->lastmod, gline->reason);
+        putsock("%s " P10_GLINE " %s +%s %lu %lu %lu :%s",
+                self->numeric, (srv ? srv->numeric : "*"), gline->target, gline->expires, gline->lastmod, gline->lifetime, gline->reason);
     else
         putsock("%s " P10_GLINE " %s +%s %lu :%s",
-                self->numeric, (srv ? srv->numeric : "*"), gline->target, (unsigned long)(gline->expires-now), gline->reason);
+                self->numeric, (srv ? srv->numeric : "*"), gline->target, gline->expires, gline->reason);
 }
 
 void
@@ -674,7 +674,7 @@ irc_settime(const char *srv_name_mask, unsigned long new_time)
 void
 irc_ungline(const char *mask)
 {
-    putsock("%s " P10_GLINE " * -%s", self->numeric, mask);
+    putsock("%s " P10_GLINE " * -%s %lu", self->numeric, mask, now);
 }
 
 /* Return negative if *(struct modeNode**)pa is "less than" pb,
@@ -1494,10 +1494,13 @@ static CMD_FUNC(cmd_num_topic)
 static CMD_FUNC(cmd_num_gline)
 {
     unsigned long lastmod;
+    unsigned long lifetime;
+
     if (argc < 6)
         return 0;
     lastmod = (argc > 5) ? strtoul(argv[5], NULL, 0) : 0;
-    gline_add(origin, argv[3], atoi(argv[4])-now, argv[argc - 1], now, lastmod, 0);
+    lifetime = (argc > 6) ? strtoul(argv[6], NULL, 0) : 0;
+    gline_add(origin, argv[3], atoi(argv[4])-now, argv[argc - 1], now, lastmod, lifetime, 0);
     return 1;
 }
 
@@ -1612,15 +1615,22 @@ static CMD_FUNC(cmd_away)
 
 static CMD_FUNC(cmd_gline)
 {
+#define PASTWATCH (5*365*24*3600)
     unsigned long lastmod;
+    unsigned long lifetime;
+    unsigned long expiration;
 
     if (argc < 3)
         return 0;
     if (argv[2][0] == '+') {
         if (argc < 5)
             return 0;
-        lastmod = (argc > 5) ? strtoul(argv[5], NULL, 0) : 0;
-        gline_add(origin, argv[2]+1, strtoul(argv[3], NULL, 0), argv[argc-1], now, lastmod, 0);
+        expiration = strtoul(argv[3], NULL, 10);
+        if (expiration < now - PASTWATCH)
+            expiration += now;
+        lastmod = (argc > 5) ? strtoul(argv[4], NULL, 10) : 0;
+        lifetime = (argc > 6) ? strtoul(argv[5], NULL, 10) : 0;
+        gline_add(origin, argv[2]+1, expiration - now, argv[argc-1], now, lastmod, lifetime, 0);
         return 1;
     } else if (argv[2][0] == '-') {
         gline_remove(argv[2]+1, 0);
