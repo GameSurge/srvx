@@ -579,7 +579,7 @@ static MODCMD_FUNC(cmd_clearmodes)
         return 0;
     }
     mod_chanmode_init(&change);
-    change.modes_clear = channel->modes;
+    change.modes_clear = channel->modes & ~MODE_REGISTERED;
     modcmd_chanmode_announce(&change);
     reply("OSMSG_CLEARMODES_DONE", channel->name);
     return 1;

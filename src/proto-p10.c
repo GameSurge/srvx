@@ -2427,12 +2427,8 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
         case 's': do_chan_mode(MODE_SECRET); break;
         case 't': do_chan_mode(MODE_TOPICLIMIT); break;
         case 'z':
-          if (!(flags & MCP_REGISTERED)) {
+          if (!(flags & MCP_REGISTERED))
               do_chan_mode(MODE_REGISTERED);
-          } else {
-              mod_chanmode_free(change);
-              return NULL;
-          }
           break;
 #undef do_chan_mode
         case 'l':
