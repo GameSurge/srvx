@@ -1651,6 +1651,23 @@ static CMD_FUNC(cmd_svsnick)
     return 1;
 }
 
+static CMD_FUNC(cmd_time)
+{
+    extern int clock_skew;
+    char buf[MAXLEN];
+    struct userNode *who;
+    time_t when;
+
+    who = GetUserH(origin);
+    if (!who)
+        return 0;
+
+    when = time(NULL);
+    strftime(buf, sizeof(buf), "%a %b %d %Y -- %H:%M %z", localtime(&when));
+    irc_numeric(who, 391, "%s %lu %d :%s", self->name, now, clock_skew, buf);
+    return 1;
+}
+
 void
 free_user(struct userNode *user)
 {
@@ -1790,6 +1807,8 @@ init_parse(void)
     dict_insert(irc_func_dict, TOK_VERSION, cmd_version);
     dict_insert(irc_func_dict, CMD_ADMIN, cmd_admin);
     dict_insert(irc_func_dict, TOK_ADMIN, cmd_admin);
+    dict_insert(irc_func_dict, CMD_TIME, cmd_time);
+    dict_insert(irc_func_dict, TOK_TIME, cmd_time);
 
     /* In P10, DESTRUCT doesn't do anything except be broadcast to servers.
      * Apparently to obliterate channels from any servers that think they
