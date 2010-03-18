@@ -2728,6 +2728,9 @@ char *
 mod_chanmode_format(struct mod_chanmode *change, char *outbuff)
 {
     unsigned int used = 0;
+    unsigned int args_used = 0;
+    char args[MAXLEN];
+
     assert(change->argc <= change->alloc_argc);
     if (change->modes_clear) {
         outbuff[used++] = '-';
@@ -2763,61 +2766,14 @@ mod_chanmode_format(struct mod_chanmode *change, char *outbuff)
         DO_MODE_CHAR(NOCOLORS, 'c');
         DO_MODE_CHAR(NOCTCPS, 'C');
         DO_MODE_CHAR(REGISTERED, 'z');
+        DO_MODE_CHAR(LIMIT, 'l'), args_used += sprintf(args + args_used, " %d", change->new_limit);
+        DO_MODE_CHAR(KEY, 'k'), args_used += sprintf(args + args_used, " %s", change->new_key);
+        DO_MODE_CHAR(UPASS, 'U'), args_used += sprintf(args + args_used, " %s", change->new_upass);
+        DO_MODE_CHAR(APASS, 'A'), args_used += sprintf(args + args_used, " %s", change->new_apass);
 #undef DO_MODE_CHAR
-        switch (change->modes_set & (MODE_KEY|MODE_LIMIT|MODE_APASS|MODE_UPASS)) {
-        /* Doing this implementation has been a pain in the arse, I hope I didn't forget a possible combination */
-        case MODE_KEY|MODE_LIMIT|MODE_APASS|MODE_UPASS:
-            used += sprintf(outbuff+used, "lkAU %d %s %s %s", change->new_limit, change->new_key, change->new_apass, change->new_upass);
-            break;
-
-        case MODE_KEY|MODE_LIMIT|MODE_APASS:
-            used += sprintf(outbuff+used, "lkA %d %s %s", change->new_limit, change->new_key, change->new_apass);
-            break;
-        case MODE_KEY|MODE_LIMIT|MODE_UPASS:
-            used += sprintf(outbuff+used, "lkU %d %s %s", change->new_limit, change->new_key, change->new_upass);
-            break;
-        case MODE_KEY|MODE_APASS|MODE_UPASS:
-            used += sprintf(outbuff+used, "kAU %s %s %s", change->new_key, change->new_apass, change->new_upass);
-            break;
-
-        case MODE_KEY|MODE_APASS:
-            used += sprintf(outbuff+used, "kA %s %s", change->new_key, change->new_apass);
-            break;
-        case MODE_KEY|MODE_UPASS:
-            used += sprintf(outbuff+used, "kU %s %s", change->new_key, change->new_upass);
-            break;
-        case MODE_KEY|MODE_LIMIT:
-            used += sprintf(outbuff+used, "lk %d %s", change->new_limit, change->new_key);
-            break;
-        case MODE_LIMIT|MODE_UPASS:
-            used += sprintf(outbuff+used, "lU %d %s", change->new_limit, change->new_upass);
-            break;
-        case MODE_LIMIT|MODE_APASS:
-            used += sprintf(outbuff+used, "lA %d %s", change->new_limit, change->new_apass);
-            break;
-        case MODE_APASS|MODE_UPASS:
-            used += sprintf(outbuff+used, "AU %s %s", change->new_apass, change->new_upass);
-            break;
-
-        case MODE_LIMIT|MODE_APASS|MODE_UPASS:
-            used += sprintf(outbuff+used, "lAU %d %s %s", change->new_limit, change->new_apass, change->new_upass);
-            break;
-
-        case MODE_APASS:
-            used += sprintf(outbuff+used, "A %s", change->new_apass);
-            break;
-        case MODE_UPASS:
-            used += sprintf(outbuff+used, "U %s", change->new_upass);
-            break;
-        case MODE_KEY:
-            used += sprintf(outbuff+used, "k %s", change->new_key);
-            break;
-        case MODE_LIMIT:
-            used += sprintf(outbuff+used, "l %d", change->new_limit);
-            break;
-        }
     }
-    outbuff[used] = 0;
+    args[args_used] = '\0';
+    strcpy(outbuff + used, args);
     return outbuff;
 }
 

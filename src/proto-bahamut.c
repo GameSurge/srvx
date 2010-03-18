@@ -1473,6 +1473,9 @@ char *
 mod_chanmode_format(struct mod_chanmode *change, char *outbuff)
 {
     unsigned int used = 0;
+    unsigned int args_used = 0;
+    char args[MAXLEN];
+
     assert(change->argc <= change->alloc_argc);
     if (change->modes_clear) {
         outbuff[used++] = '-';
@@ -1504,19 +1507,11 @@ mod_chanmode_format(struct mod_chanmode *change, char *outbuff)
         DO_MODE_CHAR(REGONLY, 'R');
         DO_MODE_CHAR(NOCOLORS, 'c');
         DO_MODE_CHAR(REGISTERED, 'r');
+        DO_MODE_CHAR(LIMIT, 'l'), args_used += sprintf(args + args_used, " %d", change->new_limit);
+        DO_MODE_CHAR(KEY, 'k'), args_used += sprintf(args + args_used, " %s", change->new_key);
 #undef DO_MODE_CHAR
-        switch (change->modes_set & (MODE_KEY|MODE_LIMIT)) {
-        case MODE_KEY|MODE_LIMIT:
-            used += sprintf(outbuff+used, "lk %d %s", change->new_limit, change->new_key);
-            break;
-        case MODE_KEY:
-            used += sprintf(outbuff+used, "k %s", change->new_key);
-            break;
-        case MODE_LIMIT:
-            used += sprintf(outbuff+used, "l %d", change->new_limit);
-            break;
-        }
     }
-    outbuff[used] = 0;
+    args[args_used] = '\0';
+    strcpy(outbuff + used, args);
     return outbuff;
 }
