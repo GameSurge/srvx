@@ -202,6 +202,8 @@ static const struct message_entry msgtab[] = {
     { "OSMSG_LOG_SEARCH_RESULTS", "The following log entries were found:" },
     { "OSMSG_GSYNC_RUNNING", "Synchronizing glines from %s." },
     { "OSMSG_GTRACE_FORMAT", "%1$s (issued %2$s ago by %3$s, lastmod %4$s ago, expires %5$s, lifetime %7$s): %6$s" },
+    { "OSMSG_GTRACE_FOREVER", "%1$s (issued %2$s ago by %3$s, lastmod %4$s ago, never expires, lifetime %7$s): %6$s" },
+    { "OSMSG_GTRACE_EXPIRED", "%1$s (issued %2$s ago by %3$s, lastmod %4$s ago, expired %5$s ago, lifetime %7$s): %6$s" },
     { "OSMSG_GAG_APPLIED", "Gagged $b%s$b, affecting %d users." },
     { "OSMSG_GAG_ADDED", "Gagged $b%s$b." },
     { "OSMSG_REDUNDANT_GAG", "Gag $b%s$b is redundant." },
@@ -3808,12 +3810,17 @@ gtrace_print_func(struct gline *gline, void *extra)
         intervalString(lastmod, now - gline->lastmod, xtra->user->handle_info);
     else
         strcpy(lastmod, "<unknown>");
-    if (gline->expires)
-        intervalString(expires, gline->expires - now, xtra->user->handle_info);
-    else
-        strcpy(expires, "never");
     intervalString(lifetime, gline->lifetime - now, xtra->user->handle_info);
-    send_message(xtra->user, opserv, "OSMSG_GTRACE_FORMAT", gline->target, issued, gline->issuer, lastmod, expires, gline->reason, lifetime);
+    if (gline->expires < now) {
+        intervalString(expires, now - gline->expires, xtra->user->handle_info);
+        send_message(xtra->user, opserv, "OSMSG_GTRACE_EXPIRED", gline->target, issued, gline->issuer, lastmod, expires, gline->reason, lifetime);
+    } else if (gline->expires) {
+        intervalString(expires, gline->expires - now, xtra->user->handle_info);
+        send_message(xtra->user, opserv, "OSMSG_GTRACE_FORMAT", gline->target, issued, gline->issuer, lastmod, expires, gline->reason, lifetime);
+    } else {
+        send_message(xtra->user, opserv, "OSMSG_GTRACE_FOREVER", gline->target, issued, gline->issuer, lastmod, NULL, gline->reason, lifetime);
+
+    }
 }
 
 static MODCMD_FUNC(cmd_stats_glines) {

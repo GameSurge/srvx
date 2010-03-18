@@ -72,10 +72,9 @@ free_gline(struct gline *ent)
 }
 
 static int
-gline_for_p(UNUSED_ARG(void *key), void *data, void *extra)
+gline_equal_p(UNUSED_ARG(void *key), void *data, void *extra)
 {
-    struct gline *ge = data;
-    return !irccasecmp(ge->target, extra);
+    return data == extra;
 }
 
 static void
@@ -125,13 +124,15 @@ gline_add(const char *issuer, const char *target, unsigned long duration, const 
         lifetime = expires;
     ent = dict_find(gline_dict, target, NULL);
     if (ent) {
-        heap_remove_pred(gline_heap, gline_for_p, (char*)target);
+        heap_remove_pred(gline_heap, gline_equal_p, ent);
+        if (ent->issued > lastmod)
+            ent->issued = lastmod;
+        if (ent->lastmod < lastmod)
+            ent->lastmod = lastmod;
         if (ent->expires != expires)
             ent->expires = expires;
         if (ent->lifetime < lifetime)
             ent->lifetime = lifetime;
-        if (ent->lastmod < lastmod)
-            ent->lastmod = lastmod;
         if (strcmp(ent->issuer, issuer)) {
             free(ent->issuer);
             ent->issuer = strdup(issuer);
