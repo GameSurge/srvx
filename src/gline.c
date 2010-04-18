@@ -52,7 +52,7 @@ static int
 gline_comparator(const void *a, const void *b)
 {
     const struct gline *ga=a, *gb=b;
-    return ga->expires - gb->expires;
+    return ga->lifetime - gb->lifetime;
 }
 
 static void
@@ -127,20 +127,16 @@ gline_add(const char *issuer, const char *target, unsigned long duration, const 
         heap_remove_pred(gline_heap, gline_equal_p, ent);
         if (ent->issued > lastmod)
             ent->issued = lastmod;
-        if (ent->lastmod < lastmod)
+        if (ent->lastmod < lastmod) {
             ent->lastmod = lastmod;
-        if (ent->expires != expires)
-            ent->expires = expires;
+	    ent->expires = expires;
+	    if (strcmp(ent->reason, reason)) {
+		free(ent->reason);
+		ent->reason = strdup(reason);
+	    }
+	}
         if (ent->lifetime < lifetime)
             ent->lifetime = lifetime;
-        if (strcmp(ent->issuer, issuer)) {
-            free(ent->issuer);
-            ent->issuer = strdup(issuer);
-        }
-        if (strcmp(ent->reason, reason)) {
-            free(ent->reason);
-            ent->reason = strdup(reason);
-        }
     } else {
         ent = malloc(sizeof(*ent));
         ent->issued = issued;

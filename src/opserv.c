@@ -3811,15 +3811,14 @@ gtrace_print_func(struct gline *gline, void *extra)
     else
         strcpy(lastmod, "<unknown>");
     intervalString(lifetime, gline->lifetime - now, xtra->user->handle_info);
-    if (gline->expires < now) {
+    if (!gline->expires) {
+        send_message(xtra->user, opserv, "OSMSG_GTRACE_FOREVER", gline->target, issued, gline->issuer, lastmod, NULL, gline->reason, lifetime);
+    } else if (gline->expires < now) {
         intervalString(expires, now - gline->expires, xtra->user->handle_info);
         send_message(xtra->user, opserv, "OSMSG_GTRACE_EXPIRED", gline->target, issued, gline->issuer, lastmod, expires, gline->reason, lifetime);
-    } else if (gline->expires) {
+    } else { /* must be in the future */
         intervalString(expires, gline->expires - now, xtra->user->handle_info);
         send_message(xtra->user, opserv, "OSMSG_GTRACE_FORMAT", gline->target, issued, gline->issuer, lastmod, expires, gline->reason, lifetime);
-    } else {
-        send_message(xtra->user, opserv, "OSMSG_GTRACE_FOREVER", gline->target, issued, gline->issuer, lastmod, NULL, gline->reason, lifetime);
-
     }
 }
 
