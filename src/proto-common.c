@@ -762,7 +762,7 @@ generate_hostmask(struct userNode *user, int options)
             sprintf(hostname, "%d.%d.*", user->ip.in6_8[12], user->ip.in6_8[13]);
         } else if (irc_in_addr_is_ipv6(user->ip)) {
             /* Who knows what the default mask should be?  Use a /48 to start with. */
-            sprintf(hostname, "%x:%x:%x:*", user->ip.in6[0], user->ip.in6[1], user->ip.in6[2]);
+            sprintf(hostname, "%x:%x:%x:*", ntohs(user->ip.in6[0]), ntohs(user->ip.in6[1]), ntohs(user->ip.in6[2]));
         } else {
             /* Unknown type; just copy IP directly. */
             irc_ntop(hostname, IRC_NTOP_MAX_SIZE, &user->ip);
