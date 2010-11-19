@@ -131,7 +131,7 @@ ioq_grow(struct ioq *ioq) {
     ioq->get = 0;
     ioq->buf = new_buf;
     ioq->size = new_size;
-    return new_size - ioq->put;
+    return new_size - ioq->put - 1;
 }
 
 extern struct io_engine io_engine_kevent;
