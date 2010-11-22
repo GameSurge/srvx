@@ -109,6 +109,7 @@ ABORT(RECDB *recdb, int code, unsigned char ch) {
 
 enum fail_codes {
     UNTERMINATED_STRING,
+    UNTERMINATED_COMMENT,
     EXPECTED_OPEN_QUOTE,
     EXPECTED_OPEN_BRACE,
     EXPECTED_OPEN_PAREN,
@@ -345,8 +346,10 @@ parse_skip_ws(RECDB *recdb)
             do {
                 do {
                     c = dbgetc(recdb);
-                } while (c != '*' && c != EOF);
+		    if (c == EOF) ABORT(recdb, UNTERMINATED_COMMENT, c);
+                } while (c != '*');
                 if ((c = dbgetc(recdb)) == '/') in_comment = 0;
+		if (c == EOF) ABORT(recdb, UNTERMINATED_COMMENT, c);
             } while (in_comment);
         } else if (d == '/') {
             /* C++ style comment, with slash slash comment newline */
@@ -552,6 +555,7 @@ failure_reason(int code)
     const char *reason;
     switch (code >> 8) {
     case UNTERMINATED_STRING: reason = "Unterminated string"; break;
+    case UNTERMINATED_COMMENT: reason = "Unterminated comment"; break;
     case EXPECTED_OPEN_QUOTE: reason = "Expected '\"'"; break;
     case EXPECTED_OPEN_BRACE: reason = "Expected '{'"; break;
     case EXPECTED_OPEN_PAREN: reason = "Expected '('"; break;
