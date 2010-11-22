@@ -591,7 +591,9 @@ extern const char *hidden_host_suffix;
 int
 user_matches_glob(struct userNode *user, const char *orig_glob, int flags)
 {
+    irc_in_addr_t mask;
     char *glob, *marker;
+    unsigned char mask_bits;
 
     /* Make a writable copy of the glob */
     glob = alloca(strlen(orig_glob)+1);
@@ -631,8 +633,8 @@ user_matches_glob(struct userNode *user, const char *orig_glob, int flags)
         && (IsFakeHost(user) || (hidden_host_suffix && user->handle_info)))
         return 0;
     /* If it might be an IP glob, test that. */
-    if (!glob[strspn(glob, "0123456789./*?")]
-        && match_ircglob(irc_ntoa(&user->ip), glob))
+    if (irc_pton(&mask, &mask_bits, glob)
+        && irc_check_mask(&user->ip, &mask, mask_bits))
         return 1;
     /* None of the above; could only be a hostname match. */
     return match_ircglob(user->hostname, glob);
