@@ -508,7 +508,7 @@ struct helpserv_bot {
     enum notification_type notify;
 
     /* This is a default; it can be changed on a per-request basis */
-    enum persistence_type persist_types[PERSIST_T_COUNT];
+    enum persistence_length persist_lengths[PERSIST_T_COUNT];
 
     dict_t users; /* indexed by handle */
 
@@ -969,7 +969,7 @@ static struct helpserv_request * create_request(struct userNode *user, struct he
         fmt = user_find_message(user, "HSMSG_REQ_NO_UNHANDLED");
         sprintf(lbuf[1], "%s", fmt);
     }
-    switch (hs->persist_types[PERSIST_T_REQUEST]) {
+    switch (hs->persist_lengths[PERSIST_T_REQUEST]) {
         case PERSIST_PART:
             fmt = user_find_message(user, "HSMSG_REQ_PERSIST_PART");
             sprintf(lbuf[2], fmt, hs->helpchan->name, hs->helpchan->name);
@@ -1060,7 +1060,7 @@ static void helpserv_usermsg(struct userNode *user, struct helpserv_bot *hs, con
             helpserv_msguser(user, "HSMSG_USERCMD_NO_REQUEST");
             return;
         }
-        if ((hs->persist_types[PERSIST_T_REQUEST] == PERSIST_PART) && !GetUserMode(hs->helpchan, user)) {
+        if ((hs->persist_lengths[PERSIST_T_REQUEST] == PERSIST_PART) && !GetUserMode(hs->helpchan, user)) {
             helpserv_msguser(user, "HSMSG_REQ_YOU_NOT_IN_HELPCHAN_OPEN", hs->helpchan->name);
             return;
         }
@@ -1605,7 +1605,7 @@ static void free_request(void *data) {
     struct helpserv_request *req = data;
 
     /* Logging */
-    if (shutting_down && (req->hs->persist_types[PERSIST_T_REQUEST] != PERSIST_CLOSE || !req->handle)) {
+    if (shutting_down && (req->hs->persist_lengths[PERSIST_T_REQUEST] != PERSIST_CLOSE || !req->handle)) {
         helpserv_log_request(req, "srvx shutdown");
     }
 
@@ -1875,7 +1875,7 @@ static int helpserv_assign(int from_opserv, struct helpserv_bot *hs, struct user
 
     if (!user->handle_info)
         return 0;
-    if ((hs->persist_types[PERSIST_T_HELPER] == PERSIST_PART) && !GetUserMode(hs->helpchan, user)) {
+    if ((hs->persist_lengths[PERSIST_T_HELPER] == PERSIST_PART) && !GetUserMode(hs->helpchan, user)) {
         struct helpserv_user *hsuser_actor = GetHSUser(hs, actor->handle_info);
         if (hsuser_actor->level < HlManager) {
             helpserv_notice(user, "HSMSG_REQ_YOU_NOT_IN_HELPCHAN", hs->helpchan->name);
@@ -2029,7 +2029,7 @@ static HELPSERV_FUNC(cmd_reassign) {
         return 0;
     }
 
-    if ((hs->persist_types[PERSIST_T_HELPER] == PERSIST_PART) && !GetUserMode(hs->helpchan, user) && (hs_user->level < HlManager)) {
+    if ((hs->persist_lengths[PERSIST_T_HELPER] == PERSIST_PART) && !GetUserMode(hs->helpchan, user) && (hs_user->level < HlManager)) {
         helpserv_notice(user, "HSMSG_REQ_HIM_NOT_IN_HELPCHAN", targetuser->nick, hs->helpchan->name);
         return 0;
     }
@@ -3199,11 +3199,11 @@ static int opt_persist(struct userNode *user, struct helpserv_bot *hs, int from_
             helpserv_notice(user, "HSMSG_INVALID_OPTION", argv[0]);
             return 0;
         }
-        hs->persist_types[idx] = new_pers;
+        hs->persist_lengths[idx] = new_pers;
         changed = 1;
     }
-    helpserv_notice(user, persistence_types[idx].print_name,
-                    user_find_message(user, persistence_lengths[hs->persist_types[idx]].print_name));
+    helpserv_notice(user, persistence_lengths[idx].print_name,
+                    user_find_message(user, persistence_lengths[hs->persist_lengths[idx]].print_name));
     return changed;
 }
 
@@ -3586,7 +3586,7 @@ helpserv_bot_write(const char *key, void *data, void *extra) {
     saxdb_end_record(ctx);
 
     /* Open requests */
-    if (hs->persist_types[PERSIST_T_REQUEST] == PERSIST_CLOSE) {
+    if (hs->persist_lengths[PERSIST_T_REQUEST] == PERSIST_CLOSE) {
         saxdb_start_record(ctx, KEY_REQUESTS, 0);
         dict_foreach(hs->requests, request_write_helper, ctx);
         saxdb_end_record(ctx);
@@ -3616,7 +3616,7 @@ helpserv_bot_write(const char *key, void *data, void *extra) {
         saxdb_write_int(ctx, interval_types[inttype].db_name, hs->intervals[inttype]);
     }
     for (persisttype=0; persisttype<PERSIST_T_COUNT; persisttype++) {
-        const char *persist = persistence_lengths[hs->persist_types[persisttype]].db_name;
+        const char *persist = persistence_lengths[hs->persist_lengths[persisttype]].db_name;
         saxdb_write_string(ctx, persistence_types[persisttype].db_name, persist);
     }
     saxdb_write_string(ctx, KEY_NOTIFICATION, notification_types[hs->notify].db_name);
@@ -3714,7 +3714,7 @@ static int helpserv_bot_read(const char *key, void *data, UNUSED_ARG(void *extra
 
     for (persisttype=0; persisttype<PERSIST_T_COUNT; persisttype++) {
         str = database_get_data(GET_RECORD_OBJECT(br), persistence_types[persisttype].db_name, RECDB_QSTRING);
-        hs->persist_types[persisttype] = str ? persistence_from_name(str) : PERSIST_QUIT;
+        hs->persist_lengths[persisttype] = str ? persistence_from_name(str) : PERSIST_QUIT;
     }
     str = database_get_data(GET_RECORD_OBJECT(br), KEY_NOTIFICATION, RECDB_QSTRING);
     hs->notify = str ? notification_from_name(str) : NOTIFY_NONE;
@@ -3830,7 +3830,7 @@ static void handle_part(struct modeNode *mn, UNUSED_ARG(const char *reason)) {
             hs = botlist->list[i];
             if (!hs->helpserv)
                 continue;
-            if (hs->persist_types[PERSIST_T_REQUEST] != PERSIST_PART)
+            if (hs->persist_lengths[PERSIST_T_REQUEST] != PERSIST_PART)
                 continue;
 
             for (it=dict_first(hs->requests); it; it=iter_next(it)) {
@@ -3873,7 +3873,7 @@ static void handle_part(struct modeNode *mn, UNUSED_ARG(const char *reason)) {
             for (it=dict_first(hs->requests); it; it=iter_next(it)) {
                 struct helpserv_request *req=iter_data(it);
 
-                if ((hs->persist_types[PERSIST_T_HELPER] == PERSIST_PART)
+                if ((hs->persist_lengths[PERSIST_T_HELPER] == PERSIST_PART)
                     && (req->helper == hs_user)) {
                     char our_reason[CHANNELLEN + 8];
                     sprintf(our_reason, "parted %s", mn->channel->name);
@@ -3930,7 +3930,7 @@ static void handle_quit(struct userNode *user, UNUSED_ARG(struct userNode *kille
         for (i=0; i < n; i++) {
             struct helpserv_request *req = reqlist->list[0];
 
-            if ((req->hs->persist_types[PERSIST_T_REQUEST] == PERSIST_QUIT) || !req->handle) {
+            if ((req->hs->persist_lengths[PERSIST_T_REQUEST] == PERSIST_QUIT) || !req->handle) {
                 char buf[12];
                 sprintf(buf, "%lu", req->id);
 
@@ -3964,7 +3964,7 @@ static void handle_quit(struct userNode *user, UNUSED_ARG(struct userNode *kille
             for (it=dict_first(hs->requests); it; it=iter_next(it)) {
                 struct helpserv_request *req=iter_data(it);
 
-                if ((hs->persist_types[PERSIST_T_HELPER] == PERSIST_QUIT) && (req->helper == hs_user)) {
+                if ((hs->persist_lengths[PERSIST_T_HELPER] == PERSIST_QUIT) && (req->helper == hs_user)) {
                     helpserv_page_helper_gone(hs, req, "disconnected");
                 }
             }
@@ -4285,7 +4285,7 @@ static void handle_nickserv_auth(struct userNode *user, struct handle_info *old_
         struct helpserv_request *req = reqlist->list[i];
         struct helpserv_bot *hs=req->hs;
 
-        if (!old_handle || hs->persist_types[PERSIST_T_REQUEST] == PERSIST_PART || hs->persist_types[PERSIST_T_REQUEST] == PERSIST_QUIT) {
+        if (!old_handle || hs->persist_lengths[PERSIST_T_REQUEST] == PERSIST_PART || hs->persist_lengths[PERSIST_T_REQUEST] == PERSIST_QUIT) {
             /* The request needs to be assigned to the new handle; either it
              * only persists until part/quit (so it makes sense to keep it as
              * close to the user as possible, and if it's made persistent later
@@ -4309,7 +4309,7 @@ static void handle_nickserv_auth(struct userNode *user, struct handle_info *old_
             if (old_handle) {
                 char buf[CHANNELLEN + 14];
 
-                if (hs->persist_types[PERSIST_T_REQUEST] == PERSIST_PART) {
+                if (hs->persist_lengths[PERSIST_T_REQUEST] == PERSIST_PART) {
                     sprintf(buf, "part channel %s", hs->helpchan->name);
                 } else {
                     strcpy(buf, "quit irc");
@@ -4412,7 +4412,7 @@ static void handle_nickserv_unreg(struct userNode *user, struct handle_info *han
                 }
                 helpserv_reqlist_append(req->parent_nick_list, req);
 
-                if (hs->persist_types[PERSIST_T_REQUEST] == PERSIST_CLOSE)
+                if (hs->persist_lengths[PERSIST_T_REQUEST] == PERSIST_CLOSE)
                     helpserv_msguser(req->user, "HSMSG_REQ_WARN_UNREG", handle->handle, hs->helpchan->name, req->id);
             } else {
                 if (handle->users) {
