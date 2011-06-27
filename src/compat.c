@@ -35,7 +35,7 @@ int gettimeofday(struct timeval * tv, struct timezone * tz)
 }
 #endif
 
-#if !defined(HAVE_GETLOCALTIME_R) && defined(HAVE_LOCALTIME)
+#if !defined(HAVE_LOCALTIME_R) && defined(HAVE_LOCALTIME)
 struct tm *localtime_r(const time_t *timep, struct tm *result)
 {
     memcpy(result, localtime(timep), sizeof(*result));
