@@ -995,8 +995,10 @@ check_alias_args(char *argv[], unsigned int argc) {
             continue;
         } else if (isdigit(argv[arg][1])) {
             char *end_num;
+            unsigned int tmp;
 
-            (void)strtoul(argv[arg]+1, &end_num, 10);
+            tmp = strtoul(argv[arg]+1, &end_num, 10);
+            (void)tmp;
             switch (end_num[0]) {
             case 0:
                 continue;
