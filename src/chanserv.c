@@ -3817,56 +3817,6 @@ static CHANSERV_FUNC(cmd_access)
 }
 
 static void
-zoot_list(struct listData *list)
-{
-    struct userData *uData;
-    unsigned int start, curr, highest, lowest;
-    struct helpfile_table tmp_table;
-    const char **temp, *msg;
-
-    if(list->table.length == 1)
-    {
-        if(list->search)
-            send_message(list->user, list->bot, "CSMSG_ACCESS_SEARCH_HEADER", list->channel->name, list->lowest, list->highest, list->search);
-        else
-            send_message(list->user, list->bot, "CSMSG_ACCESS_ALL_HEADER", list->channel->name, list->lowest, list->highest);
-        msg = user_find_message(list->user, "MSG_NONE");
-        send_message_type(4, list->user, list->bot, "  %s", msg);
-    }
-    tmp_table.width = list->table.width;
-    tmp_table.flags = list->table.flags;
-    list->table.contents[0][0] = " ";
-    highest = list->highest;
-    if(list->lowest != 0)
-        lowest = list->lowest;
-    else if(highest < 100)
-        lowest = 1;
-    else
-        lowest = highest - 100;
-    for(start = curr = 1; curr < list->table.length; )
-    {
-        uData = list->users[curr-1];
-        list->table.contents[curr++][0] = " ";
-        if((curr == list->table.length) || (list->users[curr-1]->access < lowest))
-        {
-            if(list->search)
-                send_message(list->user, list->bot, "CSMSG_ACCESS_SEARCH_HEADER", list->channel->name, lowest, highest, list->search);
-            else
-                send_message(list->user, list->bot, "CSMSG_ACCESS_ALL_HEADER", list->channel->name, lowest, highest);
-            temp = list->table.contents[--start];
-            list->table.contents[start] = list->table.contents[0];
-            tmp_table.contents = list->table.contents + start;
-            tmp_table.length = curr - start;
-            table_send(list->bot, list->user->nick, 0, NULL, tmp_table);
-            list->table.contents[start] = temp;
-            start = curr;
-            highest = lowest - 1;
-            lowest = (highest < 100) ? 0 : (highest - 99);
-        }
-    }
-}
-
-static void
 def_list(struct listData *list)
 {
     const char *msg;
@@ -3911,7 +3861,6 @@ cmd_list_users(struct userNode *user, struct chanNode *channel, unsigned int arg
     lData.highest = highest;
     lData.search = (argc > 1) ? argv[1] : NULL;
     send_list = def_list;
-    (void)zoot_list; /* since it doesn't show user levels */
 
     if(user->handle_info)
     {
@@ -4256,10 +4205,7 @@ static CHANSERV_FUNC(cmd_mode)
 
 static CHANSERV_FUNC(cmd_invite)
 {
-    struct userData *uData;
     struct userNode *invite;
-
-    uData = GetChannelUser(channel->channel_info, user->handle_info);
 
     if(argc > 1)
     {
@@ -7215,7 +7161,6 @@ user_read_helper(const char *key, struct record_data *rd, struct chanData *chan)
 static void
 ban_read_helper(const char *key, struct record_data *rd, struct chanData *chan)
 {
-    struct banData *bData;
     char *set, *triggered, *s_duration, *s_expires, *reason, *owner;
     unsigned long set_time, triggered_time, expires_time;
 
@@ -7246,7 +7191,7 @@ ban_read_helper(const char *key, struct record_data *rd, struct chanData *chan)
     if(!reason || (expires_time && (expires_time < now)))
         return;
 
-    bData = add_channel_ban(chan, key, owner, set_time, triggered_time, expires_time, reason);
+    add_channel_ban(chan, key, owner, set_time, triggered_time, expires_time, reason);
 }
 
 static struct suspended *

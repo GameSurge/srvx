@@ -1362,7 +1362,7 @@ static void helpserv_del_user(struct helpserv_bot *hs, struct helpserv_user *hs_
 }
 
 static int cmd_add_user(struct helpserv_bot *hs, int from_opserv, struct userNode *user, enum helpserv_level level, int argc, char *argv[]) {
-    struct helpserv_user *actor, *new_user;
+    struct helpserv_user *actor;
     struct handle_info *handle;
 
     REQUIRE_PARMS(2);
@@ -1390,7 +1390,7 @@ static int cmd_add_user(struct helpserv_bot *hs, int from_opserv, struct userNod
         return 0;
     }
 
-    new_user = helpserv_add_user(hs, handle, level);
+    helpserv_add_user(hs, handle, level);
 
     helpserv_notice(user, "HSMSG_ADDED_USER", helpserv_level2str(level), handle->handle);
     return 1;

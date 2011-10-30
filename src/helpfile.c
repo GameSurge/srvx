@@ -393,7 +393,7 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
     void (*irc_send)(struct userNode *from, const char *to, const char *msg);
     static struct string_buffer input;
     unsigned int size, ipos, pos, length, chars_sent, use_color;
-    unsigned int expand_pos, expand_ipos, newline_ipos;
+    unsigned int expand_ipos, newline_ipos;
     char line[MAX_LINE_SIZE];
 
     if (IsChannelName(dest) || *dest == '$') {
@@ -447,7 +447,7 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
      * that requires a very big intermediate buffer.
      */
     expand_ipos = newline_ipos = ipos = 0;
-    expand_pos = pos = 0;
+    pos = 0;
     chars_sent = 0;
     while (input.list[ipos]) {
         char ch, *value, *free_value;
@@ -644,12 +644,10 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
             free(free_value);
         pos += length;
         if ((pos < size-1) && input.list[ipos]) {
-            expand_pos = pos;
             expand_ipos = ipos;
             continue;
         }
       send_line:
-        expand_pos = pos;
         expand_ipos = ipos;
         SEND_LINE(0);
 #undef SEND_LINE

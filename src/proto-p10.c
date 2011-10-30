@@ -1434,7 +1434,7 @@ static CMD_FUNC(cmd_clearmode)
 static CMD_FUNC(cmd_topic)
 {
     struct chanNode *cn;
-    unsigned long chan_ts, topic_ts;
+    unsigned long topic_ts;
 
     if (argc < 3)
         return 0;
@@ -1444,10 +1444,8 @@ static CMD_FUNC(cmd_topic)
     }
     if (argc >= 5) {
         /* Looks like an Asuka style topic burst. */
-        chan_ts = atoi(argv[2]);
         topic_ts = atoi(argv[3]);
     } else {
-        chan_ts = cn->timestamp;
         topic_ts = now;
     }
     SetChannelTopic(cn, GetUserH(origin), argv[argc-1], 0);
@@ -2082,7 +2080,6 @@ AddLocalUser(const char *nick, const char *ident, const char *hostname, const ch
 {
     char numeric[COMBO_NUMERIC_LEN+1];
     int local_num = get_local_numeric();
-    unsigned long timestamp = now;
     struct userNode *old_user = GetUserH(nick);
 
     if (!modes)
@@ -2090,7 +2087,6 @@ AddLocalUser(const char *nick, const char *ident, const char *hostname, const ch
     if (old_user) {
         if (IsLocal(old_user))
             return old_user;
-        timestamp = old_user->timestamp - 1;
     }
     if (local_num == -1) {
         log_module(MAIN_LOG, LOG_ERROR, "Unable to allocate numnick for service %s", nick);

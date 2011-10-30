@@ -439,7 +439,7 @@ ioset_find_line_length(struct io_fd *fd) {
 
 static void
 ioset_buffered_read(struct io_fd *fd) {
-    int put_avail, nbr, fdnum;
+    int put_avail, nbr;
 
     if (!(put_avail = ioq_put_avail(&fd->recv)))
         put_avail = ioq_grow(&fd->recv);
@@ -474,7 +474,6 @@ ioset_buffered_read(struct io_fd *fd) {
         fd->recv.put += nbr;
         if (fd->recv.put == fd->recv.size)
             fd->recv.put = 0;
-        fdnum = fd->fd;
         while (fd->line_len > 0) {
             struct io_fd *old_active;
             int died = 0;

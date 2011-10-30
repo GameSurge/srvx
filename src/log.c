@@ -730,12 +730,11 @@ log_entry_search(struct logSearch *discrim, entry_search_func esf, void *data)
     unsigned int matched = 0;
 
     if (discrim->type) {
-        static volatile struct logEntry *last;
         struct logEntry *entry;
 
-        for (entry = discrim->type->log_oldest, last = NULL;
+        for (entry = discrim->type->log_oldest;
              entry;
-             last = entry, entry = entry->next) {
+             entry = entry->next) {
             verify(entry);
             if (entry_match(discrim, entry)) {
                 esf(entry, data);

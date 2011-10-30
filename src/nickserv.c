@@ -2763,12 +2763,10 @@ static OPTION_FUNC(opt_fakeident)
 
 static NICKSERV_FUNC(cmd_reclaim)
 {
-    struct handle_info *hi;
     struct nick_info *ni;
     struct userNode *victim;
 
     NICKSERV_MIN_PARMS(2);
-    hi = user->handle_info;
     ni = dict_find(nickserv_nick_dict, argv[1], 0);
     if (!ni) {
         reply("NSMSG_UNKNOWN_NICK", argv[1]);
