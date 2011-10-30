@@ -1362,7 +1362,7 @@ unregister_channel(struct chanData *channel, const char *reason)
 }
 
 static void
-expire_channels(UNUSED_ARG(void *data))
+expire_channels(void *data)
 {
     struct chanData *channel, *next;
     struct userData *user;
@@ -1392,7 +1392,7 @@ expire_channels(UNUSED_ARG(void *data))
         unregister_channel(channel, "registration expired.");
     }
 
-    if(chanserv_conf.channel_expire_frequency)
+    if(chanserv_conf.channel_expire_frequency && !data)
         timeq_add(now + chanserv_conf.channel_expire_frequency, expire_channels, NULL);
 }
 
@@ -4906,7 +4906,7 @@ chanserv_support_channels(void)
 static CHANSERV_FUNC(cmd_expire)
 {
     int channel_count = registered_channels;
-    expire_channels(NULL);
+    expire_channels(chanserv);
     reply("CSMSG_CHANNELS_EXPIRED", channel_count - registered_channels);
     return 1;
 }
