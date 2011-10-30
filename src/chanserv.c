@@ -7908,8 +7908,8 @@ init_chanserv(const char *nick)
     DEFINE_COMMAND(unf, 1, 0, "flags", "+nolog,+toy,+acceptchan", NULL);
     DEFINE_COMMAND(ping, 1, 0, "flags", "+nolog,+toy,+acceptchan", NULL);
     DEFINE_COMMAND(wut, 1, 0, "flags", "+nolog,+toy,+acceptchan", NULL);
-    DEFINE_COMMAND(8ball, 1, 0, "flags", "+nolog,+toy,+acceptchan", NULL);
-    DEFINE_COMMAND(d, 1, 0, "flags", "+nolog,+toy,+acceptchan", NULL);
+    DEFINE_COMMAND(8ball, 2, 0, "flags", "+nolog,+toy,+acceptchan", NULL);
+    DEFINE_COMMAND(d, 2, 0, "flags", "+nolog,+toy,+acceptchan", NULL);
     DEFINE_COMMAND(huggle, 1, 0, "flags", "+nolog,+toy,+acceptchan", NULL);
 
     /* Channel options */
