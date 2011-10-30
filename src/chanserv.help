@@ -110,6 +110,8 @@
         "  v     AutoVoice is active.",
         "  i     AutoInvite is active.",
         "$uSee Also:$u access, users");
+"8BALL" ("/msg $S 8BALL <question>",
+	"Asks your question to a 'Magic 8 Ball'.  Your mileage may vary.  Results not guaranteed in all states or countries.  For entertainment purposes only.");
 "ACCESS" ("/msg $S ACCESS <#channel> [<nick|*account>]",
         "Reports various pieces of information about a channel user, including channel and network access level, and the user's info line. If no nick or account is provided, $S returns your own information.",
         "$uSee Also:$u myaccess, users");
@@ -165,6 +167,8 @@
 "CUNSUSPEND" ("/msg $C CUNSUSPEND <#channel>",
         "Restores a channel's $b$C$b registration.",
         "$uSee Also:$u csuspend, unregister");
+"D" ("/msg $S D <die>",
+	"Throws a (pseudo-random) die or several dice.  !d 6 will roll one six-sided die.  !d 5d4 will roll five four-sided dice and report the sum.");
 "DELBAN" ("/msg $C DELBAN <#channel> <mask|nick>",
         "Deletes a ban from the channel ban list. This command works for both permanent and timed bans alike.",
         "$uSee Also:$u addban, addtimedban, bans");
@@ -227,6 +231,8 @@
 "HELPERS" ("/msg $C HELPERS",
         "Lists all the helpers currently online. Nicknames enclosed in parentheses are away, and likely unavailable.",
         "$uSee Also:$u staff");
+"HUGGLE" ("/msg $S HUGGLE",
+	"Asks $S to give you a huggle.");
 "INFO" ("/msg $C INFO <#channel>",
         "This command responds with various pieces of information about a channel's users, status, and registration.");
 "INVITE" ("/msg $C INVITE <#channel> [nick [reason]]",
@@ -298,6 +304,8 @@
 "PEEK" ("/msg $C PEEK <#channel>",
         "Displays the current topic, modes, and ops of the specified channel. Unlike $binfo$b, $bpeek$b displays channel information unrelated to $b$C$b.",
         "$uSee Also:$u info");
+"PING" ("/msg $S PING",
+	"Asks $S to send a pong back to you.  Can be used to check for lag in the IRC network, but is more commonly used just for fun.");
 "PLIST" ("/msg $C PLIST <#channel>",
         "This command lists all users of level $bPeon$b on a channel's userlist. If a mask is supplied, only peons matching the mask will be shown.",
         "$uSee Also:$u addpeon, delpeon, mdelpeon, users");
@@ -449,6 +457,8 @@
 "UNBANME" ("/msg $C UNBANME <#channel>",
         "Unbans your hostmask from the specified channel.",
         "$uSee Also:$u ban, unban");
+"UNF" ("/msg $S UNF",
+	"[This help message has been removed by the Coalition For A Family-Safe Internet.]");
 "UNREGISTER" ("/msg $C UNREGISTER <#channel> [<confirmation>]",
         "Unregisters a channel that is registered with $b$C$b. $bIMPORTANT$b: Once the channel is unregistered, the userlist $bcannot$b be recovered.",
         "If you are not network staff, you must add a confimation string to the end of your line to confirm the unregistration.  If you leave it out, $C will show the proper confirmation string.",
@@ -486,6 +496,8 @@
 "WLIST" ("/msg $C WLIST <#channel> [mask]",
         "This command lists all users of level $bOwner$b on a channel's userlist. If a mask is supplied, only owners matching the mask will be shown.",
         "$uSee Also:$u addcoowner, delcoowner, mdelcoowner, users");
+"WUT" ("/msg $S WUT",
+	"what what?");
 
 "I'VE FALLEN AND I CAN'T GET UP" ("$bHelp, I've fallen and I can't get up$b!",
         "If you drank your milk, you might not feel so vulnerable right now.",
