@@ -230,8 +230,7 @@ memoserv_can_send(struct userNode *bot, struct userNode *user, struct memo_accou
     if (!(account->flags & MEMO_DENY_NONCHANNEL))
         return 1;
     for (dest = account->handle->channels; dest; dest = dest->u_next) {
-        struct userData *recip = _GetChannelUser(dest->channel, user->handle_info, 1, 0);
-        if (recip != NULL && recip->seen != 0)
+        if (dest->seen && _GetChannelUser(dest->channel, user->handle_info, 1, 0))
             return 1;
     }
     send_message(user, bot, "MSMSG_CANNOT_SEND", account->handle->handle);
