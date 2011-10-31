@@ -2821,7 +2821,7 @@ cmd_trim_users(struct userNode *user, struct chanNode *channel, unsigned short m
     unsigned int count;
     unsigned long limit;
 
-    actor = GetChannelAccess(channel->channel_info, user->handle_info);
+    actor = GetChannelUser(channel->channel_info, user->handle_info);
     if(min_access > max_access)
     {
         send_message(user, chanserv, "CSMSG_BAD_RANGE", min_access, max_access);
