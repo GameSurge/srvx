@@ -3661,6 +3661,7 @@ static CHANSERV_FUNC(cmd_myaccess)
     for(uData = target_handle->channels; uData; uData = uData->u_next)
     {
         struct chanData *cData = uData->channel;
+        unsigned int base_len;
 
         if(uData->access > UL_OWNER)
             continue;
@@ -3669,9 +3670,8 @@ static CHANSERV_FUNC(cmd_myaccess)
            && !GetTrueChannelAccess(cData, user->handle_info))
             continue;
         sbuf.used = 0;
-        string_buffer_append_printf(&sbuf, "[%s (%d", cData->channel->name, uData->access);
-        if(uData->flags != USER_AUTO_OP)
-            string_buffer_append(&sbuf, ',');
+        string_buffer_append_printf(&sbuf, "[%s (%d,", cData->channel->name, uData->access);
+        base_len = sbuf.used;
         if(IsUserSuspended(uData))
             string_buffer_append(&sbuf, 's');
         if(IsUserAutoOp(uData))
@@ -3683,6 +3683,8 @@ static CHANSERV_FUNC(cmd_myaccess)
         }
         if(IsUserAutoInvite(uData) && (uData->access >= cData->lvlOpts[lvlInviteMe]))
             string_buffer_append(&sbuf, 'i');
+        if(sbuf.used==base_len)
+            sbuf.used--;
         if(uData->info)
             string_buffer_append_printf(&sbuf, ")] %s", uData->info);
         else
