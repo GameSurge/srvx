@@ -1,6 +1,7 @@
 EXTRA_DIST = FAQ UPGRADE srvx.conf.example sockcheck.conf.example Makefile.win32
 SUBDIRS = @MY_SUBDIRS@
 DIST_SUBDIRS = src rx
+ACLOCAL_AMFLAGS = -I m4
 
 all: srvx
 
