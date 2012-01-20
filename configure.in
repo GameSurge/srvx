@@ -9,7 +9,7 @@ AC_CONFIG_SRCDIR(src/opserv.c)
 dnl AM_CANONICAL_TARGET must be before AM_INIT_AUTOMAKE() or autoconf whines
 AC_CANONICAL_TARGET
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([gnu 1.6])
+AM_INIT_AUTOMAKE([gnu 1.10 silent-rules])
 AM_MAINTAINER_MODE
 LT_INIT
 
