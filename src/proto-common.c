@@ -570,6 +570,34 @@ call_oper_funcs(struct userNode *user)
     }
 }
 
+static xquery_func_t *xqf_list;
+static unsigned int xqf_size = 0, xqf_used = 0;
+
+void
+reg_xquery_func(xquery_func_t handler)
+{
+    if (xqf_used == xqf_size) {
+        if (xqf_size) {
+            xqf_size <<= 1;
+            xqf_list = realloc(xqf_list, xqf_size*sizeof(xquery_func_t));
+        } else {
+            xqf_size = 8;
+            xqf_list = malloc(xqf_size*sizeof(xquery_func_t));
+        }
+    }
+    xqf_list[xqf_used++] = handler;
+}
+
+static void
+call_xquery_funcs(struct server *source, const char routing[], const char query[])
+{
+    unsigned int n;
+    for (n=0; n < xqf_used; n++)
+    {
+        xqf_list[n](source, routing, query);
+    }
+}
+
 struct mod_chanmode *
 mod_chanmode_alloc(unsigned int argc)
 {

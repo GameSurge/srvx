@@ -101,6 +101,8 @@
 #define CMD_WHO                 "WHO"
 #define CMD_WHOIS               "WHOIS"
 #define CMD_WHOWAS              "WHOWAS"
+#define CMD_XQUERY              "XQUERY"
+#define CMD_XRESPONSE           "XRESPONSE"
 
 /* Tokenized commands. */
 #define TOK_ACCOUNT             "AC"
@@ -183,6 +185,8 @@
 #define TOK_WHO                 "H"
 #define TOK_WHOIS               "W"
 #define TOK_WHOWAS              "X"
+#define TOK_XQUERY              "XQ"
+#define TOK_XRESPONSE           "XR"
 
 /* Protocol messages; aliased to full commands or tokens depending
    on compile-time configuration. ircu prefers tokens WITH THE
@@ -276,6 +280,8 @@
 #define P10_WHO                 TYPE(WHO)
 #define P10_WHOIS               TYPE(WHOIS)
 #define P10_WHOWAS              TYPE(WHOWAS)
+#define P10_XQUERY              TYPE(XQUERY)
+#define P10_XRESPONSE           TYPE(XRESPONSE)
 
 /* Servers claiming to have a boot or link time before PREHISTORY
  * trigger errors to the log.  We hope no server has been running
@@ -906,6 +912,12 @@ irc_numeric(struct userNode *user, unsigned int num, const char *format, ...)
     vsnprintf(buffer, MAXLEN-2, format, arg_list);
     buffer[MAXLEN-1] = 0;
     putsock(":%s %03d %s %s", self->name, num, user->nick, buffer);
+}
+
+void
+irc_xresponse(struct server *target, const char *routing, const char *response)
+{
+    putsock("%s " P10_XRESPONSE " %s %s :%s", self->numeric, target->numeric, routing, response);
 }
 
 static void send_burst(void);
@@ -1666,6 +1678,16 @@ static CMD_FUNC(cmd_time)
     return 1;
 }
 
+static CMD_FUNC(cmd_xquery)
+{
+    struct server *source;
+    if ((argc < 4)
+        || !(source = GetServerH(origin)))
+        return 0;
+    call_xquery_funcs(source, argv[2], argv[3]);
+    return 1;
+}
+
 void
 free_user(struct userNode *user)
 {
@@ -1807,6 +1829,8 @@ init_parse(void)
     dict_insert(irc_func_dict, TOK_ADMIN, cmd_admin);
     dict_insert(irc_func_dict, CMD_TIME, cmd_time);
     dict_insert(irc_func_dict, TOK_TIME, cmd_time);
+    /* We don't handle XR or the (not really defined) XQUERY. */
+    dict_insert(irc_func_dict, TOK_XQUERY, cmd_xquery);
 
     /* In P10, DESTRUCT doesn't do anything except be broadcast to servers.
      * Apparently to obliterate channels from any servers that think they

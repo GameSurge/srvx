@@ -104,6 +104,9 @@ void unreg_notice_func(struct userNode *user);
 typedef void (*oper_func_t) (struct userNode *user);
 void reg_oper_func(oper_func_t handler);
 
+typedef void (*xquery_func_t) (struct server *source, const char routing[], const char query[]);
+void reg_xquery_func(xquery_func_t handler);
+
 /* replay silliness */
 void replay_read_line(void);
 void replay_event_loop(void);
@@ -142,6 +145,7 @@ void irc_kill(struct userNode *from, struct userNode *target, const char *messag
 void irc_raw(const char *what);
 void irc_stats(struct userNode *from, struct server *target, char type);
 void irc_svsnick(struct userNode *from, struct userNode *target, const char *newnick);
+void irc_xresponse(struct server *target, const char *routing, const char *response);
 
 /* account maintenance */
 void irc_account(struct userNode *user, const char *stamp, unsigned long timestamp, unsigned long serial);

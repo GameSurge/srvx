@@ -1105,6 +1105,7 @@ void init_parse(void) {
 
     userList_init(&dead_users);
     reg_exit_func(parse_cleanup);
+    (void)call_xquery_funcs;
 }
 
 int parse_line(char *line, int recursive) {
