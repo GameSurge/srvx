@@ -333,7 +333,7 @@ AC_ARG_ENABLE(modules,
   module_list=""
   dnl Must use a separate file because autoconf can't stand newlines in an AC_SUBSTed variable.
   for module in $enableval ; do
-    module=`echo $module | sed -e s/^mod-// -e s/\.c\$//`
+    module=`echo $module | sed -e s/^mod-// -e s/\\\.c\\\$//`
     EXTRA_MODULE_OBJS="$EXTRA_MODULE_OBJS mod-$module.\$(OBJEXT)"
     module_list="$module_list $module"
     echo "WITH_MODULE($module)" >> $MODULE_DEFINES
