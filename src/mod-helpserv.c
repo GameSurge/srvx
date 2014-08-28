@@ -3114,7 +3114,7 @@ static HELPSERV_OPTION(opt_req_closed) {
     return opt_message(user, hs, from_opserv, argc, argv, MSGTYPE_REQ_CLOSED);
 }
 
-static int opt_interval(struct userNode *user, struct helpserv_bot *hs, int from_opserv, int argc, char *argv[], enum interval_type idx, unsigned int min) {
+static int opt_interval(struct userNode *user, struct helpserv_bot *hs, int from_opserv, int argc, char *argv[], enum interval_type idx, unsigned int min, unsigned int max) {
     char buf[INTERVALLEN];
     int changed=0;
 
@@ -3124,7 +3124,7 @@ static int opt_interval(struct userNode *user, struct helpserv_bot *hs, int from
             helpserv_notice(user, "MSG_INVALID_DURATION", argv[0]);
             return 0;
         }
-        if (new_int && new_int < min) {
+        if (new_int && (new_int < min || new_int > max)) {
             intervalString(buf, min, user->handle_info);
             helpserv_notice(user, "HSMSG_INVALID_INTERVAL", user_find_message(user, interval_types[idx].print_name), buf);
             return 0;
@@ -3141,18 +3141,18 @@ static int opt_interval(struct userNode *user, struct helpserv_bot *hs, int from
 }
 
 static HELPSERV_OPTION(opt_idle_delay) {
-    return opt_interval(user, hs, from_opserv, argc, argv, INTERVAL_IDLE_DELAY, 60);
+    return opt_interval(user, hs, from_opserv, argc, argv, INTERVAL_IDLE_DELAY, 60, 60 * 60 * 24 * 365 * 2);
 }
 
 static HELPSERV_OPTION(opt_whine_delay) {
-    return opt_interval(user, hs, from_opserv, argc, argv, INTERVAL_WHINE_DELAY, 60);
+    return opt_interval(user, hs, from_opserv, argc, argv, INTERVAL_WHINE_DELAY, 60, 60 * 60 * 24 * 365 * 2);
 }
 
 static HELPSERV_OPTION(opt_whine_interval) {
     unsigned int old_val = hs->intervals[INTERVAL_WHINE_INTERVAL];
     int retval;
 
-    retval = opt_interval(user, hs, from_opserv, argc, argv, INTERVAL_WHINE_INTERVAL, 60);
+    retval = opt_interval(user, hs, from_opserv, argc, argv, INTERVAL_WHINE_INTERVAL, 60, 60 * 60 * 24 * 365 * 2);
 
     if (!old_val && hs->intervals[INTERVAL_WHINE_INTERVAL]) {
         timeq_add(now + hs->intervals[INTERVAL_WHINE_INTERVAL], run_whine_interval, hs);
@@ -3167,7 +3167,7 @@ static HELPSERV_OPTION(opt_empty_interval) {
     unsigned int old_val = hs->intervals[INTERVAL_EMPTY_INTERVAL];
     int retval;
 
-    retval = opt_interval(user, hs, from_opserv, argc, argv, INTERVAL_EMPTY_INTERVAL, 60);
+    retval = opt_interval(user, hs, from_opserv, argc, argv, INTERVAL_EMPTY_INTERVAL, 60, 60 * 60 * 24 * 365 * 2);
 
     if (!old_val && hs->intervals[INTERVAL_EMPTY_INTERVAL]) {
         timeq_add(now + hs->intervals[INTERVAL_EMPTY_INTERVAL], run_empty_interval, hs);
@@ -3179,7 +3179,7 @@ static HELPSERV_OPTION(opt_empty_interval) {
 }
 
 static HELPSERV_OPTION(opt_stale_delay) {
-    return opt_interval(user, hs, from_opserv, argc, argv, INTERVAL_STALE_DELAY, 60);
+    return opt_interval(user, hs, from_opserv, argc, argv, INTERVAL_STALE_DELAY, 60, 60 * 60 * 24 * 365 * 2);
 }
 
 static enum persistence_length persistence_from_name(const char *name) {
