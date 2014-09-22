@@ -171,6 +171,11 @@ static const struct message_entry msgtab[] = {
     { "HSMSG_SET_REQONJOIN",      "$bReqOnJoin       $b %s" },
     { "HSMSG_SET_AUTOVOICE",      "$bAutoVoice       $b %s" },
     { "HSMSG_SET_AUTODEVOICE",    "$bAutoDevoice     $b %s" },
+    { "HSMSG_SET_IDLEDELAY_SHORT",     "$bIdleDelay$b"     },
+    { "HSMSG_SET_WHINEDELAY_SHORT",    "$bWhineDelay$b"    },
+    { "HSMSG_SET_WHINEINTERVAL_SHORT", "$bWhineInterval$b" },
+    { "HSMSG_SET_EMPTYINTERVAL_SHORT", "$bEmptyInterval$b" },
+    { "HSMSG_SET_STALEDELAY_SHORT",    "$bStaleDelay$b"    },
     { "HSMSG_PAGE_NOTICE", "notice" },
     { "HSMSG_PAGE_PRIVMSG", "privmsg" },
     { "HSMSG_PAGE_ONOTICE", "onotice" },
@@ -180,7 +185,7 @@ static const struct message_entry msgtab[] = {
     { "HSMSG_NOTIFY_DROP", "ReqDrop" },
     { "HSMSG_NOTIFY_USERCHANGES", "UserChanges" },
     { "HSMSG_NOTIFY_ACCOUNTCHANGES", "AccountChanges" },
-    { "HSMSG_INVALID_INTERVAL", "Sorry, %s must be at least %s." },
+    { "HSMSG_INVALID_INTERVAL", "Sorry, %s must be at least %s and no longer than %s." },
     { "HSMSG_0_DISABLED", "0 (Disabled)" },
     { "HSMSG_NEED_MANAGER", "Only managers or higher can do this." },
     { "HSMSG_SET_NEED_OPER", "This option can only be set by an oper." },
@@ -398,13 +403,14 @@ enum interval_type {
 static const struct {
     char *db_name;
     char *print_name;
+    char *print_name_short;
 } interval_types[] = {
-    { "idledelay", "HSMSG_SET_IDLEDELAY" },
-    { "whinedelay", "HSMSG_SET_WHINEDELAY" },
-    { "whineinterval", "HSMSG_SET_WHINEINTERVAL" },
-    { "emptyinterval", "HSMSG_SET_EMPTYINTERVAL" },
-    { "staledelay", "HSMSG_SET_STALEDELAY" },
-    { NULL, NULL }
+    { "idledelay", "HSMSG_SET_IDLEDELAY", "HSMSG_SET_IDLEDELAY_SHORT" },
+    { "whinedelay", "HSMSG_SET_WHINEDELAY", "HSMSG_SET_WHINEDELAY_SHORT" },
+    { "whineinterval", "HSMSG_SET_WHINEINTERVAL", "HSMSG_SET_WHINEINTERVAL_SHORT" },
+    { "emptyinterval", "HSMSG_SET_EMPTYINTERVAL", "HSMSG_SET_EMPTYINTERVAL_SHORT" },
+    { "staledelay", "HSMSG_SET_STALEDELAY", "HSMSG_SET_STALEDELAY_SHORT" },
+    { NULL, NULL, NULL }
 };
 
 enum persistence_type {
@@ -3115,7 +3121,7 @@ static HELPSERV_OPTION(opt_req_closed) {
 }
 
 static int opt_interval(struct userNode *user, struct helpserv_bot *hs, int from_opserv, int argc, char *argv[], enum interval_type idx, unsigned int min, unsigned int max) {
-    char buf[INTERVALLEN];
+    char buf[INTERVALLEN], buf2[INTERVALLEN];
     int changed=0;
 
     if (argc > 0) {
@@ -3126,7 +3132,8 @@ static int opt_interval(struct userNode *user, struct helpserv_bot *hs, int from
         }
         if (new_int && (new_int < min || new_int > max)) {
             intervalString(buf, min, user->handle_info);
-            helpserv_notice(user, "HSMSG_INVALID_INTERVAL", user_find_message(user, interval_types[idx].print_name), buf);
+            intervalString(buf2, max, user->handle_info);
+            helpserv_notice(user, "HSMSG_INVALID_INTERVAL", user_find_message(user, interval_types[idx].print_name_short), buf, buf2);
             return 0;
         }
         hs->intervals[idx] = new_int;
