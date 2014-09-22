@@ -3209,7 +3209,7 @@ static int opt_persist(struct userNode *user, struct helpserv_bot *hs, int from_
         hs->persist_lengths[idx] = new_pers;
         changed = 1;
     }
-    helpserv_notice(user, persistence_lengths[idx].print_name,
+    helpserv_notice(user, persistence_types[idx].print_name,
                     user_find_message(user, persistence_lengths[hs->persist_lengths[idx]].print_name));
     return changed;
 }
