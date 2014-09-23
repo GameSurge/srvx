@@ -21,3 +21,4 @@ srvx
 srvx.conf
 srvx.pid
 sockcheck.conf
+*.o
