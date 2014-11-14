@@ -194,6 +194,13 @@
         );
 };
 
+"CHECKEMAIL" {
+        "/services/nickserv/email_enabled" (
+        "/msg $N CHECKEMAIL <nick|*account> <email>",
+        "Returns whether or not the email matches the specified account."
+        );
+};
+
 "RESETPASS" {
         "/services/nickserv/email_enabled" (
         "/msg $N@$s RESETPASS <account> <newpassword>",
