@@ -197,8 +197,8 @@
 "CHECKEMAIL" {
         "/services/nickserv/email_enabled" (
         "/msg $N CHECKEMAIL <nick|*account> <email>",
-        "Returns whether or not the email matches the specified account."
-        );
+        "Returns whether or not the given email matches the specified account.",
+        "$uSee Also:$u checkpass");
 };
 
 "RESETPASS" {
@@ -294,6 +294,9 @@
         "$uSee Also:$u nickinfo, userinfo, account flags"
         );
 };
+"CHECKPASS" ("/msg $N CHECKPASS <account> <password>",
+        "Returns whether or not the given password matches the specified account.",
+        "$uSee Also:$u checkemail");
 "ACCOUNT FLAGS" ("$bACCOUNT FLAGS$b",
         "The following flags on accounts are defined:",
         "$bS$b  $O access suspended",
