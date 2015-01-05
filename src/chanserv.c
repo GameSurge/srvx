@@ -4535,8 +4535,9 @@ static CHANSERV_FUNC(cmd_resync)
 {
     struct mod_chanmode *changes;
     struct chanData *cData = channel->channel_info;
-    unsigned int ii, used;
+    unsigned int ii, used, force;
 
+    force = (argc > 1) && !irccasecmp(argv[1], "force");
     changes = mod_chanmode_alloc(channel->members.used * 2);
     for(ii = used = 0; ii < channel->members.used; ++ii)
     {
@@ -4547,6 +4548,10 @@ static CHANSERV_FUNC(cmd_resync)
             continue;
 
         uData = GetChannelAccess(cData, mn->user->handle_info);
+        /* Honor NoAutoOp */
+        if(!force && uData && !IsUserAutoOp(uData))
+            continue;
+
         if(!cData->lvlOpts[lvlGiveOps]
            || (uData && uData->access >= cData->lvlOpts[lvlGiveOps]))
         {
