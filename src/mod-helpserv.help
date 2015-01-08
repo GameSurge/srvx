@@ -7,7 +7,7 @@
 "QUEUE" ("Managing the request queue in $S",
         "  LIST        List open requests",
         "  NEXT        Pick up the next unassigned request",
-        "  PICKUP      Pick up a particular unassigned request",
+        "  PICKUP      Pick up a particular request",
         "  REASSIGN    Assign a request to another helper",
         "  CLOSE       Close out a request",
         "  SHOW        Show detailed information on a request",
