@@ -6853,9 +6853,6 @@ handle_nick_change(struct userNode *user, UNUSED_ARG(const char *old_nick))
         for(jj = 0; jj < channel->banlist.used; ++jj)
             if(user_matches_glob(user, channel->banlist.list[jj]->ban, MATCH_USENICK))
                 break;
-        /* Need not act if we found one. */
-        if(jj < channel->banlist.used)
-            continue;
         /* Look for a matching ban in this channel. */
         for(bData = channel->channel_info->bans; bData; bData = bData->next)
         {
