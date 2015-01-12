@@ -6858,8 +6858,11 @@ handle_nick_change(struct userNode *user, UNUSED_ARG(const char *old_nick))
         {
             if(!user_matches_glob(user, bData->mask, MATCH_USENICK | MATCH_VISIBLE))
                 continue;
-            change.args[0].u.hostmask = bData->mask;
-            mod_chanmode_announce(chanserv, channel, &change);
+            if(!(jj < channel->banlist.used))
+            {
+                change.args[0].u.hostmask = bData->mask;
+                mod_chanmode_announce(chanserv, channel, &change);
+            }
             sprintf(kick_reason, "(%s) %s", bData->owner, bData->reason);
             KickChannelUser(user, channel, chanserv, kick_reason);
             bData->triggered = now;
