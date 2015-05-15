@@ -88,7 +88,7 @@ iauth_loc_xquery(struct server *source, const char routing[], const char query[]
             snprintf(response, sizeof(response), "OK %s:%lu", hi->handle, hi->registered);
             irc_xresponse(source, routing, response);
         } else {
-            irc_xresponse(source, routing, "NO Bad username, account or source");
+            irc_xresponse(source, routing, "AGAIN Bad username, account or source");
         }
     } /* else unknown or unsupported command */
 }
