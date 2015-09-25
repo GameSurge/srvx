@@ -3626,7 +3626,7 @@ opserv_cdiscrim_create(struct userNode *user, unsigned int argc, char *argv[])
         /* Assume all criteria require arguments. */
         if (i == (argc - 1)) {
             send_message(user, opserv, "MSG_MISSING_PARAMS", argv[i]);
-            return NULL;
+            goto fail;
         }
 
         if (!irccasecmp(argv[i], "name"))
