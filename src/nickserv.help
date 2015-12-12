@@ -57,6 +57,7 @@
                 "  SET        Set per-account options.",
                 "  UNREGISTER Unregister an account.",
                 "  GHOST      Disconnects your old clients",
+                "  LISTLOGINS Displays your current authenticated sessions.",
                 "  ACCOUNT FLAGS Definition for each account flag"
         );
         "!/services/nickserv/enable_ghost" (
@@ -70,6 +71,7 @@
                 "  SET        Set per-account options.",
                 "  UNREGISTER Unregister an account.",
                 "  RENAME     Renames an account",
+                "  LISTLOGINS Displays your current authenticated sessions.",
                 "  ACCOUNT FLAGS Definition for each account flag"
         );
 };
@@ -547,3 +549,5 @@
 	"Removes a note from an account.",
         "This command is only accessible to helpers and IRC operators.",
         "$uSee Also:$u delnote");
+"LISTLOGINS" ("/msg $N LISTLOGINS",
+        "Displays your current logged in sessions.");

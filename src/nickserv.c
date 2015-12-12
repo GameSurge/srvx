@@ -302,6 +302,8 @@ static const struct message_entry msgtab[] = {
     { "NSMSG_RECLAIMED_SVSNICK", "Forcibly changed %s's nick." },
     { "NSMSG_RECLAIMED_KILL",  "Disconnected %s from the network." },
     { "NSMSG_CLONE_AUTH", "Warning: %s (%s@%s) authed to your account." },
+    { "NSMSG_CLIENTS_IDENTIFIED", "Clients authed to $b%s$b:" },
+    { "NSMSG_LIST_LOGINS", "- $b%s$b!%s@%s" },
     { "NSMSG_SETTING_LIST", "$b$N account settings:$b" },
     { "NSMSG_INVALID_OPTION", "$b%s$b is an invalid account setting." },
     { "NSMSG_SET_INFO", "$bINFO:         $b%s" },
@@ -3638,6 +3640,20 @@ static MODCMD_FUNC(cmd_checkemail)
     return 1;
 }
 
+static NICKSERV_FUNC(cmd_listlogins)
+{
+    unsigned int login_count = 0;
+    struct userNode *session;
+
+    reply("NSMSG_CLIENTS_IDENTIFIED", user->handle_info->handle);
+    for (session = user->handle_info->users; session; session = session->next_authed) {
+        reply("NSMSG_LIST_LOGINS", session->nick, session->ident, session->hostname, session->hostname);
+        login_count++;
+    }
+    reply("MSG_MATCH_COUNT", login_count);
+
+    return 1;
+}
 
 static void
 nickserv_db_read_handle(const char *handle, dict_t obj)
@@ -4305,6 +4321,7 @@ init_nickserv(const char *nick)
     nickserv_define_func("MERGEDB", cmd_mergedb, 999, 1, 0);
     nickserv_define_func("CHECKPASS", cmd_checkpass, 601, 1, 0);
     nickserv_define_func("CHECKEMAIL", cmd_checkemail, 0, 1, 0);
+    nickserv_define_func("LISTLOGINS", cmd_listlogins, -1, 1, 0);
     /* other options */
     dict_insert(nickserv_opt_dict, "INFO", opt_info);
     dict_insert(nickserv_opt_dict, "WIDTH", opt_width);
