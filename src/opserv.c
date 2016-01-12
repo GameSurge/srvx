@@ -3019,7 +3019,7 @@ opserv_discrim_create(struct userNode *user, unsigned int argc, char *argv[], in
             continue;
         }
         /* Assume all other criteria require arguments. */
-        if (i == argc - 1) {
+        if (i == (argc - 1)) {
             send_message(user, opserv, "MSG_MISSING_PARAMS", argv[i]);
             goto fail;
         }
