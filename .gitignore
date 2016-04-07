@@ -3,6 +3,7 @@ aclocal.m4
 autom4te.cache
 compile
 configure
+config.h.in~
 config.guess
 config.sub
 depcomp
