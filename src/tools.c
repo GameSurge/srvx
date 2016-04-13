@@ -399,7 +399,9 @@ int
 split_line(char *line, int irc_colon, int argv_size, char *argv[])
 {
     int argc = 0;
+#ifndef NDEBUG
     int n;
+#endif
     while (*line && (argc < argv_size)) {
         while (*line == ' ')
             *line++ = 0;
@@ -416,9 +418,7 @@ split_line(char *line, int irc_colon, int argv_size, char *argv[])
         while (*line != ' ' && *line)
             line++;
     }
-#ifdef NDEBUG
-    n = 0;
-#else
+#ifndef NDEBUG
     for (n=argc; n<argv_size; n++)
         argv[n] = (char*)0xFEEDBEEF;
 #endif
