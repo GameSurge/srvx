@@ -45,7 +45,7 @@ iauth_loc_xquery(struct server *source, const char routing[], const char query[]
         static struct userNode user;
         const char *ip_str, *hostname, *username, *account, *password;
         struct handle_info *hi = NULL;
-        char *qdup, *saveptr;
+        char *qdup, *saveptr = NULL;
         unsigned int ii;
         int valid = 0;
 
