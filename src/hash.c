@@ -73,6 +73,21 @@ reg_server_link_func(server_link_func_t handler)
 }
 
 struct server*
+GetServerG(const char *glob)
+{
+    struct server *srv;
+    dict_iterator_t it;
+
+    for (it = dict_first(servers); it; it = iter_next(it)) {
+        srv = iter_data(it);
+        if (match_ircglob(srv->name, glob))
+            return srv;
+    }
+
+    return NULL;
+}
+
+struct server*
 GetServerH(const char *name)
 {
     return dict_find(servers, name, NULL);

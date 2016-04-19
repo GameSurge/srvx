@@ -197,6 +197,7 @@ extern unsigned int max_clients, invis_clients;
 extern unsigned long max_clients_time;
 extern struct userList curr_opers, curr_helpers;
 
+struct server* GetServerG(const char *glob); /* using name glob */
 struct server* GetServerH(const char *name); /* using full name */
 struct userNode* GetUserH(const char *nick);   /* using nick */
 struct chanNode* GetChannel(const char *name);

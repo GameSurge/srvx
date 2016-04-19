@@ -1137,6 +1137,30 @@ static CMD_FUNC(cmd_ping)
     return 1;
 }
 
+static CMD_FUNC(cmd_rping)
+{
+    if (argc == 6) {
+        /* AA RI|RPING AB AAXXX seconds microsec :remark */
+        /* (we are the destination server) */
+        putsock("%s " P10_RPONG " %s %s %s %s :%s", self->numeric, origin, argv[2], argv[3], argv[4], argv[5]);
+        return 1;
+    } else if (argc == 3 || argc == 4) {
+        /* AAXXX RI|RPING AB server.* :remark */
+        struct server *tgt;
+        struct userNode *un;
+
+        if ((tgt = GetServerG(argv[1])) && (un = GetUserH(origin))) {
+            struct timeval now;
+
+            gettimeofday(&now, NULL);
+            putsock("%s " P10_RPING " %s %s %ld %lu :%s", self->numeric, tgt->numeric, un->numeric, now.tv_sec, now.tv_usec, argv[argc-1]);
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 static CMD_FUNC(cmd_error_nick)
 {
     /* Go back to original IRC length .. and try to reconnect :/ */
@@ -1829,6 +1853,8 @@ init_parse(void)
     dict_insert(irc_func_dict, TOK_ADMIN, cmd_admin);
     dict_insert(irc_func_dict, CMD_TIME, cmd_time);
     dict_insert(irc_func_dict, TOK_TIME, cmd_time);
+    dict_insert(irc_func_dict, CMD_RPING, cmd_rping);
+    dict_insert(irc_func_dict, TOK_RPING, cmd_rping);
     /* We don't handle XR or the (not really defined) XQUERY. */
     dict_insert(irc_func_dict, TOK_XQUERY, cmd_xquery);
 
