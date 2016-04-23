@@ -3597,6 +3597,7 @@ typedef struct channel_discrim {
     char *name, *topic;
 
     unsigned int min_users, max_users;
+    chan_mode_t modes_set, modes_cleared;
     unsigned long min_ts, max_ts;
     unsigned int limit;
 } *cdiscrim_t;
@@ -3669,6 +3670,11 @@ opserv_cdiscrim_create(struct userNode *user, unsigned int argc, char *argv[])
             }
         } else if (!irccasecmp(argv[i], "limit")) {
             discrim->limit = strtoul(argv[++i], NULL, 10);
+        } else if (!irccasecmp(argv[i], "mode")) {
+            if (irc_parse_chanmode(argv[++i], &discrim->modes_set, &discrim->modes_cleared)) {
+                send_message(user, opserv, "MSG_INVALID_MODES", argv[i]);
+                goto fail;
+            }
         } else {
             send_message(user, opserv, "MSG_INVALID_CRITERIA", argv[i]);
             goto fail;
@@ -3693,6 +3699,8 @@ cdiscrim_match(cdiscrim_t discrim, struct chanNode *chan)
         (discrim->topic && !match_ircglob(chan->topic, discrim->topic)) ||
         (chan->members.used < discrim->min_users) ||
         (chan->members.used > discrim->max_users) ||
+        ((chan->modes & discrim->modes_set) != discrim->modes_set) ||
+        ((chan->modes & discrim->modes_cleared) != 0) ||
         (chan->timestamp < discrim->min_ts) ||
         (chan->timestamp > discrim->max_ts)) {
         return 0;

@@ -233,6 +233,10 @@ void mod_chanmode_free(struct mod_chanmode *change);
 int mod_chanmode(struct userNode *who, struct chanNode *channel, char **modes, unsigned int argc, unsigned int flags);
 typedef void (*mode_change_func_t) (struct chanNode *channel, struct userNode *user, const struct mod_chanmode *change);
 void reg_mode_change_func(mode_change_func_t handler);
+/* irc_parse_chamode() is like mod_chanmode_parse(), but expects to *not*
+ * have arguments for modes.  It is meant for building matching rules.
+ */
+int irc_parse_chanmode(const char *text, chan_mode_t *set, chan_mode_t *clear);
 int irc_make_chanmode(struct chanNode *chan, char *out);
 
 /* The "default" for generate_hostmask is to have all of these options off. */

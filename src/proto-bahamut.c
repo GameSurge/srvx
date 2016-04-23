@@ -1343,6 +1343,38 @@ mod_chanmode_parse(struct chanNode *channel, char **modes, unsigned int argc, un
     (void)base_oplevel;
 }
 
+int
+irc_parse_chanmode(const char *text, chan_mode_t *set, chan_mode_t *clear)
+{
+    int dir = 0;
+
+    for (*set = *clear = 0;; ++text) {
+        switch (*text) {
+        case '+': dir = 1; break;
+        case '-': dir = -1; break;
+#define MODE(CHAR, FLAG)                       \
+            case CHAR:                         \
+                if (dir > 0) *set |= (FLAG);   \
+                if (dir < 0) *clear |= (FLAG); \
+                break
+            MODE('D', MODE_DELAYJOINS);
+            MODE('R', MODE_REGONLY);
+            MODE('c', MODE_NOCOLORS);
+            MODE('i', MODE_INVITEONLY);
+            MODE('k', MODE_KEY);
+            MODE('l', MODE_LIMIT);
+            MODE('m', MODE_MODERATED);
+            MODE('n', MODE_NOPRIVMSGS);
+            MODE('p', MODE_PRIVATE);
+            MODE('r', MODE_REGISTERED);
+            MODE('s', MODE_SECRET);
+            MODE('t', MODE_TOPICLIMIT);
+#undef MODE
+        default: return *text;
+        }
+    }
+}
+
 struct chanmode_buffer {
     char modes[MAXLEN];
     char args[MAXLEN];

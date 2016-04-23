@@ -120,6 +120,7 @@
         "$bCOUNT$b:   Count all matching channels.");
 "CSEARCH CRITERIA" ("$bCSEARCH CRITERIA$b",
         "Criteria and values for $bcsearch$b (a search with $bcsearch$b must match all specified items):",
+	"$bMODE$b +x-i              Specifies channel mode(s) that must be set (+) or not set (-).",
         "$bNAME$b name              Specifies a name to search for.",
         "$bTOPIC$b topic            Specifies a topic to search for.",
 	"$bUSERS$b cmp              User count constraint (<Nu, <=Nu, =Nu, >=Nu or >Nu)",
