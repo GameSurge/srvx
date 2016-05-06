@@ -205,7 +205,7 @@ diff -upr srvx-1.2rc4/src/chanserv.help Services/src/chanserv.help
 +        "SUCCESSOR:     Determines if a coowner gets ownership of a channel when the owner's handle expires.",
          "$bIRCOP ONLY$b:",
          "NODELETE:  Prevents channel deletion.",
-         "$uSee Also:$u set pubcmd, set strictop, set autoop, set enfmodes, set enftopic, set protect, set toys, set setters, set topicrefresh, set ctcpusers, set ctcpreaction");
+         "$uSee Also:$u set pubcmd, set enfmodes, set enftopic, set protect, set toys, set setters, set topicrefresh, set ctcpusers, set ctcpreaction");
 @@ -427,6 +428,8 @@
          "$b2$b  Short timed ban (defaults to 3 minutes) on disallowed CTCPs.",
          "$b3$b  Long timed ban (defaults to 1 hour) on disallowed CTCPs.",

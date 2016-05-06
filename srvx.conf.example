@@ -228,7 +228,7 @@
         // How often to look for dnrs that have expired?
         "dnr_expire_freq" "1h";
         // what !set options should we show when user calls "!set" with no arguments?
-        "set_shows" ("DefaultTopic", "TopicMask", "Greeting", "UserGreeting", "Modes", "PubCmd", "InviteMe", "StrictOp", "AutoOp", "EnfModes", "EnfTopic", "TopicSnarf", "UserInfo", "GiveVoice", "GiveOps", "EnfOps", "Setters", "CtcpUser", "CtcpReaction", "Protect", "Toys", "DynLimit", "NoDelete");
+        "set_shows" ("DefaultTopic", "TopicMask", "Greeting", "UserGreeting", "Modes", "PubCmd", "InviteMe", "EnfModes", "EnfTopic", "TopicSnarf", "UserInfo", "GiveVoice", "GiveOps", "EnfOps", "Setters", "CtcpUsers", "CtcpReaction", "Protect", "Toys", "DynLimit", "NoDelete");
 
         // A list of !8ball responses
         "8ball" ("Not a chance.",

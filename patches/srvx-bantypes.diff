@@ -66,10 +66,10 @@ diff -upr srvx-1.2rc3/src/chanserv.c Services/src/chanserv.c
 +    if(IsHiddenHost(user) && user->handle_info && hidden_host_suffix) {
 +       usemask = alloca(strlen(user->handle_info->handle) + strlen(hidden_host_suffix) + 2);
 +       sprintf(usemask, "%s.%s", user->handle_info->handle, hidden_host_suffix);
-+    } 
++    }
 +    else {
 +       usemask = user->hostname;
-+    } 
++    }
 +
 +    if((banopt == 'f') || (banopt == 'h') || (banopt == 'i') || (banopt == 'j')) {
 +       nickname = user->nick;
@@ -80,7 +80,7 @@ diff -upr srvx-1.2rc3/src/chanserv.c Services/src/chanserv.c
 +
 +    if((banopt == 'd') || (banopt == 'e') || (banopt == 'i') || (banopt == 'j')) {
 +        hostname = get_domain_mask(usemask);
-+    } 
++    }
 +    else {
 +      hostname = usemask;
 +    }
@@ -120,7 +120,7 @@ diff -upr srvx-1.2rc3/src/chanserv.c Services/src/chanserv.c
  	victimCount = 1;
  
 -	ban = generate_hostmask(victim, GENMASK_STRICT_HOST|GENMASK_ANY_IDENT);
-+    if(!(cData = channel->channel_info)) 
++    if(!(cData = channel->channel_info))
 +    {
 +       banopt = 'c';
 +    }
@@ -169,7 +169,7 @@ diff -upr srvx-1.2rc3/src/chanserv.c Services/src/chanserv.c
  static void
 @@ -6538,6 +6667,7 @@ chanserv_conf_read(void)
              "DefaultTopic", "TopicMask", "Greeting", "UserGreeting", "Modes",
-             "PubCmd", "StrictOp", "AutoOp", "EnfModes", "EnfTopic", "Protect",
+             "PubCmd", "EnfModes", "EnfTopic", "Protect",
              "Toys", "Setters", "TopicRefresh", "CtcpUsers", "CtcpReaction",
 +            "BanType",
              /* binary options */

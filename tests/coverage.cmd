@@ -206,13 +206,10 @@ connect cl3 test3 test3 %srv1% :Test Bot 3
 :cl1 privmsg %chanserv% :%testchan%1 SET GREETING Hello non-user!
 :cl1 privmsg %chanserv% :%testchan%1 SET USERGREETING Hello user!
 :cl1 privmsg %chanserv% :%testchan%1 SET PUBCMD 6
-:cl1 privmsg %chanserv% :%testchan%1 SET STRICTOP 5
-:cl1 privmsg %chanserv% :%testchan%1 SET AUTOOP 4
 :cl1 privmsg %chanserv% :%testchan%1 SET PROTECT 0
 :cl1 privmsg %chanserv% :%testchan%1 SET TOYS 0
 :cl1 privmsg %chanserv% :%testchan%1 SET SETTERS 2
 :cl1 privmsg %chanserv% :%testchan%1 SET TOPICREFRESH 1
-:cl1 privmsg %chanserv% :%testchan%1 SET VOICE OFF
 :cl1 privmsg %chanserv% :%testchan%1 SET USERINFO ON
 :cl1 privmsg %chanserv% :%testchan%1 SET DYNLIMIT ON
 :cl1 privmsg %chanserv% :%testchan%1 SET TOPICSNARF OFF
