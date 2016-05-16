@@ -727,7 +727,7 @@ irc_burst(struct chanNode *chan)
                        (unsigned long)chan->timestamp);
     len = irc_make_chanmode(chan, burst_line+base_len);
     pos = base_len + len;
-    if (len > 0 && chan->members.used > 0)
+    if (len > 0 && (chan->members.used > 0 || chan->banlist.used > 0))
         burst_line[pos++] = ' ';
 
     /* sort the users for oplevel-sending purposes */
