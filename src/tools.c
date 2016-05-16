@@ -863,8 +863,7 @@ unsplit_string(char *set[], unsigned int max, char *dest)
             dest[pos++] = set[ii][jj];
         dest[pos++] = ' ';
     }
-    if (pos > 0)
-        dest[--pos] = 0;
+    dest[pos - (pos > 0)] = 0;
     return dest;
 }
 
