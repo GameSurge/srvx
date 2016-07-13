@@ -1630,7 +1630,7 @@ static NICKSERV_FUNC(cmd_notes)
 
 static NICKSERV_FUNC(cmd_rename_handle)
 {
-    struct handle_info *hi;
+    struct handle_info *hi, *hi_tmp;
     char msgbuf[MAXLEN], *old_handle;
     unsigned int nn;
 
@@ -1641,7 +1641,8 @@ static NICKSERV_FUNC(cmd_rename_handle)
         reply("NSMSG_FAIL_RENAME", argv[1], argv[2]);
         return 0;
     }
-    if (get_handle_info(argv[2])) {
+    if ((hi_tmp = get_handle_info(argv[2])) &&
+        (hi_tmp != hi || (strcmp(hi_tmp->handle, argv[2]) == 0))) {
         reply("NSMSG_HANDLE_EXISTS", argv[2]);
         return 0;
     }
