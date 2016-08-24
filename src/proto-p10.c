@@ -1150,10 +1150,10 @@ static CMD_FUNC(cmd_rping)
         struct userNode *un;
 
         if ((tgt = GetServerG(argv[1])) && (un = GetUserH(origin))) {
-            struct timeval now;
+            struct timeval ping_time;
 
-            gettimeofday(&now, NULL);
-            putsock("%s " P10_RPING " %s %s %ld %lu :%s", self->numeric, tgt->numeric, un->numeric, now.tv_sec, now.tv_usec, argv[argc-1]);
+            gettimeofday(&ping_time, NULL);
+            putsock("%s " P10_RPING " %s %s %ld %lu :%s", self->numeric, tgt->numeric, un->numeric, ping_time.tv_sec, ping_time.tv_usec, argv[argc-1]);
             return 1;
         }
     }
@@ -2650,7 +2650,7 @@ irc_parse_chanmode(const char *text, chan_mode_t *set, chan_mode_t *clear)
             MODE('s', MODE_SECRET);
             MODE('t', MODE_TOPICLIMIT);
             MODE('z', MODE_REGISTERED);
-            // o, v, b are intentionally ignored here
+            /* o, v, b are intentionally ignored here */
 #undef MODE
         default: return *text;
         }
