@@ -18,8 +18,11 @@ noinst_DATA = \
 	mod-sockcheck.help
 EXTRA_DIST = $(noinst_DATA)
 
+DISTCLEANFILES = modules-list.h
+
 if HAS_GIT
 BUILT_SOURCES = git-version.c
+DISTCLEANFILES += git-version.c
 .PHONY: checkversion
 git-version.c: checkversion
 checkversion:

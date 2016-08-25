@@ -3,6 +3,8 @@ SUBDIRS = @MY_SUBDIRS@
 DIST_SUBDIRS = src rx
 ACLOCAL_AMFLAGS = -I m4
 
+DISTCLEANFILES = srvx *.help
+
 all: srvx
 
 srvx: src/srvx
@@ -19,3 +21,6 @@ install-exec-local:
 	@echo Remember to edit srvx.conf.example and sockcheck.conf.example
 	@echo And of course, ./srvx --help before starting.
 	@echo
+
+uninstall-local:
+	rm $(prefix)/srvx $(prefix)/*.help $(prefix)/*.conf.example
