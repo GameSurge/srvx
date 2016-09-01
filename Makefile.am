@@ -5,7 +5,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 DISTCLEANFILES = srvx *.help
 
-all: srvx
+all-am: srvx
 
 srvx: src/srvx
 	cp ./src/srvx $(srcdir)/src/*.help .
