@@ -1345,6 +1345,8 @@ static CMD_FUNC(cmd_burst)
         irc_burst(cNode);
     }
     cNode = AddChannel(argv[1], in_timestamp, modes, banlist);
+    if (!cNode)
+        return 0;
 
     /* Burst channel members in now. */
     for (user = members, sep = *members, mode = 0; sep; user = end) {
