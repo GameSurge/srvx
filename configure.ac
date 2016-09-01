@@ -27,7 +27,7 @@ AC_PROG_GCC_TRADITIONAL
 
 dnl Look for a git client
 AC_CHECK_PROGS(GIT, [git])
-AM_CONDITIONAL(HAS_GIT, test z$GIT != z)
+AM_CONDITIONAL(HAS_GIT, test z$GIT != z -a -d ${ac_top_srcdir}/.git)
 
 dnl nice that unixes can all follow a standard.
 case $target in
