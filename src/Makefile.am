@@ -26,7 +26,7 @@ DISTCLEANFILES += git-version.c
 .PHONY: checkversion
 git-version.c: checkversion
 checkversion:
-	@GIT_VERSION=`$(GIT) describe`; \
+	@GIT_VERSION=`$(GIT) -C $(top_srcdir) describe`; \
 	[ "z$$GIT_VERSION" != "z" ] || exit 0; \
 	TMPFILE=`mktemp git-version.c.XXXXXX` || exit 1 ; \
 	echo "const char git_version[] = \"$${GIT_VERSION}\";" >> $$TMPFILE ; \
