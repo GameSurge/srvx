@@ -71,18 +71,22 @@ do_expandos(char *output, unsigned int out_len, const char *input, ...)
 
     safestrncpy(output, input, out_len);
     va_start(args, input);
-    while ((key = va_arg(args, const char*)) != NULL) {
+    while ((key = va_arg(args, const char *)) != NULL) {
         datum = va_arg(args, const char *);
         klen = strlen(key);
         dlen = strlen(datum);
         for (found = output; (found = strstr(output, key)) != NULL; found += dlen) {
             rlen = strlen(found + klen);
-            if ((dlen > klen) && ((unsigned)(found + dlen + rlen - output) > out_len))
-                rlen = output + out_len - found - dlen;
+            /* Save 1 spot for the null terminator at all times */
+            if ((dlen > klen) && (dlen > out_len - rlen - (size_t)(found - output) - 1))
+                rlen = output + out_len - found - dlen - 1;
             memmove(found + dlen, found + klen, rlen);
-            memcpy(found, datum, dlen + 1);
+            /* Add null terminator at the very end */
+            found[dlen + rlen] = '\0';
+            memcpy(found, datum, dlen);
         }
     }
+
     va_end(args);
 }
 
