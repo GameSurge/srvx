@@ -122,7 +122,7 @@ dnsbl_hit(struct sar_request *req, struct dns_header *hdr, struct dns_rr *rr, un
             break;
         case REQ_TYPE_TXT:
             len = raw[pos];
-            txt = malloc(len + 1);
+            txt = realloc(txt, len + 1);
             memcpy(txt, raw + pos + 1, len);
             txt[len] = '\0';
             break;
