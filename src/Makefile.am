@@ -1,6 +1,7 @@
 AM_CPPFLAGS = @RX_INCLUDES@
 LIBS = @LIBS@ @RX_LIBS@
 
+check_PROGRAMS = sha256_test
 noinst_PROGRAMS = srvx slab-read
 EXTRA_PROGRAMS = checkdb globtest
 noinst_DATA = \
@@ -89,9 +90,11 @@ srvx_SOURCES = \
 	recdb.c recdb.h \
 	sar.c sar.h \
 	saxdb.c saxdb.h \
+	sha256.c sha256.h \
 	timeq.c timeq.h \
 	tools.c
 
+sha256_test_SOURCES = sha256_test.c sha256.c sha256.h
 checkdb_SOURCES = checkdb.c common.h compat.c compat.h dict-splay.c dict.h recdb.c recdb.h saxdb.c saxdb.h tools.c conf.h log.h modcmd.h saxdb.h timeq.h
 globtest_SOURCES = common.h compat.c compat.h dict-splay.c dict.h globtest.c tools.c
 slab_read_SOURCES = slab-read.c

@@ -183,8 +183,10 @@ char *sanitize_ircmask(char *text);
 unsigned long ParseInterval(const char *interval);
 unsigned long ParseVolume(const char *volume);
 
-#define MD5_CRYPT_LENGTH 42
-/* buffer[] must be at least MD5_CRYPT_LENGTH bytes long */
+#define MD5_CRYPT_LENGTH 52
+/* buffer[] must be at least MD5_CRYPT_LENGTH bytes long,
+ * which is actually enough for %<salt-b64><sha256-b64>\0
+ */
 const char *cryptpass(const char *pass, char buffer[]);
 int checkpass(const char *pass, const char *crypt);
 

@@ -345,12 +345,41 @@ cryptpass_real(const char *pass, char *buffer, int seed)
     return buffer;
 }
 
+#include "sha256.h"
+
+static void
+cryptpass_sha256(const char *pass, char *buffer)
+{
+    struct sha256_context ctx;
+    const uint8_t *res;
+    unsigned int i, v;
+    size_t p_len;
+
+    /* Initialize, seed, and feed >= 32 bytes of password. */
+    sha256_init(&ctx);
+    sha256_update(&ctx, buffer, 6); /* seed */
+    for (p_len = strlen(pass); ctx.length < 38; )
+        sha256_update(&ctx, pass, p_len);
+    res = sha256_finish(&ctx);
+
+    /* Write hash to buffer. */
+    for (i = 0; i < 30; i += 3) {
+        v = (res[i+0] << 16) | (res[i+1] << 8) | res[i+2];
+        inttobase64(buffer + 6 + i/3*4, v, 4);
+    }
+    v = (res[30] << 8) | res[31];
+    inttobase64(buffer + 46, v, 4);
+    buffer[50] = '\0';
+}
+
 const char *
 cryptpass(const char *pass, char *buffer)
 {
-    int seed;
-    do { seed = rand(); } while (!seed);
-    return cryptpass_real(pass, buffer, seed);
+    buffer[0] = '%';
+    inttobase64(buffer + 1, rand() & 0x3FFFFFFF, 5);
+    inttobase64(buffer + 6, rand() & 0x3F, 1);
+    cryptpass_sha256(pass, buffer + 1);
+    return buffer;
 }
 
 int
@@ -359,15 +388,21 @@ checkpass(const char *pass, const char *crypted)
     char new_crypted[MD5_CRYPT_LENGTH], hseed[9];
     int seed;
 
-    if (crypted[0] == '$') {
-        /* new-style crypt, use "seed" after '$' */
-        strncpy(hseed, crypted+1, 8);
-        hseed[8] = 0;
-        seed = strtoul(hseed, NULL, 16);
+    if (crypted[0] == '%') {
+        /* salted SHA256 hash */
+        memcpy(new_crypted, crypted, 7);
+        cryptpass_sha256(pass, new_crypted + 1);
     } else {
-        /* old-style crypt, use "seed" of 0 */
-        seed = 0;
+        if (crypted[0] == '$') {
+            /* salted MD5 crypt, use "seed" after '$' */
+            strncpy(hseed, crypted + 1, 8);
+            hseed[8] = 0;
+            seed = strtoul(hseed, NULL, 16);
+        } else {
+            seed = 0;
+        }
+
+        cryptpass_real(pass, new_crypted, seed);
     }
-    cryptpass_real(pass, new_crypted, seed);
     return !strcmp(crypted, new_crypted);
 }
