@@ -1428,6 +1428,15 @@ static CMD_FUNC(cmd_opmode)
         return 0;
 
     if (!(cn = GetChannel(argv[1]))) {
+        un = GetUserN(argv[1]);
+        if (un) {
+            if (!GetServerH(origin)) {
+                log_module(MAIN_LOG, LOG_ERROR, "Unable to find server %s OPMODE'ing %s.", origin, un->nick);
+                return 0;
+            }
+            irc_user_modes(un, argv[2], strlen(argv[2]));
+            return 1;
+        }
         log_module(MAIN_LOG, LOG_ERROR, "Unable to find channel %s whose mode is changing.", argv[1]);
         return 0;
     }
