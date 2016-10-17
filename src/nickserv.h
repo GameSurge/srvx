@@ -108,7 +108,7 @@ struct handle_info {
     unsigned short table_width;
     unsigned char userlist_style;
     unsigned char maxlogins;
-    char passwd[MD5_CRYPT_LENGTH+1];
+    char passwd[MD5_CRYPT_LENGTH];
     char last_quit_host[USERLEN+HOSTLEN+2];
 };
 
