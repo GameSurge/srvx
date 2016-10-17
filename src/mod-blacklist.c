@@ -146,7 +146,7 @@ dnsbl_hit(struct sar_request *req, struct dns_header *hdr, struct dns_rr *rr, un
                 message = "client is blacklisted";
         }
 
-        /* Prepend "AUTO " prefix so the g-lined are put in a different snomask */
+        /* Prepend "AUTO " prefix so the g-lines are put in a different snomask. */
         strcpy(reason, "AUTO ");
 
         /* Expand elements of the message as necessary. */
