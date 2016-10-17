@@ -165,6 +165,8 @@ void call_exit_funcs(void);
 
 const char *inttobase64(char *buf, unsigned int v, unsigned int count);
 unsigned long base64toint(const char *s, int count);
+void inttoz85(char *buf, unsigned int v);
+unsigned int  z85toint(const char *s);
 int split_line(char *line, int irc_colon, int argv_size, char *argv[]);
 
 /* match_ircglobs(oldglob, newglob) returns non-zero if oldglob is a superset of newglob */

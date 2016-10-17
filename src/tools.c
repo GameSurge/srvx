@@ -88,6 +88,49 @@ const char* inttobase64(char* buf, unsigned int v, unsigned int count)
   return buf;
 }
 
+/* This layout (groups of ten) follows the ZeroMQ Z85 spec. */
+static const char to_z85[86] =
+    "0123456789" /*  0-9  */
+    "abcdefghij"
+    "klmnopqrst" /* 20-29 */
+    "uvwxyzABCD"
+    "EFGHIJKLMN" /* 40-49 */
+    "OPQRSTUVWX"
+    "YZ.-:+=^!/" /* 60-69 */
+    "*?&<>()[]{"
+    "}@%$#";     /* 80-84 */
+
+static const unsigned char from_z85[256] = {
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+   0,68, 0,84,83,82,72, 0,75,76,70,65, 0,63,62,69,
+   0, 1, 2, 3, 4, 5, 6, 7, 8, 9,64, 0,73,66,74,71,
+  81,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,
+  51,52,53,54,55,56,57,58,59,60,61,77, 0,78,67, 0,
+   0,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,
+  25,26,27,28,29,30,31,32,33,34,35,79, 0,80
+};
+
+void
+inttoz85(char *buf, unsigned int v)
+{
+    buf[4] = to_z85[v % 85]; v /= 85;
+    buf[3] = to_z85[v % 85]; v /= 85;
+    buf[2] = to_z85[v % 85]; v /= 85;
+    buf[1] = to_z85[v % 85]; v /= 85;
+    buf[0] = to_z85[v];
+}
+
+unsigned int
+z85toint(const char *s)
+{
+    return (int)from_z85[(unsigned char)s[0]] * 85 * 85 * 85 * 85
+        + (int)from_z85[(unsigned char)s[1]] * 85 * 85 * 85
+        + (int)from_z85[(unsigned char)s[2]] * 85 * 85
+        + (int)from_z85[(unsigned char)s[3]] * 85
+        + from_z85[(unsigned char)s[4]];
+}
+
 unsigned int
 irc_ntop(char *output, unsigned int out_size, const irc_in_addr_t *addr)
 {
