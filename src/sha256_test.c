@@ -30,15 +30,15 @@ int main(UNUSED_ARG(int argc), UNUSED_ARG(char *argv[]))
     size_t failed = 0;
 
     if (test_sha256("abc", 1,
-        "bf1678baeacf018fde4041412322ae5da36103b09c7a179661ff10b4ad1500f2"))
+        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"))
         failed++;
 
     if (test_sha256("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", 1,
-        "616a8d24b83806d29326c0e539603e0c59e43ca36721ff64d4edecf6c106db19"))
+        "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1"))
         failed++;
 
     if (test_sha256("a", 1000000,
-        "5c6ec7cd92fb1499e2c7a181673ed784489a80f10e2097a4cc396d04d02c11c7"))
+        "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0"))
         failed++;
 
     return failed ? EXIT_FAILURE : EXIT_SUCCESS;

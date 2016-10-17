@@ -107,7 +107,7 @@ void sha256_update(struct sha256_context *ctx, const char *data, size_t length)
 	partlen = sizeof(ctx->block) - used;
 	if (partlen > length)
 	    partlen = length;
-	
+
 	/* Copy the next bytes. */
 	memcpy(ctx->block + used, data, partlen);
 	ctx->length += partlen;
@@ -134,10 +134,10 @@ const uint8_t *sha256_finish(struct sha256_context *ctx)
         length[7 - ii] = total & 255;
     sha256_update(ctx, length, 8);
     for (ii = 0; ii < SHA256_OUTPUT_SIZE/4; ++ii) {
-        ctx->block[4 * ii + 0] = (ctx->h[ii] >>  0) & 255;
-        ctx->block[4 * ii + 1] = (ctx->h[ii] >>  8) & 255;
-        ctx->block[4 * ii + 2] = (ctx->h[ii] >> 16) & 255;
-        ctx->block[4 * ii + 3] = (ctx->h[ii] >> 24) & 255;
+        ctx->block[4 * ii + 0] = (ctx->h[ii] >> 24) & 255;
+        ctx->block[4 * ii + 1] = (ctx->h[ii] >> 16) & 255;
+        ctx->block[4 * ii + 2] = (ctx->h[ii] >>  8) & 255;
+        ctx->block[4 * ii + 3] = (ctx->h[ii] >>  0) & 255;
     }
     memset(ctx->block + SHA256_OUTPUT_SIZE, 0,
     	sizeof(ctx->block) - SHA256_OUTPUT_SIZE);

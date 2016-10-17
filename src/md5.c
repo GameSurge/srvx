@@ -353,31 +353,52 @@ cryptpass_sha256(const char *pass, char *buffer)
     struct sha256_context ctx;
     const uint8_t *res;
     unsigned int i, v;
+    int version = (buffer[-1] == '^');
     size_t p_len;
 
     /* Initialize, seed, and feed >= 32 bytes of password. */
     sha256_init(&ctx);
-    sha256_update(&ctx, buffer, 6); /* seed */
+    sha256_update(&ctx, buffer, version ? 5 : 6); /* seed */
     for (p_len = strlen(pass); ctx.length < 38; )
         sha256_update(&ctx, pass, p_len);
     res = sha256_finish(&ctx);
 
     /* Write hash to buffer. */
-    for (i = 0; i < 30; i += 3) {
-        v = (res[i+0] << 16) | (res[i+1] << 8) | res[i+2];
-        inttobase64(buffer + 6 + i/3*4, v, 4);
+    if (version == 0) {
+        /* An older version of sha256_finish() output in little-endian
+         * format.  Byte-swap to match that.
+         */
+        unsigned char tmpbuf[32];
+        for (i = 0; i < 32; i += 4) {
+            v = (res[i+0] << 24) | (res[i+1] << 16) | (res[i+2] << 8)
+                | (res[i+3] << 0);
+            tmpbuf[i+0] = v >> 0;
+            tmpbuf[i+1] = v >> 8;
+            tmpbuf[i+2] = v >> 16;
+            tmpbuf[i+3] = v >> 24;
+        }
+        for (i = 0; i < 30; i += 3) {
+            v = (tmpbuf[i+0] << 16) | (tmpbuf[i+1] << 8) | tmpbuf[i+2];
+            inttobase64(buffer + 6 + i/3*4, v, 4);
+        }
+        v = (tmpbuf[30] << 8) | tmpbuf[31];
+        inttobase64(buffer + 46, v, 4);
+        buffer[50] = '\0';
+    } else {
+        for (i = 0; i < 32; i += 4) {
+            v = (res[i+0] << 24) | (res[i+1] << 16) | (res[i+2] << 8)
+                | (res[i+3] << 0);
+            inttoz85(buffer + 5 + i/4*5, v);
+        }
+        buffer[45] = '\0';
     }
-    v = (res[30] << 8) | res[31];
-    inttobase64(buffer + 46, v, 4);
-    buffer[50] = '\0';
 }
 
 const char *
 cryptpass(const char *pass, char *buffer)
 {
-    buffer[0] = '%';
-    inttobase64(buffer + 1, rand() & 0x3FFFFFFF, 5);
-    inttobase64(buffer + 6, rand() & 0x3F, 1);
+    buffer[0] = '^';
+    inttoz85(buffer + 1, rand());
     cryptpass_sha256(pass, buffer + 1);
     return buffer;
 }
@@ -388,8 +409,12 @@ checkpass(const char *pass, const char *crypted)
     char new_crypted[MD5_CRYPT_LENGTH], hseed[9];
     int seed;
 
-    if (crypted[0] == '%') {
-        /* salted SHA256 hash */
+    if (crypted[0] == '^') {
+        /* salted SHA256 hash, base85 */
+        memcpy(new_crypted, crypted, 6);
+        cryptpass_sha256(pass, new_crypted + 1);
+    } else if (crypted[0] == '%') {
+        /* salted SHA256 hash, base64 big-endian */
         memcpy(new_crypted, crypted, 7);
         cryptpass_sha256(pass, new_crypted + 1);
     } else {

@@ -1788,7 +1788,7 @@ static NICKSERV_FUNC(cmd_auth)
         reply("NSMSG_PLEASE_SET_EMAIL");
     if (!is_secure_password(hi->handle, passwd, NULL))
         reply("NSMSG_WEAK_PASSWORD");
-    if (hi->passwd[0] != '%')
+    if (hi->passwd[0] != '^')
         cryptpass(passwd, hi->passwd);
     if (!hi->masks->used) {
         irc_in_addr_t ip;
