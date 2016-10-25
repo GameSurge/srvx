@@ -62,6 +62,8 @@ iauth_loc_xquery(struct server *source, const char routing[], const char query[]
             free(qdup);
             return;
         }
+        if (account[0] == ':')
+            account++;
 
         /* Set up (the rest of) the fake user. */
         user.nick = "?";
@@ -72,13 +74,13 @@ iauth_loc_xquery(struct server *source, const char routing[], const char query[]
 
         /* Check against the account. */
         hi = get_handle_info(account);
-        if (hi->masks->used == 0)
+        if (hi && (hi->masks->used == 0))
             valid = 1;
-        for (ii = 0; ii < hi->masks->used; ++ii) {
+        for (ii = 0; hi && (ii < hi->masks->used); ++ii) {
             if (user_matches_glob(&user, hi->masks->list[ii], 0))
                 valid = 1;
         }
-        if (!checkpass(password, hi ? hi->passwd : ""))
+        if (hi && !checkpass(password, hi->passwd))
             valid = 0;
 
         /* Send our response. */
