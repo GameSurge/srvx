@@ -247,6 +247,7 @@ char *intervalString(char *output, unsigned long interval, struct handle_info *h
 int getipbyname(const char *name, unsigned long *ip);
 int set_policer_param(const char *param, void *data, void *extra);
 const char *strtab(unsigned int ii);
+void do_expandos(char *output, unsigned int out_len, const char *input, ...);
 
 void tools_init(void);
 void tools_cleanup(void);

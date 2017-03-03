@@ -59,38 +59,6 @@ static struct {
 #endif
 
 static void
-do_expandos(char *output, unsigned int out_len, const char *input, ...)
-{
-    va_list args;
-    const char *key;
-    const char *datum;
-    char *found;
-    unsigned int klen;
-    unsigned int dlen;
-    unsigned int rlen;
-
-    safestrncpy(output, input, out_len);
-    va_start(args, input);
-    while ((key = va_arg(args, const char *)) != NULL) {
-        datum = va_arg(args, const char *);
-        klen = strlen(key);
-        dlen = strlen(datum);
-        for (found = output; (found = strstr(output, key)) != NULL; found += dlen) {
-            rlen = strlen(found + klen);
-            /* Save 1 spot for the null terminator at all times */
-            if ((dlen > klen) && (dlen > out_len - rlen - (size_t)(found - output) - 1))
-                rlen = output + out_len - found - dlen - 1;
-            memmove(found + dlen, found + klen, rlen);
-            /* Add null terminator at the very end */
-            found[dlen + rlen] = '\0';
-            memcpy(found, datum, dlen);
-        }
-    }
-
-    va_end(args);
-}
-
-static void
 dnsbl_hit(struct sar_request *req, struct dns_header *hdr, struct dns_rr *rr, unsigned char *raw, unsigned int raw_size)
 {
     struct dnsbl_data *data;
