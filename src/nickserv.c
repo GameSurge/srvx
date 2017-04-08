@@ -708,7 +708,7 @@ static const char *
 visible_email_addr(struct userNode *user, struct handle_info *hi)
 {
     if (hi->email_addr) {
-        if (oper_has_access(user, nickserv, nickserv_conf.email_visible_level, 1)) {
+        if (hi == user->handle_info || oper_has_access(user, nickserv, nickserv_conf.email_visible_level, 1)) {
             return hi->email_addr;
         } else {
             return "Set.";
