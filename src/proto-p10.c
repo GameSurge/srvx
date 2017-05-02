@@ -920,6 +920,12 @@ irc_xresponse(struct server *target, const char *routing, const char *response)
     putsock("%s " P10_XRESPONSE " %s %s :%s", self->numeric, target->numeric, routing, response);
 }
 
+void
+irc_remote_oper(struct userNode *target, int deoper)
+{
+    putsock("%s " P10_OPMODE " %s %s", self->numeric, target->numeric, deoper ? "-o" : "+o");
+}
+
 static void send_burst(void);
 
 static void

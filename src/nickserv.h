@@ -38,8 +38,9 @@ struct svccmd;
 #define HI_FLAG_NODELETE       0x00000080
 #define HI_FLAG_NETWORK_HELPER 0x00000100
 #define HI_FLAG_BOT            0x00000200
+#define HI_FLAG_REMOTE_OPER    0x00000400
 /* Flag characters for the above.  First char is LSB, etc. */
-#define HANDLE_FLAGS "SphgscfnHb"
+#define HANDLE_FLAGS "SphgscfnHbo"
 
 /* HI_STYLE_* go into handle_info.userlist_style */
 #define HI_STYLE_DEF    'd'
@@ -52,6 +53,8 @@ struct svccmd;
 #define HANDLE_SET_FLAG(hi, tok) ((hi)->flags |= HI_FLAG_##tok)
 #define HANDLE_TOGGLE_FLAG(hi, tok) ((hi)->flags ^= HI_FLAG_##tok)
 #define HANDLE_CLEAR_FLAG(hi, tok) ((hi)->flags &= ~HI_FLAG_##tok)
+
+#define IsRemoteOper(hi) (HANDLE_FLAGGED(hi, REMOTE_OPER) && (hi->opserv_level > 0))
 
 #define IsSupportHelper(user) (user->handle_info && HANDLE_FLAGGED(user->handle_info, SUPPORT_HELPER))
 #define IsNetworkHelper(user) (user->handle_info && HANDLE_FLAGGED(user->handle_info, NETWORK_HELPER))

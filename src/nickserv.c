@@ -1796,6 +1796,8 @@ static NICKSERV_FUNC(cmd_auth)
         if (irc_in_addr_is_valid(user->ip) && irc_pton(&ip, NULL, user->hostname))
             string_list_append(hi->masks, generate_hostmask(user, GENMASK_OMITNICK|GENMASK_BYIP|GENMASK_NO_HIDING|GENMASK_ANY_IDENT));
     }
+    if (IsRemoteOper(hi))
+        irc_remote_oper(user, 0);
     argv[pw_arg] = "****";
     reply("NSMSG_AUTH_SUCCESS");
     return 1;
@@ -2575,6 +2577,11 @@ oper_try_set_access(struct userNode *user, struct userNode *bot, struct handle_i
     log_module(NS_LOG, LOG_INFO, "Account %s setting oper level for account %s to %d (from %d).",
         user->handle_info->handle, target->handle, new_level, target->opserv_level);
     target->opserv_level = new_level;
+    if (new_level == 0) {
+        struct userNode *other;
+        for (other = target->users; other != NULL; other = other->next_authed)
+            irc_remote_oper(other, 1);
+    }
     return 1;
 }
 

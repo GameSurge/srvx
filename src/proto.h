@@ -146,6 +146,7 @@ void irc_raw(const char *what);
 void irc_stats(struct userNode *from, struct server *target, char type);
 void irc_svsnick(struct userNode *from, struct userNode *target, const char *newnick);
 void irc_xresponse(struct server *target, const char *routing, const char *response);
+void irc_remote_oper(struct userNode *target, int deoper);
 
 /* account maintenance */
 void irc_account(struct userNode *user, const char *stamp, unsigned long timestamp, unsigned long serial);
