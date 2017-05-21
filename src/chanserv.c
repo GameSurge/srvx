@@ -6853,16 +6853,16 @@ handle_nick_change(struct userNode *user, UNUSED_ARG(const char *old_nick))
         for(jj = 0; jj < channel->banlist.used; ++jj)
             if(user_matches_glob(user, channel->banlist.list[jj]->ban, MATCH_USENICK))
                 break;
-        /* Need not act if we found one. */
-        if(jj < channel->banlist.used)
-            continue;
         /* Look for a matching ban in this channel. */
         for(bData = channel->channel_info->bans; bData; bData = bData->next)
         {
             if(!user_matches_glob(user, bData->mask, MATCH_USENICK | MATCH_VISIBLE))
                 continue;
-            change.args[0].u.hostmask = bData->mask;
-            mod_chanmode_announce(chanserv, channel, &change);
+            if(!(jj < channel->banlist.used))
+            {
+                change.args[0].u.hostmask = bData->mask;
+                mod_chanmode_announce(chanserv, channel, &change);
+            }
             sprintf(kick_reason, "(%s) %s", bData->owner, bData->reason);
             KickChannelUser(user, channel, chanserv, kick_reason);
             bData->triggered = now;
