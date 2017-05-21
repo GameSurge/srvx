@@ -317,8 +317,9 @@
 "REMOVENOTE" ("/msg $S REMOVENOTE <typename> [FORCE]",
         "Permanently deletes a note type.  Without the argument $bFORCE$b, it will only delete an unused note type.  With the argument $bFORCE$b, it will delete the note from all channels and then delete the note type.",
         "$uSee Also:$u createnote");
-"RESYNC" ("/msg $S RESYNC <#channel>",
-        "Synchronizes users in the channel with the userlist.  This means that if the user can normally get ops, $S makes sure the user has ops.  Otherwise, if the user normally gets voice, $S makes sure the user has voice but not ops.  Otherwise, $S makes sure the user has neither voice nor ops.");
+"RESYNC" ("/msg $S RESYNC <#channel> [FORCE]",
+        "Synchronizes users in the channel with the userlist.  This means that if the user can normally get ops, $S makes sure the user has ops.  Otherwise, if the user normally gets voice, $S makes sure the user has voice but not ops.  Otherwise, $S makes sure the user has neither voice nor ops.",
+        "$S will ignore users with NoAutoOp/Voice enabled unless the $bFORCE$b arugment is given.");
 "SAY" ("/msg $C SAY <#channel|nick|*account> <text>",
         "Makes $b$C$b send a message to the specified channel/nick or all users on the account.",
         "$uSee Also:$u emote");
@@ -478,7 +479,7 @@
          "The $buset$b command allows you to toggle various channel user settings. With no arguments, it will print the current values of all channel user options.",
          "$bOptions:$b",
          "INFO:       Sets the infoline that $C sends when you join the channel.",
-         "NOAUTOOP:   Enable or disable $C automatically opping you upon joining or authenticating.",
+         "NOAUTOOP:   Enable or disable $C automatically opping you upon joining, authenticating, or resyncing.",
 	 "AUTOINVITE: $C will invite you to this channel if you have access to and are not in when you authenticate if this setting is on.",
          "NOTE: The NoAutoOp setting is equivalent to the !togop command in previous versions of srvx.",
          "$uSee Also:$u set");
