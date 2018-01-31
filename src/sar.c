@@ -1191,7 +1191,7 @@ sar_getaddr_request(struct sar_request *req)
 {
     struct sar_getaddr_state *state;
     unsigned int len;
-    char full_name[DNS_NAME_LENGTH];
+    char full_name[DNS_NAME_LENGTH + 1];
 
     state = (struct sar_getaddr_state*)(req + 1);
 
