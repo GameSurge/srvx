@@ -635,6 +635,7 @@ sockcheck_connected(struct io_fd *fd, int rc)
     switch (rc) {
     default:
         log_module(PC_LOG, LOG_ERROR, "BUG: connect() got error %d (%s) for client at %s.", rc, strerror(rc), client->addr->hostname);
+        /* fall through */
     case EHOSTUNREACH:
     case ECONNREFUSED:
     case ETIMEDOUT:

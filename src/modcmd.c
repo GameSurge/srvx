@@ -613,7 +613,7 @@ svccmd_expand_alias(struct svccmd *cmd, unsigned int old_argc, char *old_argv[],
                     ubound = strtoul(end_num+1, NULL, 10);
                     break;
                 }
-                /* else fall through to default case */
+                /* fall through */
             default:
                 log_module(MAIN_LOG, LOG_ERROR, "Alias expansion parse error in %s (near %s; %s.%s arg %d).", arg, end_num, cmd->parent->bot->nick, cmd->name, ii);
                 return 0;
@@ -1007,7 +1007,7 @@ check_alias_args(char *argv[], unsigned int argc) {
                     continue;
                 else if (isdigit(end_num[1]))
                     continue;
-                /* else fall through to default case */
+                /* fall through */
             default:
                 return arg;
             }

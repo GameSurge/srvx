@@ -762,7 +762,7 @@ static struct chanNode *helpserv_get_page_type(struct helpserv_bot *hs, enum pag
             break;
         default:
             log_module(HS_LOG, LOG_ERROR, "helpserv_page() called but %s has an invalid page type %d.", hs->helpserv->nick, type);
-            /* and fall through */
+            /* fall through */
         case PAGE_NONE:
             return NULL;
     }
@@ -986,6 +986,7 @@ static struct helpserv_request * create_request(struct userNode *user, struct he
             break;
         default:
             log_module(HS_LOG, LOG_ERROR, "%s has an invalid req_persist.", hs->helpserv->nick);
+            /* fall through */
         case PERSIST_CLOSE:
             if (user->handle_info) {
                 fmt = user_find_message(user, "HSMSG_REQ_PERSIST_HANDLE");

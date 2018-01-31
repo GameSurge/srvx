@@ -617,7 +617,7 @@ match_ircglob(const char *text, const char *glob)
                 for (n_tmp = n; *n && tolower(*n) != tolower(*m); n++) ;
             }
         }
-        /* and fall through */
+        /* fall through */
     default:
         if (!*n)
             return *m == '\0';

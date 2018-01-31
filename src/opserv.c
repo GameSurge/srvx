@@ -3947,7 +3947,7 @@ alert_check_user(const char *key, void *data, void *extra)
         return 1;
     default:
         log_module(OS_LOG, LOG_ERROR, "Invalid reaction type %d for alert %s.", alert->reaction, key);
-        /* fall through to REACT_NOTICE case */
+        /* fall through */
     case REACT_NOTICE:
         opserv_custom_alert(alert->discrim->notice_target, "Alert $b%s$b triggered by user $b%s$b!%s@%s (%s).", key, user->nick, user->ident, user->hostname, alert->discrim->reason);
         break;

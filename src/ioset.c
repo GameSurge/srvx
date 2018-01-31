@@ -312,7 +312,7 @@ ioset_connect(struct sockaddr *local, unsigned int sa_size, const char *peer, un
             return io_fd;
         default:
             log_module(MAIN_LOG, LOG_ERROR, "connect(%s:%d) (fd %d) returned errno %d (%s).", peer, port, io_fd->fd, errno, strerror(errno));
-            /* then fall through */
+            /* fall through */
         case EHOSTUNREACH:
         case ECONNREFUSED:
             ioset_close(io_fd, 1);
@@ -556,7 +556,7 @@ ioset_events(struct io_fd *fd, int readable, int writable)
         if (active_fd != fd)
             break;
         engine->update(fd);
-        /* and fall through */
+        /* fall through */
     case IO_CONNECTED:
         assert(active_fd == NULL || active_fd == fd);
         if (active_fd && readable) {

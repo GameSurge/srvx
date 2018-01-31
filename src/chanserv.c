@@ -4126,7 +4126,7 @@ static CHANSERV_FUNC(cmd_topic)
                     dpos += len;
                     starpos = pos;
                     break;
-                case '\\': tchar = topic_mask[pos++]; /* and fall through */
+                case '\\': tchar = topic_mask[pos++]; /* fall through */
                 default: new_topic[dpos++] = tchar; break;
                 }
             }

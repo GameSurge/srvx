@@ -496,6 +496,7 @@ vsend_message(const char *dest, struct userNode *src, struct handle_info *handle
         /* Literal '$' or end of string. */
         case 0:
             ipos--;
+            /* fall through */
         case '$':
             value = "$";
             break;
