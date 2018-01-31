@@ -85,12 +85,14 @@ iauth_loc_xquery(struct server *source, const char routing[], const char query[]
 
         /* Send our response. */
         free(qdup);
-        if (valid) {
+        if (!valid) {
+            irc_xresponse(source, routing, "AGAIN Bad username, account or source");
+        } else if (hi && HANDLE_FLAGGED(hi, SUSPENDED)) {
+            irc_xresponse(source, routing, "AGAIN That account is suspended");
+        } else {
             char response[68];
             snprintf(response, sizeof(response), "OK %s:%lu", hi->handle, hi->registered);
             irc_xresponse(source, routing, response);
-        } else {
-            irc_xresponse(source, routing, "AGAIN Bad username, account or source");
         }
     } /* else unknown or unsupported command */
 }
