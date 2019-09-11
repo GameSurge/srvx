@@ -1108,11 +1108,11 @@ static void helpserv_usermsg(struct userNode *user, struct helpserv_bot *hs, con
     } else if (hs->intervals[INTERVAL_STALE_DELAY]
                && (req->updated < now - hs->intervals[INTERVAL_STALE_DELAY])
                && (!hs->req_maxlen || req->text->used < hs->req_maxlen)) {
-        char buf[MAX_LINE_SIZE], updatestr[INTERVALLEN], timestr[MAX_LINE_SIZE];
+        char buf[MAX_LINE_SIZE], updatestr[INTERVALLEN], timestr[80];
         time_t feh;
 
         feh = req->opened;
-        strftime(timestr, MAX_LINE_SIZE, HSFMT_TIME, localtime(&feh));
+        strftime(timestr, sizeof(timestr), HSFMT_TIME, localtime(&feh));
         intervalString(updatestr, now - req->updated, user->handle_info);
         if (req->helper && (hs->notify >= NOTIFY_USER))
             if (user->handle_info)
@@ -1125,7 +1125,7 @@ static void helpserv_usermsg(struct userNode *user, struct helpserv_bot *hs, con
             else
                 helpserv_page(PGSRC_STATUS, "HSMSG_PAGE_UPD_REQUEST_NOT_AUTHED", req->id, user->nick, timestr, updatestr);
         feh = now;
-        strftime(timestr, MAX_LINE_SIZE, HSFMT_TIME, localtime(&feh));
+        strftime(timestr, sizeof(timestr), HSFMT_TIME, localtime(&feh));
         snprintf(buf, MAX_LINE_SIZE, "[Stale request updated at %s]", timestr);
         string_list_append(req->text, strdup(buf));
     }
@@ -2046,7 +2046,7 @@ static HELPSERV_FUNC(cmd_reassign) {
 }
 
 static HELPSERV_FUNC(cmd_addnote) {
-    char text[MAX_LINE_SIZE], timestr[MAX_LINE_SIZE], *note;
+    char text[MAX_LINE_SIZE], timestr[80], *note;
     struct helpserv_request *req;
     struct helpserv_user *hs_user=GetHSUser(hs, user->handle_info);
     int num_requests=0;
@@ -2065,7 +2065,7 @@ static HELPSERV_FUNC(cmd_addnote) {
     note = unsplit_string(argv+2, argc-2, NULL);
 
     feh = now;
-    strftime(timestr, MAX_LINE_SIZE, HSFMT_TIME, localtime(&feh));
+    strftime(timestr, sizeof(timestr), HSFMT_TIME, localtime(&feh));
     snprintf(text, MAX_LINE_SIZE, "[Helper note at %s]:", timestr);
     string_list_append(req->text, strdup(text));
     snprintf(text, MAX_LINE_SIZE, "  <%s> %s", user->handle_info->handle, note);
