@@ -2047,14 +2047,15 @@ make_numeric(struct server *svr, int local_num, char *outbuf)
 {
     int slen, llen;
 
+    outbuf[0] = svr->numeric[0];
     if (force_n2k || svr->numeric[1]) {
+        outbuf[1] = svr->numeric[1];
         slen = 2;
         llen = 3;
     } else {
         slen = 1;
         llen = (local_num < 64*64) ? 2 : 3;
     }
-    strncpy(outbuf, svr->numeric, slen);
     inttobase64(outbuf+slen, local_num, llen);
     outbuf[slen+llen] = 0;
 }
