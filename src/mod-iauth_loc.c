@@ -69,8 +69,8 @@ iauth_loc_xquery(struct server *source, const char routing[], const char query[]
         user.nick = "?";
         if (!irc_pton(&user.ip, NULL, ip_str))
             goto login2_bad_syntax;
-        strncpy(user.ident, username, sizeof(user.ident));
-        strncpy(user.hostname, hostname, sizeof(user.hostname));
+        strncpy(user.ident, username, sizeof(user.ident)-1);
+        strncpy(user.hostname, hostname, sizeof(user.hostname)-1);
 
         /* Check against the account. */
         hi = get_handle_info(account);
