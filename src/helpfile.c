@@ -323,7 +323,7 @@ table_send(struct userNode *from, const char *to, unsigned int size, irc_send_fu
         tot_width += max_width[jj] + 1;
     }
     /* How many rows to put in a line? */
-    if ((table.flags & TABLE_REPEAT_ROWS) && (size > tot_width))
+    if ((table.flags & TABLE_REPEAT_ROWS) && (size > tot_width) && tot_width)
         nreps = size / tot_width;
     else
         nreps = 1;
