@@ -673,6 +673,7 @@ sar_build_nslist(struct string_list *nslist)
             ns->ss = calloc(1, ns->ss_len);
             sa = (struct sockaddr*)ns->ss;
             if (!sar_pton(sa, ns->ss_len, NULL, name)) {
+                free(ns->ss);
                 free(it);
                 continue;
             }
@@ -1269,6 +1270,7 @@ sar_getaddr_decode(struct sar_request *req, struct dns_header *hdr, struct dns_r
             hit += sar_getaddr_decode(req, hdr, rr, raw, raw_size, jj);
         }
         /* XXX: if (!hit) handle or log the incomplete recursion; */
+        free(cname);
         return hit;
 
     case REQ_TYPE_SRV:
