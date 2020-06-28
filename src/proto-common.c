@@ -355,9 +355,9 @@ static CMD_FUNC(cmd_stats)
     case 'u': {
         unsigned long uptime;
         uptime = now - boot_time;
-        irc_numeric(un, RPL_STATSUPTIME, ":Server Up %d days %d:%02d:%02d",
+        irc_numeric(un, RPL_STATSUPTIME, ":Server Up %lu days %lu:%02lu:%02lu",
                     uptime/(24*60*60), (uptime/(60*60))%24, (uptime/60)%60, uptime%60);
-        irc_numeric(un, RPL_MAXCONNECTIONS, ":Highest connection count: %d (%d clients)",
+        irc_numeric(un, RPL_MAXCONNECTIONS, ":Highest connection count: %u (%u clients)",
                     self->max_clients+1, self->max_clients);
         break;
     }
@@ -678,8 +678,8 @@ mod_chanmode_apply(struct userNode *who, struct chanNode *channel, struct mod_ch
                 bn = channel->banlist.list[jj];
                 if (strcmp(bn->ban, change->args[ii].u.hostmask))
                     continue;
-                free(bn);
                 banList_remove(&channel->banlist, bn);
+                free(bn);
                 break;
             }
             break;
