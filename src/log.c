@@ -97,6 +97,9 @@ log_open(const char *name)
     if ((sep = strchr(name, ':'))) {
         memcpy(type_name, name, sep-name);
         type_name[sep-name] = 0;
+    } else if (strlen(name) >= sizeof(type_name)) {
+        log_module(MAIN_LOG, LOG_FATAL, "Over-long log name '%s'.", name);
+        return 0;
     } else {
         strcpy(type_name, name);
     }
