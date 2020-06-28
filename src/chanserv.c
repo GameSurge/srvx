@@ -3070,10 +3070,9 @@ static CHANSERV_FUNC(cmd_devoice)
 static int
 bad_channel_ban(struct chanNode *channel, struct userNode *user, const char *ban, unsigned int *victimCount, struct modeNode **victims)
 {
+    unsigned int count = 0;
     unsigned int ii;
 
-    if(victimCount)
-        *victimCount = 0;
     for(ii=0; ii<channel->members.used; ii++)
     {
         struct modeNode *mn = channel->members.list[ii];
@@ -3088,8 +3087,11 @@ bad_channel_ban(struct chanNode *channel, struct userNode *user, const char *ban
             return 1;
 
         if(victims)
-            victims[(*victimCount)++] = mn;
+            victims[count++] = mn;
     }
+
+    if(victimCount)
+        *victimCount = count;
     return 0;
 }
 
@@ -3320,7 +3322,7 @@ eject_user(struct userNode *user, struct chanNode *channel, unsigned int argc, c
         free(ban);
         name = ban = strdup(bData->mask);
     }
-    else if(ban)
+    else
     {
         for(n = 0; n < chanserv_conf.old_ban_names->used; ++n)
         {
@@ -5776,7 +5778,7 @@ handle_svccmd_unbind(struct svccmd *target) {
 static CHANSERV_FUNC(cmd_set)
 {
     struct svccmd *subcmd;
-    char buf[MAXLEN];
+    static char buf[MAXLEN];
     unsigned int ii;
 
     /* Check if we need to (re-)initialize set_shows_list. */
@@ -7007,10 +7009,10 @@ chanserv_conf_read(void)
         str = "+nt";
     safestrncpy(mode_line, str, sizeof(mode_line));
     ii = split_line(mode_line, 0, ArrayLength(modes), modes);
-    if((change = mod_chanmode_parse(NULL, modes, ii, MCP_KEY_FREE|MCP_NO_APASS, 0))
-       && (change->argc < 2))
+    if((change = mod_chanmode_parse(NULL, modes, ii, MCP_KEY_FREE|MCP_NO_APASS, 0)))
     {
-        chanserv_conf.default_modes = *change;
+        if (change->argc < 2)
+            chanserv_conf.default_modes = *change;
         mod_chanmode_free(change);
     }
     free_string_list(chanserv_conf.set_shows);
@@ -7209,8 +7211,10 @@ chanserv_read_suspended(dict_t obj)
     suspended->revoked = str ? strtoul(str, NULL, 0) : 0;
     str = database_get_data(obj, KEY_ISSUED, RECDB_QSTRING);
     suspended->issued = str ? strtoul(str, NULL, 0) : 0;
-    suspended->suspender = strdup(database_get_data(obj, KEY_SUSPENDER, RECDB_QSTRING));
-    suspended->reason = strdup(database_get_data(obj, KEY_REASON, RECDB_QSTRING));
+    str = database_get_data(obj, KEY_SUSPENDER, RECDB_QSTRING);
+    suspended->suspender = str ? strdup(str) : 0;
+    str = database_get_data(obj, KEY_REASON, RECDB_QSTRING);
+    suspended->reason = str ? strdup(str) : 0;
     previous = database_get_data(obj, KEY_PREVIOUS, RECDB_OBJECT);
     suspended->previous = previous ? chanserv_read_suspended(previous) : NULL;
     return suspended;
