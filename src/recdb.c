@@ -530,9 +530,16 @@ parse_record_int(RECDB *recdb, char **pname, struct record_data **prd)
         break;
     case '{': SET_RECORD_OBJECT(*prd, parse_object(recdb)); break;
     case '(': SET_RECORD_STRING_LIST(*prd, parse_string_list(recdb)); break;
-    default: ABORT(recdb, EXPECTED_START_RECORD_DATA, c);
+    default:
+        free_record_data(prd);
+        free(*pname);
+        ABORT(recdb, EXPECTED_START_RECORD_DATA, c);
     }
-    if ((c = parse_skip_ws(recdb)) != ';') ABORT(recdb, EXPECTED_SEMICOLON, c);
+    if ((c = parse_skip_ws(recdb)) != ';') {
+        free_record_data(prd);
+        free(pname);
+        ABORT(recdb, EXPECTED_SEMICOLON, c);
+    }
 }
 
 static dict_t
