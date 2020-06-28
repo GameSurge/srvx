@@ -36,6 +36,8 @@ read_log_file(const char *name)
             fprintf(stdout, "unmap\n");
         }
     }
+
+    fclose(log);
 }
 
 int
