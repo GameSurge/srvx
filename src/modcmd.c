@@ -20,6 +20,7 @@
 
 #include "chanserv.h"
 #include "conf.h"
+#include "log.h"
 #include "modcmd.h"
 #include "saxdb.h"
 
@@ -701,7 +702,7 @@ svccmd_invoke_argv(struct userNode *user, struct service *service, struct chanNo
 
     /* Expand the alias arguments, if there are any. */
     if (cmd->alias.used) {
-        char *new_argv[MAXNUMPARAMS];
+        static char *new_argv[MAXNUMPARAMS];
         int res;
 
         res = svccmd_expand_alias(cmd, argc, argv, new_argv);
@@ -1307,7 +1308,12 @@ static MODCMD_FUNC(cmd_command) {
         shown_flags |= MODCMD_REQUIRE_CHANUSER | MODCMD_REQUIRE_REGCHAN | MODCMD_REQUIRE_CHANNEL | MODCMD_REQUIRE_AUTHED;
     }
     if (svccmd->req_account_flags) {
-        for (nn=pos=0; nn<32; nn++) {
+        for (nn=pos=0; svccmd->req_account_flags >> nn; nn++) {
+            if (!HANDLE_FLAGS[nn]) {
+                log_module(MAIN_LOG, LOG_FATAL, "%s command %s has too-large account flags %#lx",
+                    svccmd->parent->bot->nick, cmd_name, svccmd->req_account_flags);
+                return 0;
+            }
             if (!(svccmd->req_account_flags & (1 << nn))) continue;
             buf[pos++] = HANDLE_FLAGS[nn];
         }
@@ -1410,11 +1416,11 @@ modcmd_describe_command(struct userNode *user, struct svccmd *cmd, struct svccmd
     if (buf1_used)
         buf1[buf1_used] = '\0';
     else
-        strcpy(buf1, user_find_message(user, "MSG_NONE"));
+        safestrncpy(buf1, user_find_message(user, "MSG_NONE"), MAXLEN+1);
     if (buf2_used)
         buf2[buf2_used] = '\0';
     else
-        strcpy(buf2, user_find_message(user, "MSG_NONE"));
+        safestrncpy(buf2, user_find_message(user, "MSG_NONE"), MAXLEN+1);
     reply("MCMSG_COMMAND_FLAGS", buf1, buf2);
     for (ii = buf1_used = buf2_used = 0; handle_flags[ii]; ++ii) {
         if (target->req_account_flags & (1 << ii))
@@ -1491,7 +1497,7 @@ static MODCMD_FUNC(cmd_god) {
 }
 
 static MODCMD_FUNC(cmd_joiner) {
-    char cmdname[MAXLEN];
+    static char cmdname[MAXLEN];
 
     if (argc < 2) {
         int len = sprintf(cmdname, "%s ", cmd->name);
@@ -1981,6 +1987,8 @@ modcmd_saxdb_write_command(struct saxdb_context *ctx, struct svccmd *cmd) {
                     buf[pos++] = ',';
                 }
             }
+            if (pos == 0)
+                memcpy(buf, "???", pos = 3);
         } else {
             pos = 1;
         }
@@ -2141,7 +2149,7 @@ modcmd_load_bots(struct dict *db, int default_nick) {
             if (!svc)
                 svc = service_register(AddLocalUser(nick, nick, hostname, desc, modes));
             else if (hostname)
-                strcpy(svc->bot->hostname, hostname);
+                safestrncpy(svc->bot->hostname, hostname, HOSTLEN + 1);
             desc = database_get_data(rd->d.object, "trigger", RECDB_QSTRING);
             if (desc) {
                 svc->trigger = desc[0];
@@ -2277,6 +2285,10 @@ service_make_alias(struct service *service, const char *alias, ...) {
         argv[argc++] = arg;
     }
     va_end(args);
+    if (argc == 0) {
+        log_module(MAIN_LOG, LOG_ERROR, "Invalid expansion for alias %s in service %s", alias, service->bot->nick);
+        return NULL;
+    }
     svccmd = calloc(1, sizeof(*svccmd));
     if (!(template = svccmd_resolve_name(svccmd, argv[0]))) {
         log_module(MAIN_LOG, LOG_ERROR, "Invalid base command %s for alias %s in service %s", argv[0], alias, service->bot->nick);
@@ -2453,6 +2465,7 @@ import_aliases_db() {
             service_bind_modcmd(service, command, iter_key(it2));
         }
     }
+    dict_delete(db);
 }
 
 void
