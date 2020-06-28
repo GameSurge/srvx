@@ -436,7 +436,7 @@ irc_p10_ntop(char *output, const irc_in_addr_t *ip)
     } else if (irc_in_addr_is_ipv6(*ip)) {
         unsigned int max_start, max_zeros, curr_zeros, zero, ii;
         /* Can start by printing out the leading non-zero parts. */
-        for (ii = 0; (ip->in6[ii]) && (ii < 8); ++ii) {
+        for (ii = 0; (ii < 8) && ip->in6[ii]; ++ii) {
             inttobase64(output, ntohs(ip->in6[ii]), 3);
             output += 3;
         }
@@ -910,6 +910,7 @@ irc_numeric(struct userNode *user, unsigned int num, const char *format, ...)
     char buffer[MAXLEN];
     va_start(arg_list, format);
     vsnprintf(buffer, MAXLEN-2, format, arg_list);
+    va_end(arg_list);
     buffer[MAXLEN-1] = 0;
     putsock(":%s %03d %s %s", self->name, num, user->nick, buffer);
 }
@@ -1356,7 +1357,10 @@ static CMD_FUNC(cmd_burst)
 
     /* Burst channel members in now. */
     for (user = members, sep = *members, mode = 0; sep; user = end) {
-        for (end = user + 3; isalnum(*end) || *end == '[' || *end == ']'; end++) ;
+        for (end = user; isalnum(*end) || *end == '[' || *end == ']'; end++) ;
+        if (end - user < 4) {
+            return 0;
+        }
         sep = *end++; end[-1] = 0;
         if (sep == ':') {
             mode = 0;
@@ -1549,7 +1553,7 @@ static CMD_FUNC(cmd_num_gline)
 
     if (argc < 6)
         return 0;
-    lastmod = (argc > 5) ? strtoul(argv[5], NULL, 0) : 0;
+    lastmod = strtoul(argv[5], NULL, 0);
     lifetime = (argc > 6) ? strtoul(argv[6], NULL, 0) : 0;
     gline_add(origin, argv[3], atoi(argv[4])-now, argv[argc - 1], now, lastmod, lifetime, 0);
     return 1;
