@@ -590,6 +590,10 @@ sockcheck_readable(struct io_fd *fd)
                 expand_var(client, resp_state[1], &expected, &exp_length);
                 free_exp = 1;
                 break;
+            default:
+                log_module(MAIN_LOG, LOG_FATAL,
+                    "sockcheck_check_template allowed invalid template %s", resp_state);
+                return;
             }
             if (client->read_pos+exp_length <= client->read_used) {
                 if (exp_length && memcmp(client->read+client->read_pos, expected, exp_length)) {
@@ -735,7 +739,7 @@ sockcheck_queue_address(irc_in_addr_t addr)
     sci->last_touched = now;
     sci->reason = NULL;
     sci->addr = addr;
-    strncpy(sci->hostname, ipstr, sizeof(sci->hostname));
+    safestrncpy(sci->hostname, ipstr, sizeof(sci->hostname));
     dict_insert(checked_ip_dict, sci->hostname, sci);
     sci_list_append(&pending_sci_list, sci);
     if (sockcheck_num_clients < sockcheck_conf.max_clients)
@@ -765,7 +769,7 @@ sockcheck_create_response(const char *key, void *data, void *extra)
 
     /* allocate memory and tack it onto parent->responses */
     resp = malloc(sizeof(*resp));
-    for (end = key; *end != ':' && *end != 0; end += 2 && end) ;
+    for (end = key; (*end != ':') && (*end != 0); end += 2) ;
     templ = malloc(end - key + 1);
     memcpy(templ, key, end - key);
     templ[end - key] = 0;
@@ -921,10 +925,12 @@ sockcheck_add_test(const char *desc)
     new_tests = sockcheck_list_clone(tests);
     if (sockcheck_create_test(name, rd, new_tests)) {
         sockcheck_list_unref(new_tests);
+        free_record_data(rd);
         return "Sockcheck test parse error";
     }
     sockcheck_list_unref(tests);
     tests = new_tests;
+    free_record_data(rd);
     return 0;
 }
 
