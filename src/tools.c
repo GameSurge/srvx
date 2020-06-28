@@ -976,7 +976,7 @@ DEFINE_LIST(string_buffer, char)
 void
 string_buffer_append_substring(struct string_buffer *buf, const char *tail, unsigned int len)
 {
-    while (buf->used + len >= buf->size) {
+    while (buf->used + len + 1 >= buf->size) {
         if (!buf->size)
             buf->size = 16;
         else
