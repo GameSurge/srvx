@@ -306,7 +306,10 @@ ioset_connect(struct sockaddr *local, unsigned int sa_size, const char *peer, un
     io_fd->data = data;
     io_fd->connect_cb = connect_cb;
     if (res < 0) {
-        switch (errno) {
+        int err = errno;
+        if (connect_cb)
+            connect_cb(io_fd, err);
+        switch (err) {
         case EINPROGRESS: /* only if !blocking */
             engine->update(io_fd);
             return io_fd;
@@ -322,7 +325,7 @@ ioset_connect(struct sockaddr *local, unsigned int sa_size, const char *peer, un
     io_fd->state = IO_CONNECTED;
     old_active = active_fd;
     if (connect_cb)
-        connect_cb(io_fd, ((res < 0) ? errno : 0));
+        connect_cb(io_fd, 0);
     if (active_fd)
         engine->update(io_fd);
     if (old_active != io_fd)

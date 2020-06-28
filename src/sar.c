@@ -674,7 +674,7 @@ sar_build_nslist(struct string_list *nslist)
             sa = (struct sockaddr*)ns->ss;
             if (!sar_pton(sa, ns->ss_len, NULL, name)) {
                 free(ns->ss);
-                free(it);
+                free(ns);
                 continue;
             }
             sar_set_port(sa, ns->ss_len, 53);

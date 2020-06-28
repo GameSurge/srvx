@@ -4196,6 +4196,7 @@ static CHANSERV_FUNC(cmd_mode)
     {
         char modes[MAXLEN];
         mod_chanmode_format(&channel->channel_info->modes, modes);
+        mod_chanmode_free(change);
         reply("CSMSG_MODE_LOCKED", modes, channel->name);
         return 0;
     }
@@ -6078,9 +6079,8 @@ static CHANSERV_FUNC(cmd_giveownership)
         co_access = new_owner->access;
     else
         co_access = UL_COOWNER;
+    curr_user->access = co_access;
     new_owner->access = UL_OWNER;
-    if(curr_user)
-        curr_user->access = co_access;
     cData->ownerTransfer = now;
     reply("CSMSG_OWNERSHIP_GIVEN", channel->name, new_owner_hi->handle);
     sprintf(reason, "%s ownership transferred to %s by %s.", channel->name, new_owner_hi->handle, user->handle_info->handle);

@@ -478,6 +478,8 @@ memoserv_saxdb_read_messages(struct dict *db)
     struct handle_info *sender, *recipient;
     struct record_data *hir;
     struct memo *memo;
+    struct memo_account *send_acct;
+    struct memo_account *recip_acct;
     dict_iterator_t it;
     unsigned long sent;
 
@@ -515,7 +517,14 @@ memoserv_saxdb_read_messages(struct dict *db)
             continue;
         }
 
-        memo = add_memo(sent, memoserv_get_account(recipient), memoserv_get_account(sender), str);
+        recip_acct = memoserv_get_account(recipient);
+        send_acct = memoserv_get_account(sender);
+        if (!recip_acct || !send_acct) {
+            log_module(MS_LOG, LOG_ERROR, "Unable to find account for %s and/or %s",
+                recipient->handle, sender->handle);
+            continue;
+        }
+        memo = add_memo(sent, recip_acct, send_acct, str);
         if ((str = database_get_data(hir->d.object, KEY_READ, RECDB_QSTRING)))
             memo->is_read = 1;
     }

@@ -184,6 +184,8 @@ static struct language *language_read(const char *name)
         || !fgets(filename, sizeof(filename), file)) {
         strcpy(filename, "C");
     }
+    if (file)
+        fclose(file);
     if (!(lang->parent = language_find(filename))) {
         uscore = strchr(filename, '_');
         if (uscore) {

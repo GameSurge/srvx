@@ -628,7 +628,8 @@ global_saxdb_read(struct dict *db)
         from = database_get_data(hir->d.object, KEY_FROM, RECDB_QSTRING);
         message = database_get_data(hir->d.object, KEY_MESSAGE, RECDB_QSTRING);
 
-        message_add(flags, posted, duration, from, message);
+        if (from && message)
+            message_add(flags, posted, duration, from, message);
     }
     return 0;
 }
