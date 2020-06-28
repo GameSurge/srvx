@@ -2028,7 +2028,7 @@ opserv_join_check(struct modeNode *mNode)
                 mod_chanmode_announce(opserv, channel, &change);
             send_target_message(0, channel->name, opserv, "OSMSG_FLOOD_MODERATE");
             opserv_alert("Warning: Possible join flood in %s (currently %d users; channel moderated).", channel->name, channel->members.used);
-        } else {
+        } else if (opserv) {
             opserv_alert("Warning: Possible join flood in %s (currently %d users).", channel->name, channel->members.used);
         }
     }
@@ -2708,6 +2708,10 @@ add_user_alert(const char *key, void *data, UNUSED_ARG(void *extra))
         return 1;
     }
     discrim = database_get_data(alert_dict, KEY_DISCRIM, RECDB_QSTRING);
+    if (!discrim) {
+        log_module(OS_LOG, LOG_ERROR, "Missing discriminator for alert %s, dropping it.", key);
+        return 0;
+    }
     react = database_get_data(alert_dict, KEY_REACTION, RECDB_QSTRING);
     if (!react || !irccasecmp(react, "notice"))
         reaction = REACT_NOTICE;
@@ -3278,9 +3282,11 @@ opserv_discrim_search(discrim_t discrim, discrim_search_func dsf, void *data)
 
                 for (i = 1; i < discrim->channel_count; i++) {
                     struct modeNode *mn2 = GetUserMode(discrim->channels[i], mn->user);
+                    unsigned int req_modes = discrim->chan_req_modes[i];
+                    unsigned int no_modes = discrim->chan_no_modes[i];
 
-                    if (((mn2->modes & discrim->chan_req_modes[i]) != discrim->chan_req_modes[i])
-                        || ((mn2->modes & discrim->chan_no_modes[i]) != 0)) {
+                    if ((req_modes && (!mn2 || ((mn2->modes & req_modes) != req_modes)))
+                        || (no_modes && mn2 && ((mn2->modes & no_modes) != 0))) {
                         match = 0;
                         break;
                     }
