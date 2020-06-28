@@ -88,7 +88,7 @@ uplink_insert(const char *key, void *data, UNUSED_ARG(void *extra))
     struct uplinkNode *uplink = malloc(sizeof(struct uplinkNode));
     struct record_data *rd = data;
     struct addrinfo hints, *ai;
-    int enabled = 1;
+    int enabled;
     char *str;
 
     if(!uplink)
@@ -105,10 +105,7 @@ uplink_insert(const char *key, void *data, UNUSED_ARG(void *extra))
     uplink->their_password = database_get_data(rd->d.object, "uplink_password", RECDB_QSTRING);
 
     str = database_get_data(rd->d.object, "enabled", RECDB_QSTRING);
-    if(str)
-    {
-        enabled = atoi(str) ? 1 : 0;
-    }
+    enabled = uplink->host && (!str || (atoi(str) != 0));
 
     cManager.enabled += enabled;
 
