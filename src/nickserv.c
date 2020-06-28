@@ -2210,7 +2210,8 @@ nickserv_modify_handle_flags(struct userNode *user, struct userNode *bot, const 
         case '-': add = 0; break;
         default:
             if (!(pos = handle_inverse_flags[(unsigned char)str[nn]])) {
-                send_message(user, bot, "NSMSG_INVALID_FLAG", str[nn]);
+                if (user)
+                    send_message(user, bot, "NSMSG_INVALID_FLAG", str[nn]);
                 return 0;
             }
             if (user && (user->handle_info->opserv_level < flag_access_levels[pos-1])) {
@@ -4221,7 +4222,7 @@ nickserv_define_func(const char *name, modcmd_func_t func, int min_level, int mu
         }
     } else if (min_level == 0) {
         if (must_be_qualified) {
-            return modcmd_register(nickserv_module, name, func, 1, (must_auth ? MODCMD_REQUIRE_AUTHED : 0), "flags", "+helping", NULL);
+            return modcmd_register(nickserv_module, name, func, 1, (must_auth ? MODCMD_REQUIRE_AUTHED : 0), "flags", "+qualified,+helping", NULL);
         } else {
             return modcmd_register(nickserv_module, name, func, 1, (must_auth ? MODCMD_REQUIRE_AUTHED : 0), "flags", "+helping", NULL);
         }
