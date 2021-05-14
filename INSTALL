@@ -51,6 +51,11 @@ almost all our testing, and we recommend it for use with srvx.
 
 Quick Install:
 ----------
+$ libtoolize --force
+$ aclocal
+$ autoheader
+$ automake --force-missing --add-missing
+$ autoconf
 $ ./configure
     NOTE: The protocol the resulting srvx binary will support is
     determined by the configure script. The P10 protocol is the
@@ -68,52 +73,59 @@ Compiling:
   1) Enter the root directory of the srvx tree.  If installation is done
      from outside of it, it may cause problems during compile, or during
      runtime.
+     
+  2) Run autotools to create the configure script and files needed by it
+     $ libtoolize --force
+     $ aclocal
+     $ autoheader
+     $ automake --force-missing --add-missing
+     $ autoconf
 
-  2) Run the configure script (sh configure), it will verify that your
+  3) Run the configure script (sh configure), it will verify that your
      system will have the resources needed for srvx to compile.  If you
      would like to change the path where srvx will be installed to,
      execute configure with the --prefix=/path option.  The default path
      is ~/srvx-X.X.X/, with the X's representing the version.  See the
      note in "Quick Install" if you are linking to Bahamut.
 
-  3) On some systems you may need to edit the Makefile in order for
+  4) On some systems you may need to edit the Makefile in order for
      it to compile correctly.  Includes, and other such things may
      reside in other directories.  Most likely the Makefile won't require
      any modifications.
 
-  4) You may optionally edit config.h in case the configure script made a
+  5) You may optionally edit config.h in case the configure script made a
      mistake.
 
-  5) Execute the "make" command to begin compiling.  If you encounter any
+  6) Execute the "make" command to begin compiling.  If you encounter any
      uncorrectable errors/warnings, please scroll up to the introduction
      section and follow the instructions.
 
-  6) You may now either type "make install" to install it to your
+  7) You may now either type "make install" to install it to your
      installation path, or work from your build directory, either is fine.
 
-  7) Copy sockcheck.conf.example to sockcheck.conf (and edit to add
+  8) Copy sockcheck.conf.example to sockcheck.conf (and edit to add
      new proxy types, if you wish).
 
-  8) Copy srvx.conf.example to srvx.conf and edit to suit your
+  9) Copy srvx.conf.example to srvx.conf and edit to suit your
      needs. Errors in the configuration file will be logged to
      main.log (and if srvx is running in the foreground, printed to
      stdout) when you start the daemon.
 
-  9) You can now begin using your service bots.  You can debug by
+ 10) You can now begin using your service bots.  You can debug by
      running it with '-fd', it will not background itself, and it
      will be fairly verbose if you gave the configure script the
      --enable-debug flag. If you would like to run in the foreground
      with no verbosity, use the '-f' flag. If you just want to run it,
      execute srvx without any flags.
 
- 10) Once you have srvx started, you'll need to register a NickServ
+ 11) Once you have srvx started, you'll need to register a NickServ
      account:
        /msg NickServ@services.irc.com register <account> <password>
      Make sure that you register the first account -- it is
      automatically granted certain privileges and gives you root-level
      access to OpServ once you are opered up.
 
- 11) New operators can be given access to OpServ through NickServ's
+ 12) New operators can be given access to OpServ through NickServ's
      (or whatever you've named the nick/authentication service) oset
      command:
        /msg NickServ oset <nick>|*<account> level <level>
