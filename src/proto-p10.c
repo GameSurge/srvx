@@ -1160,7 +1160,7 @@ static CMD_FUNC(cmd_rping)
             struct timeval ping_time;
 
             gettimeofday(&ping_time, NULL);
-            putsock("%s " P10_RPING " %s %s %ld %lu :%s", self->numeric, tgt->numeric, un->numeric, ping_time.tv_sec, ping_time.tv_usec, argv[argc-1]);
+            putsock("%s " P10_RPING " %s %s %ld %lu :%s", self->numeric, tgt->numeric, un->numeric, ping_time.tv_sec, (long)ping_time.tv_usec, argv[argc-1]);
             return 1;
         }
     }

@@ -131,15 +131,15 @@ int getpeername (int $arg2 *, $t *);]], [[$t len;
   [#include <sys/types.h>
 #include<sys/socket.h>])
 
+dnl Check for post-C89 keywords - must be before adding -Werror
+AC_C_INLINE
+
 dnl Can only check with -Werror, but the rest of configure doesn't like -Werror
 OLD_CFLAGS=$CFLAGS
 CFLAGS="$CFLAGS -W -Wall -Werror"
 if test "z$USE_MAINTAINER_MODE" = zyes ; then
   CFLAGS="$CFLAGS -ansi"
 fi
-
-dnl Check for post-C89 keywords
-AC_C_INLINE
 
 dnl How to copy one va_list to another?
 AC_CACHE_CHECK([for va_copy], ac_cv_c_va_copy, [AC_LINK_IFELSE(
