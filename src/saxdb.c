@@ -280,7 +280,7 @@ saxdb_pre_object(struct saxdb_context *dest) {
 #define saxdb_pre_object(DEST)
 #endif
 
-static inline void
+static void
 saxdb_post_object(struct saxdb_context *dest) {
     saxdb_put_char(dest, ';');
     saxdb_put_char(dest, COMPLEX(dest) ? '\n' : ' ');
