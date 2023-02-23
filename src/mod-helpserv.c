@@ -878,7 +878,7 @@ static struct helpserv_request * create_request(struct userNode *user, struct he
 
     if (hs->id_wrap) {
         unsigned long i;
-        char buf[12];
+        char buf[24];
         if (hs->last_requestid < hs->id_wrap) {
             for (i=hs->last_requestid; i < hs->id_wrap; i++) {
                 sprintf(buf, "%lu", i);
