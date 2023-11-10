@@ -269,6 +269,16 @@ irc_fakehost(UNUSED_ARG(struct userNode *user), UNUSED_ARG(const char *host), UN
 }
 
 void
+irc_remote_oper(struct userNode *target, int deoper)
+{
+    if (deoper) {
+        irc_svsmode(target, "-o", 0);
+    } else {
+        irc_svsmode(target, "+o", 0);
+    }
+}
+
+void
 irc_regnick(struct userNode *user)
 {
     if (IsReggedNick(user)) {
