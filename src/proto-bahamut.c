@@ -28,6 +28,7 @@
 #define CAPAB_NICKIP    0x20
 #define CAPAB_TSMODE    0x40
 #define CAPAB_ZIP       0x80
+#define CAPAB_NICKIPSTR 0x100
 
 struct service_message_info {
     privmsg_func_t on_privmsg;
@@ -181,7 +182,12 @@ AddLocalUser(const char *nick, const char *ident, const char *hostname, const ch
 {
     unsigned long timestamp = now;
     struct userNode *old_user = GetUserH(nick);
-    static const irc_in_addr_t ipaddr;
+    /* 127.0.0.1 */
+    static const irc_in_addr_t ipaddr = {
+        .in6_8 = {
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 127, 0, 0, 1,
+        }
+    };
 
     if (!modes)
         modes = "+oikr";
@@ -244,12 +250,21 @@ irc_server(struct server *srv) {
 void
 irc_user(struct userNode *user) {
     char modes[32];
-    if (!user || user->nick[0] != ' ') return;
+    char ip_str[IRC_NTOP_MAX_SIZE];
+    if (!user || IsDummy(user))
     irc_user_modes(user, modes, sizeof(modes));
-    putsock("NICK %s %d %lu +%s %s %s %s %d %u :%s",
-            user->nick, user->uplink->hops+2, (unsigned long)user->timestamp,
-            modes, user->ident, user->hostname, user->uplink->name, 0,
-            ntohl(user->ip.in6_32[3]), user->info);
+    if (uplink_capab & CAPAB_NICKIPSTR) {
+        irc_ntop(ip_str, sizeof(ip_str), &user->ip);
+        putsock("NICK %s %d %lu +%s %s %s %s %d %s :%s",
+                user->nick, user->uplink->hops+2, (unsigned long)user->timestamp,
+                modes, user->ident, user->hostname, user->uplink->name, 0,
+                ip_str, user->info);
+    } else {
+        putsock("NICK %s %d %lu +%s %s %s %s %d %u :%s",
+                user->nick, user->uplink->hops+2, (unsigned long)user->timestamp,
+                modes, user->ident, user->hostname, user->uplink->name, 0,
+                ntohl(user->ip.in6_32[3]), user->info);
+    }
 }
 
 void
@@ -308,7 +323,7 @@ irc_pass(const char *passwd) {
 
 void
 irc_capab() {
-    putsock("CAPAB TS3 NOQUIT SSJOIN BURST UNCONNECT NICKIP TSMODE");
+    putsock("CAPAB TS3 NOQUIT SSJOIN BURST UNCONNECT NICKIP NICKIPSTR TSMODE");
 }
 
 void
@@ -667,6 +682,7 @@ static CMD_FUNC(cmd_capab) {
         { "NICKIP", CAPAB_NICKIP },
         { "TSMODE", CAPAB_TSMODE },
         { "ZIP", CAPAB_ZIP },
+        { "NICKIPSTR", CAPAB_NICKIPSTR },
         { NULL, 0 }
     };
     unsigned int nn, mm;
@@ -814,8 +830,13 @@ static CMD_FUNC(cmd_nick) {
 
         if (argc < 10) return 0;
         stamp = strtoul(argv[8], NULL, 0);
-        if (argc > 10)
-            ip.in6_32[3] = htonl(atoi(argv[9]));
+        if (argc > 10) {
+            if (uplink_capab & CAPAB_NICKIPSTR) {
+                irc_pton(&ip, NULL, argv[9]);
+            } else {
+                ip.in6_32[3] = htonl(atoi(argv[9]));
+            }
+        }
         un = AddUser(GetServerH(argv[7]), argv[1], argv[5], argv[6], argv[4], argv[argc-1], atoi(argv[3]), ip, stamp);
     }
     return 1;
