@@ -282,7 +282,7 @@ fi
 
 AC_ARG_WITH(getopt,
 [  --without-getopt        Disables building of the GNU getopt library],
-[if test "$withval" = no; then
+[if test "x$withval" = xno -o "x$ac_cv_func_getopt_long" = xyes ; then
   AC_DEFINE(IGNORE_GETOPT, 1, [Define to disable built-in getopt library])
 fi])
 

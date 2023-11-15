@@ -37,7 +37,7 @@
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #else
-#include "getopt.h"
+#include "g_getopt.h"
 #endif
 #ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>

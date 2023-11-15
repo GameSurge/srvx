@@ -20,11 +20,12 @@
    Boston, MA 02111-1307, USA.  */
 
 #include "common.h"
-#include "getopt.h"
 
 #ifndef IGNORE_GETOPT
 
-#if !defined (__STDC__) || !__STDC__
+#include "g_getopt.h"
+
+#if !defined(__STDC__) || !__STDC__
 /* This is a separate conditional since some stdc systems
    reject `defined (const)'.  */
 #ifndef const

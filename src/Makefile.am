@@ -69,8 +69,7 @@ srvx_SOURCES = \
 	compat.c compat.h \
 	conf.c conf.h \
 	dict-splay.c dict.h \
-	getopt.c getopt.h \
-	getopt1.c getopt.h \
+	getopt.c getopt1.c g_getopt.h \
 	gline.c gline.h \
 	global.c global.h \
 	hash.c hash.h \
