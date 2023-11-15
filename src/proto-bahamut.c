@@ -252,19 +252,17 @@ irc_user(struct userNode *user) {
     char modes[32];
     char ip_str[IRC_NTOP_MAX_SIZE];
     if (!user || IsDummy(user))
+        return;
     irc_user_modes(user, modes, sizeof(modes));
     if (uplink_capab & CAPAB_NICKIPSTR) {
         irc_ntop(ip_str, sizeof(ip_str), &user->ip);
-        putsock("NICK %s %d %lu +%s %s %s %s %d %s :%s",
-                user->nick, user->uplink->hops+2, (unsigned long)user->timestamp,
-                modes, user->ident, user->hostname, user->uplink->name, 0,
-                ip_str, user->info);
     } else {
-        putsock("NICK %s %d %lu +%s %s %s %s %d %u :%s",
-                user->nick, user->uplink->hops+2, (unsigned long)user->timestamp,
-                modes, user->ident, user->hostname, user->uplink->name, 0,
-                ntohl(user->ip.in6_32[3]), user->info);
+        snprintf(ip_str, sizeof(ip_str), "%u", ntohl(user->ip.in6_32[3]));
     }
+    putsock("NICK %s %d %lu +%s %s %s %s %d %s :%s",
+            user->nick, user->uplink->hops+2, (unsigned long)user->timestamp,
+            modes, user->ident, user->hostname, user->uplink->name, 0,
+            ip_str, user->info);
 }
 
 void
@@ -830,12 +828,12 @@ static CMD_FUNC(cmd_nick) {
 
         if (argc < 10) return 0;
         stamp = strtoul(argv[8], NULL, 0);
-        if (argc > 10) {
-            if (uplink_capab & CAPAB_NICKIPSTR) {
-                irc_pton(&ip, NULL, argv[9]);
-            } else {
-                ip.in6_32[3] = htonl(atoi(argv[9]));
-            }
+        if (argc == 10) {
+            memset(&ip, 0, sizeof(ip));
+        } else if (uplink_capab & CAPAB_NICKIPSTR) {
+            irc_pton(&ip, NULL, argv[9]);
+        } else {
+            ip.in6_32[3] = htonl(atoi(argv[9]));
         }
         un = AddUser(GetServerH(argv[7]), argv[1], argv[5], argv[6], argv[4], argv[argc-1], atoi(argv[3]), ip, stamp);
     }
