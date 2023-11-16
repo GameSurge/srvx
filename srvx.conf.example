@@ -290,7 +290,7 @@
     "snoop" {
         // Where to send snoop messages?
         "channel" "#wherever";
-        // Which bot?
+        // Which bot?  (It must already exist on srvx.)
         "bot" "OpServ";
         // Show new users and joins from net joins?  (off by default)
         "show_bursts" "0";

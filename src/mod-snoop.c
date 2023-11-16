@@ -23,7 +23,7 @@
  *     "snoop" {
  *         // Where to send snoop messages?
  *         "channel" "#wherever";
- *         // Which bot?
+ *         // Which bot?  (It must already exist on srvx.)
  *         "bot" "OpServ";
  *         // Show new users and joins from net joins?  (off by default)
  *         "show_bursts" "0";
@@ -45,8 +45,7 @@
 static struct {
     struct chanNode *channel;
     struct userNode *bot;
-    unsigned int show_bursts : 1;
-    unsigned int enabled : 1;
+    unsigned int show_bursts;
 } snoop_cfg;
 static char timestamp[16];
 const char *snoop_module_deps[] = { NULL };
@@ -63,7 +62,7 @@ int snoop_finalize(void);
 
 static void
 snoop_nick_change(struct userNode *user, const char *old_nick) {
-    if (!snoop_cfg.enabled) return;
+    if (!snoop_cfg.bot) return;
     UPDATE_TIMESTAMP();
     SNOOP("$bNICK$b change %s -> %s", old_nick, user->nick);
 }
@@ -72,7 +71,7 @@ static int
 snoop_join(struct modeNode *mNode) {
     struct userNode *user = mNode->user;
     struct chanNode *chan = mNode->channel;
-    if (!snoop_cfg.enabled) return 0;
+    if (!snoop_cfg.bot) return 0;
     if (user->uplink->burst && !snoop_cfg.show_bursts) return 0;
     UPDATE_TIMESTAMP();
     if (chan->members.used == 1) {
@@ -85,7 +84,7 @@ snoop_join(struct modeNode *mNode) {
 
 static void
 snoop_part(struct modeNode *mn, const char *reason) {
-    if (!snoop_cfg.enabled) return;
+    if (!snoop_cfg.bot) return;
     if (mn->user->dead) return;
     UPDATE_TIMESTAMP();
     SNOOP("$bPART$b %s by %s (%s)", mn->channel->name, mn->user->nick, reason ? reason : "");
@@ -93,14 +92,14 @@ snoop_part(struct modeNode *mn, const char *reason) {
 
 static void
 snoop_kick(struct userNode *kicker, struct userNode *victim, struct chanNode *chan) {
-    if (!snoop_cfg.enabled) return;
+    if (!snoop_cfg.bot) return;
     UPDATE_TIMESTAMP();
     SNOOP("$bKICK$b %s from %s by %s", victim->nick, chan->name, (kicker ? kicker->nick : "some server"));
 }
 
 static void
 snoop_new_user(struct userNode *user) {
-    if (!snoop_cfg.enabled) return;
+    if (!snoop_cfg.bot) return;
     if (user->uplink->burst && !snoop_cfg.show_bursts) return;
     UPDATE_TIMESTAMP();
     SNOOP("$bNICK$b %s %s@%s [%s] on %s", user->nick, user->ident, user->hostname, irc_ntoa(&user->ip), user->uplink->name);
@@ -108,7 +107,7 @@ snoop_new_user(struct userNode *user) {
 
 static void
 snoop_del_user(struct userNode *user, struct userNode *killer, const char *why) {
-    if (!snoop_cfg.enabled) return;
+    if (!snoop_cfg.bot) return;
     UPDATE_TIMESTAMP();
     if (killer) {
         SNOOP("$bKILL$b %s (%s@%s, on %s) by %s (%s)", user->nick, user->ident, user->hostname, user->uplink->name, killer->nick, why);
@@ -119,7 +118,7 @@ snoop_del_user(struct userNode *user, struct userNode *killer, const char *why) 
 
 static void
 snoop_auth(struct userNode *user, UNUSED_ARG(struct handle_info *old_handle)) {
-    if (!snoop_cfg.enabled) return;
+    if (!snoop_cfg.bot) return;
     if (user->uplink->burst && !snoop_cfg.show_bursts) return;
     if (user->handle_info) {
         UPDATE_TIMESTAMP();
@@ -143,14 +142,13 @@ snoop_conf_read(void) {
         return;
     str = database_get_data(node, "show_bursts", RECDB_QSTRING);
     snoop_cfg.show_bursts = str ? enabled_string(str) : 0;
-    snoop_cfg.enabled = 1;
     if (finalized)
         snoop_finalize();
 }
 
 void
 snoop_cleanup(void) {
-    snoop_cfg.enabled = 0;
+    snoop_cfg.bot = NULL;
     unreg_del_user_func(snoop_del_user);
 }
 
@@ -179,6 +177,7 @@ snoop_finalize(void) {
     char *str;
 
     finalized = 1;
+    snoop_cfg.bot = NULL;
     node = conf_get_data("modules/snoop", RECDB_OBJECT);
     if (!node)
         return 0;
