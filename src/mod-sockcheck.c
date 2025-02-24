@@ -647,6 +647,7 @@ sockcheck_connected(struct io_fd *fd, int rc)
             log_module(PC_LOG, LOG_INFO, "Client %s gave us errno %d (%s)", client->addr->hostname, rc, strerror(rc));
         }
         sockcheck_advance(client, client->state->responses.used-1);
+    case EINPROGRESS:
         return;
     case 0: break;
     }
