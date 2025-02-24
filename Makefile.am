@@ -11,16 +11,16 @@ srvx: src/srvx
 	cp ./src/srvx $(srcdir)/src/*.help .
 
 install-exec-local:
-	$(INSTALL) -d -m 755 $(prefix)
-	$(INSTALL) -m 744 ./src/srvx $(prefix)
-	$(INSTALL) -m 644 $(srcdir)/src/*.help $(prefix)
-	$(INSTALL) -m 600 $(srcdir)/srvx.conf.example $(prefix)
-	$(INSTALL) -m 644 $(srcdir)/sockcheck.conf.example $(prefix)
+	$(INSTALL) -d -m 755 $(DESTDIR)$(prefix)
+	$(INSTALL) -m 744 ./src/srvx $(DESTDIR)$(prefix)
+	$(INSTALL) -m 644 $(srcdir)/src/*.help $(DESTDIR)$(prefix)
+	$(INSTALL) -m 600 $(srcdir)/srvx.conf.example $(DESTDIR)$(prefix)
+	$(INSTALL) -m 644 $(srcdir)/sockcheck.conf.example $(DESTDIR)$(prefix)
 	@echo
-	@echo srvx-$(VERSION) has been installed to $(prefix)
+	@echo srvx-$(VERSION) has been installed to $(DESTDIR)$(prefix)
 	@echo Remember to edit srvx.conf.example and sockcheck.conf.example
 	@echo And of course, ./srvx --help before starting.
 	@echo
 
 uninstall-local:
-	rm $(prefix)/srvx $(prefix)/*.help $(prefix)/*.conf.example
+	rm $(DESTDIR)$(prefix)/srvx $(DESTDIR)$(prefix)/*.help $(DESTDIR)$(prefix)/*.conf.example

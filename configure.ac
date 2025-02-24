@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to create a configure script.
 
 dnl General initialization.
-AC_PREREQ(2.64)
+AC_PREREQ([2.72])
 AC_INIT([srvx],[1.4.0-rc3],[srvx-bugs@lists.sourceforge.net])
 CODENAME=surge
 AC_CONFIG_HEADERS(src/config.h)
@@ -23,7 +23,6 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-AC_PROG_GCC_TRADITIONAL
 
 dnl Look for a git client
 AC_CHECK_PROGS(GIT, [git])
@@ -61,15 +60,11 @@ dnl Checks for libraries.
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(nsl, gethostbyname)
 
-dnl Checks for header files.
-AC_HEADER_STDC
-
 dnl will be used for portability stuff
-AC_HEADER_TIME
 AC_STRUCT_TM
 
 dnl Would rather not bail on headers, BSD has alot of the functions elsewhere. -Jedi
-AC_CHECK_HEADERS(fcntl.h malloc.h netdb.h arpa/inet.h netinet/in.h sys/resource.h sys/timeb.h sys/times.h sys/param.h sys/socket.h sys/time.h sys/types.h sys/wait.h unistd.h getopt.h memory.h regex.h arpa/inet.h sys/mman.h sys/stat.h dirent.h sys/epoll.h sys/event.h stdint.h,,)
+AC_CHECK_HEADERS(fcntl.h malloc.h netdb.h arpa/inet.h netinet/in.h sys/resource.h sys/time.h sys/timeb.h sys/times.h sys/param.h sys/socket.h sys/time.h sys/types.h sys/wait.h unistd.h getopt.h memory.h regex.h arpa/inet.h sys/mman.h sys/stat.h dirent.h sys/epoll.h sys/event.h stdint.h,,)
 
 dnl portability stuff, hurray! -Jedi
 AC_CHECK_MEMBER([struct sockaddr.sa_len],
